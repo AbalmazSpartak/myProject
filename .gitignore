@@ -5,3 +5,5 @@ DerivedData/
 *.xcworkspace/xcuserdata/
 *.xcuserstate
 .DS_Store
+.full_code.txt
+myProject/.full_code.txt
