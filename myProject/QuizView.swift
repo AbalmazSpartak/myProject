@@ -6,7 +6,6 @@ struct QuizView: View {
     @Query private var words: [Word]
     @Binding var currentScreen: String
     
-    @State private var isAlreadySpoken = false
     @State private var currentWord: Word?
     @State private var options: [String] = []
     @State private var selectedAnswer: String?
@@ -93,9 +92,12 @@ struct QuizView: View {
         }
         .padding()
         .onAppear {
-            if !isAlreadySpoken {
+            generateQuestion()
+        }
+        // Защита от зависания экрана, если слова были добавлены позже
+        .onChange(of: words) {
+            if currentWord == nil && words.count >= 3 {
                 generateQuestion()
-                isAlreadySpoken = true
             }
         }
     }
@@ -103,7 +105,6 @@ struct QuizView: View {
     func generateQuestion() {
         guard words.count >= 3 else { return }
         selectedAnswer = nil
-        isAlreadySpoken = false // Сбрасываем для нового вопроса
 
         let shuffled = words.shuffled()
         currentWord = shuffled.first
@@ -113,9 +114,7 @@ struct QuizView: View {
         answers.append(contentsOf: wrongs)
 
         options = answers.shuffled()
-        speakWord()
     }
-
     
     func speakWord() {
         guard let word = currentWord else { return }

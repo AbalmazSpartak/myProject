@@ -3,7 +3,7 @@ import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var words: [Word] // Автоматически вытягивает слова из базы
+    @Query private var words: [Word]
     @State private var currentScreen = "menu"
     
     var body: some View {
@@ -26,7 +26,6 @@ struct ContentView: View {
         .animation(.default, value: currentScreen)
         .preferredColorScheme(.dark)
         .onAppear {
-            // Если приложение запущено впервые и база пуста — наполняем её базовыми словами
             if words.isEmpty {
                 for word in sampleWords {
                     modelContext.insert(word)
@@ -63,7 +62,6 @@ struct TitleScreenView: View {
             Spacer()
             
             VStack(spacing: 15) {
-                // Кнопка: Карточки
                 Button(action: { currentScreen = "cards" }) {
                     HStack {
                         Text("Карточки с вводом")
@@ -77,7 +75,6 @@ struct TitleScreenView: View {
                     .cornerRadius(16)
                 }
                 
-                // Кнопка: Викторина (Тест)
                 Button(action: { currentScreen = "quiz" }) {
                     HStack {
                         Text("Викторина (Выбор ответа)")
@@ -91,7 +88,6 @@ struct TitleScreenView: View {
                     .cornerRadius(16)
                 }
                 
-                // Кнопка: Словарь
                 Button(action: { currentScreen = "dictionary" }) {
                     HStack {
                         Text("Открыть словарь")

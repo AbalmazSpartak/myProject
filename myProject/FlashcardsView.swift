@@ -3,24 +3,23 @@ import SwiftData
 import AVFoundation
 
 struct FlashcardsView: View {
-    @Query private var words: [Word] // Запрашиваем слова из базы
+    @Query private var words: [Word]
     @Binding var currentScreen: String
-    @State private var isAlreadySpoken = false // Защита от двойного старта
 
     @State private var currentIndex = 0
     @State private var userAnswer = ""
     @State private var showResult = false
     @State private var isCorrect = false
     
-    // Статистика сессии
     @State private var correctCount = 0
     @State private var totalAnswered = 0
+    
+    @FocusState private var isTextFieldFocused: Bool
     
     private let synthesizer = AVSpeechSynthesizer()
     
     var body: some View {
         VStack(spacing: 20) {
-            // Панель навигации
             HStack {
                 Button(action: { currentScreen = "menu" }) {
                     HStack(spacing: 5) {
@@ -30,7 +29,6 @@ struct FlashcardsView: View {
                     .font(.headline)
                 }
                 Spacer()
-                // Счетчик прогресса сессии
                 Text("Прогресс: \(correctCount)/\(totalAnswered)")
                     .font(.subheadline)
                     .foregroundColor(.gray)
@@ -53,16 +51,31 @@ struct FlashcardsView: View {
                         Text(words[currentIndex].english)
                             .font(.system(size: 40, weight: .bold))
                         
-                        // Кнопка ручной озвучки
                         Button(action: speakWord) {
                             Image(systemName: "speaker.wave.2.bubble.fill")
                                 .font(.title2)
                                 .foregroundColor(.blue)
                         }
                     }
-                    .padding(.bottom, 10)
                     
-                    TextField("Введите перевод на русский", text: $userAnswer)
+                    if !words[currentIndex].example.isEmpty {
+                        VStack(alignment: .center, spacing: 4) {
+                            Text("Пример использования:")
+                                .font(.caption2)
+                                .foregroundColor(.blue)
+                                .bold()
+                            
+                            Text(words[currentIndex].example)
+                                .font(.subheadline)
+                                .italic()
+                                .foregroundColor(.white.opacity(0.7))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 15)
+                        }
+                        .padding(.bottom, 10)
+                    }
+                    
+                    TextField(isTextFieldFocused ? "" : "Введите перевод на русский", text: $userAnswer)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                         .multilineTextAlignment(.center)
                         .font(.title3)
@@ -70,6 +83,7 @@ struct FlashcardsView: View {
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
                         .disabled(showResult)
+                        .focused($isTextFieldFocused)
                     
                     if showResult {
                         if isCorrect {
@@ -89,10 +103,11 @@ struct FlashcardsView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 40)
+                .padding(.vertical, 30)
                 .background(Color.secondary.opacity(0.1))
                 .cornerRadius(20)
                 .padding(.horizontal)
+                .onTapGesture { }
             }
             
             Spacer()
@@ -125,14 +140,13 @@ struct FlashcardsView: View {
             }
         }
         .padding()
-        
-        .onAppear {
-            if !isAlreadySpoken {
-                speakWord()
-                isAlreadySpoken = true
-            }
-        }
-
+        .background(
+            Color.clear
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    isTextFieldFocused = false
+                }
+        )
     }
     
     func speakWord() {
@@ -145,28 +159,27 @@ struct FlashcardsView: View {
     }
     
     func checkAnswer() {
+        isTextFieldFocused = false
+        
         let cleanUser = userAnswer.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         let cleanCorrect = words[currentIndex].russian.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         
         isCorrect = (cleanUser == cleanCorrect)
         if isCorrect { correctCount += 1 }
         totalAnswered += 1
-        showResult = true
+        withAnimation {
+            showResult = true
+        }
     }
     
     func nextWord() {
         userAnswer = ""
         showResult = false
-        isAlreadySpoken = false // 1. Сбрасываем флаг, чтобы новое слово могло озвучиться
         
-        // 2. Безопасно переключаем индекс (защита от вылета, если удалили слова в словаре)
         if !words.isEmpty {
             currentIndex = (currentIndex + 1) % words.count
         } else {
             currentIndex = 0
         }
-        
-        speakWord() // 3. Озвучиваем следующее слово
     }
-
 }
