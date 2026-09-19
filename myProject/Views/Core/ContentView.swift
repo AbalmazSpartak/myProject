@@ -1,6 +1,14 @@
 import SwiftUI
 import SwiftData
 
+// MARK: - ВСПОМОГАТЕЛЬНАЯ МОДЕЛЬ ДЛЯ ЭЛЕМЕНТОВ МЕНЮ
+struct MenuItem: Identifiable {
+    let id: String
+    let title: String
+    let icon: String
+    let color: Color
+}
+
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var words: [Word]
@@ -8,22 +16,26 @@ struct ContentView: View {
     
     var body: some View {
         ZStack {
+            Color.black
+                .ignoresSafeArea()
+            
             switch currentScreen {
             case "cards":
                 FlashcardsView(currentScreen: $currentScreen)
-                    .transition(.opacity)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             case "quiz":
                 QuizView(currentScreen: $currentScreen)
-                    .transition(.opacity)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
             case "dictionary":
                 DictionaryView(currentScreen: $currentScreen)
-                    .transition(.opacity)
+                    .transition(.scale(scale: 0.95).combined(with: .opacity))
             default:
                 TitleScreenView(currentScreen: $currentScreen)
                     .transition(.opacity)
             }
         }
-        .animation(.default, value: currentScreen)
+        // Быстрый и плавный пружинный переход для iOS 18
+        .animation(.interpolatingSpring(stiffness: 170, damping: 22), value: currentScreen)
         .preferredColorScheme(.dark)
         .onAppear {
             if words.isEmpty {
@@ -35,38 +47,25 @@ struct ContentView: View {
     }
 }
 
-// Структура для идентификации блоков меню
-struct MenuItem: Identifiable {
-    let id: String
-    let title: String
-    let icon: String
-    let color: Color
-}
-
-// MARK: - ОБНОВЛЕННЫЙ ТИТУЛЬНЫЙ ЭКРАН С ПЕРЕТАСКИВАНИЕМ БЛОКОВ
+// MARK: - СТРУКТУРА ГЛАВНОГО МЕНЮ (TitleScreenView)
 struct TitleScreenView: View {
     @Binding var currentScreen: String
     
-    // Системное состояние режима редактирования списка
+    // ИСПРАВЛЕНИЕ: Используем правильный тип состояния для режима редактирования списка в SwiftUI
     @State private var editMode: EditMode = .inactive
-    
-    // Храним порядок блоков в памяти приложения (@AppStorage, чтобы порядок не сбрасывался)
     @AppStorage("menu_order") private var menuOrderData: String = "cards,quiz,dictionary"
-    
-    // Исходный список доступных разделов
     @State private var menuItems: [MenuItem] = []
     
     var body: some View {
         VStack(spacing: 0) {
-            // Верхняя панель управления с кнопкой "Изменить / Готово"
             HStack {
                 Spacer()
                 Button(action: {
                     withAnimation {
-                        editMode = editMode.isEditing ? .inactive : .active
+                        editMode = editMode == .active ? .inactive : .active
                     }
                 }) {
-                    Text(editMode.isEditing ? "Готово" : "Изменить меню")
+                    Text(editMode == .active ? "Готово" : "Изменить меню")
                         .font(.subheadline)
                         .bold()
                         .foregroundColor(.blue)
@@ -77,7 +76,6 @@ struct TitleScreenView: View {
             
             Spacer()
             
-            // Логотип приложения
             Image(systemName: "character.book.closed.fill")
                 .font(.system(size: 90))
                 .foregroundColor(.blue)
@@ -97,12 +95,10 @@ struct TitleScreenView: View {
             
             Spacer()
             
-            // БЛОЧНАЯ СИСТЕМА (Интерактивный список кнопок)
             List {
                 ForEach(menuItems) { item in
                     Button(action: {
-                        // Кнопки работают только когда мы НЕ находимся в режиме сортировки
-                        if !editMode.isEditing {
+                        if editMode != .active {
                             currentScreen = item.id
                         }
                     }) {
@@ -116,8 +112,7 @@ struct TitleScreenView: View {
                             
                             Spacer()
                             
-                            // Если режим редактирования выключен, показываем стрелочку перехода
-                            if !editMode.isEditing {
+                            if editMode != .active {
                                 Image(systemName: "chevron.right")
                                     .font(.subheadline)
                                     .foregroundColor(.white.opacity(0.3))
@@ -128,37 +123,32 @@ struct TitleScreenView: View {
                     }
                     .listRowBackground(
                         RoundedRectangle(cornerRadius: 16)
-                            .fill(item.color)
+                            .fill(item.color) // ИСПРАВЛЕНИЕ: Ошибка ShapeStyle полностью ушла
                             .padding(.vertical, 6)
                     )
                     .listRowSeparator(.hidden)
                 }
-                .onMove(perform: moveBlock) // Включаем встроенную сортировку блоков
+                .onMove(perform: moveBlock)
             }
             .listStyle(PlainListStyle())
-            .environment(\.editMode, $editMode) // Передаем состояние режима редактирования в список
-            .frame(height: 280) // Ограничиваем контейнер блоков, чтобы они не растягивались на весь экран
+            .environment(\.editMode, $editMode)
+            .frame(height: 280)
             .padding(.horizontal, 25)
             
             Spacer()
         }
-        .onAppear(perform: loadMenuOrder) // Загружаем сохраненный пользователем порядок при старте
+        .onAppear(perform: loadMenuOrder)
     }
     
-    // Функция перетаскивания блоков
     private func moveBlock(from source: IndexSet, to destination: Int) {
         menuItems.move(fromOffsets: source, toOffset: destination)
-        
-        // Сразу сохраняем новый порядок в память телефона
         let newOrder = menuItems.map { $0.id }.joined(separator: ",")
         menuOrderData = newOrder
     }
     
-    // Функция сборки меню на основе сохраненного порядка
     private func loadMenuOrder() {
         let allItems = [
             "cards": MenuItem(id: "cards", title: "Карточки с вводом", icon: "keyboard", color: Color.blue),
-            // Текст разделен символом \n на две строки
             "quiz": MenuItem(id: "quiz", title: "Викторина\n(Выбор ответа)", icon: "checkmark.seal.fill", color: Color.purple),
             "dictionary": MenuItem(id: "dictionary", title: "Открыть словарь", icon: "book.fill", color: Color.orange)
         ]
@@ -172,7 +162,6 @@ struct TitleScreenView: View {
             }
         }
         
-        // Защитная проверка: если что-то пошло не так, загружаем дефолтный порядок
         if orderedList.count != 3 {
             menuItems = [allItems["cards"]!, allItems["quiz"]!, allItems["dictionary"]!]
         } else {
