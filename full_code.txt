@@ -1,0 +1,920 @@
+import SwiftUI
+import SwiftData
+
+@main
+struct MyApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+        .modelContainer(for: [Word.self, Category.self])
+    }
+}
+import SwiftUI
+import SwiftData
+
+struct ContentView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query private var words: [Word]
+    @State private var currentScreen = "menu"
+    
+    var body: some View {
+        ZStack {
+            switch currentScreen {
+            case "cards":
+                FlashcardsView(currentScreen: $currentScreen)
+                    .transition(.opacity)
+            case "quiz":
+                QuizView(currentScreen: $currentScreen)
+                    .transition(.opacity)
+            case "dictionary":
+                DictionaryView(currentScreen: $currentScreen)
+                    .transition(.opacity)
+            default:
+                TitleScreenView(currentScreen: $currentScreen)
+                    .transition(.opacity)
+            }
+        }
+        .animation(.default, value: currentScreen)
+        .preferredColorScheme(.dark)
+        .onAppear {
+            if words.isEmpty {
+                for word in sampleWords {
+                    modelContext.insert(word)
+                }
+            }
+        }
+    }
+}
+
+// Структура для идентификации блоков меню
+struct MenuItem: Identifiable {
+    let id: String
+    let title: String
+    let icon: String
+    let color: Color
+}
+
+// MARK: - ОБНОВЛЕННЫЙ ТИТУЛЬНЫЙ ЭКРАН С ПЕРЕТАСКИВАНИЕМ БЛОКОВ
+struct TitleScreenView: View {
+    @Binding var currentScreen: String
+    
+    // Системное состояние режима редактирования списка
+    @State private var editMode: EditMode = .inactive
+    
+    // Храним порядок блоков в памяти приложения (@AppStorage, чтобы порядок не сбрасывался)
+    @AppStorage("menu_order") private var menuOrderData: String = "cards,quiz,dictionary"
+    
+    // Исходный список доступных разделов
+    @State private var menuItems: [MenuItem] = []
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Верхняя панель управления с кнопкой "Изменить / Готово"
+            HStack {
+                Spacer()
+                Button(action: {
+                    withAnimation {
+                        editMode = editMode.isEditing ? .inactive : .active
+                    }
+                }) {
+                    Text(editMode.isEditing ? "Готово" : "Изменить меню")
+                        .font(.subheadline)
+                        .bold()
+                        .foregroundColor(.blue)
+                }
+            }
+            .padding(.horizontal, 25)
+            .padding(.top, 15)
+            
+            Spacer()
+            
+            // Логотип приложения
+            Image(systemName: "character.book.closed.fill")
+                .font(.system(size: 90))
+                .foregroundColor(.blue)
+                .shadow(color: .blue.opacity(0.3), radius: 10, x: 0, y: 10)
+                .padding(.bottom, 15)
+            
+            VStack(spacing: 5) {
+                Text("WordLearner")
+                    .font(.system(size: 38, weight: .black, design: .rounded))
+                
+                Text("Твой персональный тренажер английского")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+            
+            Spacer()
+            
+            // БЛОЧНАЯ СИСТЕМА (Интерактивный список кнопок)
+            List {
+                ForEach(menuItems) { item in
+                    Button(action: {
+                        // Кнопки работают только когда мы НЕ находимся в режиме сортировки
+                        if !editMode.isEditing {
+                            currentScreen = item.id
+                        }
+                    }) {
+                        HStack(spacing: 15) {
+                            Image(systemName: item.icon)
+                                .font(.title2)
+                                .frame(width: 30)
+                            
+                            Text(item.title)
+                                .font(.headline)
+                            
+                            Spacer()
+                            
+                            // Если режим редактирования выключен, показываем стрелочку перехода
+                            if !editMode.isEditing {
+                                Image(systemName: "chevron.right")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.3))
+                            }
+                        }
+                        .padding(.vertical, 8)
+                        .foregroundColor(.white)
+                    }
+                    .listRowBackground(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(item.color)
+                            .padding(.vertical, 6)
+                    )
+                    .listRowSeparator(.hidden)
+                }
+                .onMove(perform: moveBlock) // Включаем встроенную сортировку блоков
+            }
+            .listStyle(PlainListStyle())
+            .environment(\.editMode, $editMode) // Передаем состояние режима редактирования в список
+            .frame(height: 280) // Ограничиваем контейнер блоков, чтобы они не растягивались на весь экран
+            .padding(.horizontal, 25)
+            
+            Spacer()
+        }
+        .onAppear(perform: loadMenuOrder) // Загружаем сохраненный пользователем порядок при старте
+    }
+    
+    // Функция перетаскивания блоков
+    private func moveBlock(from source: IndexSet, to destination: Int) {
+        menuItems.move(fromOffsets: source, toOffset: destination)
+        
+        // Сразу сохраняем новый порядок в память телефона
+        let newOrder = menuItems.map { $0.id }.joined(separator: ",")
+        menuOrderData = newOrder
+    }
+    
+    // Функция сборки меню на основе сохраненного порядка
+    private func loadMenuOrder() {
+        let allItems = [
+            "cards": MenuItem(id: "cards", title: "Карточки с вводом", icon: "keyboard", color: Color.blue),
+            "quiz": MenuItem(id: "quiz", title: "Викторина (Выбор ответа)", icon: "checkmark.seal.fill", color: Color.purple),
+            "dictionary": MenuItem(id: "dictionary", title: "Открыть словарь", icon: "book.fill", color: Color.orange)
+        ]
+        
+        let ids = menuOrderData.components(separatedBy: ",")
+        var orderedList: [MenuItem] = []
+        
+        for id in ids {
+            if let item = allItems[id] {
+                orderedList.append(item)
+            }
+        }
+        
+        // Защитная проверка: если что-то пошло не так, загружаем дефолтный порядок
+        if orderedList.count != 3 {
+            menuItems = [allItems["cards"]!, allItems["quiz"]!, allItems["dictionary"]!]
+        } else {
+            menuItems = orderedList
+        }
+    }
+}
+import SwiftUI
+import SwiftData
+import AVFoundation
+
+struct FlashcardsView: View {
+    @Query private var words: [Word]
+    @Binding var currentScreen: String
+
+    @State private var currentIndex = 0
+    @State private var userAnswer = ""
+    @State private var showResult = false
+    @State private var isCorrect = false
+    
+    @State private var correctCount = 0
+    @State private var totalAnswered = 0
+    
+    @FocusState private var isTextFieldFocused: Bool
+    
+    private let synthesizer = AVSpeechSynthesizer()
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            HStack {
+                Button(action: { currentScreen = "menu" }) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "chevron.left")
+                        Text("В меню")
+                    }
+                    .font(.headline)
+                }
+                Spacer()
+                Text("Прогресс: \(correctCount)/\(totalAnswered)")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .bold()
+            }
+            .padding(.horizontal)
+            
+            Text("Изучение слов")
+                .font(.largeTitle)
+                .bold()
+            
+            Spacer()
+            
+            if words.isEmpty {
+                Text("Добавьте слова в словаре")
+                    .foregroundColor(.gray)
+            } else {
+                VStack(spacing: 20) {
+                    HStack(spacing: 15) {
+                        Text(words[currentIndex].english)
+                            .font(.system(size: 40, weight: .bold))
+                        
+                        Button(action: speakWord) {
+                            Image(systemName: "speaker.wave.2.bubble.fill")
+                                .font(.title2)
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    
+                    if !words[currentIndex].example.isEmpty {
+                        VStack(alignment: .center, spacing: 4) {
+                            Text("Пример использования:")
+                                .font(.caption2)
+                                .foregroundColor(.blue)
+                                .bold()
+                            
+                            Text(words[currentIndex].example)
+                                .font(.subheadline)
+                                .italic()
+                                .foregroundColor(.white.opacity(0.7))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 15)
+                        }
+                        .padding(.bottom, 10)
+                    }
+                    
+                    TextField(isTextFieldFocused ? "" : "Введите перевод на русский", text: $userAnswer)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .multilineTextAlignment(.center)
+                        .font(.title3)
+                        .padding(.horizontal, 20)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                        .disabled(showResult)
+                        .focused($isTextFieldFocused)
+                    
+                    if showResult {
+                        if isCorrect {
+                            Text("🎉 Правильно!")
+                                .font(.headline)
+                                .foregroundColor(.green)
+                        } else {
+                            VStack(spacing: 5) {
+                                Text("❌ Ошибка")
+                                  .font(.headline)
+                                  .foregroundColor(.red)
+                                Text("Правильный ответ: \(words[currentIndex].russian)")
+                                  .font(.subheadline)
+                                  .foregroundColor(.gray)
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 30)
+                .background(Color.secondary.opacity(0.1))
+                .cornerRadius(20)
+                .padding(.horizontal)
+                .onTapGesture { }
+            }
+            
+            Spacer()
+            
+            if !words.isEmpty {
+                if !showResult {
+                    Button(action: checkAnswer) {
+                        Text("Проверить")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(userAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color.gray : Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                    }
+                    .disabled(userAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .padding(.horizontal, 40)
+                } else {
+                    Button(action: nextWord) {
+                        Text("Следующее слово")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                    }
+                    .padding(.horizontal, 40)
+                }
+            }
+        }
+        .padding()
+        .background(
+            Color.clear
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    isTextFieldFocused = false
+                }
+        )
+    }
+    
+    func speakWord() {
+        guard !words.isEmpty else { return }
+        let utterance = AVSpeechUtterance(string: words[currentIndex].english)
+        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+        utterance.rate = 0.45
+        if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
+        synthesizer.speak(utterance)
+    }
+    
+    func checkAnswer() {
+        isTextFieldFocused = false
+        
+        let cleanUser = userAnswer.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let cleanCorrect = words[currentIndex].russian.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        
+        isCorrect = (cleanUser == cleanCorrect)
+        if isCorrect { correctCount += 1 }
+        totalAnswered += 1
+        withAnimation {
+            showResult = true
+        }
+    }
+    
+    func nextWord() {
+        userAnswer = ""
+        showResult = false
+        
+        if !words.isEmpty {
+            currentIndex = (currentIndex + 1) % words.count
+        } else {
+            currentIndex = 0
+        }
+    }
+}
+import Foundation
+import SwiftData
+
+@Model
+final class Category {
+    var id: UUID
+    var name: String
+    
+    // Связь: при удалении категории все слова в ней удалятся автоматически
+    @Relationship(deleteRule: .cascade) var words: [Word] = []
+    
+    init(name: String) {
+        self.id = UUID()
+        self.name = name
+    }
+}
+
+@Model
+final class Word {
+    var id: UUID
+    var english: String
+    var russian: String
+    var example: String
+    
+    // Опциональная связь: если category == nil, слово лежит в Общем словаре
+    var category: Category?
+    
+    init(english: String, russian: String, example: String = "", category: Category? = nil) {
+        self.id = UUID()
+        self.english = english
+        self.russian = russian
+        self.example = example
+        self.category = category
+    }
+}
+
+// Базовые слова для первого запуска
+let sampleWords = [
+    Word(english: "Apple", russian: "Яблоко", example: "I eat a fresh apple every morning."),
+    Word(english: "Book", russian: "Книга", example: "This book has a very interesting story."),
+    Word(english: "Cat", russian: "Кот", example: "The sleeping cat is very warm and fluffy."),
+    Word(english: "Dog", russian: "Собака", example: "My dog loves running in the big park."),
+    Word(english: "House", russian: "Дом", example: "We live in a beautiful white house.")
+]
+import SwiftUI
+import SwiftData
+import UniformTypeIdentifiers
+
+struct DictionaryView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Binding var currentScreen: String
+    
+    @Query(sort: \Word.english) private var allWords: [Word]
+    @Query(sort: \Category.name) private var categories: [Category]
+    
+    @State private var selectedCategory: Category? = nil // nil = "Общий словарь"
+    @State private var isAddingCategory = false
+    @State private var newCategoryName = ""
+    @State private var isImporting = false
+    
+    // Состояние для редактирования слова
+    @State private var editingWord: Word? = nil
+    
+    @State private var closeKeyboardsTrigger = false
+    
+    var filteredWords: [Word] {
+        if let selected = selectedCategory {
+            return allWords.filter { $0.category?.id == selected.id }
+        } else {
+            return allWords
+        }
+    }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Верхняя навигационная панель
+            HStack {
+                Button(action: { currentScreen = "menu" }) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "chevron.left")
+                        Text("Меню")
+                    }
+                    .font(.headline)
+                }
+                Spacer()
+                Text("Мой словарь (\(filteredWords.count))")
+                    .font(.headline)
+                    .bold()
+                Spacer()
+                
+                Button(action: { isImporting = true }) {
+                    Image(systemName: "doc.badge.plus")
+                        .font(.title3)
+                        .foregroundColor(.orange)
+                }
+            }
+            .padding()
+            
+            // Горизонтальный селектор категорий (папок)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    Button(action: { selectedCategory = nil }) {
+                        Text("Общий")
+                            .fontWeight(.medium)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(selectedCategory == nil ? Color.orange : Color.secondary.opacity(0.2))
+                            .foregroundColor(.white)
+                            .cornerRadius(20)
+                    }
+                    
+                    ForEach(categories) { category in
+                        HStack(spacing: 4) {
+                            Text(category.name)
+                                .fontWeight(.medium)
+                                .onTapGesture { selectedCategory = category }
+                            
+                            Button(action: { deleteCategory(category) }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.6))
+                            }
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(selectedCategory?.id == category.id ? Color.orange : Color.secondary.opacity(0.2))
+                        .foregroundColor(.white)
+                        .cornerRadius(20)
+                    }
+                    
+                    Button(action: { isAddingCategory = true }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "plus")
+                            Text("Папка")
+                        }
+                        .fontWeight(.bold)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Color.blue.opacity(0.3))
+                        .foregroundColor(.blue)
+                        .cornerRadius(20)
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 10)
+            }
+            
+            // Форма добавления новых слов
+            AddWordFormView(selectedCategory: selectedCategory)
+                .id(closeKeyboardsTrigger)
+            
+            // Список слов
+            List {
+                ForEach(filteredWords) { word in
+                    Button(action: { editingWord = word }) { // Клик по строке открывает редактор
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text(word.english)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.white)
+                                Spacer()
+                                Text(word.russian)
+                                    .foregroundColor(.gray)
+                            }
+                            if !word.example.isEmpty {
+                                Text(word.example)
+                                    .font(.caption)
+                                    .italic()
+                                    .foregroundColor(.gray.opacity(0.8))
+                            }
+                            if selectedCategory == nil, let cat = word.category {
+                                Text(cat.name)
+                                    .font(.system(size: 10, weight: .bold))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.blue.opacity(0.2))
+                                    .foregroundColor(.blue)
+                                    .cornerRadius(4)
+                            }
+                        }
+                    }
+                }
+                .onDelete(perform: deleteWord)
+            }
+            .listStyle(PlainListStyle())
+            .onTapGesture { closeKeyboardsTrigger.toggle() }
+        }
+        .background(
+            Color.clear
+                .contentShape(Rectangle())
+                .onTapGesture { closeKeyboardsTrigger.toggle() }
+        )
+        // Модальное окно редактирования слова (Берется теперь из отдельного файла)
+        .sheet(item: $editingWord) { word in
+            EditWordView(word: word)
+        }
+        .alert("Новая категория", isPresented: $isAddingCategory) {
+            TextField("Название папки", text: $newCategoryName)
+                .autocapitalization(.words)
+            Button("Отмена", role: .cancel) { newCategoryName = "" }
+            Button("Создать") {
+                let name = newCategoryName.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !name.isEmpty {
+                    let newCat = Category(name: name)
+                    modelContext.insert(newCat)
+                }
+                newCategoryName = ""
+            }
+        }
+        .fileImporter(
+            isPresented: $isImporting,
+            allowedContentTypes: [.plainText],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                if let fileURL = urls.first {
+                    importWords(url: fileURL)
+                }
+            case .failure(let error):
+                print("Ошибка импорта: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    func deleteWord(at offsets: IndexSet) {
+        for index in offsets {
+            modelContext.delete(filteredWords[index])
+        }
+    }
+    
+    func deleteCategory(_ category: Category) {
+        if selectedCategory?.id == category.id {
+            selectedCategory = nil
+        }
+        modelContext.delete(category)
+    }
+    
+    private func importWords(url: URL) {
+        guard url.startAccessingSecurityScopedResource() else { return }
+        defer { url.stopAccessingSecurityScopedResource() }
+        
+        do {
+            let fileContent = try String(contentsOf: url, encoding: .utf8)
+            let lines = fileContent.components(separatedBy: .newlines)
+            
+            for line in lines {
+                let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                if trimmedLine.isEmpty { continue }
+                
+                let parts = trimmedLine.components(separatedBy: " — ")
+                
+                if parts.count == 4 {
+                    let englishPart = parts[0].trimmingCharacters(in: .whitespacesAndNewlines)
+                    let russianPart = parts[2].trimmingCharacters(in: .whitespacesAndNewlines)
+                    
+                    var examplePart = parts[3].trimmingCharacters(in: .whitespacesAndNewlines)
+                    examplePart = examplePart.trimmingCharacters(in: CharacterSet(charactersIn: "\"‘'—«»"))
+                    
+                    if !englishPart.isEmpty && !russianPart.isEmpty {
+                        let newWord = Word(english: englishPart, russian: russianPart, example: examplePart, category: selectedCategory)
+                        modelContext.insert(newWord)
+                    }
+                }
+            }
+        } catch {
+            print("Ошибка импорта: \(error.localizedDescription)")
+        }
+    }
+}
+import SwiftUI
+import SwiftData
+import AVFoundation
+
+struct QuizView: View {
+    @Query private var words: [Word]
+    @Binding var currentScreen: String
+    
+    @State private var currentWord: Word?
+    @State private var options: [String] = []
+    @State private var selectedAnswer: String?
+    @State private var correctCount = 0
+    @State private var totalAnswered = 0
+    
+    private let synthesizer = AVSpeechSynthesizer()
+    
+    var body: some View {
+        VStack(spacing: 25) {
+            HStack {
+                Button(action: { currentScreen = "menu" }) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "chevron.left")
+                        Text("В меню")
+                    }
+                    .font(.headline)
+                }
+                Spacer()
+                Text("Тест: \(correctCount)/\(totalAnswered)")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .bold()
+            }
+            .padding(.horizontal)
+            
+            Text("Викторина")
+                .font(.largeTitle)
+                .bold()
+            
+            Spacer()
+            
+            if words.count < 3 {
+                Text("Для генерации теста нужно минимум 3 слова в вашем словаре.")
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.gray)
+                    .padding()
+            } else if let word = currentWord {
+                VStack(spacing: 20) {
+                    HStack(spacing: 15) {
+                        Text(word.english)
+                            .font(.system(size: 40, weight: .bold))
+                        
+                        Button(action: speakWord) {
+                            Image(systemName: "speaker.wave.2.bubble.fill")
+                                .font(.title2)
+                                .foregroundColor(.purple)
+                        }
+                    }
+                    .padding(.bottom, 10)
+                    
+                    VStack(spacing: 12) {
+                        ForEach(options, id: \.self) { option in
+                            Button(action: { checkAnswer(option) }) {
+                                Text(option)
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(buttonColor(for: option))
+                                    .foregroundColor(.white)
+                                    .cornerRadius(12)
+                            }
+                            .disabled(selectedAnswer != nil)
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 30)
+                .background(Color.secondary.opacity(0.1))
+                .cornerRadius(20)
+                .padding(.horizontal)
+                
+                if selectedAnswer != nil {
+                    Button("Продолжить") {
+                        generateQuestion()
+                    }
+                    .font(.headline)
+                    .foregroundColor(.purple)
+                    .padding(.top)
+                }
+            }
+            Spacer()
+        }
+        .padding()
+        .onAppear {
+            generateQuestion()
+        }
+        // Защита от зависания экрана, если слова были добавлены позже
+        .onChange(of: words) {
+            if currentWord == nil && words.count >= 3 {
+                generateQuestion()
+            }
+        }
+    }
+    
+    func generateQuestion() {
+        guard words.count >= 3 else { return }
+        selectedAnswer = nil
+
+        let shuffled = words.shuffled()
+        currentWord = shuffled.first
+
+        var answers = [currentWord!.russian]
+        let wrongs = shuffled.dropFirst().map { $0.russian }.prefix(2)
+        answers.append(contentsOf: wrongs)
+
+        options = answers.shuffled()
+    }
+    
+    func speakWord() {
+        guard let word = currentWord else { return }
+        let utterance = AVSpeechUtterance(string: word.english)
+        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+        utterance.rate = 0.45
+
+        if synthesizer.isSpeaking {
+            synthesizer.stopSpeaking(at: .immediate)
+        }
+
+        synthesizer.speak(utterance)
+    }
+    
+    func checkAnswer(_ option: String) {
+        selectedAnswer = option
+        totalAnswered += 1
+        if option == currentWord?.russian {
+            correctCount += 1
+        }
+    }
+    
+    func buttonColor(for option: String) -> Color {
+        guard let selected = selectedAnswer else { return .purple }
+        if option == currentWord?.russian { return .green }
+        if option == selected { return .red }
+        return .purple.opacity(0.4)
+    }
+}
+import SwiftUI
+import SwiftData
+
+struct AddWordFormView: View {
+    @Environment(\.modelContext) private var modelContext
+    var selectedCategory: Category? // Текущая выбранная папка
+    
+    @State private var newEnglish = ""
+    @State private var newRussian = ""
+    @State private var newExample = ""
+    
+    enum Field: Hashable {
+        case english, russian, example
+    }
+    
+    @FocusState private var focusedField: Field?
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            // Поле ввода 1: Английское слово
+            TextField(focusedField == .english ? "" : "Слово на английском", text: $newEnglish)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .multilineTextAlignment(.center)
+                .autocapitalization(.none)
+                .disableAutocorrection(true)
+                .focused($focusedField, equals: .english)
+
+            // Поле ввода 2: Русский перевод
+            TextField(focusedField == .russian ? "" : "Перевод на русский", text: $newRussian)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .multilineTextAlignment(.center)
+                .disableAutocorrection(true)
+                .focused($focusedField, equals: .russian)
+
+            // Поле ввода 3: Пример фразы
+            TextField(focusedField == .example ? "" : "Пример фразы (необязательно)", text: $newExample)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .multilineTextAlignment(.center)
+                .disableAutocorrection(true)
+                .focused($focusedField, equals: .example)
+
+            // Кнопка добавления
+            Button(action: addWord) {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                    Text(selectedCategory == nil ? "Добавить в Общий" : "Добавить в «\(selectedCategory!.name)»")
+                }
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(newEnglish.isEmpty || newRussian.isEmpty ? Color.gray : Color.orange)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+            }
+            .disabled(newEnglish.isEmpty || newRussian.isEmpty)
+        }
+        .padding()
+        .background(Color.secondary.opacity(0.05))
+        .cornerRadius(12)
+        .padding(.horizontal)
+        .padding(.bottom, 10)
+        // Защита: клик по самой форме не закрывает клавиатуру
+        .onTapGesture { }
+    }
+    
+    private func addWord() {
+        focusedField = nil // Закрываем клавиатуру
+        
+        let eng = newEnglish.trimmingCharacters(in: .whitespacesAndNewlines)
+        let rus = newRussian.trimmingCharacters(in: .whitespacesAndNewlines)
+        let ex = newExample.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Создаем слово и привязываем к текущей категории
+        let newWord = Word(english: eng, russian: rus, example: ex, category: selectedCategory)
+        modelContext.insert(newWord)
+        
+        // Очищаем поля
+        newEnglish = ""
+        newRussian = ""
+        newExample = ""
+    }
+}
+import SwiftUI
+import SwiftData
+
+struct EditWordView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Bindable var word: Word // Связываем поля напрямую со свойствами SwiftData-модели
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section(header: Text("Слово и Перевод")) {
+                    TextField("Английское слово", text: $word.english)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                    
+                    TextField("Перевод на русский", text: $word.russian)
+                        .disableAutocorrection(true)
+                }
+                
+                Section(header: Text("Контекст")) {
+                    TextField("Пример предложения", text: $word.example)
+                        .disableAutocorrection(true)
+                }
+            }
+            .navigationTitle("Редактирование")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Готово") {
+                        // Чистим пробелы перед закрытием
+                        word.english = word.english.trimmingCharacters(in: .whitespacesAndNewlines)
+                        word.russian = word.russian.trimmingCharacters(in: .whitespacesAndNewlines)
+                        word.example = word.example.trimmingCharacters(in: .whitespacesAndNewlines)
+                        dismiss() // Закрываем экран, SwiftData сохранит всё автоматически
+                    }
+                    .bold()
+                    .disabled(word.english.isEmpty || word.russian.isEmpty)
+                }
+            }
+            .preferredColorScheme(.dark)
+        }
+    }
+}
+

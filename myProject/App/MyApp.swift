@@ -7,6 +7,6 @@ struct MyApp: App {
         WindowGroup {
             ContentView()
         }
-        .modelContainer(for: Word.self)
+        .modelContainer(for: [Word.self, Category.self])
     }
 }
