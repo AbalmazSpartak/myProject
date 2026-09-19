@@ -15,8 +15,11 @@ struct QuizView: View {
     
     private let synthesizer = AVSpeechSynthesizer()
     
+    // НАСТРОЙКА ЦВЕТА: Задаем базовый цвет для кнопок викторины
+    private let baseButtonColor = Color.indigo
+    
     var body: some View {
-        VStack(spacing: 25) {
+        VStack(spacing: 0) {
             // Верхняя панель навигации и счета
             HStack {
                 Button(action: { currentScreen = "menu" }) {
@@ -33,8 +36,7 @@ struct QuizView: View {
                     .bold()
             }
             .padding(.horizontal)
-            
-            // ИСПРАВЛЕНИЕ: Крупный заголовок "Викторина" полностью удален
+            .padding(.top, 10)
             
             Spacer()
             
@@ -44,7 +46,7 @@ struct QuizView: View {
                     .foregroundColor(.gray)
                     .padding()
             } else if let word = currentWord {
-                // ЦЕЛЬНАЯ КАРТОЧКА ВИКТОРИНЫ
+                // СТАБИЛЬНАЯ ЦЕЛЬНАЯ КАРТОЧКА ВИКТОРИНЫ
                 VStack(spacing: 20) {
                     HStack(spacing: 15) {
                         Text(word.english)
@@ -53,10 +55,10 @@ struct QuizView: View {
                         Button(action: speakWord) {
                             Image(systemName: "speaker.wave.2.bubble.fill")
                                 .font(.title2)
-                                .foregroundColor(.purple)
+                                .foregroundColor(.blue) // Синий динамик для гармонии с индиго
                         }
                     }
-                    .padding(.top, 10)
+                    .padding(.top, 25)
                     
                     if !word.transcription.isEmpty {
                         Text(word.transcription)
@@ -80,26 +82,38 @@ struct QuizView: View {
                         }
                     }
                     .padding(.horizontal)
-                    .padding(.bottom, 10)
+                    .padding(.bottom, 25)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 20)
                 .background(Color.secondary.opacity(0.1))
                 .cornerRadius(20)
                 .padding(.horizontal)
                 
-                if selectedAnswer != nil {
-                    Button("Продолжить") {
-                        generateQuestion()
+                // КНОПКА ПРОДОЛЖИТЬ (За пределами серой карточки)
+                VStack {
+                    if selectedAnswer != nil {
+                        Button(action: {
+                            generateQuestion()
+                        }) {
+                            Text("Продолжить")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(baseButtonColor) // Использует базовый цвет
+                                .foregroundColor(.white)
+                                .cornerRadius(12)
+                        }
+                        .padding(.horizontal, 40)
+                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
                     }
-                    .font(.headline)
-                    .foregroundColor(.purple)
-                    .padding(.top)
                 }
+                .frame(height: 55)
+                .padding(.top, 25)
             }
+            
             Spacer()
         }
-        .padding()
+        .padding(.vertical)
         .onAppear {
             checkDatabaseAndStart()
         }
@@ -109,11 +123,8 @@ struct QuizView: View {
         do {
             let descriptor = FetchDescriptor<Word>()
             let allWords = try modelContext.fetch(descriptor)
-            
-            // Собираем все уникальные русские переводы через Set
             let uniqueTranslations = Set(allWords.map { $0.russian.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() })
             
-            // Для викторины нужно минимум 3 разных перевода, иначе кнопки будут дублироваться
             if allWords.count >= 3 && uniqueTranslations.count >= 3 {
                 hasMinimumWords = true
                 generateQuestion()
@@ -126,7 +137,9 @@ struct QuizView: View {
     }
     
     func generateQuestion() {
-        selectedAnswer = nil
+        withAnimation(.easeInOut(duration: 0.15)) {
+            selectedAnswer = nil
+        }
         
         do {
             let descriptor = FetchDescriptor<Word>()
@@ -139,7 +152,6 @@ struct QuizView: View {
                 
                 var answers = [randomMainWord.russian]
                 
-                // ИСПРАВЛЕНИЕ БАГА: исключаем дубликаты строк через Set
                 let alternativeTranslations = Array(Set(allWords
                     .filter { $0.id != randomMainWord.id && $0.russian.lowercased() != randomMainWord.russian.lowercased() }
                     .map { $0.russian }))
@@ -147,7 +159,6 @@ struct QuizView: View {
                 let wrongAnswers = alternativeTranslations.shuffled().prefix(2)
                 answers.append(contentsOf: wrongAnswers)
                 
-                // Если вариантов все равно не хватило до 3 (из-за дубликатов в БД), подмешиваем заглушки
                 while answers.count < 3 {
                     answers.append("—")
                 }
@@ -169,7 +180,9 @@ struct QuizView: View {
     }
     
     func checkAnswer(_ option: String) {
-        selectedAnswer = option
+        withAnimation(.easeInOut(duration: 0.15)) {
+            selectedAnswer = option
+        }
         totalAnswered += 1
         if option == currentWord?.russian {
             correctCount += 1
@@ -177,9 +190,9 @@ struct QuizView: View {
     }
     
     func buttonColor(for option: String) -> Color {
-        guard let selected = selectedAnswer else { return .purple }
+        guard let selected = selectedAnswer else { return baseButtonColor }
         if option == currentWord?.russian { return .green }
         if option == selected { return .red }
-        return .purple.opacity(0.4)
+        return baseButtonColor.opacity(0.4)
     }
 }
