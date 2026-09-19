@@ -13,14 +13,21 @@ struct WordListView: View {
         self._editingWord = editingWord
         self.showCategoryTag = (selectedCategory == nil)
         
-        let categoryID = selectedCategory?.id
+        // Передаем ID как чистый, неопциональный UUID для точного сравнения внутри SQL-запроса
+        let targetCategoryID = selectedCategory?.id ?? UUID()
+        let isGeneralDictionary = (selectedCategory == nil)
         
-        // Инициализируем Query с жесткой фильтрацией на уровне базы данных
+        // Инициализируем Query с безопасной фильтрацией на уровне базы данных без Descendant-свойств
         _filteredWords = Query(filter: #Predicate<Word> { word in
-            if let categoryID = categoryID {
-                return word.category?.id == categoryID
+            if isGeneralDictionary {
+                return true // Если выбран Общий словарь, показываем все записи без фильтрации
             } else {
-                return true // Показываем все слова из СУБД без ручного перебора
+                // Сравниваем ID категории напрямую через развернутый опционал — это полностью безопасно для СУБД
+                if let category = word.category {
+                    return category.id == targetCategoryID
+                } else {
+                    return false
+                }
             }
         }, sort: \Word.english)
     }
