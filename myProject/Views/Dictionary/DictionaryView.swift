@@ -13,13 +13,23 @@ struct DictionaryView: View {
     @State private var newCategoryName = ""
     @State private var isImporting = false
     @State private var editingWord: Word? = nil
+    
+    // Системный триггер для закрытия клавиатур во вложенных формах
     @State private var closeKeyboardsTrigger = false
     
     var body: some View {
         VStack(spacing: 0) {
             // Верхняя навигационная панель
             HStack {
-                Button(action: { currentScreen = "menu" }) {
+                Button(action: {
+                    // ИСПРАВЛЕНИЕ: Жестко гасим фокус полей ввода до переключения экрана
+                    closeKeyboardsTrigger.toggle()
+                    
+                    // Минимальный фоновый тик, чтобы клавиатура успела скрыться
+                    DispatchQueue.main.async {
+                        currentScreen = "menu"
+                    }
+                }) {
                     HStack(spacing: 5) {
                         Image(systemName: "chevron.left")
                         Text("Меню")
@@ -93,7 +103,7 @@ struct DictionaryView: View {
             AddWordFormView(selectedCategory: selectedCategory)
                 .id(closeKeyboardsTrigger)
             
-            // Оптимизированный список слов (подтягивается из отдельного файла)
+            // Оптимизированный список слов
             WordListView(selectedCategory: selectedCategory, editingWord: $editingWord)
         }
         .background(
@@ -152,18 +162,15 @@ struct DictionaryView: View {
                 let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
                 if trimmedLine.isEmpty { continue }
                 
-                // Стандартизируем все виды тире
                 let normalizedLine = trimmedLine
                     .replacingOccurrences(of: " — ", with: " | ")
                     .replacingOccurrences(of: " – ", with: " | ")
                     .replacingOccurrences(of: " - ", with: " | ")
                 
-                // Фильтруем пустые элементы, которые могли возникнуть из-за лишних пробелов вокруг дефисов
                 let parts = normalizedLine.components(separatedBy: " | ")
                     .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                     .filter { !$0.isEmpty }
                 
-                // Защитная проверка: строго контролируем наличие 4 колонок данных перед обращением по индексу
                 if parts.count == 4 {
                     let englishPart = parts[0]
                     
