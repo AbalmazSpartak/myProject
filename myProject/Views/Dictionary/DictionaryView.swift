@@ -6,26 +6,14 @@ struct DictionaryView: View {
     @Environment(\.modelContext) private var modelContext
     @Binding var currentScreen: String
     
-    @Query(sort: \Word.english) private var allWords: [Word]
     @Query(sort: \Category.name) private var categories: [Category]
     
     @State private var selectedCategory: Category? = nil // nil = "Общий словарь"
     @State private var isAddingCategory = false
     @State private var newCategoryName = ""
     @State private var isImporting = false
-    
-    // Состояние для редактирования слова
     @State private var editingWord: Word? = nil
-    
     @State private var closeKeyboardsTrigger = false
-    
-    var filteredWords: [Word] {
-        if let selected = selectedCategory {
-            return allWords.filter { $0.category?.id == selected.id }
-        } else {
-            return allWords
-        }
-    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -39,7 +27,7 @@ struct DictionaryView: View {
                     .font(.headline)
                 }
                 Spacer()
-                Text("Мой словарь (\(filteredWords.count))")
+                Text("Мой словарь")
                     .font(.headline)
                     .bold()
                 Spacer()
@@ -105,48 +93,14 @@ struct DictionaryView: View {
             AddWordFormView(selectedCategory: selectedCategory)
                 .id(closeKeyboardsTrigger)
             
-            // Список слов
-            List {
-                ForEach(filteredWords) { word in
-                    Button(action: { editingWord = word }) { // Клик по строке открывает редактор
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text(word.english)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.white)
-                                Spacer()
-                                Text(word.russian)
-                                    .foregroundColor(.gray)
-                            }
-                            if !word.example.isEmpty {
-                                Text(word.example)
-                                    .font(.caption)
-                                    .italic()
-                                    .foregroundColor(.gray.opacity(0.8))
-                            }
-                            if selectedCategory == nil, let cat = word.category {
-                                Text(cat.name)
-                                    .font(.system(size: 10, weight: .bold))
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(Color.blue.opacity(0.2))
-                                    .foregroundColor(.blue)
-                                    .cornerRadius(4)
-                            }
-                        }
-                    }
-                }
-                .onDelete(perform: deleteWord)
-            }
-            .listStyle(PlainListStyle())
-            .onTapGesture { closeKeyboardsTrigger.toggle() }
+            // Оптимизированный список слов (подтягивается из отдельного файла)
+            WordListView(selectedCategory: selectedCategory, editingWord: $editingWord)
         }
         .background(
             Color.clear
                 .contentShape(Rectangle())
                 .onTapGesture { closeKeyboardsTrigger.toggle() }
         )
-        // Модальное окно редактирования слова (Берется теперь из отдельного файла)
         .sheet(item: $editingWord) { word in
             EditWordView(word: word)
         }
@@ -179,12 +133,6 @@ struct DictionaryView: View {
         }
     }
     
-    func deleteWord(at offsets: IndexSet) {
-        for index in offsets {
-            modelContext.delete(filteredWords[index])
-        }
-    }
-    
     func deleteCategory(_ category: Category) {
         if selectedCategory?.id == category.id {
             selectedCategory = nil
@@ -204,17 +152,32 @@ struct DictionaryView: View {
                 let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
                 if trimmedLine.isEmpty { continue }
                 
-                let parts = trimmedLine.components(separatedBy: " — ")
+                // Стандартизируем все виды тире
+                let normalizedLine = trimmedLine
+                    .replacingOccurrences(of: " — ", with: " | ")
+                    .replacingOccurrences(of: " – ", with: " | ")
+                    .replacingOccurrences(of: " - ", with: " | ")
                 
+                // Фильтруем пустые элементы, которые могли возникнуть из-за лишних пробелов вокруг дефисов
+                let parts = normalizedLine.components(separatedBy: " | ")
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    .filter { !$0.isEmpty }
+                
+                // Защитная проверка: строго контролируем наличие 4 колонок данных перед обращением по индексу
                 if parts.count == 4 {
-                    let englishPart = parts[0].trimmingCharacters(in: .whitespacesAndNewlines)
-                    let russianPart = parts[2].trimmingCharacters(in: .whitespacesAndNewlines)
+                    let englishPart = parts[0]
                     
-                    var examplePart = parts[3].trimmingCharacters(in: .whitespacesAndNewlines)
+                    var transcriptionPart = parts[1]
+                    transcriptionPart = transcriptionPart.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+                    if !transcriptionPart.isEmpty { transcriptionPart = "[\(transcriptionPart)]" }
+                    
+                    let russianPart = parts[2]
+                    
+                    var examplePart = parts[3]
                     examplePart = examplePart.trimmingCharacters(in: CharacterSet(charactersIn: "\"‘'—«»"))
                     
                     if !englishPart.isEmpty && !russianPart.isEmpty {
-                        let newWord = Word(english: englishPart, russian: russianPart, example: examplePart, category: selectedCategory)
+                        let newWord = Word(english: englishPart, russian: russianPart, example: examplePart, transcription: transcriptionPart, category: selectedCategory)
                         modelContext.insert(newWord)
                     }
                 }

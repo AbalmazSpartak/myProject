@@ -3,21 +3,21 @@ import SwiftData
 
 struct AddWordFormView: View {
     @Environment(\.modelContext) private var modelContext
-    var selectedCategory: Category? // Текущая выбранная папка
+    var selectedCategory: Category?
     
     @State private var newEnglish = ""
+    @State private var newTranscription = "" // Состояние для транскрипции
     @State private var newRussian = ""
     @State private var newExample = ""
     
     enum Field: Hashable {
-        case english, russian, example
+        case english, transcription, russian, example
     }
     
     @FocusState private var focusedField: Field?
     
     var body: some View {
         VStack(spacing: 12) {
-            // Поле ввода 1: Английское слово
             TextField(focusedField == .english ? "" : "Слово на английском", text: $newEnglish)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .multilineTextAlignment(.center)
@@ -25,21 +25,26 @@ struct AddWordFormView: View {
                 .disableAutocorrection(true)
                 .focused($focusedField, equals: .english)
 
-            // Поле ввода 2: Русский перевод
+            // Поле транскрипции (Необязательное)
+            TextField(focusedField == .transcription ? "" : "Транскрипция (необязательно)", text: $newTranscription)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .multilineTextAlignment(.center)
+                .autocapitalization(.none)
+                .disableAutocorrection(true)
+                .focused($focusedField, equals: .transcription)
+
             TextField(focusedField == .russian ? "" : "Перевод на русский", text: $newRussian)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .multilineTextAlignment(.center)
                 .disableAutocorrection(true)
                 .focused($focusedField, equals: .russian)
 
-            // Поле ввода 3: Пример фразы
             TextField(focusedField == .example ? "" : "Пример фразы (необязательно)", text: $newExample)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .multilineTextAlignment(.center)
                 .disableAutocorrection(true)
                 .focused($focusedField, equals: .example)
 
-            // Кнопка добавления
             Button(action: addWord) {
                 HStack {
                     Image(systemName: "plus.circle.fill")
@@ -48,6 +53,7 @@ struct AddWordFormView: View {
                 .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
+                // Кнопка зависит только от english и russian fields
                 .background(newEnglish.isEmpty || newRussian.isEmpty ? Color.gray : Color.orange)
                 .foregroundColor(.white)
                 .cornerRadius(10)
@@ -59,23 +65,27 @@ struct AddWordFormView: View {
         .cornerRadius(12)
         .padding(.horizontal)
         .padding(.bottom, 10)
-        // Защита: клик по самой форме не закрывает клавиатуру
         .onTapGesture { }
     }
     
     private func addWord() {
-        focusedField = nil // Закрываем клавиатуру
+        focusedField = nil
         
         let eng = newEnglish.trimmingCharacters(in: .whitespacesAndNewlines)
+        var trans = newTranscription.trimmingCharacters(in: .whitespacesAndNewlines)
         let rus = newRussian.trimmingCharacters(in: .whitespacesAndNewlines)
         let ex = newExample.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        // Создаем слово и привязываем к текущей категории
-        let newWord = Word(english: eng, russian: rus, example: ex, category: selectedCategory)
+        // Автоматически оборачиваем в скобки, если пользователь ввел транскрипцию вручную без них
+        if !trans.isEmpty && !trans.hasPrefix("[") {
+            trans = "[\(trans)]"
+        }
+        
+        let newWord = Word(english: eng, russian: rus, example: ex, transcription: trans, category: selectedCategory)
         modelContext.insert(newWord)
         
-        // Очищаем поля
         newEnglish = ""
+        newTranscription = ""
         newRussian = ""
         newExample = ""
     }

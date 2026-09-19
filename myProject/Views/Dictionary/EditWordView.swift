@@ -13,6 +13,10 @@ struct EditWordView: View {
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
                     
+                    TextField("Транскрипция", text: $word.transcription)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                    
                     TextField("Перевод на русский", text: $word.russian)
                         .disableAutocorrection(true)
                 }
@@ -27,11 +31,12 @@ struct EditWordView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Готово") {
-                        // Чистим пробелы перед закрытием
+                        // Очищаем пробелы перед сохранением
                         word.english = word.english.trimmingCharacters(in: .whitespacesAndNewlines)
+                        word.transcription = word.transcription.trimmingCharacters(in: .whitespacesAndNewlines)
                         word.russian = word.russian.trimmingCharacters(in: .whitespacesAndNewlines)
                         word.example = word.example.trimmingCharacters(in: .whitespacesAndNewlines)
-                        dismiss() // Закрываем экран, SwiftData сохранит всё автоматически
+                        dismiss() // SwiftData зафиксирует изменения автоматически
                     }
                     .bold()
                     .disabled(word.english.isEmpty || word.russian.isEmpty)
@@ -41,4 +46,3 @@ struct EditWordView: View {
         }
     }
 }
-

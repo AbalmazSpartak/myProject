@@ -158,7 +158,8 @@ struct TitleScreenView: View {
     private func loadMenuOrder() {
         let allItems = [
             "cards": MenuItem(id: "cards", title: "Карточки с вводом", icon: "keyboard", color: Color.blue),
-            "quiz": MenuItem(id: "quiz", title: "Викторина (Выбор ответа)", icon: "checkmark.seal.fill", color: Color.purple),
+            // Текст разделен символом \n на две строки
+            "quiz": MenuItem(id: "quiz", title: "Викторина\n(Выбор ответа)", icon: "checkmark.seal.fill", color: Color.purple),
             "dictionary": MenuItem(id: "dictionary", title: "Открыть словарь", icon: "book.fill", color: Color.orange)
         ]
         

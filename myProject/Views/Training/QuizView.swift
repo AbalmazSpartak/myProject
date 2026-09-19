@@ -3,7 +3,7 @@ import SwiftData
 import AVFoundation
 
 struct QuizView: View {
-    @Query private var words: [Word]
+    @Environment(\.modelContext) private var modelContext
     @Binding var currentScreen: String
     
     @State private var currentWord: Word?
@@ -11,11 +11,13 @@ struct QuizView: View {
     @State private var selectedAnswer: String?
     @State private var correctCount = 0
     @State private var totalAnswered = 0
+    @State private var hasMinimumWords = false
     
     private let synthesizer = AVSpeechSynthesizer()
     
     var body: some View {
         VStack(spacing: 25) {
+            // Верхняя панель навигации и счета
             HStack {
                 Button(action: { currentScreen = "menu" }) {
                     HStack(spacing: 5) {
@@ -32,18 +34,17 @@ struct QuizView: View {
             }
             .padding(.horizontal)
             
-            Text("Викторина")
-                .font(.largeTitle)
-                .bold()
+            // ИСПРАВЛЕНИЕ: Крупный заголовок "Викторина" полностью удален
             
             Spacer()
             
-            if words.count < 3 {
-                Text("Для генерации теста нужно минимум 3 слова в вашем словаре.")
+            if !hasMinimumWords {
+                Text("Для генерации тестов нужно минимум 3 слова с уникальными переводами в вашем словаре.")
                     .multilineTextAlignment(.center)
                     .foregroundColor(.gray)
                     .padding()
             } else if let word = currentWord {
+                // ЦЕЛЬНАЯ КАРТОЧКА ВИКТОРИНЫ
                 VStack(spacing: 20) {
                     HStack(spacing: 15) {
                         Text(word.english)
@@ -55,7 +56,14 @@ struct QuizView: View {
                                 .foregroundColor(.purple)
                         }
                     }
-                    .padding(.bottom, 10)
+                    .padding(.top, 10)
+                    
+                    if !word.transcription.isEmpty {
+                        Text(word.transcription)
+                            .font(.title3)
+                            .foregroundColor(.orange)
+                            .padding(.top, -10)
+                    }
                     
                     VStack(spacing: 12) {
                         ForEach(options, id: \.self) { option in
@@ -72,9 +80,10 @@ struct QuizView: View {
                         }
                     }
                     .padding(.horizontal)
+                    .padding(.bottom, 10)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 30)
+                .padding(.vertical, 20)
                 .background(Color.secondary.opacity(0.1))
                 .cornerRadius(20)
                 .padding(.horizontal)
@@ -92,28 +101,62 @@ struct QuizView: View {
         }
         .padding()
         .onAppear {
-            generateQuestion()
+            checkDatabaseAndStart()
         }
-        // Защита от зависания экрана, если слова были добавлены позже
-        .onChange(of: words) {
-            if currentWord == nil && words.count >= 3 {
+    }
+    
+    private func checkDatabaseAndStart() {
+        do {
+            let descriptor = FetchDescriptor<Word>()
+            let allWords = try modelContext.fetch(descriptor)
+            
+            // Собираем все уникальные русские переводы через Set
+            let uniqueTranslations = Set(allWords.map { $0.russian.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() })
+            
+            // Для викторины нужно минимум 3 разных перевода, иначе кнопки будут дублироваться
+            if allWords.count >= 3 && uniqueTranslations.count >= 3 {
+                hasMinimumWords = true
                 generateQuestion()
+            } else {
+                hasMinimumWords = false
             }
+        } catch {
+            hasMinimumWords = false
         }
     }
     
     func generateQuestion() {
-        guard words.count >= 3 else { return }
         selectedAnswer = nil
-
-        let shuffled = words.shuffled()
-        currentWord = shuffled.first
-
-        var answers = [currentWord!.russian]
-        let wrongs = shuffled.dropFirst().map { $0.russian }.prefix(2)
-        answers.append(contentsOf: wrongs)
-
-        options = answers.shuffled()
+        
+        do {
+            let descriptor = FetchDescriptor<Word>()
+            let allWords = try modelContext.fetch(descriptor)
+            
+            guard allWords.count >= 3 else { return }
+            
+            if let randomMainWord = allWords.randomElement() {
+                currentWord = randomMainWord
+                
+                var answers = [randomMainWord.russian]
+                
+                // ИСПРАВЛЕНИЕ БАГА: исключаем дубликаты строк через Set
+                let alternativeTranslations = Array(Set(allWords
+                    .filter { $0.id != randomMainWord.id && $0.russian.lowercased() != randomMainWord.russian.lowercased() }
+                    .map { $0.russian }))
+                
+                let wrongAnswers = alternativeTranslations.shuffled().prefix(2)
+                answers.append(contentsOf: wrongAnswers)
+                
+                // Если вариантов все равно не хватило до 3 (из-за дубликатов в БД), подмешиваем заглушки
+                while answers.count < 3 {
+                    answers.append("—")
+                }
+                
+                options = answers.shuffled()
+            }
+        } catch {
+            print("Ошибка генерации викторины: \(error.localizedDescription)")
+        }
     }
     
     func speakWord() {
@@ -121,11 +164,7 @@ struct QuizView: View {
         let utterance = AVSpeechUtterance(string: word.english)
         utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
         utterance.rate = 0.45
-
-        if synthesizer.isSpeaking {
-            synthesizer.stopSpeaking(at: .immediate)
-        }
-
+        if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
         synthesizer.speak(utterance)
     }
     
