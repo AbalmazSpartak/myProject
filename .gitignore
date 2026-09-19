@@ -7,3 +7,9 @@ DerivedData/
 .DS_Store
 .full_code.txt
 myProject/.full_code.txt
+full_code.txt
+.DS_Store
+# Xcode файлы пользователя
+*.xcuserstate
+*.xcworkspace/
+xcuserdata/
