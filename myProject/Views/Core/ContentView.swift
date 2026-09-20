@@ -1,7 +1,6 @@
 import SwiftUI
 import SwiftData
 
-// MARK: - ВСПОМОГАТЕЛЬНАЯ МОДЕЛЬ ДЛЯ ЭЛЕМЕНТОВ МЕНЮ
 struct MenuItem: Identifiable {
     let id: String
     let title: String
@@ -10,15 +9,15 @@ struct MenuItem: Identifiable {
     let color: Color
 }
 
+// MARK: - ГЛАВНЫЙ НАВИГАЦИОННЫЙ ПЕРЕКЛЮЧАТЕЛЬ
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var words: [Word]
-    @State private var currentScreen = "menu"
+    @State private var currentScreen = "menu" // Хранит ID активного экрана
     
     var body: some View {
         ZStack {
-            // Эффект глубокого черного или светлого фона в зависимости от экрана
-            Color.clear // Заменено вместо старой привязки темы
+            Color.clear
                 .ignoresSafeArea()
             
             switch currentScreen {
@@ -36,19 +35,18 @@ struct ContentView: View {
                     .transition(.opacity)
             }
         }
+        // Пружинная анимация переключения разделов меню
         .animation(.interpolatingSpring(stiffness: 170, damping: 22), value: currentScreen)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .onAppear {
             if words.isEmpty {
-                for word in sampleWords {
-                    modelContext.insert(word)
-                }
+                for word in sampleWords { modelContext.insert(word) }
             }
         }
     }
 }
 
-// MARK: - СТРУКТУРА ГЛАВНОГО МЕНЮ (TitleScreenView)
+// MARK: - ИНТЕРФЕЙС ГЛАВНОЙ СТРАНИЦЫ
 struct TitleScreenView: View {
     @Binding var currentScreen: String
     @AppStorage("menu_order") private var menuOrderData: String = "cards,quiz,dictionary"
@@ -56,11 +54,10 @@ struct TitleScreenView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // ИСПРАВЛЕНИЕ: Ограничиваем верхний отступ, чтобы меню плавно опустилось вниз
             Spacer()
                 .frame(minHeight: 20, maxHeight: 60)
             
-            // 1. Иконка-логотип в белом закругленном квадрате с мягкой тенью
+            // 1. ЛОГОТИП ПРИЛОЖЕНИЯ
             ZStack {
                 RoundedRectangle(cornerRadius: 24)
                     .fill(Color.white)
@@ -77,7 +74,7 @@ struct TitleScreenView: View {
             }
             .padding(.bottom, 25)
             
-            // 2. Блок заголовков (Фирменные шрифты)
+            // 2. БЛОК ЗАГОЛОВКОВ ТЕКСТА
             VStack(spacing: 12) {
                 Text("WordLearner")
                     .font(.system(size: 36, weight: .bold, design: .rounded))
@@ -90,16 +87,13 @@ struct TitleScreenView: View {
                     .lineSpacing(4)
             }
             
-            // Центральная распорка между текстом и блоком кнопок
             Spacer()
                 .frame(minHeight: 20, maxHeight: 50)
             
-            // 3. Кастомные интерактивные карточки
+            // 3. ИНТЕРАКТИВНЫЕ КАРТОЧКИ РАЗДЕЛОВ
             VStack(spacing: 16) {
                 ForEach(menuItems) { item in
-                    Button(action: {
-                        currentScreen = item.id
-                    }) {
+                    Button(action: { currentScreen = item.id }) {
                         HStack(spacing: 0) {
                             Rectangle()
                                 .fill(item.color)
@@ -145,12 +139,10 @@ struct TitleScreenView: View {
             }
             .padding(.horizontal, 24)
             
-            // Нижний гибкий отступ для точного баланса на iPhone 12
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(red: 247/255, green: 249/255, blue: 253/255))
-        // ИСПРАВЛЕНИЕ: Убрали игнорирование безопасной зоны (.edgesIgnoringSafeArea), чтобы интерфейс не лез на часы
         .onAppear(perform: loadMenuOrder)
     }
     
@@ -170,7 +162,7 @@ struct TitleScreenView: View {
     }
 }
 
-// MARK: - СИСТЕМНЫЕ СТИЛИ ДЛЯ КРАСИВОГО НАЖАТИЯ
+// MARK: - ЭФФЕКТ ФИЗИЧЕСКОГО НАЖАТИЯ КНОПОК
 struct FlatButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
