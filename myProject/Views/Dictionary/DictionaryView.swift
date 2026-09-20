@@ -49,8 +49,10 @@ struct DictionaryView: View {
             .padding(.bottom, 15)
             
             // Горизонтальный селектор категорий (папок)
+            // Горизонтальный селектор категорий (папок)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
+                    // Кнопка "Общий словарь"
                     Button(action: { selectedCategory = nil }) {
                         Text("Общий")
                             .font(.system(size: 14, weight: .semibold, design: .rounded))
@@ -62,26 +64,28 @@ struct DictionaryView: View {
                             .shadow(color: Color.black.opacity(0.02), radius: 4, x: 0, y: 2)
                     }
                     
+                    // Кастомные папки пользователя и из JSON
                     ForEach(categories) { category in
-                        HStack(spacing: 4) {
-                            Text(category.name)
-                                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                .onTapGesture { selectedCategory = category }
-                            
-                            Button(action: { deleteCategory(category) }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.caption)
-                                    .foregroundColor(selectedCategory?.id == category.id ? .white.opacity(0.7) : .gray.opacity(0.6))
+                        Text(category.name)
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(selectedCategory?.id == category.id ? Color.orange : Color.white)
+                            .foregroundColor(selectedCategory?.id == category.id ? .white : Color(red: 26/255, green: 37/255, blue: 68/255))
+                            .cornerRadius(14)
+                            .shadow(color: Color.black.opacity(0.02), radius: 4, x: 0, y: 2)
+                            .onTapGesture { selectedCategory = category }
+                            // Безопасное удаление папки по долгому нажатию
+                            .contextMenu {
+                                Button(role: .destructive) {
+                                    deleteCategory(category)
+                                } label: {
+                                    Label("Удалить папку", systemImage: "trash")
+                                }
                             }
-                        }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(selectedCategory?.id == category.id ? Color.orange : Color.white)
-                        .foregroundColor(selectedCategory?.id == category.id ? .white : Color(red: 26/255, green: 37/255, blue: 68/255))
-                        .cornerRadius(14)
-                        .shadow(color: Color.black.opacity(0.02), radius: 4, x: 0, y: 2)
                     }
                     
+                    // Кнопка добавления новой папки
                     Button(action: { isAddingCategory = true }) {
                         HStack(spacing: 4) {
                             Image(systemName: "plus")

@@ -1,0 +1,3503 @@
+[
+  {
+    "english": "the",
+    "russian": "определенный артикль (не переводится)",
+    "transcription": "[ðə]",
+    "example": "The book is on the table.",
+    "categoryName": "Артикли"
+  },
+  {
+    "english": "be",
+    "russian": "быть, являться",
+    "transcription": "[biː]",
+    "example": "I want to be a doctor.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "to",
+    "russian": "к, в, направленный к (также частица инфинитива)",
+    "transcription": "[tuː]",
+    "example": "We walked to the school.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "of",
+    "russian": "из, от, указывает на родительный падеж",
+    "transcription": "[ɒv]",
+    "example": "This is a piece of cake.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "and",
+    "russian": "и, а",
+    "transcription": "[ænd]",
+    "example": "You and I are good friends.",
+    "categoryName": "Союзы"
+  },
+  {
+    "english": "a",
+    "russian": "неопределенный артикль",
+    "transcription": "[ə]",
+    "example": "She bought a new car.",
+    "categoryName": "Артикли"
+  },
+  {
+    "english": "in",
+    "russian": "в, внутри",
+    "transcription": "[ɪn]",
+    "example": "He lives in a big city.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "that",
+    "russian": "тот, та, то, что",
+    "transcription": "[ðæt]",
+    "example": "I know that you are right.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "have",
+    "russian": "иметь, обладать",
+    "transcription": "[hæv]",
+    "example": "They have two children.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "I",
+    "russian": "я",
+    "transcription": "[aɪ]",
+    "example": "I am learning English now.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "it",
+    "russian": "оно, это (для неодушевленных)",
+    "transcription": "[ɪt]",
+    "example": "It is raining outside today.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "for",
+    "russian": "для, ради, в течение",
+    "transcription": "[fɔː(r)]",
+    "example": "This flower is for you.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "not",
+    "russian": "не, ни (отрицание)",
+    "transcription": "[nɒt]",
+    "example": "She is not at home now.",
+    "categoryName": "Частицы"
+  },
+  {
+    "english": "on",
+    "russian": "на, по, в",
+    "transcription": "[ɒn]",
+    "example": "The keys are on the desk.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "with",
+    "russian": "с, вместе с",
+    "transcription": "[wɪð]",
+    "example": "Come with me to the shop.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "he",
+    "russian": "он",
+    "transcription": "[hiː]",
+    "example": "He works at a bank downtown.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "as",
+    "russian": "как, в качестве, так как",
+    "transcription": "[æz]",
+    "example": "He works as a software engineer.",
+    "categoryName": "Союзы"
+  },
+  {
+    "english": "you",
+    "russian": "ты, вы, Вы",
+    "transcription": "[juː]",
+    "example": "Do you need any help?",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "do",
+    "russian": "делать, выполнять",
+    "transcription": "[duː]",
+    "example": "What do you do for a living?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "at",
+    "russian": "у, в, около",
+    "transcription": "[æt]",
+    "example": "We met at the bus station.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "this",
+    "russian": "этот, эта, это",
+    "transcription": "[ðɪs]",
+    "example": "This smartphone is very expensive.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "but",
+    "russian": "но, однако, кроме",
+    "transcription": "[bʌt]",
+    "example": "I like coffee but prefer tea.",
+    "categoryName": "Союзы"
+  },
+  {
+    "english": "his",
+    "russian": "его (чей?)",
+    "transcription": "[hɪz]",
+    "example": "His car is parked outside.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "by",
+    "russian": "у, около, посредством (кем-то/чем-то)",
+    "transcription": "[baɪ]",
+    "example": "The book was written by him.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "from",
+    "russian": "от, из, с",
+    "transcription": "[frɒm]",
+    "example": "Where are you from originally?",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "they",
+    "russian": "они",
+    "transcription": "[ðeɪ]",
+    "example": "They live in a beautiful house.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "we",
+    "russian": "мы",
+    "transcription": "[wiː]",
+    "example": "We are going on holiday soon.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "say",
+    "russian": "сказать, говорить",
+    "transcription": "[seɪ]",
+    "example": "What did you say to her?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "her",
+    "russian": "её, ей",
+    "transcription": "[hɜː(r)]",
+    "example": "I saw her at the gym.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "she",
+    "russian": "она",
+    "transcription": "[ʃiː]",
+    "example": "She is a very talented artist.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "or",
+    "russian": "или",
+    "transcription": "[ɔː(r)]",
+    "example": "Do you want tea or coffee?",
+    "categoryName": "Союзы"
+  },
+  {
+    "english": "an",
+    "russian": "неопределенный артикль (перед гласными)",
+    "transcription": "[ən]",
+    "example": "He ate an orange after lunch.",
+    "categoryName": "Артикли"
+  },
+  {
+    "english": "will",
+    "russian": "будет (вспомогательный глагол будущего времени)",
+    "transcription": "[wɪl]",
+    "example": "I will call you tomorrow night.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "my",
+    "russian": "мой, моя, мое",
+    "transcription": "[maɪ]",
+    "example": "This is my favorite track.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "one",
+    "russian": "один",
+    "transcription": "[wʌn]",
+    "example": "Just one moment, please.",
+    "categoryName": "Числительные"
+  },
+  {
+    "english": "all",
+    "russian": "все, всё, весь",
+    "transcription": "[ɔːl]",
+    "example": "All the guests have arrived safely.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "would",
+    "russian": "бы (вспомогательный глагол для сослагательного наклонения)",
+    "transcription": "[wʊd]",
+    "example": "Would you like some water?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "there",
+    "russian": "там, туда",
+    "transcription": "[ðeə(r)]",
+    "example": "Put the box over there, please.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "their",
+    "russian": "их (чей?)",
+    "transcription": "[ðeə(r)]",
+    "example": "Their kids go to our school.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "what",
+    "russian": "что, какой",
+    "transcription": "[wɒt]",
+    "example": "What is your main goal here?",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "so",
+    "russian": "так, поэтому, таким образом",
+    "transcription": "[səʊ]",
+    "example": "I was tired, so I went to bed.",
+    "categoryName": "Союзы"
+  },
+  {
+    "english": "up",
+    "russian": "вверх, выше",
+    "transcription": "[ʌp]",
+    "example": "He looked up at the night sky.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "out",
+    "russian": "из, наружу, вне",
+    "transcription": "[aʊt]",
+    "example": "Let's go out for dinner tonight.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "if",
+    "russian": "если",
+    "transcription": "[ɪf]",
+    "example": "Call me if you need help.",
+    "categoryName": "Союзы"
+  },
+  {
+    "english": "about",
+    "russian": "о, около, кругом",
+    "transcription": "[əˈbaʊt]",
+    "example": "Tell me more about your trip.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "who",
+    "russian": "кто, который",
+    "transcription": "[huː]",
+    "example": "The man who phoned you is here.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "get",
+    "russian": "получать, добираться, становиться",
+    "transcription": "[ɡet]",
+    "example": "I need to get a new jacket.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "which",
+    "russian": "который, какой",
+    "transcription": "[wɪtʃ]",
+    "example": "Which color do you prefer?",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "go",
+    "russian": "идти, ехать, уходить",
+    "transcription": "[ɡəʊ]",
+    "example": "We should go home now.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "me",
+    "russian": "мне, меня",
+    "transcription": "[miː]",
+    "example": "Can you give me that book?",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "when",
+    "russian": "когда",
+    "transcription": "[wen]",
+    "example": "When will you come back?",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "make",
+    "russian": "делать, создавать",
+    "transcription": "[meɪk]",
+    "example": "She likes to make coffee.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "can",
+    "russian": "мочь, уметь",
+    "transcription": "[kæn]",
+    "example": "I can speak three languages.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "like",
+    "russian": "нравиться, подобно",
+    "transcription": "[laɪk]",
+    "example": "I like this music.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "time",
+    "russian": "время, раз",
+    "transcription": "[taɪm]",
+    "example": "What time is it now?",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "no",
+    "russian": "нет, никакой",
+    "transcription": "[nəʊ]",
+    "example": "There is no water left.",
+    "categoryName": "Частицы"
+  },
+  {
+    "english": "just",
+    "russian": "просто, только что",
+    "transcription": "[dʒʌst]",
+    "example": "I have just arrived here.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "him",
+    "russian": "его, ему",
+    "transcription": "[hɪm]",
+    "example": "I met him yesterday.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "know",
+    "russian": "знать",
+    "transcription": "[nəʊ]",
+    "example": "Do you know his name?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "take",
+    "russian": "брать, взять",
+    "transcription": "[teɪk]",
+    "example": "Take this key with you.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "people",
+    "russian": "люди",
+    "transcription": "[ˈpiːpl]",
+    "example": "Many people live in cities.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "into",
+    "russian": "в, внутрь (направление)",
+    "transcription": "[ˈɪntu]",
+    "example": "He walked into the room.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "year",
+    "russian": "год",
+    "transcription": "[jɪə(r)]",
+    "example": "Happy New Year!",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "your",
+    "russian": "твой, ваш",
+    "transcription": "[jɔː(r)]",
+    "example": "Is this your coat?",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "good",
+    "russian": "хороший",
+    "transcription": "[ɡʊd]",
+    "example": "Have a good day!",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "some",
+    "russian": "некоторый, несколько",
+    "transcription": "[sʌm]",
+    "example": "I need some water.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "could",
+    "russian": "мог, мог бы",
+    "transcription": "[kʊd]",
+    "example": "Could you help me, please?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "them",
+    "russian": "их, им",
+    "transcription": "[ðem]",
+    "example": "Tell them the truth.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "see",
+    "russian": "видеть",
+    "transcription": "[siː]",
+    "example": "I see a bird in the tree.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "other",
+    "russian": "другой",
+    "transcription": "[ˈʌðə(r)]",
+    "example": "Where is the other glove?",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "than",
+    "russian": "чем (при сравнении)",
+    "transcription": "[ðæn]",
+    "example": "He is older than me.",
+    "categoryName": "Союзы"
+  },
+  {
+    "english": "then",
+    "russian": "тогда, затем",
+    "transcription": "[ðen]",
+    "example": "First wash up, then eat.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "now",
+    "russian": "сейчас, теперь",
+    "transcription": "[naʊ]",
+    "example": "We can go now.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "look",
+    "russian": "смотреть, выглядеть",
+    "transcription": "[lʊk]",
+    "example": "Look at the camera.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "only",
+    "russian": "только, единственный",
+    "transcription": "[ˈəʊnli]",
+    "example": "I have only five minutes.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "come",
+    "russian": "приходить, приезжать",
+    "transcription": "[kʌm]",
+    "example": "Come here for a second.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "its",
+    "russian": "его, ее (для неодушевленных)",
+    "transcription": "[ɪts]",
+    "example": "The dog wagged its tail.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "over",
+    "russian": "над, через, выше",
+    "transcription": "[ˈəʊvə(r)]",
+    "example": "The ball flew over the wall.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "think",
+    "russian": "думать",
+    "transcription": "[θɪŋk]",
+    "example": "I think you are right.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "also",
+    "russian": "также, тоже",
+    "transcription": "[ˈɔːlsəʊ]",
+    "example": "She is also a teacher.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "back",
+    "russian": "назад, спина",
+    "transcription": "[bæk]",
+    "example": "Please come back soon.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "after",
+    "russian": "после",
+    "transcription": "[ˈɑːftə(r)]",
+    "example": "We met after work.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "use",
+    "russian": "использовать",
+    "transcription": "[juːz]",
+    "example": "May I use your phone?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "two",
+    "russian": "два",
+    "transcription": "[tuː]",
+    "example": "I have two sisters.",
+    "categoryName": "Числительные"
+  },
+  {
+    "english": "how",
+    "russian": "как, каким образом",
+    "transcription": "[haʊ]",
+    "example": "How do you do that?",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "our",
+    "russian": "наш",
+    "transcription": "[ˈaʊə(r)]",
+    "example": "This is our new house.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "work",
+    "russian": "работать, работа",
+    "transcription": "[wɜːk]",
+    "example": "He goes to work by train.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "first",
+    "russian": "первый",
+    "transcription": "[fɜːst]",
+    "example": "This is my first time here.",
+    "categoryName": "Порядковые числительные"
+  },
+  {
+    "english": "well",
+    "russian": "хорошо",
+    "transcription": "[wel]",
+    "example": "She speaks English well.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "way",
+    "russian": "путь, способ",
+    "transcription": "[weɪ]",
+    "example": "Show me the way to the station.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "even",
+    "russian": "даже",
+    "transcription": "[ˈiːvn]",
+    "example": "Even a child can do it.",
+    "categoryName": "Частицы"
+  },
+  {
+    "english": "new",
+    "russian": "новый",
+    "transcription": "[njuː]",
+    "example": "I bought a new phone.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "want",
+    "russian": "хотеть",
+    "transcription": "[wɒnt]",
+    "example": "I want to eat something.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "because",
+    "russian": "потому что",
+    "transcription": "[bɪˈkɒz]",
+    "example": "I stayed because it rained.",
+    "categoryName": "Союзы"
+  },
+  {
+    "english": "any",
+    "russian": "любой, какой-нибудь",
+    "transcription": "[ˈeni]",
+    "example": "Do you have any questions?",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "these",
+    "russian": "эти",
+    "transcription": "[ðiːz]",
+    "example": "These shoes are tight.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "give",
+    "russian": "давать",
+    "transcription": "[ɡɪv]",
+    "example": "Give me your hand.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "day",
+    "russian": "день",
+    "transcription": "[deɪ]",
+    "example": "It was a wonderful day.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "most",
+    "russian": "наибольший, большинство",
+    "transcription": "[məʊst]",
+    "example": "Most people like summer.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "us",
+    "russian": "нам, нас",
+    "transcription": "[ʌs]",
+    "example": "Join us for lunch.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "find",
+    "russian": "находить",
+    "transcription": "[faɪnd]",
+    "example": "I can't find my keys.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "more",
+    "russian": "больше",
+    "transcription": "[mɔː(r)]",
+    "example": "We need more time to finish.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "say",
+    "russian": "говорить, сказать",
+    "transcription": "[seɪ]",
+    "example": "What did you say to him?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "man",
+    "russian": "мужчина, человек",
+    "transcription": "[mæn]",
+    "example": "He is a very wise man.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "here",
+    "russian": "здесь, сюда",
+    "transcription": "[hɪə(r)]",
+    "example": "Please sit here next to me.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "slowly",
+    "russian": "медленно",
+    "transcription": "[ˈsləʊli]",
+    "example": "Please speak more slowly.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "many",
+    "russian": "много (для исчисляемых)",
+    "transcription": "[ˈmeni]",
+    "example": "How many books do you have?",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "well",
+    "russian": "хорошо",
+    "transcription": "[wel]",
+    "example": "He plays tennis very well.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "only",
+    "russian": "только, единственный",
+    "transcription": "[ˈəʊnli]",
+    "example": "It is only five o'clock.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "those",
+    "russian": "те",
+    "transcription": "[ðəʊz]",
+    "example": "Look at those birds over there.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "tell",
+    "russian": "рассказывать, велеть",
+    "transcription": "[tel]",
+    "example": "Tell me a story tonight.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "one",
+    "russian": "один",
+    "transcription": "[wʌn]",
+    "example": "I need one more cup.",
+    "categoryName": "Числительные"
+  },
+  {
+    "english": "very",
+    "russian": "очень",
+    "transcription": "[ˈveri]",
+    "example": "Thank you very much.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "her",
+    "russian": "её",
+    "transcription": "[hɜː(r)]",
+    "example": "I met her brother yesterday.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "even",
+    "russian": "даже",
+    "transcription": "[ˈiːvn]",
+    "example": "He didn't even notice me.",
+    "categoryName": "Частицы"
+  },
+  {
+    "english": "back",
+    "russian": "назад, спина",
+    "transcription": "[bæk]",
+    "example": "Put it back on the shelf.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "any",
+    "russian": "любой, какой-нибудь",
+    "transcription": "[ˈeni]",
+    "example": "Is there any milk left?",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "good",
+    "russian": "хороший",
+    "transcription": "[ɡʊd]",
+    "example": "This is a good movie.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "woman",
+    "russian": "женщина",
+    "transcription": "[ˈwʊmən]",
+    "example": "She is a business woman.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "through",
+    "russian": "через, сквозь",
+    "transcription": "[θruː]",
+    "example": "We walked through the forest.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "us",
+    "russian": "нам, нас",
+    "transcription": "[ʌs]",
+    "example": "Come with us to the park.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "life",
+    "russian": "жизнь",
+    "transcription": "[laɪf]",
+    "example": "Life is beautiful and simple.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "child",
+    "russian": "ребенок",
+    "transcription": "[tʃaɪld]",
+    "example": "The child is playing outside.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "three",
+    "russian": "три",
+    "transcription": "[θriː]",
+    "example": "I will stay for three days.",
+    "categoryName": "Числительные"
+  },
+  {
+    "english": "work",
+    "russian": "работа, работать",
+    "transcription": "[wɜːk]",
+    "example": "I need to finish this work.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "down",
+    "russian": "вниз, внизу",
+    "transcription": "[daʊn]",
+    "example": "Please sit down on the chair.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "may",
+    "russian": "мочь (иметь разрешение)",
+    "transcription": "[meɪ]",
+    "example": "May I open the window?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "after",
+    "russian": "после",
+    "transcription": "[ˈɑːftə(r)]",
+    "example": "After lunch we went for a walk.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "should",
+    "russian": "должен, следует",
+    "transcription": "[ʃʊd]",
+    "example": "You should drink more water.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "call",
+    "russian": "звонить, звать, называть",
+    "transcription": "[kɔːl]",
+    "example": "Please call me at six.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "world",
+    "russian": "мир, свет",
+    "transcription": "[wɜːld]",
+    "example": "Travel around the world.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "over",
+    "russian": "над, через",
+    "transcription": "[ˈəʊvə(r)]",
+    "example": "The cat jumped over the fence.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "school",
+    "russian": "школа",
+    "transcription": "[skuːl]",
+    "example": "He goes to school every day.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "still",
+    "russian": "всё еще, неподвижный",
+    "transcription": "[stɪl]",
+    "example": "I am still waiting for you.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "try",
+    "russian": "пробовать, пытаться",
+    "transcription": "[traɪ]",
+    "example": "Try to solve this problem.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "last",
+    "russian": "последний, прошлый",
+    "transcription": "[lɑːst]",
+    "example": "This is our last chance.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "ask",
+    "russian": "спрашивать, просить",
+    "transcription": "[ɑːsk]",
+    "example": "Ask him about his family.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "need",
+    "russian": "нуждаться, нужно",
+    "transcription": "[niːd]",
+    "example": "I need some fresh air.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "too",
+    "russian": "тоже, слишком",
+    "transcription": "[tuː]",
+    "example": "This tea is too hot.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "feel",
+    "russian": "чувствовать",
+    "transcription": "[fiːl]",
+    "example": "I feel happy today.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "three",
+    "russian": "три",
+    "transcription": "[θriː]",
+    "example": "We have three options.",
+    "categoryName": "Числительные"
+  },
+  {
+    "english": "state",
+    "russian": "государство, штат, состояние",
+    "transcription": "[steɪt]",
+    "example": "He is in a critical state.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "never",
+    "russian": "никогда",
+    "transcription": "[ˈnevə(r)]",
+    "example": "I have never been to Paris.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "become",
+    "russian": "становиться",
+    "transcription": "[bɪˈkʌm]",
+    "example": "He wants to become a writer.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "between",
+    "russian": "между",
+    "transcription": "[bɪˈtwiːn]",
+    "example": "The table is between the chairs.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "high",
+    "russian": "высокий",
+    "transcription": "[haɪ]",
+    "example": "The mountain is very high.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "really",
+    "russian": "действительно, правда",
+    "transcription": "[ˈrɪəli]",
+    "example": "I really like this place.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "something",
+    "russian": "что-то, что-нибудь",
+    "transcription": "[ˈsʌmθɪŋ]",
+    "example": "I want to eat something.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "most",
+    "russian": "наибольший, большинство",
+    "transcription": "[məʊst]",
+    "example": "Most stories have a happy ending.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "another",
+    "russian": "другой, еще один",
+    "transcription": "[əˈnʌðə(r)]",
+    "example": "Would you like another cup of tea?",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "family",
+    "russian": "семья",
+    "transcription": "[ˈfæməli]",
+    "example": "I love my family very much.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "own",
+    "russian": "собственный, владеть",
+    "transcription": "[əʊn]",
+    "example": "I want to start my own business.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "out",
+    "russian": "из, наружу, вне",
+    "transcription": "[aʊt]",
+    "example": "He walked out of the room.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "leave",
+    "russian": "покидать, оставлять, уходить",
+    "transcription": "[liːv]",
+    "example": "Don't leave your umbrella behind.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "put",
+    "russian": "класть, ставить",
+    "transcription": "[pʊt]",
+    "example": "Put your bags here.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "old",
+    "russian": "старый",
+    "transcription": "[əʊld]",
+    "example": "This is an old house.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "while",
+    "russian": "в то время как, пока",
+    "transcription": "[waɪl]",
+    "example": "Listen to music while cooking.",
+    "categoryName": "Союзы"
+  },
+  {
+    "english": "mean",
+    "russian": "значить, иметь в виду",
+    "transcription": "[miːn]",
+    "example": "What do you mean by that?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "on",
+    "russian": "на, по, в",
+    "transcription": "[ɒn]",
+    "example": "The cat is on the roof.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "keep",
+    "russian": "держать, хранить, продолжать",
+    "transcription": "[kiːp]",
+    "example": "Keep your room clean.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "student",
+    "russian": "студент, ученик",
+    "transcription": "[ˈstjuːdnt]",
+    "example": "She is a brilliant student.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "why",
+    "russian": "почему",
+    "transcription": "[waɪ]",
+    "example": "Why are you late today?",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "let",
+    "russian": "позволять, пускать",
+    "transcription": "[let]",
+    "example": "Let me see the document.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "great",
+    "russian": "великий, отличный",
+    "transcription": "[ɡreɪt]",
+    "example": "That is a great idea.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "same",
+    "russian": "тот же самый, одинаковый",
+    "transcription": "[seɪm]",
+    "example": "We live in the same building.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "big",
+    "russian": "большой",
+    "transcription": "[bɪɡ]",
+    "example": "They have a big dog.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "group",
+    "russian": "группа",
+    "transcription": "[ɡruːp]",
+    "example": "Join our study group.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "begin",
+    "russian": "начинать",
+    "transcription": "[bɪˈɡɪn]",
+    "example": "Let's begin the presentation.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "seem",
+    "russian": "казаться",
+    "transcription": "[siːm]",
+    "example": "You seem tired today.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "country",
+    "russian": "страна, сельская местность",
+    "transcription": "[ˈkʌntri]",
+    "example": "Which country are you visiting?",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "help",
+    "russian": "помогать, помощь",
+    "transcription": "[help]",
+    "example": "Can you help me move this?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "talk",
+    "russian": "разговаривать, беседа",
+    "transcription": "[tɔːk]",
+    "example": "We need to talk about it.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "where",
+    "russian": "где, куда",
+    "transcription": "[weə(r)]",
+    "example": "Where is the nearest bank?",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "turn",
+    "russian": "поворачивать, оборот",
+    "transcription": "[tɜːn]",
+    "example": "Turn left at the next corner.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "problem",
+    "russian": "проблема, задача",
+    "transcription": "[ˈprɒbləm]",
+    "example": "We can solve this problem.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "every",
+    "russian": "каждый",
+    "transcription": "[ˈevri]",
+    "example": "Every person needs a home.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "start",
+    "russian": "начинать, старт",
+    "transcription": "[stɑːt]",
+    "example": "When does the match start?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "hand",
+    "russian": "рука (кисть)",
+    "transcription": "[hænd]",
+    "example": "Hold the rail with your hand.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "might",
+    "russian": "может быть (вероятность)",
+    "transcription": "[maɪt]",
+    "example": "It might rain later.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "American",
+    "russian": "американец, американский",
+    "transcription": "[əˈmerɪkən]",
+    "example": "He likes American cars.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "show",
+    "russian": "показывать, шоу",
+    "transcription": "[ʃəʊ]",
+    "example": "Show me your passport, please.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "part",
+    "russian": "часть, роль",
+    "transcription": "[pɑːt]",
+    "example": "This is the best part of the day.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "about",
+    "russian": "о, около",
+    "transcription": "[əˈbaʊt]",
+    "example": "The meeting is about to start.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "against",
+    "russian": "против",
+    "transcription": "[əˈɡenst]",
+    "example": "We are playing against a tough team.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "place",
+    "russian": "место",
+    "transcription": "[pleɪs]",
+    "example": "This is a quiet place.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "over",
+    "russian": "над, через",
+    "transcription": "[ˈəʊvə(r)]",
+    "example": "The storm is finally over.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "such",
+    "russian": "такой, подобный",
+    "transcription": "[sʌtʃ]",
+    "example": "It was such a cold day.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "again",
+    "russian": "снова, опять",
+    "transcription": "[əˈɡen]",
+    "example": "Please read that part again.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "few",
+    "russian": "мало, несколько (для исчисляемых)",
+    "transcription": "[fjuː]",
+    "example": "I have a few questions.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "case",
+    "russian": "случай, дело, чемодан",
+    "transcription": "[keɪs]",
+    "example": "In this case, you are right.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "most",
+    "russian": "наибольший",
+    "transcription": "[məʊst]",
+    "example": "That was the most interesting book.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "week",
+    "russian": "неделя",
+    "transcription": "[wiːk]",
+    "example": "See you next week.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "company",
+    "russian": "компания, фирма",
+    "transcription": "[ˈkʌmpəni]",
+    "example": "He works for an IT company.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "where",
+    "russian": "где",
+    "transcription": "[weə(r)]",
+    "example": "Where do you live?",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "system",
+    "russian": "система",
+    "transcription": "[ˈsɪstəm]",
+    "example": "The security system is active.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "each",
+    "russian": "каждый",
+    "transcription": "[iːtʃ]",
+    "example": "Each student got a book.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "right",
+    "russian": "правый, правильный, право",
+    "transcription": "[raɪt]",
+    "example": "You made the right choice.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "program",
+    "russian": "программа",
+    "transcription": "[ˈprəʊɡræm]",
+    "example": "The television program is funny.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "hear",
+    "russian": "слышать",
+    "transcription": "[hɪə(r)]",
+    "example": "Can you hear that noise?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "so",
+    "russian": "так, поэтому",
+    "transcription": "[səʊ]",
+    "example": "The test was so difficult.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "question",
+    "russian": "вопрос, спрашивать",
+    "transcription": "[ˈkwestʃən]",
+    "example": "May I ask a quick question?",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "during",
+    "russian": "в течение, во время",
+    "transcription": "[ˈdjʊərɪŋ]",
+    "example": "It rained heavily during the night.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "work",
+    "russian": "работать",
+    "transcription": "[wɜːk]",
+    "example": "They work together in a clinic.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "play",
+    "russian": "играть, пьеса",
+    "transcription": "[pleɪ]",
+    "example": "Children like to play video games.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "government",
+    "russian": "правительство",
+    "transcription": "[ˈɡʌvənmənt]",
+    "example": "The government announced new taxes.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "run",
+    "russian": "бежать, управлять",
+    "transcription": "[rʌn]",
+    "example": "He runs a small grocery shop.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "small",
+    "russian": "маленький",
+    "transcription": "[smɔːl]",
+    "example": "She lives in a small apartment.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "number",
+    "russian": "номер, число, количество",
+    "transcription": "[ˈnʌmbə(r)]",
+    "example": "Write your phone number here.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "off",
+    "russian": "выключенный, с, от",
+    "transcription": "[ɒf]",
+    "example": "Please turn off the lights.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "always",
+    "russian": "всегда",
+    "transcription": "[ˈɔːlweɪz]",
+    "example": "She always arrives on time.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "move",
+    "russian": "двигаться, переезжать",
+    "transcription": "[muːv]",
+    "example": "We plan to move next month.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "like",
+    "russian": "подобно, как",
+    "transcription": "[laɪk]",
+    "example": "He looks exactly like his father.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "night",
+    "russian": "ночь",
+    "transcription": "[naɪt]",
+    "example": "The stars shine bright at night.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "live",
+    "russian": "жить",
+    "transcription": "[lɪv]",
+    "example": "They live in a beautiful valley.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "Mr",
+    "russian": "мистер, господин",
+    "transcription": "[ˈmɪstə(r)]",
+    "example": "Mr. Smith is our manager.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "point",
+    "russian": "точка, балл, указывать",
+    "transcription": "[pɔɪnt]",
+    "example": "What is the point of this discussion?",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "believe",
+    "russian": "верить",
+    "transcription": "[bɪˈliːv]",
+    "example": "I believe that honesty is crucial.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "hold",
+    "russian": "держать, удерживать",
+    "transcription": "[həʊld]",
+    "example": "Can you hold this box for a moment?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "today",
+    "russian": "сегодня",
+    "transcription": "[təˈdeɪ]",
+    "example": "The weather is gorgeous today.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "bring",
+    "russian": "приносить",
+    "transcription": "[brɪŋ]",
+    "example": "Don't forget to bring your passport.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "happen",
+    "russian": "случаться, происходить",
+    "transcription": "[ˈhæpən]",
+    "example": "Accidents can happen at any time.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "next",
+    "russian": "следующий",
+    "transcription": "[nekst]",
+    "example": "The next train leaves at noon.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "without",
+    "russian": "без",
+    "transcription": "[wɪˈðaʊt]",
+    "example": "I cannot drink coffee without sugar.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "before",
+    "russian": "до, перед",
+    "transcription": "[bɪˈfɔː(r)]",
+    "example": "Wash your hands before eating.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "large",
+    "russian": "большой, крупный",
+    "transcription": "[lɑːdʒ]",
+    "example": "A large crowd gathered outside.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "all",
+    "russian": "полностью, совсем",
+    "transcription": "[ɔːl]",
+    "example": "She was all alone in the house.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "million",
+    "russian": "миллион",
+    "transcription": "[ˈmɪljən]",
+    "example": "The city has over a million residents.",
+    "categoryName": "Числительные"
+  },
+  {
+    "english": "must",
+    "russian": "должен, обязан",
+    "transcription": "[mʌst]",
+    "example": "You must wear a seatbelt.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "home",
+    "russian": "дом (место проживания)",
+    "transcription": "[həʊm]",
+    "example": "It feels good to be back home.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "under",
+    "russian": "под",
+    "transcription": "[ˈʌndə(r)]",
+    "example": "The dog is resting under the table.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "water",
+    "russian": "вода",
+    "transcription": "[ˈwɔːtə(r)]",
+    "example": "Drink plenty of water every day.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "room",
+    "russian": "комната, пространство",
+    "transcription": "[ruːm]",
+    "example": "Is there enough room for me?",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "write",
+    "russian": "писать",
+    "transcription": "[raɪt]",
+    "example": "Please write your name here.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "mother",
+    "russian": "мать",
+    "transcription": "[ˈmʌðə(r)]",
+    "example": "My mother makes incredible pies.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "area",
+    "russian": "область, сфера, район",
+    "transcription": "[ˈeəriə]",
+    "example": "This is a quiet residential area.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "national",
+    "russian": "национальный, государственный",
+    "transcription": "[ˈnæʃnəl]",
+    "example": "Today is a national holiday.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "money",
+    "russian": "деньги",
+    "transcription": "[ˈmʌni]",
+    "example": "Time is more valuable than money.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "story",
+    "russian": "история, рассказ",
+    "transcription": "[ˈstɔːri]",
+    "example": "She told us a fascinating story.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "young",
+    "russian": "молодой",
+    "transcription": "[jʌŋ]",
+    "example": "The young boy learned quickly.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "fact",
+    "russian": "факт",
+    "transcription": "[fækt]",
+    "example": "It is a fact that water freezes at zero.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "month",
+    "russian": "месяц",
+    "transcription": "[mʌnθ]",
+    "example": "We spent a month in Italy.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "different",
+    "russian": "разный, другой",
+    "transcription": "[ˈdɪfrənt]",
+    "example": "They have very different opinions.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "lot",
+    "russian": "многое, жребий, участок",
+    "transcription": "[lɒt]",
+    "example": "A lot of people attended the event.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "right",
+    "russian": "правильно, прямо",
+    "transcription": "[raɪt]",
+    "example": "The shop is right down the street.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "study",
+    "russian": "изучать, исследование",
+    "transcription": "[ˈstʌdi]",
+    "example": "He wants to study law at university.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "book",
+    "russian": "книга, бронировать",
+    "transcription": "[bʊk]",
+    "example": "I need to book a flight online.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "eye",
+    "russian": "глаз",
+    "transcription": "[aɪ]",
+    "example": "She has a keen eye for details.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "job",
+    "russian": "работа, профессия",
+    "transcription": "[dʒɒb]",
+    "example": "He applied for a new job yesterday.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "word",
+    "russian": "слово",
+    "transcription": "[wɜːd]",
+    "example": "What does this English word mean?",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "though",
+    "russian": "хотя, однако",
+    "transcription": "[ðəʊ]",
+    "example": "It was cold, though the sun was shining.",
+    "categoryName": "Союзы"
+  },
+  {
+    "english": "business",
+    "russian": "бизнес, дело",
+    "transcription": "[ˈbɪznəs]",
+    "example": "He runs a successful business.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "issue",
+    "russian": "проблема, выпуск, выдавать",
+    "transcription": "[ˈɪʃuː]",
+    "example": "Let's focus on the main issue.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "side",
+    "russian": "сторона, бок",
+    "transcription": "[saɪd]",
+    "example": "The sunny side of the street.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "kind",
+    "russian": "вид, тип, добрый",
+    "transcription": "[kaɪnd]",
+    "example": "What kind of music do you like?",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "four",
+    "russian": "четыре",
+    "transcription": "[fɔː(r)]",
+    "example": "There are four chairs in the room.",
+    "categoryName": "Числительные"
+  },
+  {
+    "english": "head",
+    "russian": "голова, глава",
+    "transcription": "[hed]",
+    "example": "He is the head of our department.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "far",
+    "russian": "далеко, далекий",
+    "transcription": "[fɑː(r)]",
+    "example": "How far is the airport from here?",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "black",
+    "russian": "черный",
+    "transcription": "[blæk]",
+    "example": "She wore a elegant black dress.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "long",
+    "russian": "длинный, долгий",
+    "transcription": "[lɒŋ]",
+    "example": "It was a long and exhausting journey.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "both",
+    "russian": "оба, и тот и другой",
+    "transcription": "[bəʊθ]",
+    "example": "Both options are acceptable.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "little",
+    "russian": "маленький, немного",
+    "transcription": "[ˈlɪtl]",
+    "example": "Give me a little more time, please.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "house",
+    "russian": "дом (здание)",
+    "transcription": "[haʊs]",
+    "example": "They are building a new house.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "yes",
+    "russian": "да",
+    "transcription": "[jes]",
+    "example": "Yes, I agree with your terms.",
+    "categoryName": "Частицы"
+  },
+  {
+    "english": "since",
+    "russian": "с тех пор как, поскольку",
+    "transcription": "[sɪns]",
+    "example": "I haven't seen him since Monday.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "provide",
+    "russian": "предоставлять, обеспечивать",
+    "transcription": "[prəˈvaɪd]",
+    "example": "We provide free tech support.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "service",
+    "russian": "услуга, служба, сервис",
+    "transcription": "[ˈsɜːvɪs]",
+    "example": "The customer service is excellent here.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "around",
+    "russian": "вокруг, кругом, около",
+    "transcription": "[əˈraʊnd]",
+    "example": "Let's meet around five o'clock.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "friend",
+    "russian": "друг",
+    "transcription": "[frend]",
+    "example": "He is a very close friend of mine.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "important",
+    "russian": "важный",
+    "transcription": "[ɪmˈpɔːtnt]",
+    "example": "This is an important document.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "father",
+    "russian": "отец",
+    "transcription": "[ˈfɑːðə(r)]",
+    "example": "His father works as a pilot.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "sit",
+    "russian": "сидеть",
+    "transcription": "[sɪt]",
+    "example": "Please sit down on the sofa.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "away",
+    "russian": "прочь, далеко",
+    "transcription": "[əˈweɪ]",
+    "example": "The beach is just a mile away.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "until",
+    "russian": "до тех пор пока, до",
+    "transcription": "[ənˈtɪl]",
+    "example": "Stay here until I come back.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "power",
+    "russian": "сила, мощность, власть",
+    "transcription": "[ˈpaʊə(r)]",
+    "example": "Knowledge is a source of power.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "hour",
+    "russian": "час",
+    "transcription": "[ˈaʊə(r)]",
+    "example": "The meeting lasted for an hour.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "game",
+    "russian": "игра",
+    "transcription": "[ɡeɪm]",
+    "example": "That was an exciting football game.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "often",
+    "russian": "часто",
+    "transcription": "[ˈɒfn]",
+    "example": "How often do you go to the gym?",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "yet",
+    "russian": "еще, всё же",
+    "transcription": "[jet]",
+    "example": "I haven't finished my homework yet.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "line",
+    "russian": "линия, очередь, строка",
+    "transcription": "[laɪn]",
+    "example": "Please stand behind the white line.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "political",
+    "russian": "политический",
+    "transcription": "[pəˈlɪtɪkl]",
+    "example": "They discussed the political situation.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "end",
+    "russian": "конец, завершать",
+    "transcription": "[end]",
+    "example": "This is the end of the chapter.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "among",
+    "russian": "среди, между",
+    "transcription": "[əˈmʌŋ]",
+    "example": "Divide the sweets among the kids.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "ever",
+    "russian": "когда-либо",
+    "transcription": "[ˈevə(r)]",
+    "example": "Have you ever seen a whale?",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "stand",
+    "russian": "стоять, подставка",
+    "transcription": "[stænd]",
+    "example": "Please stand up when he enters.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "bad",
+    "russian": "плохой",
+    "transcription": "[bæd]",
+    "example": "Smoking is a very bad habit.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "lose",
+    "russian": "терять, проигрывать",
+    "transcription": "[luːz]",
+    "example": "Don't lose your hotel room key.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "however",
+    "russian": "однако, тем не менее",
+    "transcription": "[haʊˈevə(r)]",
+    "example": "He worked hard; however, he failed.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "member",
+    "russian": "член (организации, семьи)",
+    "transcription": "[ˈmembə(r)]",
+    "example": "She is a member of the local club.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "pay",
+    "russian": "платить, оплата",
+    "transcription": "[peɪ]",
+    "example": "You can pay by credit card.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "law",
+    "russian": "закон, право",
+    "transcription": "[lɔː]",
+    "example": "Everyone must obey the local law.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "meet",
+    "russian": "встречать, знакомиться",
+    "transcription": "[miːt]",
+    "example": "Nice to meet you here.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "car",
+    "russian": "машина, автомобиль",
+    "transcription": "[kɑː(r)]",
+    "example": "He bought a brand new electric car.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "city",
+    "russian": "город",
+    "transcription": "[ˈsɪti]",
+    "example": "New York is a massive city.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "almost",
+    "russian": "почти",
+    "transcription": "[ˈɔːlməʊst]",
+    "example": "Dinner is almost ready now.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "include",
+    "russian": "включать в себя",
+    "transcription": "[ɪnˈkluːd]",
+    "example": "Does the price include breakfast?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "continue",
+    "russian": "продолжать",
+    "transcription": "[kənˈtɪnjuː]",
+    "example": "Please continue reading the text.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "set",
+    "russian": "набор, устанавливать",
+    "transcription": "[set]",
+    "example": "He set the box on the table.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "later",
+    "russian": "позже",
+    "transcription": "[ˈleɪtə(r)]",
+    "example": "I will call you back later.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "community",
+    "russian": "сообщество, община",
+    "transcription": "[kəˈmjuːnəti]",
+    "example": "We live in a friendly community.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "much",
+    "russian": "много (для неисчисляемых)",
+    "transcription": "[mʌtʃ]",
+    "example": "Thank you so much for your help.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "name",
+    "russian": "имя, название, называть",
+    "transcription": "[neɪm]",
+    "example": "What is your full name?",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "five",
+    "russian": "пять",
+    "transcription": "[faɪv]",
+    "example": "I will be back in five minutes.",
+    "categoryName": "Числительные"
+  },
+  {
+    "english": "once",
+    "russian": "однажды, один раз",
+    "transcription": "[wʌns]",
+    "example": "I visit my grandparents once a week.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "white",
+    "russian": "белый",
+    "transcription": "[waɪt]",
+    "example": "The winter snow is clean and white.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "least",
+    "russian": "наименьший, меньше всего",
+    "transcription": "[liːst]",
+    "example": "It will take at least two hours.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "president",
+    "russian": "президент",
+    "transcription": "[ˈprezɪdənt]",
+    "example": "The president gave a speech on TV.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "learn",
+    "russian": "учить, учиться, узнавать",
+    "transcription": "[lɜːn]",
+    "example": "I want to learn how to swim.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "real",
+    "russian": "реальный, настоящий",
+    "transcription": "[rɪəl]",
+    "example": "This is a real gold ring.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "change",
+    "russian": "менять, изменение, сдача",
+    "transcription": "[tʃeɪndʒ]",
+    "example": "Don't forget your change at the till.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "team",
+    "russian": "команда",
+    "transcription": "[tiːm]",
+    "example": "Our team won the championship match.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "minute",
+    "russian": "минута",
+    "transcription": "[ˈmɪnɪt]",
+    "example": "Wait for a minute, please.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "best",
+    "russian": "лучший, лучше всего",
+    "transcription": "[best]",
+    "example": "He is my best friend in school.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "several",
+    "russian": "несколько",
+    "transcription": "[ˈsevrəl]",
+    "example": "I have read several books this month.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "idea",
+    "russian": "идея, мысль",
+    "transcription": "[aɪˈdɪə]",
+    "example": "That sounds like a brilliant idea.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "kid",
+    "russian": "ребенок, козленок",
+    "transcription": "[kɪd]",
+    "example": "The kids are playing in the garden.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "body",
+    "russian": "тело",
+    "transcription": "[ˈbɒdi]",
+    "example": "Regular exercise is good for your body.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "information",
+    "russian": "информация",
+    "transcription": "[ˌɪnfəˈmeɪʃn]",
+    "example": "Where can I find more information?",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "nothing",
+    "russian": "ничего",
+    "transcription": "[ˈnʌθɪŋ]",
+    "example": "There is nothing in the fridge.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "ago",
+    "russian": "тому назад",
+    "transcription": "[əˈɡəʊ]",
+    "example": "He left the office an hour ago.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "right",
+    "russian": "право, правильный (повтор в контексте употребления)",
+    "transcription": "[raɪt]",
+    "example": "Everyone has the right to speak.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "lead",
+    "russian": "вести, вести за собой",
+    "transcription": "[liːd]",
+    "example": "All roads lead to Rome.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "social",
+    "russian": "социальный, общественный",
+    "transcription": "[ˈsəʊʃl]",
+    "example": "They study different social problems.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "understand",
+    "russian": "понимать",
+    "transcription": "[ˌʌndəˈstænd]",
+    "example": "Do you understand the main rule?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "whether",
+    "russian": "ли (в косвенных вопросах)",
+    "transcription": "[ˈweðə(r)]",
+    "example": "I don't know whether she will come.",
+    "categoryName": "Союзы"
+  },
+  {
+    "english": "watch",
+    "russian": "смотреть, наблюдать, часы",
+    "transcription": "[wɒtʃ]",
+    "example": "I like to watch sci-fi movies.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "together",
+    "russian": "вместе",
+    "transcription": "[təˈɡeðə(r)]",
+    "example": "Let's complete this task together.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "follow",
+    "russian": "следовать, идти за",
+    "transcription": "[ˈfɒləʊ]",
+    "example": "Please follow me to the office.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "parent",
+    "russian": "родитель",
+    "transcription": "[ˈpeərənt]",
+    "example": "Every parent wants the best for their child.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "stop",
+    "russian": "останавливать, остановка",
+    "transcription": "[stɒp]",
+    "example": "The bus stop is near the shop.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "face",
+    "russian": "лицо, сталкиваться",
+    "transcription": "[feɪs]",
+    "example": "She had a huge smile on her face.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "anything",
+    "russian": "что-нибудь, что угодно",
+    "transcription": "[ˈeniθɪŋ]",
+    "example": "Do you need anything from the market?",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "create",
+    "russian": "создавать, творить",
+    "transcription": "[kriˈeɪt]",
+    "example": "Artists create beautiful artworks.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "public",
+    "russian": "публичный, общественный",
+    "transcription": "[ˈpʌblɪk]",
+    "example": "Public transport is very efficient here.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "already",
+    "russian": "уже",
+    "transcription": "[ɔːlˈredi]",
+    "example": "I have already finished my dinner.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "speak",
+    "russian": "говорить, разговаривать",
+    "transcription": "[spiːk]",
+    "example": "Can you speak a bit louder, please?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "others",
+    "russian": "другие, остальные",
+    "transcription": "[ˈʌðəz]",
+    "example": "Be kind and respectful to others.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "read",
+    "russian": "читать (повтор в контексте)",
+    "transcription": "[riːd]",
+    "example": "He loves to read detective stories.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "level",
+    "russian": "уровень",
+    "transcription": "[ˈlevl]",
+    "example": "My English level is intermediate.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "allow",
+    "russian": "позволять, разрешать",
+    "transcription": "[əˈlaʊ]",
+    "example": "Pets are not allowed in this hotel.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "add",
+    "russian": "добавлять",
+    "transcription": "[æd]",
+    "example": "Add some salt to the soup, please.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "office",
+    "russian": "офис, контора",
+    "transcription": "[ˈɒfɪs]",
+    "example": "Our office is in the city center.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "spend",
+    "russian": "тратить, проводить (время)",
+    "transcription": "[spend]",
+    "example": "I like to spend time in nature.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "door",
+    "russian": "дверь",
+    "transcription": "[dɔː(r)]",
+    "example": "Please lock the door when you leave.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "health",
+    "russian": "здоровье",
+    "transcription": "[helθ]",
+    "example": "Health is more important than wealth.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "person",
+    "russian": "человек, личность",
+    "transcription": "[ˈpɜːsn]",
+    "example": "She is a very responsible person.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "art",
+    "russian": "искусство",
+    "transcription": "[ɑːt]",
+    "example": "We visited an modern art exhibition.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "sure",
+    "russian": "уверенный, конечно",
+    "transcription": "[ʃɔː(r)]",
+    "example": "Are you absolutely sure about this?",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "war",
+    "russian": "война",
+    "transcription": "[wɔː(r)]",
+    "example": "The war destroyed many ancient cities.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "history",
+    "russian": "история",
+    "transcription": "[ˈhɪstri]",
+    "example": "He enjoys reading world history books.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "party",
+    "russian": "партия, вечеринка",
+    "transcription": "[ˈpɑːti]",
+    "example": "They invited us to a birthday party.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "within",
+    "russian": "в пределах, внутри",
+    "transcription": "[wɪˈðɪn]",
+    "example": "The order will arrive within three days.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "grow",
+    "russian": "расти, выращивать",
+    "transcription": "[ɡrəʊ]",
+    "example": "We grow tomatoes in our backyard.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "result",
+    "russian": "результат, приводить к",
+    "transcription": "[rɪˈzʌlt]",
+    "example": "We are waiting for the test results.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "open",
+    "russian": "открытый, открывать",
+    "transcription": "[ˈəʊpən]",
+    "example": "Please open the window for fresh air.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "change",
+    "russian": "менять (повтор в роли глагола)",
+    "transcription": "[tʃeɪndʒ]",
+    "example": "You need to change your habits.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "morning",
+    "russian": "утро",
+    "transcription": "[ˈmɔːnɪŋ]",
+    "example": "Good morning! Time to wake up.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "walk",
+    "russian": "ходить пешком, прогулка",
+    "transcription": "[wɔːk]",
+    "example": "Let's go for a walk in the evening.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "reason",
+    "russian": "причина, повод",
+    "transcription": "[ˈriːzn]",
+    "example": "What is the reason for your delay?",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "low",
+    "russian": "низкий",
+    "transcription": "[ləʊ]",
+    "example": "The clouds are very low today.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "win",
+    "russian": "выигрывать, побеждать",
+    "transcription": "[wɪn]",
+    "example": "They want to win the championship.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "research",
+    "russian": "исследование, исследовать",
+    "transcription": "[rɪˈsɜːtʃ]",
+    "example": "Scientists conduct medical research.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "girl",
+    "russian": "девочка, девушка",
+    "transcription": "[ɡɜːl]",
+    "example": "The little girl wore a pink hat.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "guy",
+    "russian": "парень, малый",
+    "transcription": "[ɡaɪ]",
+    "example": "He is a very nice guy.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "early",
+    "russian": "ранний, рано",
+    "transcription": "[ˈɜːli]",
+    "example": "I woke up early this morning.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "food",
+    "russian": "еда, пища",
+    "transcription": "[fuːd]",
+    "example": "Italian food is famous worldwide.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "before",
+    "russian": "раньше, прежде",
+    "transcription": "[bɪˈfɔː(r)]",
+    "example": "I have never seen this movie before.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "moment",
+    "russian": "момент, миг",
+    "transcription": "[ˈməʊmənt]",
+    "example": "Just a moment, let me check.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "himself",
+    "russian": "он сам, себя",
+    "transcription": "[hɪmˈself]",
+    "example": "He built the bookshelf himself.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "air",
+    "russian": "воздух",
+    "transcription": "[eə(r)]",
+    "example": "Mountain air is so fresh and clean.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "teacher",
+    "russian": "учитель (повтор в контексте популярности)",
+    "transcription": "[ˈtiːtʃə(r)]",
+    "example": "Our English teacher explains clearly.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "force",
+    "russian": "сила, заставлять",
+    "transcription": "[fɔːs]",
+    "example": "They used force to open the lock.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "market",
+    "russian": "рынок",
+    "transcription": "[ˈmɑːkɪt]",
+    "example": "We buy fresh vegetables at the market.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "social",
+    "russian": "общительный, социальный",
+    "transcription": "[ˈsəʊʃl]",
+    "example": "Social media apps are very popular.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "light",
+    "russian": "свет, легкий, светлый",
+    "transcription": "[laɪt]",
+    "example": "Turn on the light, please.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "ready",
+    "russian": "готовый",
+    "transcription": "[ˈredi]",
+    "example": "Are you ready to order now?",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "carry",
+    "russian": "нести, носить",
+    "transcription": "[ˈkæri]",
+    "example": "Can you carry this bag for me?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "clear",
+    "russian": "ясный, четкий, очищать",
+    "transcription": "[klɪə(r)]",
+    "example": "The instructions were clear and simple.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "yet",
+    "russian": "однако, все же",
+    "transcription": "[jet]",
+    "example": "It is simple yet effective.",
+    "categoryName": "Союзы"
+  },
+  {
+    "english": "class",
+    "russian": "класс, занятие",
+    "transcription": "[klɑːs]",
+    "example": "The history class starts at ten.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "raise",
+    "russian": "поднимать, растить (детей)",
+    "transcription": "[reɪz]",
+    "example": "Please raise your hand if you know.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "pass",
+    "russian": "проходить, передавать, сдавать (экзамен)",
+    "transcription": "[pɑːs]",
+    "example": "Did you pass your driving test?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "sell",
+    "russian": "продавать",
+    "transcription": "[sel]",
+    "example": "They sell fresh bread here.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "major",
+    "russian": "главный, крупный, мажорный",
+    "transcription": "[ˈmeɪdʒə(r)]",
+    "example": "Traffic is a major problem here.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "require",
+    "russian": "требовать, нуждаться",
+    "transcription": "[rɪˈkwaɪə(r)]",
+    "example": "This task requires specific skills.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "along",
+    "russian": "вдоль, вместе",
+    "transcription": "[əˈlɒŋ]",
+    "example": "We walked along the river bank.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "report",
+    "russian": "доклад, отчет, сообщать",
+    "transcription": "[rɪˈpɔːt]",
+    "example": "Write a financial report for today.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "role",
+    "russian": "роль",
+    "transcription": "[rəʊl]",
+    "example": "She played the leading role in the movie.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "better",
+    "russian": "лучше, лучший",
+    "transcription": "[ˈbetə(r)]",
+    "example": "I feel much better today.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "effort",
+    "russian": "усилие, попытка",
+    "transcription": "[ˈefət]",
+    "example": "It takes effort to learn a language.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "decide",
+    "russian": "решать, принимать решение",
+    "transcription": "[dɪˈsaɪd]",
+    "example": "I can't decide which dress to buy.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "rate",
+    "russian": "ставка, тариф, оценивать",
+    "transcription": "[reɪt]",
+    "example": "What is the current inflation rate?",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "strong",
+    "russian": "сильный, крепкий",
+    "transcription": "[strɒŋ]",
+    "example": "He has a strong personality.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "possible",
+    "russian": "возможный",
+    "transcription": "[ˈpɒsəbl]",
+    "example": "Is it possible to complete this today?",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "heart",
+    "russian": "сердце",
+    "transcription": "[hɑːt]",
+    "example": "Her heart was beating fast.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "drug",
+    "russian": "лекарство, наркотик",
+    "transcription": "[drʌɡ]",
+    "example": "This drug is available by prescription.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "show",
+    "russian": "шоу, показ (повтор в роли существительного)",
+    "transcription": "[ʃəʊ]",
+    "example": "The TV show was very entertaining.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "leader",
+    "russian": "лидер, руководитель",
+    "transcription": "[ˈliːdə(r)]",
+    "example": "He is a natural born leader.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "light",
+    "russian": "легкий (по весу/сложности)",
+    "transcription": "[laɪt]",
+    "example": "This jacket is very warm but light.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "voice",
+    "russian": "голос",
+    "transcription": "[vɔɪs]",
+    "example": "She has a beautiful singing voice.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "wife",
+    "russian": "жена",
+    "transcription": "[waɪf]",
+    "example": "His wife is a professional architect.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "whole",
+    "russian": "весь, целый",
+    "transcription": "[həʊl]",
+    "example": "I read the whole book in one day.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "police",
+    "russian": "полиция",
+    "transcription": "[pəˈliːs]",
+    "example": "Call the police immediately.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "mind",
+    "russian": "разум, возражать",
+    "transcription": "[maɪnd]",
+    "example": "Do you mind if I open the window?",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "finally",
+    "russian": "в конце концов, наконец",
+    "transcription": "[ˈfaɪnəli]",
+    "example": "The train finally arrived at midnight.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "pull",
+    "russian": "тянуть, тащить",
+    "transcription": "[pʊl]",
+    "example": "Pull the door to open it.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "return",
+    "russian": "возвращаться, возврат",
+    "transcription": "[rɪˈtɜːn]",
+    "example": "I will return from my trip tomorrow.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "free",
+    "russian": "свободный, бесплатный",
+    "transcription": "[friː]",
+    "example": "This Wi-Fi service is completely free.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "military",
+    "russian": "военный",
+    "transcription": "[ˈmɪlətri]",
+    "example": "He decided to join the military service.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "price",
+    "russian": "цена",
+    "transcription": "[praɪs]",
+    "example": "The price of petrol has gone up.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "less",
+    "russian": "меньше, менее",
+    "transcription": "[les]",
+    "example": "You should spend less money on coffee.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "according",
+    "russian": "согласно, в соответствии",
+    "transcription": "[əˈkɔːdɪŋ]",
+    "example": "According to the map, we are lost.",
+    "categoryName": "Предлоги"
+  },
+  {
+    "english": "decision",
+    "russian": "решение",
+    "transcription": "[dɪˈsɪʒn]",
+    "example": "It was a difficult decision to make.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "explain",
+    "russian": "объяснять",
+    "transcription": "[ɪkˈspleɪn]",
+    "example": "Can you explain this rule again?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "son",
+    "russian": "сын",
+    "transcription": "[sʌn]",
+    "example": "Their son studies engineering at college.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "hope",
+    "russian": "надеяться, надежда",
+    "transcription": "[həʊp]",
+    "example": "I hope you feel better soon.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "even",
+    "russian": "ровный, четный",
+    "transcription": "[ˈiːvn]",
+    "example": "Two, four, and six are even numbers.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "develop",
+    "russian": "развивать, разрабатывать",
+    "transcription": "[dɪˈveləp]",
+    "example": "They want to develop a new mobile app.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "view",
+    "russian": "вид, взгляд, осматривать",
+    "transcription": "[vjuː]",
+    "example": "The room has a beautiful sea view.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "relationship",
+    "russian": "отношения, связь",
+    "transcription": "[rɪˈleɪʃnʃɪp]",
+    "example": "They have a great working relationship.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "carry",
+    "russian": "нести (повтор в контексте употребления)",
+    "transcription": "[ˈkæri]",
+    "example": "The trucks carry goods across the country.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "town",
+    "russian": "городок, город",
+    "transcription": "[taʊn]",
+    "example": "He lives in a small coastal town.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "road",
+    "russian": "дорога",
+    "transcription": "[rəʊd]",
+    "example": "Follow this road to reach the station.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "drive",
+    "russian": "водить (машину), поездка",
+    "transcription": "[draɪv]",
+    "example": "Can you teach me how to drive?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "arm",
+    "russian": "рука (от плеча до кисти)",
+    "transcription": "[ɑːm]",
+    "example": "He broke his arm during the game.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "true",
+    "russian": "верный, истинный, настоящий",
+    "transcription": "[truː]",
+    "example": "The story is based on true events.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "federal",
+    "russian": "федеральный",
+    "transcription": "[ˈfedərəl]",
+    "example": "He works for the federal government.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "break",
+    "russian": "ломать, перерыв",
+    "transcription": "[breɪk]",
+    "example": "Let's take a short coffee break.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "difference",
+    "russian": "разница, различие",
+    "transcription": "[ˈdɪfrəns]",
+    "example": "What is the difference between them?",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "thank",
+    "russian": "благодарить",
+    "transcription": "[θæŋk]",
+    "example": "I want to thank you for everything.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "receive",
+    "russian": "получать, принимать",
+    "transcription": "[rɪˈsiːv]",
+    "example": "Did you receive my email message?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "value",
+    "russian": "значение, ценность, ценить",
+    "transcription": "[ˈvæljuː]",
+    "example": "The property value has risen sharply.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "international",
+    "russian": "международный",
+    "transcription": "[ˌɪntəˈnæʃnəl]",
+    "example": "He works at the international airport.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "building",
+    "russian": "здание, строительство",
+    "transcription": "[ˈbɪldɪŋ]",
+    "example": "That glass building is very modern.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "action",
+    "russian": "действие, поступок",
+    "transcription": "[ˈækʃn]",
+    "example": "We need to take immediate action.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "full",
+    "russian": "полный, сытый",
+    "transcription": "[fʊl]",
+    "example": "The fuel tank is completely full.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "model",
+    "russian": "модель, образец",
+    "transcription": "[ˈmɒdl]",
+    "example": "She bought the latest iPhone model.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "join",
+    "russian": "присоединяться, связывать",
+    "transcription": "[dʒɔɪn]",
+    "example": "Would you like to join our club?",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "season",
+    "russian": "сезон, время года",
+    "transcription": "[ˈsiːzn]",
+    "example": "Autumn is my absolute favorite season.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "society",
+    "russian": "общество",
+    "transcription": "[səˈsaɪəti]",
+    "example": "Technology changes our modern society.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "director",
+    "russian": "директор, режиссер",
+    "transcription": "[dəˈrektə(r)]",
+    "example": "The film director won an Oscar.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "tax",
+    "russian": "налог",
+    "transcription": "[tæks]",
+    "example": "The sales tax is included in the price.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "player",
+    "russian": "игрок, плеер",
+    "transcription": "[ˈpleɪə(r)]",
+    "example": "He is the best football player here.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "agree",
+    "russian": "соглашаться",
+    "transcription": "[əˈɡriː]",
+    "example": "I completely agree with your choice.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "especially",
+    "russian": "особенно, специально",
+    "transcription": "[ɪˈspeʃəli]",
+    "example": "I love fruits, especially red apples.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "record",
+    "russian": "запись, рекорд, записывать",
+    "transcription": "[ˈrekɔːd]",
+    "example": "He broke the world swimming record.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "pick",
+    "russian": "выбирать, собирать",
+    "transcription": "[pɪk]",
+    "example": "Pick the option that fits you best.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "wear",
+    "russian": "носить (одежду)",
+    "transcription": "[weə(r)]",
+    "example": "You must wear a warm coat today.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "paper",
+    "russian": "бумага, газета",
+    "transcription": "[ˈpeɪpə(r)]",
+    "example": "Write your ideas on a piece of paper.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "special",
+    "russian": "специальный, особый",
+    "transcription": "[ˈspeʃl]",
+    "example": "Today is a very special day for us.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "space",
+    "russian": "космос, пространство",
+    "transcription": "[speɪs]",
+    "example": "Is there enough space in the trunk?",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "ground",
+    "russian": "земля, почва",
+    "transcription": "[ɡraʊnd]",
+    "example": "The autumn leaves fell to the ground.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "form",
+    "russian": "форма, бланк, формировать",
+    "transcription": "[fɔːm]",
+    "example": "Please fill out this application form.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "support",
+    "russian": "поддержка, поддерживать",
+    "transcription": "[səˈpɔːt]",
+    "example": "Thank you for your continuous support.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "event",
+    "russian": "событие, мероприятие",
+    "transcription": "[ɪˈvent]",
+    "example": "The sports event was well-organized.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "official",
+    "russian": "официальный, чиновник",
+    "transcription": "[əˈfɪʃl]",
+    "example": "We are waiting for the official reply.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "matter",
+    "russian": "дело, вопрос, иметь значение",
+    "transcription": "[ˈmætə(r)]",
+    "example": "It doesn't matter what they think.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "center",
+    "russian": "центр",
+    "transcription": "[ˈsentə(r)]",
+    "example": "The hotel is in the city center.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "couple",
+    "russian": "пара, несколько",
+    "transcription": "[ˈkʌpl]",
+    "example": "I will stay here for a couple of days.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "site",
+    "russian": "место, сайт",
+    "transcription": "[saɪt]",
+    "example": "This is a great site for building a house.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "project",
+    "russian": "проект",
+    "transcription": "[ˈprɒdʒekt]",
+    "example": "We must complete this project on time.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "hit",
+    "russian": "ударять, хит",
+    "transcription": "[hɪt]",
+    "example": "The baseball player hit the ball hard.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "base",
+    "russian": "база, основа, базировать",
+    "transcription": "[beɪs]",
+    "example": "The company has its main base in London.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "star",
+    "russian": "звезда (повтор в контексте популярности)",
+    "transcription": "[stɑː(r)]",
+    "example": "She became a famous Hollywood star.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "table",
+    "russian": "стол, таблица (повтор)",
+    "transcription": "[ˈteɪbl]",
+    "example": "Look at the data in this table.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "need",
+    "russian": "нужда, потребность (в роли сущ.)",
+    "transcription": "[niːd]",
+    "example": "There is a clear need for improvement.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "court",
+    "russian": "суд, корт, площадка",
+    "transcription": "[kɔːt]",
+    "example": "The case is being decided in court.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "produce",
+    "russian": "производить, выпускать",
+    "transcription": "[prəˈdjuːs]",
+    "example": "They produce high-quality eco clothing.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "eat",
+    "russian": "есть, кушать",
+    "transcription": "[iːt]",
+    "example": "It is healthy to eat fresh fruits.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "teach",
+    "russian": "обучать, преподавать",
+    "transcription": "[tiːtʃ]",
+    "example": "She wants to teach math at school.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "oil",
+    "russian": "масло, нефть",
+    "transcription": "[ɔɪl]",
+    "example": "Add a teaspoon of olive oil.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "half",
+    "russian": "половина",
+    "transcription": "[hɑːf]",
+    "example": "Cut the orange into two halves.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "situation",
+    "russian": "ситуация, положение",
+    "transcription": "[ˌsɪtʃuˈeɪʃn]",
+    "example": "We must control this difficult situation.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "easy",
+    "russian": "легкий, простой",
+    "transcription": "[ˈiːzi]",
+    "example": "The English exam was very easy.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "cost",
+    "russian": "стоимость, стоить",
+    "transcription": "[kɒst]",
+    "example": "How much does this smartphone cost?",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "industry",
+    "russian": "индустрия, промышленность",
+    "transcription": "[ˈɪndəstri]",
+    "example": "He works in the automobile industry.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "figure",
+    "russian": "фигура, цифра, вычислять",
+    "transcription": "[ˈfɪɡə(r)]",
+    "example": "The sales figures look promising.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "face",
+    "russian": "сталкиваться (в роли глагола)",
+    "transcription": "[feɪs]",
+    "example": "We face many challenges this year.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "street",
+    "russian": "улица",
+    "transcription": "[striːt]",
+    "example": "The street was quiet and empty.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "image",
+    "russian": "изображение, образ",
+    "transcription": "[ˈɪmɪdʒ]",
+    "example": "Click to enlarge the original image.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "itself",
+    "russian": "сам, само, себя (неодуш.)",
+    "transcription": "[ɪtˈself]",
+    "example": "The computer rebooted by itself.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "phone",
+    "russian": "телефон, звонить",
+    "transcription": "[fəʊn]",
+    "example": "Don't look at your phone screen.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "either",
+    "russian": "или, любой из двух, тоже (в отриц.)",
+    "transcription": "[ˈaɪðə(r)]",
+    "example": "You can choose either option.",
+    "categoryName": "Местоимения"
+  },
+  {
+    "english": "data",
+    "russian": "данные, информация",
+    "transcription": "[ˈdeɪtə]",
+    "example": "The system processes data quickly.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "cover",
+    "russian": "покрывать, обложка",
+    "transcription": "[ˈkʌvə(r)]",
+    "example": "Snow will cover the ground tonight.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "quite",
+    "russian": "вполне, довольно-таки",
+    "transcription": "[kwaɪt]",
+    "example": "The restaurant was quite expensive.",
+    "categoryName": "Наречия"
+  },
+  {
+    "english": "picture",
+    "russian": "картинка, картина, фотография",
+    "transcription": "[ˈpɪktʃə(r)]",
+    "example": "He took a beautiful picture of us.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "clear",
+    "russian": "очищать, проясняться (в роли гл.)",
+    "transcription": "[klɪə(r)]",
+    "example": "The sky began to clear after noon.",
+    "categoryName": "Глаголы"
+  },
+  {
+    "english": "practice",
+    "russian": "практика, практиковаться",
+    "transcription": "[ˈpræktɪs]",
+    "example": "You need more practice to improve.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "piece",
+    "russian": "кусок, часть",
+    "transcription": "[piːs]",
+    "example": "Would you like a piece of cake?",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "land",
+    "russian": "земля, страна, приземляться",
+    "transcription": "[lænd]",
+    "example": "The airplane managed to land safely.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "recent",
+    "russian": "недавний, последний",
+    "transcription": "[ˈriːsnt]",
+    "example": "This is a recent photo of her.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "doctor",
+    "russian": "врач, доктор",
+    "transcription": "[ˈdɒktə(r)]",
+    "example": "You should see a doctor about it.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "wall",
+    "russian": "стена",
+    "transcription": "[wɔːl]",
+    "example": "There is a painting on the wall.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "patient",
+    "russian": "пациент, терпеливый",
+    "transcription": "[ˈpeɪʃnt]",
+    "example": "The doctor is examining a patient.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "worker",
+    "russian": "работник, рабочий",
+    "transcription": "[ˈwɜːkə(r)]",
+    "example": "She is a hard-working office worker.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "news",
+    "russian": "новости",
+    "transcription": "[njuːz]",
+    "example": "I heard some fantastic news today.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "test",
+    "russian": "тест, испытание, тестировать",
+    "transcription": "[test]",
+    "example": "We need to pass the final test.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "movie",
+    "russian": "фильм, кино",
+    "transcription": "[ˈmuːvi]",
+    "example": "Let's watch a comedy movie tonight.",
+    "categoryName": "Существительные"
+  },
+  {
+    "english": "certain",
+    "russian": "определенный, уверенный",
+    "transcription": "[ˈsɜːtn]",
+    "example": "I am certain that he is right.",
+    "categoryName": "Прилагательные"
+  },
+  {
+    "english": "north",
+    "russian": "север, северный",
+    "transcription": "[nɔːθ]",
+    "example": "Birds fly north for the summer.",
+    "categoryName": "Существительные"
+  }
+]
+

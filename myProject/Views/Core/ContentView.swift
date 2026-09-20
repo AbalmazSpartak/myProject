@@ -12,7 +12,6 @@ struct MenuItem: Identifiable {
 // MARK: - ГЛАВНЫЙ НАВИГАЦИОННЫЙ ПЕРЕКЛЮЧАТЕЛЬ
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var words: [Word]
     @State private var currentScreen = "menu" // Хранит ID активного экрана
     
     var body: some View {
@@ -35,14 +34,13 @@ struct ContentView: View {
                     .transition(.opacity)
             }
         }
-        // Пружинная анимация переключения разделов меню
-        .animation(.interpolatingSpring(stiffness: 170, damping: 22), value: currentScreen)
-        .preferredColorScheme(.light)
+        .preferredColorScheme(.light) // Нативная премиальная светлая тема
         .onAppear {
-            if words.isEmpty {
-                for word in sampleWords { modelContext.insert(word) }
-            }
+            // Безопасное высокопроизводительное наполнение базы из JSON
+            DataPreloader.preloadSampleWords(context: modelContext)
         }
+        // Пружинная анимация переключения разделов меню согласно ТЗ
+        .animation(.interpolatingSpring(stiffness: 170, damping: 22), value: currentScreen)
     }
 }
 
@@ -140,6 +138,7 @@ struct TitleScreenView: View {
             .padding(.horizontal, 24)
             
             Spacer()
+                .frame(height: 10) // Фиксированный нижний отступ для идеального баланса верстки
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(red: 247/255, green: 249/255, blue: 253/255))

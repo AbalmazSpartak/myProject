@@ -38,10 +38,10 @@ final class Word {
 
 // Обновим базовые слова для первого запуска, добавив транскрипцию
 let sampleWords = [
-    Word(english: "Apple", russian: "Яблоко", example: "I eat a fresh apple every morning.", transcription: "[ˈæpl]"),
-    Word(english: "Book", russian: "Книга", example: "This book has a very interesting story.", transcription: "[bʊk]"),
-    Word(english: "Cat", russian: "Кот", example: "The sleeping cat is very warm and fluffy.", transcription: "[kæt]"),
-    Word(english: "Dog", russian: "Собака", example: "My dog loves running in the big park.", transcription: "[dɔːɡ]"),
-    Word(english: "House", russian: "Дом", example: "We live in a beautiful white house.", transcription: "[haʊs]")
+    Word(english: "apple", russian: "яблоко", example: "I eat a fresh apple every morning.", transcription: "[ˈæpl]"),
+    Word(english: "book", russian: "книга", example: "This book has a very interesting story.", transcription: "[bʊk]"),
+    Word(english: "cat", russian: "кот", example: "The sleeping cat is very warm and fluffy.", transcription: "[kæt]"),
+    Word(english: "dog", russian: "собака", example: "My dog loves running in the big park.", transcription: "[dɔːɡ]"),
+    Word(english: "house", russian: "дом", example: "We live in a beautiful white house.", transcription: "[haʊs]")
 ]
 
