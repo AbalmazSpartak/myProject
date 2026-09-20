@@ -42,7 +42,7 @@ struct EditWordView: View {
                     .disabled(word.english.isEmpty || word.russian.isEmpty)
                 }
             }
-            .preferredColorScheme(.dark)
+            .preferredColorScheme(.light)
         }
     }
 }

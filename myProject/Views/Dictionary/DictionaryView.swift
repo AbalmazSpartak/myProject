@@ -14,32 +14,28 @@ struct DictionaryView: View {
     @State private var isImporting = false
     @State private var editingWord: Word? = nil
     
-    // Системный триггер для закрытия клавиатур во вложенных формах
+    // Системный триггер для закрытия клавиатур
     @State private var closeKeyboardsTrigger = false
     
     var body: some View {
         VStack(spacing: 0) {
-            // Верхняя навигационная панель
+            // Верхняя навигационная панель под светлую тему
             HStack {
                 Button(action: {
-                    // ИСПРАВЛЕНИЕ: Жестко гасим фокус полей ввода до переключения экрана
                     closeKeyboardsTrigger.toggle()
-                    
-                    // Минимальный фоновый тик, чтобы клавиатура успела скрыться
-                    DispatchQueue.main.async {
-                        currentScreen = "menu"
-                    }
+                    DispatchQueue.main.async { currentScreen = "menu" }
                 }) {
                     HStack(spacing: 5) {
                         Image(systemName: "chevron.left")
                         Text("Меню")
                     }
-                    .font(.headline)
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundColor(.orange)
                 }
                 Spacer()
                 Text("Мой словарь")
-                    .font(.headline)
-                    .bold()
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundColor(Color(red: 26/255, green: 37/255, blue: 68/255)) // Темно-синий заголовок
                 Spacer()
                 
                 Button(action: { isImporting = true }) {
@@ -48,38 +44,42 @@ struct DictionaryView: View {
                         .foregroundColor(.orange)
                 }
             }
-            .padding()
+            .padding(.horizontal, 24)
+            .padding(.top, 10)
+            .padding(.bottom, 15)
             
             // Горизонтальный селектор категорий (папок)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
                     Button(action: { selectedCategory = nil }) {
                         Text("Общий")
-                            .fontWeight(.medium)
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)
-                            .background(selectedCategory == nil ? Color.orange : Color.secondary.opacity(0.2))
-                            .foregroundColor(.white)
-                            .cornerRadius(20)
+                            .background(selectedCategory == nil ? Color.orange : Color.white)
+                            .foregroundColor(selectedCategory == nil ? .white : Color(red: 26/255, green: 37/255, blue: 68/255))
+                            .cornerRadius(14)
+                            .shadow(color: Color.black.opacity(0.02), radius: 4, x: 0, y: 2)
                     }
                     
                     ForEach(categories) { category in
                         HStack(spacing: 4) {
                             Text(category.name)
-                                .fontWeight(.medium)
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
                                 .onTapGesture { selectedCategory = category }
                             
                             Button(action: { deleteCategory(category) }) {
                                 Image(systemName: "xmark.circle.fill")
                                     .font(.caption)
-                                    .foregroundColor(.white.opacity(0.6))
+                                    .foregroundColor(selectedCategory?.id == category.id ? .white.opacity(0.7) : .gray.opacity(0.6))
                             }
                         }
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
-                        .background(selectedCategory?.id == category.id ? Color.orange : Color.secondary.opacity(0.2))
-                        .foregroundColor(.white)
-                        .cornerRadius(20)
+                        .background(selectedCategory?.id == category.id ? Color.orange : Color.white)
+                        .foregroundColor(selectedCategory?.id == category.id ? .white : Color(red: 26/255, green: 37/255, blue: 68/255))
+                        .cornerRadius(14)
+                        .shadow(color: Color.black.opacity(0.02), radius: 4, x: 0, y: 2)
                     }
                     
                     Button(action: { isAddingCategory = true }) {
@@ -87,18 +87,17 @@ struct DictionaryView: View {
                             Image(systemName: "plus")
                             Text("Папка")
                         }
-                        .fontWeight(.bold)
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
-                        .background(Color.blue.opacity(0.3))
+                        .background(Color.blue.opacity(0.08))
                         .foregroundColor(.blue)
-                        .cornerRadius(20)
+                        .cornerRadius(14)
                     }
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 10)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 20)
             }
-            
             // Форма добавления новых слов
             AddWordFormView(selectedCategory: selectedCategory)
                 .id(closeKeyboardsTrigger)
@@ -106,6 +105,8 @@ struct DictionaryView: View {
             // Оптимизированный список слов
             WordListView(selectedCategory: selectedCategory, editingWord: $editingWord)
         }
+        // ИСПРАВЛЕНИЕ: красим весь главный экран словаря в фирменный светлый цвет
+        .background(Color(red: 247/255, green: 249/255, blue: 253/255).ignoresSafeArea())
         .background(
             Color.clear
                 .contentShape(Rectangle())
@@ -134,9 +135,7 @@ struct DictionaryView: View {
         ) { result in
             switch result {
             case .success(let urls):
-                if let fileURL = urls.first {
-                    importWords(url: fileURL)
-                }
+                if let fileURL = urls.first { importWords(url: fileURL) }
             case .failure(let error):
                 print("Ошибка импорта: \(error.localizedDescription)")
             }
@@ -144,9 +143,7 @@ struct DictionaryView: View {
     }
     
     func deleteCategory(_ category: Category) {
-        if selectedCategory?.id == category.id {
-            selectedCategory = nil
-        }
+        if selectedCategory?.id == category.id { selectedCategory = nil }
         modelContext.delete(category)
     }
     
@@ -173,13 +170,11 @@ struct DictionaryView: View {
                 
                 if parts.count == 4 {
                     let englishPart = parts[0]
-                    
                     var transcriptionPart = parts[1]
                     transcriptionPart = transcriptionPart.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
                     if !transcriptionPart.isEmpty { transcriptionPart = "[\(transcriptionPart)]" }
                     
                     let russianPart = parts[2]
-                    
                     var examplePart = parts[3]
                     examplePart = examplePart.trimmingCharacters(in: CharacterSet(charactersIn: "\"‘'—«»"))
                     
@@ -189,8 +184,6 @@ struct DictionaryView: View {
                     }
                 }
             }
-        } catch {
-            print("Ошибка импорта: \(error.localizedDescription)")
-        }
+        } catch { print("Ошибка импорта: \(error.localizedDescription)") }
     }
 }

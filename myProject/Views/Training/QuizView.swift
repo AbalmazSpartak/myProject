@@ -15,108 +15,107 @@ struct QuizView: View {
     
     private let synthesizer = AVSpeechSynthesizer()
     
-    // НАСТРОЙКА ЦВЕТА: Задаем базовый цвет для кнопок викторины
+    // Брендовые цвета светлой темы викторины
+    private let brandDarkColor = Color(red: 26/255, green: 37/255, blue: 68/255)
+    private let brandBgColor = Color(red: 247/255, green: 249/255, blue: 253/255)
     private let baseButtonColor = Color.indigo
     
     var body: some View {
         VStack(spacing: 0) {
-            // Верхняя панель навигации и счета
+            // Верхняя навигационная панель
             HStack {
                 Button(action: { currentScreen = "menu" }) {
                     HStack(spacing: 5) {
                         Image(systemName: "chevron.left")
                         Text("В меню")
                     }
-                    .font(.headline)
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundColor(.purple)
                 }
                 Spacer()
                 Text("Тест: \(correctCount)/\(totalAnswered)")
-                    .font(.subheadline)
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
                     .foregroundColor(.gray)
-                    .bold()
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 24)
             .padding(.top, 10)
             
             Spacer()
             
             if !hasMinimumWords {
-                Text("Для генерации тестов нужно минимум 3 слова с уникальными переводами в вашем словаре.")
-                    .multilineTextAlignment(.center)
+                Text("Для генерации тестов нужно минимум 3 слова с уникальными переводами.")
+                    .font(.system(.body, design: .rounded))
                     .foregroundColor(.gray)
-                    .padding()
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
             } else if let word = currentWord {
-                // СТАБИЛЬНАЯ ЦЕЛЬНАЯ КАРТОЧКА ВИКТОРИНЫ
+                // БЕЛАЯ НЕОМОРФНАЯ КАРТОЧКА ВИКТОРИНЫ
                 VStack(spacing: 20) {
                     HStack(spacing: 15) {
                         Text(word.english)
-                            .font(.system(size: 40, weight: .bold))
+                            .font(.system(size: 38, weight: .bold, design: .rounded))
+                            .foregroundColor(brandDarkColor)
                         
                         Button(action: speakWord) {
                             Image(systemName: "speaker.wave.2.bubble.fill")
                                 .font(.title2)
-                                .foregroundColor(.blue) // Синий динамик для гармонии с индиго
+                                .foregroundColor(.purple)
                         }
                     }
-                    .padding(.top, 25)
+                    .padding(.top, 30)
                     
                     if !word.transcription.isEmpty {
                         Text(word.transcription)
-                            .font(.title3)
+                            .font(.system(size: 18, weight: .medium, design: .rounded))
                             .foregroundColor(.orange)
                             .padding(.top, -10)
                     }
-                    
                     VStack(spacing: 12) {
                         ForEach(options, id: \.self) { option in
                             Button(action: { checkAnswer(option) }) {
                                 Text(option)
-                                    .font(.headline)
+                                    .font(.system(size: 16, weight: .bold, design: .rounded))
                                     .frame(maxWidth: .infinity)
-                                    .padding()
+                                    .padding(.vertical, 14)
                                     .background(buttonColor(for: option))
-                                    .foregroundColor(.white)
-                                    .cornerRadius(12)
+                                    .foregroundColor(buttonTextColor(for: option))
+                                    .cornerRadius(16)
                             }
                             .disabled(selectedAnswer != nil)
                         }
                     }
-                    .padding(.horizontal)
-                    .padding(.bottom, 25)
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 30)
                 }
                 .frame(maxWidth: .infinity)
-                .background(Color.secondary.opacity(0.1))
-                .cornerRadius(20)
-                .padding(.horizontal)
+                .background(Color.white)
+                .cornerRadius(24)
+                .shadow(color: Color.black.opacity(0.04), radius: 12, x: 0, y: 8)
+                .padding(.horizontal, 24)
                 
-                // КНОПКА ПРОДОЛЖИТЬ (За пределами серой карточки)
+                // Кнопка продолжить (За пределами карточки)
                 VStack {
                     if selectedAnswer != nil {
-                        Button(action: {
-                            generateQuestion()
-                        }) {
+                        Button(action: { generateQuestion() }) {
                             Text("Продолжить")
-                                .font(.headline)
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
                                 .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(baseButtonColor) // Использует базовый цвет
+                                .padding(.vertical, 14)
+                                .background(Color.purple)
                                 .foregroundColor(.white)
-                                .cornerRadius(12)
+                                .cornerRadius(16)
                         }
                         .padding(.horizontal, 40)
-                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
                     }
                 }
                 .frame(height: 55)
                 .padding(.top, 25)
             }
-            
             Spacer()
         }
         .padding(.vertical)
-        .onAppear {
-            checkDatabaseAndStart()
-        }
+        .background(brandBgColor.ignoresSafeArea())
+        .onAppear { checkDatabaseAndStart() }
     }
     
     private func checkDatabaseAndStart() {
@@ -124,50 +123,29 @@ struct QuizView: View {
             let descriptor = FetchDescriptor<Word>()
             let allWords = try modelContext.fetch(descriptor)
             let uniqueTranslations = Set(allWords.map { $0.russian.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() })
-            
             if allWords.count >= 3 && uniqueTranslations.count >= 3 {
                 hasMinimumWords = true
                 generateQuestion()
-            } else {
-                hasMinimumWords = false
-            }
-        } catch {
-            hasMinimumWords = false
-        }
+            } else { hasMinimumWords = false }
+        } catch { hasMinimumWords = false }
     }
     
     func generateQuestion() {
-        withAnimation(.easeInOut(duration: 0.15)) {
-            selectedAnswer = nil
-        }
-        
+        selectedAnswer = nil
         do {
             let descriptor = FetchDescriptor<Word>()
             let allWords = try modelContext.fetch(descriptor)
-            
-            guard allWords.count >= 3 else { return }
-            
-            if let randomMainWord = allWords.randomElement() {
-                currentWord = randomMainWord
-                
-                var answers = [randomMainWord.russian]
-                
-                let alternativeTranslations = Array(Set(allWords
-                    .filter { $0.id != randomMainWord.id && $0.russian.lowercased() != randomMainWord.russian.lowercased() }
-                    .map { $0.russian }))
-                
-                let wrongAnswers = alternativeTranslations.shuffled().prefix(2)
-                answers.append(contentsOf: wrongAnswers)
-                
-                while answers.count < 3 {
-                    answers.append("—")
-                }
-                
-                options = answers.shuffled()
-            }
-        } catch {
-            print("Ошибка генерации викторины: \(error.localizedDescription)")
-        }
+            guard let randomMainWord = allWords.randomElement() else { return }
+            currentWord = randomMainWord
+            var answers = [randomMainWord.russian]
+            let alternativeTranslations = Array(Set(allWords
+                .filter { $0.id != randomMainWord.id && $0.russian.lowercased() != randomMainWord.russian.lowercased() }
+                .map { $0.russian }))
+            let wrongAnswers = alternativeTranslations.shuffled().prefix(2)
+            answers.append(contentsOf: wrongAnswers)
+            while answers.count < 3 { answers.append("—") }
+            options = answers.shuffled()
+        } catch {}
     }
     
     func speakWord() {
@@ -180,19 +158,21 @@ struct QuizView: View {
     }
     
     func checkAnswer(_ option: String) {
-        withAnimation(.easeInOut(duration: 0.15)) {
-            selectedAnswer = option
-        }
+        selectedAnswer = option
         totalAnswered += 1
-        if option == currentWord?.russian {
-            correctCount += 1
-        }
+        if option == currentWord?.russian { correctCount += 1 }
     }
     
     func buttonColor(for option: String) -> Color {
-        guard let selected = selectedAnswer else { return baseButtonColor }
+        guard let selected = selectedAnswer else { return baseButtonColor.opacity(0.08) }
         if option == currentWord?.russian { return .green }
         if option == selected { return .red }
+        return baseButtonColor.opacity(0.03)
+    }
+    
+    func buttonTextColor(for option: String) -> Color {
+        guard selectedAnswer != nil else { return baseButtonColor }
+        if option == currentWord?.russian || option == selectedAnswer { return .white }
         return baseButtonColor.opacity(0.4)
     }
 }

@@ -5,6 +5,7 @@ import SwiftData
 struct MenuItem: Identifiable {
     let id: String
     let title: String
+    let subtitle: String
     let icon: String
     let color: Color
 }
@@ -16,7 +17,8 @@ struct ContentView: View {
     
     var body: some View {
         ZStack {
-            Color.black
+            // Эффект глубокого черного или светлого фона в зависимости от экрана
+            Color.clear // Заменено вместо старой привязки темы
                 .ignoresSafeArea()
             
             switch currentScreen {
@@ -34,7 +36,6 @@ struct ContentView: View {
                     .transition(.opacity)
             }
         }
-        // Быстрый и плавный пружинный переход для iOS 18
         .animation(.interpolatingSpring(stiffness: 170, damping: 22), value: currentScreen)
         .preferredColorScheme(.dark)
         .onAppear {
@@ -50,122 +51,131 @@ struct ContentView: View {
 // MARK: - СТРУКТУРА ГЛАВНОГО МЕНЮ (TitleScreenView)
 struct TitleScreenView: View {
     @Binding var currentScreen: String
-    
-    // ИСПРАВЛЕНИЕ: Используем правильный тип состояния для режима редактирования списка в SwiftUI
-    @State private var editMode: EditMode = .inactive
     @AppStorage("menu_order") private var menuOrderData: String = "cards,quiz,dictionary"
     @State private var menuItems: [MenuItem] = []
     
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                Spacer()
-                Button(action: {
-                    withAnimation {
-                        editMode = editMode == .active ? .inactive : .active
-                    }
-                }) {
-                    Text(editMode == .active ? "Готово" : "Изменить меню")
-                        .font(.subheadline)
-                        .bold()
-                        .foregroundColor(.blue)
-                }
-            }
-            .padding(.horizontal, 25)
-            .padding(.top, 15)
-            
+            // ИСПРАВЛЕНИЕ: Ограничиваем верхний отступ, чтобы меню плавно опустилось вниз
             Spacer()
+                .frame(minHeight: 20, maxHeight: 60)
             
-            Image(systemName: "character.book.closed.fill")
-                .font(.system(size: 90))
-                .foregroundColor(.blue)
-                .shadow(color: .blue.opacity(0.3), radius: 10, x: 0, y: 10)
-                .padding(.bottom, 15)
-            
-            VStack(spacing: 5) {
-                Text("WordLearner")
-                    .font(.system(size: 38, weight: .black, design: .rounded))
+            // 1. Иконка-логотип в белом закругленном квадрате с мягкой тенью
+            ZStack {
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(Color.white)
+                    .frame(width: 100, height: 100)
+                    .shadow(color: Color.black.opacity(0.06), radius: 15, x: 0, y: 10)
                 
-                Text("Твой персональный тренажер английского")
-                    .font(.subheadline)
+                Image(systemName: "book.closed.fill")
+                    .font(.system(size: 44, weight: .semibold))
+                    .foregroundStyle(LinearGradient(
+                        colors: [Color.blue, Color.cyan],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
+            }
+            .padding(.bottom, 25)
+            
+            // 2. Блок заголовков (Фирменные шрифты)
+            VStack(spacing: 12) {
+                Text("WordLearner")
+                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .foregroundColor(Color(red: 26/255, green: 37/255, blue: 68/255))
+                
+                Text("Твой персональный тренажер\nанглийского языка")
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
                     .foregroundColor(.gray)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
+                    .lineSpacing(4)
             }
             
+            // Центральная распорка между текстом и блоком кнопок
             Spacer()
+                .frame(minHeight: 20, maxHeight: 50)
             
-            List {
+            // 3. Кастомные интерактивные карточки
+            VStack(spacing: 16) {
                 ForEach(menuItems) { item in
                     Button(action: {
-                        if editMode != .active {
-                            currentScreen = item.id
-                        }
+                        currentScreen = item.id
                     }) {
-                        HStack(spacing: 15) {
-                            Image(systemName: item.icon)
-                                .font(.title2)
-                                .frame(width: 30)
+                        HStack(spacing: 0) {
+                            Rectangle()
+                                .fill(item.color)
+                                .frame(width: 6)
                             
-                            Text(item.title)
-                                .font(.headline)
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(item.color.opacity(0.12))
+                                    .frame(width: 48, height: 48)
+                                
+                                Image(systemName: item.icon)
+                                    .font(.title3)
+                                    .foregroundColor(item.color)
+                            }
+                            .padding(.leading, 16)
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(item.title)
+                                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                                    .foregroundColor(.black)
+                                
+                                Text(item.subtitle)
+                                    .font(.system(size: 14, weight: .regular, design: .rounded))
+                                    .foregroundColor(.gray)
+                            }
+                            .padding(.leading, 16)
                             
                             Spacer()
                             
-                            if editMode != .active {
-                                Image(systemName: "chevron.right")
-                                    .font(.subheadline)
-                                    .foregroundColor(.white.opacity(0.3))
-                            }
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.gray.opacity(0.6))
+                                .padding(.trailing, 20)
                         }
-                        .padding(.vertical, 8)
-                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 84)
+                        .background(Color.white)
+                        .cornerRadius(20)
+                        .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 6)
                     }
-                    .listRowBackground(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(item.color) // ИСПРАВЛЕНИЕ: Ошибка ShapeStyle полностью ушла
-                            .padding(.vertical, 6)
-                    )
-                    .listRowSeparator(.hidden)
+                    .buttonStyle(FlatButtonStyle())
                 }
-                .onMove(perform: moveBlock)
             }
-            .listStyle(PlainListStyle())
-            .environment(\.editMode, $editMode)
-            .frame(height: 280)
-            .padding(.horizontal, 25)
+            .padding(.horizontal, 24)
             
+            // Нижний гибкий отступ для точного баланса на iPhone 12
             Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(red: 247/255, green: 249/255, blue: 253/255))
+        // ИСПРАВЛЕНИЕ: Убрали игнорирование безопасной зоны (.edgesIgnoringSafeArea), чтобы интерфейс не лез на часы
         .onAppear(perform: loadMenuOrder)
-    }
-    
-    private func moveBlock(from source: IndexSet, to destination: Int) {
-        menuItems.move(fromOffsets: source, toOffset: destination)
-        let newOrder = menuItems.map { $0.id }.joined(separator: ",")
-        menuOrderData = newOrder
     }
     
     private func loadMenuOrder() {
         let allItems = [
-            "cards": MenuItem(id: "cards", title: "Карточки с вводом", icon: "keyboard", color: Color.blue),
-            "quiz": MenuItem(id: "quiz", title: "Викторина\n(Выбор ответа)", icon: "checkmark.seal.fill", color: Color.purple),
-            "dictionary": MenuItem(id: "dictionary", title: "Открыть словарь", icon: "book.fill", color: Color.orange)
+            "cards": MenuItem(id: "cards", title: "Карточки с вводом", subtitle: "Учи новые слова", icon: "keyboard.fill", color: Color.blue),
+            "quiz": MenuItem(id: "quiz", title: "Викторина", subtitle: "Тесты с вариантами", icon: "checkmark.seal.fill", color: Color.purple),
+            "dictionary": MenuItem(id: "dictionary", title: "Словарь", subtitle: "Все изученные слова", icon: "book.fill", color: Color.orange)
         ]
         
         let ids = menuOrderData.components(separatedBy: ",")
         var orderedList: [MenuItem] = []
-        
         for id in ids {
-            if let item = allItems[id] {
-                orderedList.append(item)
-            }
+            if let item = allItems[id] { orderedList.append(item) }
         }
-        
-        if orderedList.count != 3 {
-            menuItems = [allItems["cards"]!, allItems["quiz"]!, allItems["dictionary"]!]
-        } else {
-            menuItems = orderedList
-        }
+        menuItems = orderedList.count == 3 ? orderedList : [allItems["cards"]!, allItems["quiz"]!, allItems["dictionary"]!]
+    }
+}
+
+// MARK: - СИСТЕМНЫЕ СТИЛИ ДЛЯ КРАСИВОГО НАЖАТИЯ
+struct FlatButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .opacity(configuration.isPressed ? 0.95 : 1.0)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
     }
 }
