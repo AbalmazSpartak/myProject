@@ -117,7 +117,7 @@ struct DictionaryView: View {
     
     private var categoryDropdownCard: some View {
         VStack(spacing: 0) {
-            // Главная кнопка-заголовок карточки
+            // Главная кнопка-заголовок
             Button(action: {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                     isDropdownExpanded.toggle()
@@ -141,61 +141,66 @@ struct DictionaryView: View {
                 .padding(16)
             }
             
-            // Выпадающий список вариантов
             if isDropdownExpanded {
                 VStack(spacing: 0) {
-                    // Вариант "Общий"
-                    Button(action: {
-                        selectCategoryAndClose(nil)
-                    }) {
-                        HStack {
-                            Text("Общий")
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(selectedCategory == nil ? .orange : .brandDark)
-                            
-                            Spacer()
-                            
-                            if selectedCategory == nil {
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 14, weight: .bold))
-                                    .foregroundColor(.orange)
+                    // Прокручиваемая область, ограниченная по высоте (примерно 10 элементов)
+                    ScrollView(.vertical, showsIndicators: true) {
+                        VStack(spacing: 0) {
+                            // Вариант "Общий"
+                            Button(action: {
+                                selectCategoryAndClose(nil)
+                            }) {
+                                HStack {
+                                    Text("Общий")
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(selectedCategory == nil ? .orange : .brandDark)
+                                    
+                                    Spacer()
+                                    
+                                    if selectedCategory == nil {
+                                        Image(systemName: "checkmark")
+                                            .font(.system(size: 14, weight: .bold))
+                                            .foregroundColor(.orange)
+                                    }
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 12)
                             }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                    }
-                    
-                    Divider()
-                        .padding(.horizontal, 16)
-                    
-                    // Список категорий из базы
-                    ForEach(categories) { category in
-                        let isSelected = selectedCategory?.id == category.id
-                        Button(action: {
-                            selectCategoryAndClose(category)
-                        }) {
-                            HStack {
-                                Text("\(category.name) (\(countWords(for: category)))")
-                                    .font(.system(size: 16, weight: isSelected ? .bold : .semibold))
-                                    .foregroundColor(isSelected ? .orange : .brandDark)
-                                
-                                Spacer()
-                                
-                                if isSelected {
-                                    Image(systemName: "checkmark")
-                                        .font(.system(size: 14, weight: .bold))
-                                        .foregroundColor(.orange)
+                            
+                            Divider()
+                                .padding(.horizontal, 16)
+                            
+                            // Список категорий
+                            ForEach(categories) { category in
+                                let isSelected = selectedCategory?.id == category.id
+                                Button(action: {
+                                    selectCategoryAndClose(category)
+                                }) {
+                                    HStack {
+                                        Text("\(category.name) (\(countWords(for: category)))")
+                                            .font(.system(size: 16, weight: isSelected ? .bold : .semibold))
+                                            .foregroundColor(isSelected ? .orange : .brandDark)
+                                        
+                                        Spacer()
+                                        
+                                        if isSelected {
+                                            Image(systemName: "checkmark")
+                                                .font(.system(size: 14, weight: .bold))
+                                                .foregroundColor(.orange)
+                                        }
+                                    }
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 12)
                                 }
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 12)
                         }
                     }
+                    .frame(maxHeight: 440) // Высота примерно для 10 строк (по ~44pt на элемент)
                     
                     Divider()
                         .padding(.horizontal, 16)
                     
-                    // Кнопка: Создать новую папку...
+                    // Кнопки действия (зафиксированы внизу под списком)
                     Button(action: {
                         isDropdownExpanded = false
                         isShowingAddCategoryAlert = true
@@ -212,7 +217,6 @@ struct DictionaryView: View {
                         .padding(.vertical, 12)
                     }
                     
-                    // Кнопка: Управление папками...
                     Button(action: {
                         isDropdownExpanded = false
                         isShowingManageCategories = true
