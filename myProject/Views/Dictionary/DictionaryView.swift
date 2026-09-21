@@ -69,7 +69,7 @@ struct DictionaryView: View {
                             .font(.system(size: 15, weight: .bold, design: .rounded))
                             .foregroundColor(Color(red: 26/255, green: 37/255, blue: 68/255))
                         
-                        Text(selectedCategory == nil ? "" : "(\(selectedCategory!.words.count))")
+                        Text(selectedCategory == nil ? "" : "(\(countWords(for: selectedCategory!)))")
                             .font(.system(size: 13, weight: .medium, design: .rounded))
                             .foregroundColor(.gray.opacity(0.6))
                         
@@ -127,7 +127,7 @@ struct DictionaryView: View {
                                     withAnimation { isDropdownExpanded = false }
                                 }) {
                                     DropdownRow(
-                                        title: "\(category.name) (\(category.words.count))",
+                                        title: "\(category.name) (\(countWords(for: category)))",
                                         isSelected: selectedCategory?.id == category.id
                                     )
                                 }
@@ -176,7 +176,7 @@ struct DictionaryView: View {
                                 .font(.system(.body, design: .rounded, weight: .medium))
                                 .foregroundColor(Color(red: 26/255, green: 37/255, blue: 68/255))
                             Spacer()
-                            Text("\(category.words.count) слов")
+                            Text("\(countWords(for: category)) слов")
                                 .font(.system(size: 14, weight: .regular, design: .rounded))
                                 .foregroundColor(.gray)
                         }
@@ -271,6 +271,19 @@ struct DictionaryView: View {
                 }
             }
         } catch { print("Ошибка импорта: \(error.localizedDescription)") }
+    }
+    private func countWords(for category: Category) -> Int {
+        let categoryID = category.id
+        let descriptor = FetchDescriptor<Word>(
+            predicate: #Predicate<Word> { word in
+                if let cat = word.category {
+                    return cat.id == categoryID
+                } else {
+                    return false
+                }
+            }
+        )
+        return (try? modelContext.fetchCount(descriptor)) ?? 0
     }
 }
 
