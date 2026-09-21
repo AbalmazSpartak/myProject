@@ -48,60 +48,77 @@ struct DictionaryView: View {
             .padding(.top, 10)
             .padding(.bottom, 15)
             
-            // Горизонтальный селектор категорий (папок)
-            // Горизонтальный селектор категорий (папок)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    // Кнопка "Общий словарь"
-                    Button(action: { selectedCategory = nil }) {
+            // Раскрывающийся список категорий (папок) на базе нативного Menu
+            Menu {
+                // 1. Пункт "Общий словарь"
+                Button(action: { selectedCategory = nil }) {
+                    HStack {
                         Text("Общий")
-                            .font(.system(size: 14, weight: .semibold, design: .rounded))
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(selectedCategory == nil ? Color.orange : Color.white)
-                            .foregroundColor(selectedCategory == nil ? .white : Color(red: 26/255, green: 37/255, blue: 68/255))
-                            .cornerRadius(14)
-                            .shadow(color: Color.black.opacity(0.02), radius: 4, x: 0, y: 2)
-                    }
-                    
-                    // Кастомные папки пользователя и из JSON
-                    ForEach(categories) { category in
-                        Text(category.name)
-                            .font(.system(size: 14, weight: .semibold, design: .rounded))
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(selectedCategory?.id == category.id ? Color.orange : Color.white)
-                            .foregroundColor(selectedCategory?.id == category.id ? .white : Color(red: 26/255, green: 37/255, blue: 68/255))
-                            .cornerRadius(14)
-                            .shadow(color: Color.black.opacity(0.02), radius: 4, x: 0, y: 2)
-                            .onTapGesture { selectedCategory = category }
-                            // Безопасное удаление папки по долгому нажатию
-                            .contextMenu {
-                                Button(role: .destructive) {
-                                    deleteCategory(category)
-                                } label: {
-                                    Label("Удалить папку", systemImage: "trash")
-                                }
-                            }
-                    }
-                    
-                    // Кнопка добавления новой папки
-                    Button(action: { isAddingCategory = true }) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "plus")
-                            Text("Папка")
-                        }
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(Color.blue.opacity(0.08))
-                        .foregroundColor(.blue)
-                        .cornerRadius(14)
+                        Spacer()
+                        // Если выбран "Общий", подсветим его галочкой
+                        if selectedCategory == nil { Image(systemName: "checkmark") }
                     }
                 }
+                
+                Divider() // Визуальный разделитель между Общим и кастомными папками
+                
+                // 2. Список всех доступных папок
+                ForEach(categories) { category in
+                    Button(action: { selectedCategory = category }) {
+                        HStack {
+                            Text("\(category.name) (\(category.words.count))")
+                            Spacer()
+                            if selectedCategory?.id == category.id { Image(systemName: "checkmark") }
+                        }
+                    }
+                    // Безопасное удаление конкретной папки прямо из выпадающего списка
+                    .contextMenu {
+                        Button(role: .destructive) {
+                            deleteCategory(category)
+                        } label: {
+                            Label("Удалить папку", systemImage: "trash")
+                        }
+                    }
+                }
+                
+                Divider()
+                
+                // 3. Кнопка создания новой папки прямо внутри меню
+                Button(action: { isAddingCategory = true }) {
+                    Label("Создать новую папку...", systemImage: "folder.badge.plus")
+                }
+                
+            } label: {
+                // Внешний вид кнопки раскрывающегося списка (занимает место старой ленты)
+                HStack {
+                    Image(systemName: selectedCategory == nil ? "folder.fill" : "folder.fill.badge.gearshape")
+                        .foregroundColor(.orange)
+                        .font(.system(size: 16, weight: .semibold))
+                    
+                    Text(selectedCategory == nil ? "Общий словарь" : selectedCategory!.name)
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .foregroundColor(Color(red: 26/255, green: 37/255, blue: 68/255))
+                    
+                    // Маленький счетчик слов для выбранной в данный момент папки
+                    Text(selectedCategory == nil ? "" : "(\(selectedCategory!.words.count))")
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundColor(.gray.opacity(0.6))
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.gray.opacity(0.5))
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color.white)
+                .cornerRadius(14)
+                .shadow(color: Color.black.opacity(0.02), radius: 6, x: 0, y: 3)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 20)
             }
+
             // Форма добавления новых слов
             AddWordFormView(selectedCategory: selectedCategory)
                 .id(closeKeyboardsTrigger)
