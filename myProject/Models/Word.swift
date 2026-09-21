@@ -7,7 +7,8 @@ final class Category {
     var name: String
     
     // Связь: при удалении категории все слова в ней удалятся автоматически
-    @Relationship(deleteRule: .cascade) var words: [Word] = []
+    @Relationship(deleteRule: .cascade, inverse: \Word.category)
+    var words: [Word] = []
     
     init(name: String) {
         self.id = UUID()

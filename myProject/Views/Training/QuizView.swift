@@ -7,6 +7,7 @@ struct QuizView: View {
     @Binding var currentScreen: String
     
     @State private var currentWord: Word?
+    @State private var cachedWords: [Word] = []
     @State private var options: [String] = []
     @State private var selectedAnswer: String?
     @State private var correctCount = 0
@@ -121,31 +122,39 @@ struct QuizView: View {
     private func checkDatabaseAndStart() {
         do {
             let descriptor = FetchDescriptor<Word>()
-            let allWords = try modelContext.fetch(descriptor)
-            let uniqueTranslations = Set(allWords.map { $0.russian.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() })
-            if allWords.count >= 3 && uniqueTranslations.count >= 3 {
+            cachedWords = try modelContext.fetch(descriptor)
+            
+            let uniqueTranslations = Set(cachedWords.map {
+                $0.russian.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            })
+            
+            if cachedWords.count >= 3 && uniqueTranslations.count >= 3 {
                 hasMinimumWords = true
                 generateQuestion()
-            } else { hasMinimumWords = false }
-        } catch { hasMinimumWords = false }
+            } else {
+                hasMinimumWords = false
+            }
+        } catch {
+            hasMinimumWords = false
+        }
     }
-    
+
     func generateQuestion() {
         selectedAnswer = nil
-        do {
-            let descriptor = FetchDescriptor<Word>()
-            let allWords = try modelContext.fetch(descriptor)
-            guard let randomMainWord = allWords.randomElement() else { return }
-            currentWord = randomMainWord
-            var answers = [randomMainWord.russian]
-            let alternativeTranslations = Array(Set(allWords
-                .filter { $0.id != randomMainWord.id && $0.russian.lowercased() != randomMainWord.russian.lowercased() }
-                .map { $0.russian }))
-            let wrongAnswers = alternativeTranslations.shuffled().prefix(2)
-            answers.append(contentsOf: wrongAnswers)
-            while answers.count < 3 { answers.append("—") }
-            options = answers.shuffled()
-        } catch {}
+        guard cachedWords.count >= 3, let randomMainWord = cachedWords.randomElement() else { return }
+        
+        currentWord = randomMainWord
+        var answers = [randomMainWord.russian]
+        
+        let alternativeTranslations = Array(Set(cachedWords
+            .filter { $0.id != randomMainWord.id && $0.russian.lowercased() != randomMainWord.russian.lowercased() }
+            .map { $0.russian }))
+        
+        let wrongAnswers = alternativeTranslations.shuffled().prefix(2)
+        answers.append(contentsOf: wrongAnswers)
+        
+        while answers.count < 3 { answers.append("—") }
+        options = answers.shuffled()
     }
     
     func speakWord() {

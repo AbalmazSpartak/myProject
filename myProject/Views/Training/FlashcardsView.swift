@@ -184,12 +184,27 @@ struct FlashcardsView: View {
     
     private func generateSession() {
         do {
-            let descriptor = FetchDescriptor<Word>()
-            let allAvailableWords = try modelContext.fetch(descriptor)
-            guard !allAvailableWords.isEmpty else { return }
-            sessionWords = Array(allAvailableWords.shuffled().prefix(30))
+            var descriptor = FetchDescriptor<Word>()
+            let totalCount = (try? modelContext.fetchCount(descriptor)) ?? 0
+            guard totalCount > 0 else {
+                sessionWords = []
+                return
+            }
+            
+            let limit = 30
+            if totalCount <= limit {
+                sessionWords = (try modelContext.fetch(descriptor)).shuffled()
+            } else {
+                // Случайное смещение, чтобы брать разные 30 слов при каждом запуске
+                let maxOffset = totalCount - limit
+                descriptor.fetchOffset = Int.random(in: 0...maxOffset)
+                descriptor.fetchLimit = limit
+                sessionWords = (try modelContext.fetch(descriptor)).shuffled()
+            }
             currentIndex = 0
-        } catch { sessionWords = [] }
+        } catch {
+            sessionWords = []
+        }
     }
     
     func speakWord() {
