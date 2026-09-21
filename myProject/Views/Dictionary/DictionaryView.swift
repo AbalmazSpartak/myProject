@@ -3,6 +3,7 @@ import SwiftData
 import UniformTypeIdentifiers
 
 struct DictionaryView: View {
+    @Binding var currentScreen: String // <-- ДОБАВЬТЕ ЭТУ СТРОКУ
     @Environment(\.modelContext) private var modelContext
     
     @Query(sort: \Category.name) private var categories: [Category]
@@ -12,6 +13,7 @@ struct DictionaryView: View {
     @State private var searchText = ""
     @State private var isImporting = false
     @State private var isShowingAddWord = false
+    @State private var isShowingManageCategories = false
     
     var filteredWords: [Word] {
         allWords.filter { word in
@@ -39,34 +41,7 @@ struct DictionaryView: View {
                 } else {
                     List {
                         ForEach(filteredWords) { word in
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack(spacing: 6) {
-                                        Text(word.english)
-                                            .font(.headline)
-                                        
-                                        if !word.transcription.isEmpty {
-                                            Text("[\(word.transcription)]")
-                                                .font(.subheadline)
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-                                    
-                                    if !word.example.isEmpty {
-                                        Text(word.example)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                            .lineLimit(1)
-                                    }
-                                }
-                                
-                                Spacer()
-                                
-                                Text(word.russian)
-                                    .font(.body)
-                                    .foregroundColor(.primary)
-                            }
-                            .padding(.vertical, 2)
+                            WordRowView(word: word)
                         }
                         .onDelete(perform: deleteWords)
                     }
@@ -76,6 +51,12 @@ struct DictionaryView: View {
             .navigationTitle("Словарь")
             .searchable(text: $searchText, prompt: "Поиск слова...")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(action: { isShowingManageCategories = true }) {
+                        Image(systemName: "folder.badge.gearshape")
+                    }
+                }
+                
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: 16) {
                         Button(action: { isImporting = true }) {
@@ -104,12 +85,14 @@ struct DictionaryView: View {
             .sheet(isPresented: $isShowingAddWord) {
                 AddWordFormView(selectedCategory: selectedCategory)
             }
+            .sheet(isPresented: $isShowingManageCategories) {
+                ManageCategoriesView()
+            }
         }
     }
     
     // MARK: - Subviews
     
-    // ИСПРАВЛЕНО: Заменили View на `some View`
     private var categoryHeaderView: some View {
         Menu {
             Button("Все категории (\(allWords.count))") {
@@ -202,7 +185,6 @@ struct DictionaryView: View {
                 }
             }
             
-            // ИСПРАВЛЕНО: Передаем неизменяемую копию для безопасности потоков Swift 6
             let itemsToInsert = parsedDTOs
             
             await MainActor.run {
@@ -215,6 +197,104 @@ struct DictionaryView: View {
                         category: currentCategory
                     )
                     modelContext.insert(newWord)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - WordRowView (Автоматически убирает дублирующиеся скобки [[ ... ]])
+
+struct WordRowView: View {
+    let word: Word
+    
+    /// Безопасно форматирует транскрипцию, предотвращая скобки вида [[ə'baʊt]]
+    private var formattedTranscription: String {
+        let trimmed = word.transcription.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+        if trimmed.hasPrefix("[") && trimmed.hasSuffix("]") {
+            return trimmed
+        }
+        return "[\(trimmed)]"
+    }
+    
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(word.english)
+                        .font(.headline)
+                    
+                    if !formattedTranscription.isEmpty {
+                        Text(formattedTranscription)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                if !word.example.isEmpty {
+                    Text(word.example)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+            }
+            
+            Spacer()
+            
+            Text(word.russian)
+                .font(.body)
+                .foregroundColor(.primary)
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+// MARK: - ManageCategoriesView (Экран управления категориями)
+
+struct ManageCategoriesView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \Category.name) private var categories: [Category]
+    
+    @State private var newCategoryName = ""
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Создать категорию") {
+                    HStack {
+                        TextField("Название категории", text: $newCategoryName)
+                        
+                        Button("Добавить") {
+                            let trimmed = newCategoryName.trimmingCharacters(in: .whitespaces)
+                            guard !trimmed.isEmpty else { return }
+                            let newCategory = Category(name: trimmed)
+                            modelContext.insert(newCategory)
+                            newCategoryName = ""
+                        }
+                        .disabled(newCategoryName.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+                }
+                
+                Section("Существующие категории") {
+                    ForEach(categories) { category in
+                        Text(category.name)
+                    }
+                    .onDelete { offsets in
+                        for index in offsets {
+                            modelContext.delete(categories[index])
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Категории")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Готово") {
+                        dismiss()
+                    }
                 }
             }
         }
