@@ -1,8 +1,7 @@
 import SwiftUI
 import SwiftData
 import AVFoundation
-import AVFoundation
-
+ 
 struct QuizView: View {
     @Environment(\.modelContext) private var modelContext
     @Binding var currentScreen: String
