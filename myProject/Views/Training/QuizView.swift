@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import AVFoundation
+import AVFoundation
 
 struct QuizView: View {
     @Environment(\.modelContext) private var modelContext
@@ -14,7 +15,7 @@ struct QuizView: View {
     @State private var totalAnswered = 0
     @State private var hasMinimumWords = false
     
-    private let synthesizer = AVSpeechSynthesizer()
+
     
     // Брендовые цвета светлой темы викторины
     private let brandDarkColor = Color(red: 26/255, green: 37/255, blue: 68/255)
@@ -159,11 +160,7 @@ struct QuizView: View {
     
     func speakWord() {
         guard let word = currentWord else { return }
-        let utterance = AVSpeechUtterance(string: word.english)
-        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-        utterance.rate = 0.45
-        if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
-        synthesizer.speak(utterance)
+        TextToSpeechManager.shared.speak(word.english)
     }
     
     func checkAnswer(_ option: String) {

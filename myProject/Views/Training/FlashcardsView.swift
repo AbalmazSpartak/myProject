@@ -15,7 +15,6 @@ struct FlashcardsView: View {
     @State private var totalAnswered = 0
     @FocusState private var isTextFieldFocused: Bool
     
-    private let synthesizer = AVSpeechSynthesizer()
     
     // Брендовые цвета нового светлого дизайна
     private let brandDarkColor = Color(red: 26/255, green: 37/255, blue: 68/255)
@@ -209,11 +208,7 @@ struct FlashcardsView: View {
     
     func speakWord() {
         guard !sessionWords.isEmpty else { return }
-        let utterance = AVSpeechUtterance(string: sessionWords[currentIndex].english)
-        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-        utterance.rate = 0.45
-        if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
-        synthesizer.speak(utterance)
+        TextToSpeechManager.shared.speak(sessionWords[currentIndex].english)
     }
     
     func checkAnswer() {
