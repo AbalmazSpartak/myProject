@@ -76,7 +76,7 @@ struct TitleScreenView: View {
             VStack(spacing: 12) {
                 Text("WordLearner")
                     .font(.system(size: 36, weight: .bold, design: .rounded))
-                    .foregroundColor(Color(red: 26/255, green: 37/255, blue: 68/255))
+                    .foregroundColor(.brandDark)
                 
                 Text("Твой персональный тренажер\nанглийского языка")
                     .font(.system(size: 16, weight: .medium, design: .rounded))
@@ -141,7 +141,7 @@ struct TitleScreenView: View {
                 .frame(height: 10) // Фиксированный нижний отступ для идеального баланса верстки
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(red: 247/255, green: 249/255, blue: 253/255))
+        .background(Color.brandBackground)
         .onAppear(perform: loadMenuOrder)
     }
     

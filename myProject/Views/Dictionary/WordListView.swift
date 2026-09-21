@@ -7,7 +7,7 @@ struct WordListView: View {
     @Binding var editingWord: Word?
     
     private var showCategoryTag: Bool
-    private let brandDarkColor = Color(red: 26/255, green: 37/255, blue: 68/255)
+    private let brandDarkColor = Color.brandDark
     
     init(selectedCategory: Category?, editingWord: Binding<Word?>) {
         self._editingWord = editingWord
@@ -74,7 +74,7 @@ struct WordListView: View {
         }
         .listStyle(PlainListStyle())
         .scrollContentBackground(.hidden)
-        .background(Color(red: 247/255, green: 249/255, blue: 253/255))
+        .background(Color.brandBackground)
     }
     
     private func deleteWord(at offsets: IndexSet) {

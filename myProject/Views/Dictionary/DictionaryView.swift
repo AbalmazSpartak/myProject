@@ -1,162 +1,306 @@
 import SwiftUI
 import SwiftData
-import UniformTypeIdentifiers
 
 struct DictionaryView: View {
+    @Binding var currentScreen: String
+    
     @Environment(\.modelContext) private var modelContext
     
     @Query(sort: \Category.name) private var categories: [Category]
     @Query(sort: \Word.english) private var allWords: [Word]
     
     @State private var selectedCategory: Category?
-    @State private var searchText = ""
-    @State private var isImporting = false
-    @State private var isShowingAddWord = false
+    @State private var isDropdownExpanded = false
+    
+    @State private var isShowingManageCategories = false
+    @State private var isShowingAddCategoryAlert = false
+    @State private var newCategoryName = ""
+    
+    // Форма добавления слова
+    @State private var newEnglish = ""
+    @State private var newTranscription = ""
+    @State private var newRussian = ""
+    @State private var newExample = ""
     
     var filteredWords: [Word] {
         allWords.filter { word in
             let matchesCategory = selectedCategory == nil || word.category?.id == selectedCategory?.id
-            let matchesSearch = searchText.isEmpty ||
-                word.english.localizedCaseInsensitiveContains(searchText) ||
-                word.russian.localizedCaseInsensitiveContains(searchText)
-            return matchesCategory && matchesSearch
+            return matchesCategory
         }
     }
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // Меню выбора категории
-                categoryHeaderView
+        ZStack {
+            // Светлый фон экрана
+            Color.brandBackground
+                .ignoresSafeArea()
+            
+            VStack(spacing: 12) {
+                // Шапка (Верхняя панель)
+                customHeader
                 
-                // Список слов
-                if filteredWords.isEmpty {
-                    ContentUnavailableView(
-                        "Слова не найдены",
-                        systemImage: "book.closed",
-                        description: Text("Добавьте новое слово или импортируйте словарь.")
-                    )
-                } else {
-                    List {
-                        ForEach(filteredWords) { word in
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack(spacing: 6) {
-                                        Text(word.english)
-                                            .font(.headline)
-                                        
-                                        if !word.transcription.isEmpty {
-                                            Text("[\(word.transcription)]")
-                                                .font(.subheadline)
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-                                    
-                                    if !word.example.isEmpty {
-                                        Text(word.example)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                            .lineLimit(1)
-                                    }
+                ScrollView {
+                    VStack(spacing: 12) {
+                        // Выпадающая карточка выбора категории
+                        categoryDropdownCard
+                        
+                        // Содержимое экрана (скрываем форму и список при открытом меню, если нужно)
+                        if !isDropdownExpanded {
+                            addWordCard
+                            
+                            LazyVStack(spacing: 12) {
+                                ForEach(filteredWords) { word in
+                                    WordRowCard(word: word)
                                 }
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 20)
+                }
+            }
+        }
+        .alert("Новая категория", isPresented: $isShowingAddCategoryAlert) {
+            TextField("Название категории", text: $newCategoryName)
+            Button("Отмена", role: .cancel) { newCategoryName = "" }
+            Button("Создать") {
+                let trimmed = newCategoryName.trimmingCharacters(in: .whitespaces)
+                if !trimmed.isEmpty {
+                    let newCat = Category(name: trimmed)
+                    modelContext.insert(newCat)
+                    selectedCategory = newCat
+                    newCategoryName = ""
+                }
+            }
+        }
+        .sheet(isPresented: $isShowingManageCategories) {
+            ManageCategoriesView()
+        }
+    }
+    
+    // MARK: - Header
+    
+    private var customHeader: some View {
+        HStack {
+            Button(action: {
+                currentScreen = "title"
+            }) {
+                HStack(spacing: 4) {
+                    Image(systemName: "chevron.left")
+                    Text("Меню")
+                }
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(.orange)
+            }
+            
+            Spacer()
+            
+            Text("Мой словарь")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(.brandDark)
+            
+            Spacer()
+            
+            Button(action: {
+                isShowingManageCategories = true
+            }) {
+                Image(systemName: "doc.badge.plus")
+                    .font(.system(size: 20))
+                    .foregroundColor(.orange)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+    }
+    
+    // MARK: - Dropdown Card
+    
+    private var categoryDropdownCard: some View {
+        VStack(spacing: 0) {
+            // Главная кнопка-заголовок карточки
+            Button(action: {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    isDropdownExpanded.toggle()
+                }
+            }) {
+                HStack(spacing: 12) {
+                    Image(systemName: "folder.fill")
+                        .foregroundColor(.orange)
+                        .font(.system(size: 18))
+                    
+                    Text(selectedCategory?.name ?? "Общий словарь")
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundColor(.brandDark)
+                    
+                    Spacer()
+                    
+                    Image(systemName: isDropdownExpanded ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.gray)
+                }
+                .padding(16)
+            }
+            
+            // Выпадающий список вариантов
+            if isDropdownExpanded {
+                VStack(spacing: 0) {
+                    // Вариант "Общий"
+                    Button(action: {
+                        selectCategoryAndClose(nil)
+                    }) {
+                        HStack {
+                            Text("Общий")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(selectedCategory == nil ? .orange : .brandDark)
+                            
+                            Spacer()
+                            
+                            if selectedCategory == nil {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(.orange)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                    }
+                    
+                    Divider()
+                        .padding(.horizontal, 16)
+                    
+                    // Список категорий из базы
+                    ForEach(categories) { category in
+                        let isSelected = selectedCategory?.id == category.id
+                        Button(action: {
+                            selectCategoryAndClose(category)
+                        }) {
+                            HStack {
+                                Text("\(category.name) (\(countWords(for: category)))")
+                                    .font(.system(size: 16, weight: isSelected ? .bold : .semibold))
+                                    .foregroundColor(isSelected ? .orange : .brandDark)
                                 
                                 Spacer()
                                 
-                                Text(word.russian)
-                                    .font(.body)
-                                    .foregroundColor(.primary)
+                                if isSelected {
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(.orange)
+                                }
                             }
-                            .padding(.vertical, 2)
-                        }
-                        .onDelete(perform: deleteWords)
-                    }
-                    .listStyle(.plain)
-                }
-            }
-            .navigationTitle("Словарь")
-            .searchable(text: $searchText, prompt: "Поиск слова...")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: 16) {
-                        Button(action: { isImporting = true }) {
-                            Image(systemName: "square.and.arrow.down")
-                        }
-                        
-                        Button(action: { isShowingAddWord = true }) {
-                            Image(systemName: "plus")
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
                         }
                     }
+                    
+                    Divider()
+                        .padding(.horizontal, 16)
+                    
+                    // Кнопка: Создать новую папку...
+                    Button(action: {
+                        isDropdownExpanded = false
+                        isShowingAddCategoryAlert = true
+                    }) {
+                        HStack(spacing: 10) {
+                            Image(systemName: "folder.badge.plus")
+                                .font(.system(size: 16))
+                            Text("Создать новую папку...")
+                                .font(.system(size: 15, weight: .semibold))
+                            Spacer()
+                        }
+                        .foregroundColor(Color(red: 0/255, green: 112/255, blue: 243/255))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                    }
+                    
+                    // Кнопка: Управление папками...
+                    Button(action: {
+                        isDropdownExpanded = false
+                        isShowingManageCategories = true
+                    }) {
+                        HStack(spacing: 10) {
+                            Image(systemName: "folder.badge.gearshape")
+                                .font(.system(size: 16))
+                            Text("Управление папками...")
+                                .font(.system(size: 15, weight: .semibold))
+                            Spacer()
+                        }
+                        .foregroundColor(.gray)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                    }
                 }
+                .padding(.bottom, 8)
             }
-            .fileImporter(
-                isPresented: $isImporting,
-                allowedContentTypes: [.plainText],
-                allowsMultipleSelection: false
-            ) { result in
-                switch result {
-                case .success(let urls):
-                    guard let selectedFile = urls.first else { return }
-                    importWords(from: selectedFile)
-                case .failure(let error):
-                    print("Ошибка импорта: \(error.localizedDescription)")
-                }
-            }
-            .sheet(isPresented: $isShowingAddWord) {
-                AddWordFormView(selectedCategory: selectedCategory)
-            }
+        }
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 3)
+    }
+    
+    private func selectCategoryAndClose(_ category: Category?) {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            selectedCategory = category
+            isDropdownExpanded = false
         }
     }
     
-    // MARK: - Subviews
+    // MARK: - Add Word Form
     
-    // ИСПРАВЛЕНО: Заменили View на `some View`
-    private var categoryHeaderView: some View {
-        Menu {
-            Button("Все категории (\(allWords.count))") {
-                selectedCategory = nil
-            }
+    private var addWordCard: some View {
+        VStack(spacing: 12) {
+            customTextField(placeholder: "Слово на английском", text: $newEnglish)
+            customTextField(placeholder: "Транскрипция (необязательно)", text: $newTranscription)
+            customTextField(placeholder: "Перевод на русский", text: $newRussian)
+            customTextField(placeholder: "Пример фразы (необязательно)", text: $newExample)
             
-            Divider()
-            
-            ForEach(categories) { category in
-                Button {
-                    selectedCategory = category
-                } label: {
-                    HStack {
-                        Text("\(category.name) (\(countWords(for: category)))")
-                        if selectedCategory?.id == category.id {
-                            Image(systemName: "checkmark")
-                        }
-                    }
+            Button(action: addNewWord) {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                    Text("Добавить в \(selectedCategory?.name ?? "Общий")")
                 }
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(.gray)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
             }
-        } label: {
-            HStack {
-                Text(selectedCategory?.name ?? "Все категории")
-                    .font(.headline)
-                
-                if let category = selectedCategory {
-                    Text("(\(countWords(for: category)))")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                
-                Image(systemName: "chevron.down")
-                    .font(.caption)
-            }
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(.systemGroupedBackground))
+            .disabled(newEnglish.isEmpty || newRussian.isEmpty)
         }
+        .padding(16)
+        .background(Color.white)
+        .cornerRadius(20)
+        .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 2)
     }
     
-    // MARK: - Helper Methods
+    private func customTextField(placeholder: String, text: Binding<String>) -> some View {
+        TextField(placeholder, text: text)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color.brandInputBg)
+            .cornerRadius(10)
+            .font(.system(size: 15))
+    }
     
-    private func deleteWords(at offsets: IndexSet) {
-        for index in offsets {
-            let word = filteredWords[index]
-            modelContext.delete(word)
-        }
+    private func addNewWord() {
+        let trimmedEng = newEnglish.trimmingCharacters(in: .whitespaces)
+        let trimmedRus = newRussian.trimmingCharacters(in: .whitespaces)
+        guard !trimmedEng.isEmpty && !trimmedRus.isEmpty else { return }
+        
+        let word = Word(
+            english: trimmedEng,
+            russian: trimmedRus,
+            example: newExample.trimmingCharacters(in: .whitespaces),
+            transcription: newTranscription.trimmingCharacters(in: .whitespaces),
+            category: selectedCategory
+        )
+        
+        modelContext.insert(word)
+        
+        newEnglish = ""
+        newTranscription = ""
+        newRussian = ""
+        newExample = ""
     }
     
     private func countWords(for category: Category) -> Int {
@@ -172,49 +316,116 @@ struct DictionaryView: View {
         )
         return (try? modelContext.fetchCount(descriptor)) ?? 0
     }
+}
+
+// MARK: - WordRowCard
+
+struct WordRowCard: View {
+    let word: Word
+    @Environment(\.modelContext) private var modelContext
     
-    private func importWords(from url: URL) {
-        guard url.startAccessingSecurityScopedResource() else { return }
-        let currentCategory = selectedCategory
-        
-        Task.detached(priority: .userInitiated) {
-            defer { url.stopAccessingSecurityScopedResource() }
-            
-            guard let fileContent = try? String(contentsOf: url, encoding: .utf8) else { return }
-            let lines = fileContent.components(separatedBy: .newlines)
-            
-            var parsedDTOs: [(eng: String, trans: String, rus: String, ex: String)] = []
-            
-            for line in lines {
-                let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmed.isEmpty else { continue }
-                
-                let components = trimmed.components(separatedBy: CharacterSet(charactersIn: ";|\t"))
-                    .map { $0.trimmingCharacters(in: .whitespaces) }
-                
-                if components.count >= 2 {
-                    let eng = components[0]
-                    let rus = components[1]
-                    let trans = components.count > 2 ? components[2] : ""
-                    let ex = components.count > 3 ? components[3] : ""
+    private var formattedTranscription: String {
+        let trimmed = word.transcription.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+        if trimmed.hasPrefix("[") && trimmed.hasSuffix("]") {
+            return trimmed
+        }
+        return "[\(trimmed)]"
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                HStack(spacing: 6) {
+                    Text(word.english)
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.brandDark)
                     
-                    parsedDTOs.append((eng: eng, trans: trans, rus: rus, ex: ex))
+                    if !formattedTranscription.isEmpty {
+                        Text(formattedTranscription)
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(.orange)
+                    }
                 }
+                
+                Spacer()
+                
+                Text(word.russian)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(Color(.systemGray))
             }
             
-            // ИСПРАВЛЕНО: Передаем неизменяемую копию для безопасности потоков Swift 6
-            let itemsToInsert = parsedDTOs
+            if !word.example.isEmpty {
+                Text(word.example)
+                    .font(.system(size: 14))
+                    .foregroundColor(Color(.systemGray2))
+            }
             
-            await MainActor.run {
-                for item in itemsToInsert {
-                    let newWord = Word(
-                        english: item.eng,
-                        russian: item.rus,
-                        example: item.ex,
-                        transcription: item.trans,
-                        category: currentCategory
-                    )
-                    modelContext.insert(newWord)
+            if let categoryName = word.category?.name {
+                Text(categoryName)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.orange)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(Color.orange.opacity(0.12))
+                    .cornerRadius(8)
+            }
+        }
+        .padding(16)
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(color: Color.black.opacity(0.02), radius: 4, x: 0, y: 2)
+        .contextMenu {
+            Button(role: .destructive) {
+                modelContext.delete(word)
+            } label: {
+                Label("Удалить", systemImage: "trash")
+            }
+        }
+    }
+}
+
+// MARK: - ManageCategoriesView
+
+struct ManageCategoriesView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \Category.name) private var categories: [Category]
+    
+    @State private var newCategoryName = ""
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Создать категорию") {
+                    HStack {
+                        TextField("Название категории", text: $newCategoryName)
+                        Button("Добавить") {
+                            let trimmed = newCategoryName.trimmingCharacters(in: .whitespaces)
+                            guard !trimmed.isEmpty else { return }
+                            modelContext.insert(Category(name: trimmed))
+                            newCategoryName = ""
+                        }
+                        .disabled(newCategoryName.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+                }
+                
+                Section("Существующие категории") {
+                    ForEach(categories) { category in
+                        Text(category.name)
+                    }
+                    .onDelete { offsets in
+                        for index in offsets {
+                            modelContext.delete(categories[index])
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Категории")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Готово") { dismiss() }
                 }
             }
         }

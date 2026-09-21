@@ -17,7 +17,7 @@ struct AddWordFormView: View {
     @FocusState private var focusedField: Field?
     
     // Брендовые цвета для интеграции с главным меню
-    private let brandDarkColor = Color(red: 26/255, green: 37/255, blue: 68/255)
+    private let brandDarkColor = Color.brandDark
     
     var body: some View {
         VStack(spacing: 12) {
@@ -30,7 +30,7 @@ struct AddWordFormView: View {
             .font(.system(.body, design: .rounded))
             .foregroundColor(brandDarkColor)
             .padding(.vertical, 10)
-            .background(Color(red: 245/255, green: 247/255, blue: 251/255))
+            .background(Color.brandInputBg)
             .cornerRadius(10)
             .autocapitalization(.none)
             .disableAutocorrection(true)
@@ -44,7 +44,7 @@ struct AddWordFormView: View {
             .font(.system(.body, design: .rounded))
             .foregroundColor(brandDarkColor)
             .padding(.vertical, 10)
-            .background(Color(red: 245/255, green: 247/255, blue: 251/255))
+            .background(Color.brandInputBg)
             .cornerRadius(10)
             .autocapitalization(.none)
             .disableAutocorrection(true)
@@ -58,7 +58,7 @@ struct AddWordFormView: View {
             .font(.system(.body, design: .rounded))
             .foregroundColor(brandDarkColor)
             .padding(.vertical, 10)
-            .background(Color(red: 245/255, green: 247/255, blue: 251/255))
+            .background(Color.brandInputBg)
             .cornerRadius(10)
             .disableAutocorrection(true)
             .focused($focusedField, equals: .russian)
@@ -71,7 +71,7 @@ struct AddWordFormView: View {
             .font(.system(.body, design: .rounded))
             .foregroundColor(brandDarkColor)
             .padding(.vertical, 10)
-            .background(Color(red: 245/255, green: 247/255, blue: 251/255))
+            .background(Color.brandInputBg)
             .cornerRadius(10)
             .disableAutocorrection(true)
             .focused($focusedField, equals: .example)

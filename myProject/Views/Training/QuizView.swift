@@ -17,8 +17,8 @@ struct QuizView: View {
 
     
     // Брендовые цвета светлой темы викторины
-    private let brandDarkColor = Color(red: 26/255, green: 37/255, blue: 68/255)
-    private let brandBgColor = Color(red: 247/255, green: 249/255, blue: 253/255)
+    private let brandDarkColor = Color.brandDark
+    private let brandBgColor = Color.brandBackground
     private let baseButtonColor = Color.indigo
     
     var body: some View {
