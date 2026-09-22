@@ -3,7 +3,7 @@ import SwiftData
 
 struct QuizView: View {
     @Environment(\.modelContext) private var modelContext
-    @Binding var currentScreen: AppScreen
+    @Environment(\.dismiss) private var dismiss
     
     @Query(sort: \Category.name) private var categories: [Category]
     @State private var selectedCategory: Category?
@@ -21,14 +21,14 @@ struct QuizView: View {
     private let baseButtonColor = Color.indigo
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                Button(action: { currentScreen = .menu }) {
-                    HStack(spacing: 5) { Image(systemName: "chevron.left"); Text("В меню") }
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-                    .foregroundColor(.purple)
-                }
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    Button(action: { dismiss() }) { // Изменено
+                        HStack(spacing: 5) { Image(systemName: "chevron.left"); Text("В меню") }
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .foregroundColor(.purple)
+                    }
                 
                 Spacer()
                 

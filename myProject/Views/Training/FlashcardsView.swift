@@ -3,7 +3,7 @@ import SwiftData
 
 struct FlashcardsView: View {
     @Environment(\.modelContext) private var modelContext
-    @Binding var currentScreen: AppScreen
+    @Environment(\.dismiss) private var dismiss
     
     @Query(sort: \Category.name) private var categories: [Category]
     @State private var selectedCategory: Category?
@@ -25,17 +25,17 @@ struct FlashcardsView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                Button(action: {
-                    isTextFieldFocused = false
-                    DispatchQueue.main.async { currentScreen = .menu }
-                }) {
-                    HStack(spacing: 5) { Image(systemName: "chevron.left"); Text("В меню") }
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-                    .foregroundColor(.blue)
-                }
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    Button(action: {
+                        isTextFieldFocused = false
+                        DispatchQueue.main.async { dismiss() } // Изменено
+                    }) {
+                        HStack(spacing: 5) { Image(systemName: "chevron.left"); Text("В меню") }
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .foregroundColor(.blue)
+                    }
                 
                 Spacer()
                 

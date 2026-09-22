@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct DictionaryView: View {
-    @Binding var currentScreen: AppScreen
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     
     @Query(sort: \Category.name) private var categories: [Category]
@@ -77,7 +77,7 @@ struct DictionaryView: View {
     
     private var customHeader: some View {
         HStack {
-            Button(action: { currentScreen = .menu }) {
+            Button(action: { dismiss() }) { // Изменено
                 HStack(spacing: 4) { Image(systemName: "chevron.left"); Text("Меню") }
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(.orange)

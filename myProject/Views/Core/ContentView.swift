@@ -1,8 +1,8 @@
 import SwiftUI
 import SwiftData
 
-enum AppScreen: String {
-    case menu, cards, quiz, dictionary
+enum AppScreen: String, Hashable {
+    case cards, quiz, dictionary
 }
 
 struct MenuItem: Identifiable {
@@ -15,37 +15,34 @@ struct MenuItem: Identifiable {
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @State private var currentScreen: AppScreen = .menu
+    @State private var navigationPath: [AppScreen] = []
     
     var body: some View {
-        ZStack {
-            Color.clear.ignoresSafeArea()
-            
-            switch currentScreen {
-            case .cards:
-                FlashcardsView(currentScreen: $currentScreen)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            case .quiz:
-                QuizView(currentScreen: $currentScreen)
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
-            case .dictionary:
-                DictionaryView(currentScreen: $currentScreen)
-                    .transition(.scale(scale: 0.95).combined(with: .opacity))
-            case .menu:
-                TitleScreenView(currentScreen: $currentScreen)
-                    .transition(.opacity)
-            }
+        NavigationStack(path: $navigationPath) {
+            TitleScreenView(navigationPath: $navigationPath)
+                .navigationDestination(for: AppScreen.self) { screen in
+                    Group {
+                        switch screen {
+                        case .cards:
+                            FlashcardsView()
+                        case .quiz:
+                            QuizView()
+                        case .dictionary:
+                            DictionaryView()
+                        }
+                    }
+                    .toolbar(.hidden, for: .navigationBar)
+                }
         }
         .preferredColorScheme(.light)
         .onAppear {
             DataPreloader.preloadSampleWords(context: modelContext)
         }
-        .animation(.interpolatingSpring(stiffness: 170, damping: 22), value: currentScreen)
     }
 }
 
 struct TitleScreenView: View {
-    @Binding var currentScreen: AppScreen
+    @Binding var navigationPath: [AppScreen]
     @AppStorage("menu_order") private var menuOrderData: String = "cards,quiz,dictionary"
     @State private var menuItems: [MenuItem] = []
     
@@ -85,7 +82,7 @@ struct TitleScreenView: View {
             
             VStack(spacing: 16) {
                 ForEach(menuItems) { item in
-                    Button(action: { currentScreen = item.id }) {
+                    Button(action: { navigationPath.append(item.id) }) {
                         HStack(spacing: 0) {
                             Rectangle().fill(item.color).frame(width: 6)
                             ZStack {
