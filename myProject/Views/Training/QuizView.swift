@@ -1,10 +1,12 @@
 import SwiftUI
 import SwiftData
-import AVFoundation
- 
+
 struct QuizView: View {
     @Environment(\.modelContext) private var modelContext
-    @Binding var currentScreen: String
+    @Binding var currentScreen: AppScreen
+    
+    @Query(sort: \Category.name) private var categories: [Category]
+    @State private var selectedCategory: Category?
     
     @State private var currentWord: Word?
     @State private var cachedWords: [Word] = []
@@ -14,70 +16,75 @@ struct QuizView: View {
     @State private var totalAnswered = 0
     @State private var hasMinimumWords = false
     
-
-    
-    // Брендовые цвета светлой темы викторины
     private let brandDarkColor = Color.brandDark
     private let brandBgColor = Color.brandBackground
     private let baseButtonColor = Color.indigo
     
     var body: some View {
         VStack(spacing: 0) {
-            // Верхняя навигационная панель
+            // Header
             HStack {
-                Button(action: { currentScreen = "menu" }) {
-                    HStack(spacing: 5) {
-                        Image(systemName: "chevron.left")
-                        Text("В меню")
-                    }
+                Button(action: { currentScreen = .menu }) {
+                    HStack(spacing: 5) { Image(systemName: "chevron.left"); Text("В меню") }
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .foregroundColor(.purple)
                 }
+                
+                Spacer()
+                
+                Menu {
+                    Button("Все слова") { changeCategory(to: nil) }
+                    Divider()
+                    ForEach(categories) { category in
+                        Button(category.name) { changeCategory(to: category) }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "folder.fill")
+                        Text(selectedCategory?.name ?? "Все слова")
+                            .lineLimit(1)
+                        Image(systemName: "chevron.down").font(.caption2)
+                    }
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundColor(.purple)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Color.purple.opacity(0.1))
+                    .cornerRadius(8)
+                }
+            }
+            .padding(.horizontal, 24).padding(.top, 10)
+            
+            HStack {
                 Spacer()
                 Text("Тест: \(correctCount)/\(totalAnswered)")
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
                     .foregroundColor(.gray)
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 10)
+            .padding(.horizontal, 24).padding(.top, 12)
             
             Spacer()
             
             if !hasMinimumWords {
-                Text("Для генерации тестов нужно минимум 3 слова с уникальными переводами.")
-                    .font(.system(.body, design: .rounded))
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
+                Text("Для генерации тестов нужно минимум 3 слова с уникальными переводами в выбранной категории.")
+                    .font(.system(.body, design: .rounded)).foregroundColor(.gray).multilineTextAlignment(.center).padding(.horizontal, 40)
             } else if let word = currentWord {
-                // БЕЛАЯ НЕОМОРФНАЯ КАРТОЧКА ВИКТОРИНЫ
                 VStack(spacing: 20) {
                     HStack(spacing: 15) {
-                        Text(word.english)
-                            .font(.system(size: 38, weight: .bold, design: .rounded))
-                            .foregroundColor(brandDarkColor)
-                        
-                        Button(action: speakWord) {
-                            Image(systemName: "speaker.wave.2.bubble.fill")
-                                .font(.title2)
-                                .foregroundColor(.purple)
-                        }
+                        Text(word.english).font(.system(size: 38, weight: .bold, design: .rounded)).foregroundColor(brandDarkColor)
+                        Button(action: speakWord) { Image(systemName: "speaker.wave.2.bubble.fill").font(.title2).foregroundColor(.purple) }
                     }
                     .padding(.top, 30)
                     
                     if !word.transcription.isEmpty {
-                        Text(word.transcription)
-                            .font(.system(size: 18, weight: .medium, design: .rounded))
-                            .foregroundColor(.orange)
-                            .padding(.top, -10)
+                        Text(word.transcription).font(.system(size: 18, weight: .medium, design: .rounded)).foregroundColor(.orange).padding(.top, -10)
                     }
                     VStack(spacing: 12) {
                         ForEach(options, id: \.self) { option in
                             Button(action: { checkAnswer(option) }) {
                                 Text(option)
                                     .font(.system(size: 16, weight: .bold, design: .rounded))
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 14)
+                                    .frame(maxWidth: .infinity).padding(.vertical, 14)
                                     .background(buttonColor(for: option))
                                     .foregroundColor(buttonTextColor(for: option))
                                     .cornerRadius(16)
@@ -85,54 +92,67 @@ struct QuizView: View {
                             .disabled(selectedAnswer != nil)
                         }
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 30)
+                    .padding(.horizontal, 24).padding(.bottom, 30)
                 }
-                .frame(maxWidth: .infinity)
-                .background(Color.white)
-                .cornerRadius(24)
-                .shadow(color: Color.black.opacity(0.04), radius: 12, x: 0, y: 8)
-                .padding(.horizontal, 24)
+                .frame(maxWidth: .infinity).background(Color.white).cornerRadius(24).shadow(color: Color.black.opacity(0.04), radius: 12, x: 0, y: 8).padding(.horizontal, 24)
                 
-                // Кнопка продолжить (За пределами карточки)
                 VStack {
                     if selectedAnswer != nil {
                         Button(action: { generateQuestion() }) {
-                            Text("Продолжить")
-                                .font(.system(size: 16, weight: .bold, design: .rounded))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(Color.purple)
-                                .foregroundColor(.white)
-                                .cornerRadius(16)
+                            Text("Продолжить").font(.system(size: 16, weight: .bold, design: .rounded)).frame(maxWidth: .infinity).padding(.vertical, 14).background(Color.purple).foregroundColor(.white).cornerRadius(16)
                         }
                         .padding(.horizontal, 40)
                     }
                 }
-                .frame(height: 55)
-                .padding(.top, 25)
+                .frame(height: 55).padding(.top, 25)
             }
             Spacer()
         }
-        .padding(.vertical)
-        .background(brandBgColor.ignoresSafeArea())
+        .padding(.vertical).background(brandBgColor.ignoresSafeArea())
         .onAppear { checkDatabaseAndStart() }
+    }
+    
+    private func changeCategory(to category: Category?) {
+        selectedCategory = category
+        correctCount = 0
+        totalAnswered = 0
+        checkDatabaseAndStart()
     }
     
     private func checkDatabaseAndStart() {
         do {
-            let descriptor = FetchDescriptor<Word>()
-            cachedWords = try modelContext.fetch(descriptor)
+            var descriptor = FetchDescriptor<Word>()
             
-            let uniqueTranslations = Set(cachedWords.map {
-                $0.russian.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            })
+            // Фильтрация
+            if let catID = selectedCategory?.id {
+                descriptor.predicate = #Predicate<Word> { $0.category?.id == catID }
+            }
+            
+            let totalCount = (try? modelContext.fetchCount(descriptor)) ?? 0
+            
+            if totalCount < 3 {
+                hasMinimumWords = false
+                return
+            }
+            
+            let fetchLimit = 60
+            if totalCount > fetchLimit {
+                descriptor.fetchOffset = Int.random(in: 0...(totalCount - fetchLimit))
+            }
+            descriptor.fetchLimit = fetchLimit
+            
+            cachedWords = try modelContext.fetch(descriptor)
+            let uniqueTranslations = Set(cachedWords.map { $0.russian.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() })
             
             if cachedWords.count >= 3 && uniqueTranslations.count >= 3 {
                 hasMinimumWords = true
                 generateQuestion()
             } else {
-                hasMinimumWords = false
+                // Пытаемся вытянуть больше слов, если попались дубликаты
+                descriptor.fetchLimit = 100
+                cachedWords = try modelContext.fetch(descriptor)
+                hasMinimumWords = Set(cachedWords.map { $0.russian.lowercased() }).count >= 3
+                if hasMinimumWords { generateQuestion() }
             }
         } catch {
             hasMinimumWords = false

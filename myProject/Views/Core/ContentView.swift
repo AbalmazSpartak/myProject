@@ -1,61 +1,58 @@
 import SwiftUI
 import SwiftData
 
+enum AppScreen: String {
+    case menu, cards, quiz, dictionary
+}
+
 struct MenuItem: Identifiable {
-    let id: String
+    let id: AppScreen
     let title: String
     let subtitle: String
     let icon: String
     let color: Color
 }
 
-// MARK: - ГЛАВНЫЙ НАВИГАЦИОННЫЙ ПЕРЕКЛЮЧАТЕЛЬ
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @State private var currentScreen = "menu" // Хранит ID активного экрана
+    @State private var currentScreen: AppScreen = .menu
     
     var body: some View {
         ZStack {
-            Color.clear
-                .ignoresSafeArea()
+            Color.clear.ignoresSafeArea()
             
             switch currentScreen {
-            case "cards":
+            case .cards:
                 FlashcardsView(currentScreen: $currentScreen)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
-            case "quiz":
+            case .quiz:
                 QuizView(currentScreen: $currentScreen)
                     .transition(.move(edge: .trailing).combined(with: .opacity))
-            case "dictionary":
+            case .dictionary:
                 DictionaryView(currentScreen: $currentScreen)
                     .transition(.scale(scale: 0.95).combined(with: .opacity))
-            default:
+            case .menu:
                 TitleScreenView(currentScreen: $currentScreen)
                     .transition(.opacity)
             }
         }
-        .preferredColorScheme(.light) // Нативная премиальная светлая тема
+        .preferredColorScheme(.light)
         .onAppear {
-            // Безопасное высокопроизводительное наполнение базы из JSON
             DataPreloader.preloadSampleWords(context: modelContext)
         }
-        // Пружинная анимация переключения разделов меню согласно ТЗ
         .animation(.interpolatingSpring(stiffness: 170, damping: 22), value: currentScreen)
     }
 }
 
-// MARK: - ИНТЕРФЕЙС ГЛАВНОЙ СТРАНИЦЫ
 struct TitleScreenView: View {
-    @Binding var currentScreen: String
+    @Binding var currentScreen: AppScreen
     @AppStorage("menu_order") private var menuOrderData: String = "cards,quiz,dictionary"
     @State private var menuItems: [MenuItem] = []
     
     var body: some View {
         VStack(spacing: 0) {
-            Spacer()
-                .frame(minHeight: 20, maxHeight: 60)
+            Spacer().frame(minHeight: 20, maxHeight: 60)
             
-            // 1. ЛОГОТИП ПРИЛОЖЕНИЯ
             ZStack {
                 RoundedRectangle(cornerRadius: 24)
                     .fill(Color.white)
@@ -72,7 +69,6 @@ struct TitleScreenView: View {
             }
             .padding(.bottom, 25)
             
-            // 2. БЛОК ЗАГОЛОВКОВ ТЕКСТА
             VStack(spacing: 12) {
                 Text("WordLearner")
                     .font(.system(size: 36, weight: .bold, design: .rounded))
@@ -85,23 +81,17 @@ struct TitleScreenView: View {
                     .lineSpacing(4)
             }
             
-            Spacer()
-                .frame(minHeight: 20, maxHeight: 50)
+            Spacer().frame(minHeight: 20, maxHeight: 50)
             
-            // 3. ИНТЕРАКТИВНЫЕ КАРТОЧКИ РАЗДЕЛОВ
             VStack(spacing: 16) {
                 ForEach(menuItems) { item in
                     Button(action: { currentScreen = item.id }) {
                         HStack(spacing: 0) {
-                            Rectangle()
-                                .fill(item.color)
-                                .frame(width: 6)
-                            
+                            Rectangle().fill(item.color).frame(width: 6)
                             ZStack {
                                 RoundedRectangle(cornerRadius: 12)
                                     .fill(item.color.opacity(0.12))
                                     .frame(width: 48, height: 48)
-                                
                                 Image(systemName: item.icon)
                                     .font(.title3)
                                     .foregroundColor(item.color)
@@ -112,15 +102,12 @@ struct TitleScreenView: View {
                                 Text(item.title)
                                     .font(.system(size: 18, weight: .bold, design: .rounded))
                                     .foregroundColor(.black)
-                                
                                 Text(item.subtitle)
                                     .font(.system(size: 14, weight: .regular, design: .rounded))
                                     .foregroundColor(.gray)
                             }
                             .padding(.leading, 16)
-                            
                             Spacer()
-                            
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundColor(.gray.opacity(0.6))
@@ -136,9 +123,7 @@ struct TitleScreenView: View {
                 }
             }
             .padding(.horizontal, 24)
-            
-            Spacer()
-                .frame(height: 10) // Фиксированный нижний отступ для идеального баланса верстки
+            Spacer().frame(height: 10)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.brandBackground)
@@ -146,27 +131,16 @@ struct TitleScreenView: View {
     }
     
     private func loadMenuOrder() {
-        let allItems = [
-            "cards": MenuItem(id: "cards", title: "Карточки с вводом", subtitle: "Учи новые слова", icon: "keyboard.fill", color: Color.blue),
-            "quiz": MenuItem(id: "quiz", title: "Викторина", subtitle: "Тесты с вариантами", icon: "checkmark.seal.fill", color: Color.purple),
-            "dictionary": MenuItem(id: "dictionary", title: "Словарь", subtitle: "Все изученные слова", icon: "book.fill", color: Color.orange)
+        let allItems: [String: MenuItem] = [
+            "cards": MenuItem(id: .cards, title: "Карточки с вводом", subtitle: "Учи новые слова", icon: "keyboard.fill", color: .blue),
+            "quiz": MenuItem(id: .quiz, title: "Викторина", subtitle: "Тесты с вариантами", icon: "checkmark.seal.fill", color: .purple),
+            "dictionary": MenuItem(id: .dictionary, title: "Словарь", subtitle: "Все изученные слова", icon: "book.fill", color: .orange)
         ]
-        
         let ids = menuOrderData.components(separatedBy: ",")
         var orderedList: [MenuItem] = []
         for id in ids {
             if let item = allItems[id] { orderedList.append(item) }
         }
         menuItems = orderedList.count == 3 ? orderedList : [allItems["cards"]!, allItems["quiz"]!, allItems["dictionary"]!]
-    }
-}
-
-// MARK: - ЭФФЕКТ ФИЗИЧЕСКОГО НАЖАТИЯ КНОПОК
-struct FlatButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
-            .opacity(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
     }
 }

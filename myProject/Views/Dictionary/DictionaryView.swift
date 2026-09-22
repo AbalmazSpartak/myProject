@@ -2,8 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct DictionaryView: View {
-    @Binding var currentScreen: String
-    
+    @Binding var currentScreen: AppScreen
     @Environment(\.modelContext) private var modelContext
     
     @Query(sort: \Category.name) private var categories: [Category]
@@ -11,12 +10,11 @@ struct DictionaryView: View {
     
     @State private var selectedCategory: Category?
     @State private var isDropdownExpanded = false
-    
     @State private var isShowingManageCategories = false
     @State private var isShowingAddCategoryAlert = false
     @State private var newCategoryName = ""
+    @State private var wordToEdit: Word?
     
-    // Форма добавления слова
     @State private var newEnglish = ""
     @State private var newTranscription = ""
     @State private var newRussian = ""
@@ -24,33 +22,29 @@ struct DictionaryView: View {
     
     var filteredWords: [Word] {
         allWords.filter { word in
-            let matchesCategory = selectedCategory == nil || word.category?.id == selectedCategory?.id
-            return matchesCategory
+            if let selected = selectedCategory {
+                return word.category?.id == selected.id
+            } else {
+                return word.category == nil
+            }
         }
     }
     
     var body: some View {
         ZStack {
-            // Светлый фон экрана
-            Color.brandBackground
-                .ignoresSafeArea()
-            
+            Color.brandBackground.ignoresSafeArea()
             VStack(spacing: 12) {
-                // Шапка (Верхняя панель)
                 customHeader
-                
                 ScrollView {
                     VStack(spacing: 12) {
-                        // Выпадающая карточка выбора категории
                         categoryDropdownCard
-                        
-                        // Содержимое экрана (скрываем форму и список при открытом меню, если нужно)
                         if !isDropdownExpanded {
                             addWordCard
-                            
                             LazyVStack(spacing: 12) {
                                 ForEach(filteredWords) { word in
-                                    WordRowCard(word: word)
+                                    WordRowCard(word: word) {
+                                        wordToEdit = word
+                                    }
                                 }
                             }
                         }
@@ -76,34 +70,24 @@ struct DictionaryView: View {
         .sheet(isPresented: $isShowingManageCategories) {
             ManageCategoriesView()
         }
+        .sheet(item: $wordToEdit) { word in
+            EditWordView(word: word)
+        }
     }
-    
-    // MARK: - Header
     
     private var customHeader: some View {
         HStack {
-            Button(action: {
-                currentScreen = "title"
-            }) {
-                HStack(spacing: 4) {
-                    Image(systemName: "chevron.left")
-                    Text("Меню")
-                }
+            Button(action: { currentScreen = .menu }) {
+                HStack(spacing: 4) { Image(systemName: "chevron.left"); Text("Меню") }
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(.orange)
             }
-            
             Spacer()
-            
             Text("Мой словарь")
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(.brandDark)
-            
             Spacer()
-            
-            Button(action: {
-                isShowingManageCategories = true
-            }) {
+            Button(action: { isShowingManageCategories = true }) {
                 Image(systemName: "doc.badge.plus")
                     .font(.system(size: 20))
                     .foregroundColor(.orange)
@@ -113,124 +97,53 @@ struct DictionaryView: View {
         .padding(.top, 8)
     }
     
-    // MARK: - Dropdown Card
-    
     private var categoryDropdownCard: some View {
         VStack(spacing: 0) {
-            // Главная кнопка-заголовок
-            Button(action: {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    isDropdownExpanded.toggle()
-                }
-            }) {
+            Button(action: { withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { isDropdownExpanded.toggle() } }) {
                 HStack(spacing: 12) {
-                    Image(systemName: "folder.fill")
-                        .foregroundColor(.orange)
-                        .font(.system(size: 18))
-                    
-                    Text(selectedCategory?.name ?? "Общий словарь")
-                        .font(.system(size: 17, weight: .bold))
-                        .foregroundColor(.brandDark)
-                    
+                    Image(systemName: "folder.fill").foregroundColor(.orange).font(.system(size: 18))
+                    Text(selectedCategory?.name ?? "Общий словарь").font(.system(size: 17, weight: .bold)).foregroundColor(.brandDark)
                     Spacer()
-                    
-                    Image(systemName: isDropdownExpanded ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.gray)
+                    Image(systemName: isDropdownExpanded ? "chevron.up" : "chevron.down").font(.system(size: 14, weight: .semibold)).foregroundColor(.gray)
                 }
                 .padding(16)
             }
             
             if isDropdownExpanded {
                 VStack(spacing: 0) {
-                    // Прокручиваемая область, ограниченная по высоте (примерно 10 элементов)
                     ScrollView(.vertical, showsIndicators: true) {
                         VStack(spacing: 0) {
-                            // Вариант "Общий"
-                            Button(action: {
-                                selectCategoryAndClose(nil)
-                            }) {
+                            Button(action: { selectCategoryAndClose(nil) }) {
                                 HStack {
-                                    Text("Общий")
-                                        .font(.system(size: 16, weight: .bold))
-                                        .foregroundColor(selectedCategory == nil ? .orange : .brandDark)
-                                    
+                                    Text("Общий").font(.system(size: 16, weight: .bold)).foregroundColor(selectedCategory == nil ? .orange : .brandDark)
                                     Spacer()
-                                    
-                                    if selectedCategory == nil {
-                                        Image(systemName: "checkmark")
-                                            .font(.system(size: 14, weight: .bold))
-                                            .foregroundColor(.orange)
-                                    }
+                                    if selectedCategory == nil { Image(systemName: "checkmark").font(.system(size: 14, weight: .bold)).foregroundColor(.orange) }
                                 }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 12)
+                                .padding(.horizontal, 16).padding(.vertical, 12)
                             }
-                            
-                            Divider()
-                                .padding(.horizontal, 16)
-                            
-                            // Список категорий
+                            Divider().padding(.horizontal, 16)
                             ForEach(categories) { category in
                                 let isSelected = selectedCategory?.id == category.id
-                                Button(action: {
-                                    selectCategoryAndClose(category)
-                                }) {
+                                Button(action: { selectCategoryAndClose(category) }) {
                                     HStack {
-                                        Text("\(category.name) (\(countWords(for: category)))")
-                                            .font(.system(size: 16, weight: isSelected ? .bold : .semibold))
-                                            .foregroundColor(isSelected ? .orange : .brandDark)
-                                        
+                                        Text("\(category.name) (\(countWords(for: category)))").font(.system(size: 16, weight: isSelected ? .bold : .semibold)).foregroundColor(isSelected ? .orange : .brandDark)
                                         Spacer()
-                                        
-                                        if isSelected {
-                                            Image(systemName: "checkmark")
-                                                .font(.system(size: 14, weight: .bold))
-                                                .foregroundColor(.orange)
-                                        }
+                                        if isSelected { Image(systemName: "checkmark").font(.system(size: 14, weight: .bold)).foregroundColor(.orange) }
                                     }
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 12)
+                                    .padding(.horizontal, 16).padding(.vertical, 12)
                                 }
                             }
                         }
                     }
-                    .frame(maxHeight: 440) // Высота примерно для 10 строк (по ~44pt на элемент)
-                    
-                    Divider()
-                        .padding(.horizontal, 16)
-                    
-                    // Кнопки действия (зафиксированы внизу под списком)
-                    Button(action: {
-                        isDropdownExpanded = false
-                        isShowingAddCategoryAlert = true
-                    }) {
-                        HStack(spacing: 10) {
-                            Image(systemName: "folder.badge.plus")
-                                .font(.system(size: 16))
-                            Text("Создать новую папку...")
-                                .font(.system(size: 15, weight: .semibold))
-                            Spacer()
-                        }
-                        .foregroundColor(Color(red: 0/255, green: 112/255, blue: 243/255))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
+                    .frame(maxHeight: 440)
+                    Divider().padding(.horizontal, 16)
+                    Button(action: { isDropdownExpanded = false; isShowingAddCategoryAlert = true }) {
+                        HStack(spacing: 10) { Image(systemName: "folder.badge.plus").font(.system(size: 16)); Text("Создать новую папку...").font(.system(size: 15, weight: .semibold)); Spacer() }
+                        .foregroundColor(Color(red: 0/255, green: 112/255, blue: 243/255)).padding(.horizontal, 16).padding(.vertical, 12)
                     }
-                    
-                    Button(action: {
-                        isDropdownExpanded = false
-                        isShowingManageCategories = true
-                    }) {
-                        HStack(spacing: 10) {
-                            Image(systemName: "folder.badge.gearshape")
-                                .font(.system(size: 16))
-                            Text("Управление папками...")
-                                .font(.system(size: 15, weight: .semibold))
-                            Spacer()
-                        }
-                        .foregroundColor(.gray)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
+                    Button(action: { isDropdownExpanded = false; isShowingManageCategories = true }) {
+                        HStack(spacing: 10) { Image(systemName: "folder.badge.gearshape").font(.system(size: 16)); Text("Управление папками...").font(.system(size: 15, weight: .semibold)); Spacer() }
+                        .foregroundColor(.gray).padding(.horizontal, 16).padding(.vertical, 12)
                     }
                 }
                 .padding(.bottom, 8)
@@ -247,8 +160,6 @@ struct DictionaryView: View {
             isDropdownExpanded = false
         }
     }
-    
-    // MARK: - Add Word Form
     
     private var addWordCard: some View {
         VStack(spacing: 12) {
@@ -289,18 +200,23 @@ struct DictionaryView: View {
     private func addNewWord() {
         let trimmedEng = newEnglish.trimmingCharacters(in: .whitespaces)
         let trimmedRus = newRussian.trimmingCharacters(in: .whitespaces)
+        var trans = newTranscription.trimmingCharacters(in: .whitespaces)
+        
         guard !trimmedEng.isEmpty && !trimmedRus.isEmpty else { return }
+        
+        if !trans.isEmpty && !trans.hasPrefix("[") {
+            trans = "[\(trans)]"
+        }
         
         let word = Word(
             english: trimmedEng,
             russian: trimmedRus,
             example: newExample.trimmingCharacters(in: .whitespaces),
-            transcription: newTranscription.trimmingCharacters(in: .whitespaces),
+            transcription: trans,
             category: selectedCategory
         )
         
         modelContext.insert(word)
-        
         newEnglish = ""
         newTranscription = ""
         newRussian = ""
@@ -311,29 +227,22 @@ struct DictionaryView: View {
         let categoryID = category.id
         let descriptor = FetchDescriptor<Word>(
             predicate: #Predicate<Word> { word in
-                if let cat = word.category {
-                    return cat.id == categoryID
-                } else {
-                    return false
-                }
+                if let cat = word.category { return cat.id == categoryID } else { return false }
             }
         )
         return (try? modelContext.fetchCount(descriptor)) ?? 0
     }
 }
 
-// MARK: - WordRowCard
-
 struct WordRowCard: View {
     let word: Word
+    var onEdit: () -> Void
     @Environment(\.modelContext) private var modelContext
     
     private var formattedTranscription: String {
         let trimmed = word.transcription.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return "" }
-        if trimmed.hasPrefix("[") && trimmed.hasSuffix("]") {
-            return trimmed
-        }
+        if trimmed.hasPrefix("[") && trimmed.hasSuffix("]") { return trimmed }
         return "[\(trimmed)]"
     }
     
@@ -341,38 +250,16 @@ struct WordRowCard: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline) {
                 HStack(spacing: 6) {
-                    Text(word.english)
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.brandDark)
-                    
+                    Text(word.english).font(.system(size: 18, weight: .bold)).foregroundColor(.brandDark)
                     if !formattedTranscription.isEmpty {
-                        Text(formattedTranscription)
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(.orange)
+                        Text(formattedTranscription).font(.system(size: 15, weight: .medium)).foregroundColor(.orange)
                     }
                 }
-                
                 Spacer()
-                
-                Text(word.russian)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(Color(.systemGray))
+                Text(word.russian).font(.system(size: 16, weight: .bold)).foregroundColor(Color(.systemGray))
             }
-            
             if !word.example.isEmpty {
-                Text(word.example)
-                    .font(.system(size: 14))
-                    .foregroundColor(Color(.systemGray2))
-            }
-            
-            if let categoryName = word.category?.name {
-                Text(categoryName)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(.orange)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(Color.orange.opacity(0.12))
-                    .cornerRadius(8)
+                Text(word.example).font(.system(size: 14)).foregroundColor(Color(.systemGray2))
             }
         }
         .padding(16)
@@ -380,6 +267,9 @@ struct WordRowCard: View {
         .cornerRadius(16)
         .shadow(color: Color.black.opacity(0.02), radius: 4, x: 0, y: 2)
         .contextMenu {
+            Button(action: onEdit) {
+                Label("Редактировать", systemImage: "pencil")
+            }
             Button(role: .destructive) {
                 modelContext.delete(word)
             } label: {
@@ -389,13 +279,10 @@ struct WordRowCard: View {
     }
 }
 
-// MARK: - ManageCategoriesView
-
 struct ManageCategoriesView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Category.name) private var categories: [Category]
-    
     @State private var newCategoryName = ""
     
     var body: some View {
@@ -413,24 +300,17 @@ struct ManageCategoriesView: View {
                         .disabled(newCategoryName.trimmingCharacters(in: .whitespaces).isEmpty)
                     }
                 }
-                
                 Section("Существующие категории") {
-                    ForEach(categories) { category in
-                        Text(category.name)
-                    }
+                    ForEach(categories) { category in Text(category.name) }
                     .onDelete { offsets in
-                        for index in offsets {
-                            modelContext.delete(categories[index])
-                        }
+                        for index in offsets { modelContext.delete(categories[index]) }
                     }
                 }
             }
             .navigationTitle("Категории")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Готово") { dismiss() }
-                }
+                ToolbarItem(placement: .topBarTrailing) { Button("Готово") { dismiss() } }
             }
         }
     }
