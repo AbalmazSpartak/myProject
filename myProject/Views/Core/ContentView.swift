@@ -83,11 +83,11 @@ struct TitleScreenView: View {
                     .font(.system(size: 36, weight: .bold, design: .rounded))
                     .foregroundColor(.brandDark)
                 
-                Text("Твой персональный тренажер\nанглийского языка")
+                /*Text("Твой персональный тренажер\nанглийского языка")
                     .font(.system(size: 16, weight: .medium, design: .rounded))
                     .foregroundColor(.gray)
                     .multilineTextAlignment(.center)
-                    .lineSpacing(4)
+                    .lineSpacing(4)*/
             }
             
             Spacer().frame(minHeight: 20, maxHeight: 50)
@@ -107,23 +107,15 @@ struct TitleScreenView: View {
                             }
                             .padding(.leading, 16)
                             
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(item.title)
-                                    .font(.system(size: 18, weight: .bold, design: .rounded))
-                                    .foregroundColor(.primary)
-                                Text(item.subtitle)
-                                    .font(.system(size: 14, weight: .regular, design: .rounded))
-                                    .foregroundColor(.gray)
-                            }
-                            .padding(.leading, 16)
+                            Text(item.title)
+                                .font(.system(size: 18, weight: .bold, design: .rounded))
+                                .foregroundColor(.primary)
+                                .padding(.leading, 16)
+                            
                             Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.gray.opacity(0.6))
-                                .padding(.trailing, 20)
                         }
                         .frame(maxWidth: .infinity)
-                        .frame(height: 84)
+                        .frame(height: 70)
                         .background(Color.cardBackground)
                         .cornerRadius(20)
                         .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 6)
