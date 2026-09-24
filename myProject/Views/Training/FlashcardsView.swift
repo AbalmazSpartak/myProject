@@ -103,7 +103,7 @@ struct FlashcardsView: View {
                         .foregroundColor(brandDarkColor)
                         .padding(.vertical, 12)
                         .padding(.horizontal, 16)
-                        .background(Color.white)
+                        .background(Color.cardBackground)
                         .cornerRadius(12)
                         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.black.opacity(0.1), lineWidth: 1))
                         .padding(.horizontal, 24).padding(.top, 25)
@@ -150,7 +150,7 @@ struct FlashcardsView: View {
                     }
                     .padding(.horizontal, 24).padding(.bottom, 30)
                 }
-                .frame(maxWidth: .infinity).background(Color.white).cornerRadius(24).shadow(color: Color.black.opacity(0.04), radius: 12, x: 0, y: 8).padding(.horizontal, 24)
+                .frame(maxWidth: .infinity).background(Color.cardBackground).cornerRadius(24).shadow(color: Color.black.opacity(0.04), radius: 12, x: 0, y: 8).padding(.horizontal, 24)
             }
             Spacer()
         }

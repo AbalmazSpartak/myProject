@@ -34,3 +34,19 @@ final class Word {
         self.category = category
     }
 }
+
+@Model
+final class UserProfile {
+    var id: UUID
+    var name: String
+    var correctAnswers: Int
+    var totalAnswers: Int
+    
+    init(name: String = "Студент", correctAnswers: Int = 0, totalAnswers: Int = 0) {
+        self.id = UUID()
+        self.name = name
+        self.correctAnswers = correctAnswers
+        self.totalAnswers = totalAnswers
+    }
+}
+

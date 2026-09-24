@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 enum AppScreen: String, Hashable {
-    case cards, quiz, dictionary
+    case cards, quiz, dictionary, profile
 }
 
 struct MenuItem: Identifiable {
@@ -23,6 +23,8 @@ struct ContentView: View {
                 .navigationDestination(for: AppScreen.self) { screen in
                     Group {
                         switch screen {
+                        case .profile:
+                            ProfileView()
                         case .cards:
                             FlashcardsView()
                         case .quiz:
@@ -34,7 +36,6 @@ struct ContentView: View {
                     .toolbar(.hidden, for: .navigationBar)
                 }
         }
-        .preferredColorScheme(.light)
         .onAppear {
             DataPreloader.preloadSampleWords(context: modelContext)
         }
@@ -43,7 +44,7 @@ struct ContentView: View {
 
 struct TitleScreenView: View {
     @Binding var navigationPath: [AppScreen]
-    @AppStorage("menu_order") private var menuOrderData: String = "cards,quiz,dictionary"
+    @AppStorage("menu_order_v2") private var menuOrderData: String = "profile,cards,quiz,dictionary"
     @State private var menuItems: [MenuItem] = []
     
     var body: some View {
@@ -52,7 +53,7 @@ struct TitleScreenView: View {
             
             ZStack {
                 RoundedRectangle(cornerRadius: 24)
-                    .fill(Color.white)
+                    .fill(Color.cardBackground)
                     .frame(width: 100, height: 100)
                     .shadow(color: Color.black.opacity(0.06), radius: 15, x: 0, y: 10)
                 
@@ -98,7 +99,7 @@ struct TitleScreenView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(item.title)
                                     .font(.system(size: 18, weight: .bold, design: .rounded))
-                                    .foregroundColor(.black)
+                                    .foregroundColor(.primary)
                                 Text(item.subtitle)
                                     .font(.system(size: 14, weight: .regular, design: .rounded))
                                     .foregroundColor(.gray)
@@ -112,7 +113,7 @@ struct TitleScreenView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 84)
-                        .background(Color.white)
+                        .background(Color.cardBackground)
                         .cornerRadius(20)
                         .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 6)
                     }
@@ -128,16 +129,17 @@ struct TitleScreenView: View {
     }
     
     private func loadMenuOrder() {
-        let allItems: [String: MenuItem] = [
-            "cards": MenuItem(id: .cards, title: "Карточки с вводом", subtitle: "Учи новые слова", icon: "keyboard.fill", color: .blue),
-            "quiz": MenuItem(id: .quiz, title: "Викторина", subtitle: "Тесты с вариантами", icon: "checkmark.seal.fill", color: .purple),
-            "dictionary": MenuItem(id: .dictionary, title: "Словарь", subtitle: "Все изученные слова", icon: "book.fill", color: .orange)
-        ]
-        let ids = menuOrderData.components(separatedBy: ",")
-        var orderedList: [MenuItem] = []
-        for id in ids {
-            if let item = allItems[id] { orderedList.append(item) }
-        }
-        menuItems = orderedList.count == 3 ? orderedList : [allItems["cards"]!, allItems["quiz"]!, allItems["dictionary"]!]
+            let allItems: [String: MenuItem] = [
+                "profile": MenuItem(id: .profile, title: "Мой профиль", subtitle: "Статистика и успехи", icon: "person.fill", color: .teal),
+                "cards": MenuItem(id: .cards, title: "Карточки с вводом", subtitle: "Учи новые слова", icon: "keyboard.fill", color: .blue),
+                "quiz": MenuItem(id: .quiz, title: "Викторина", subtitle: "Тесты с вариантами", icon: "checkmark.seal.fill", color: .purple),
+                "dictionary": MenuItem(id: .dictionary, title: "Словарь", subtitle: "Все изученные слова", icon: "book.fill", color: .orange)
+            ]
+            let ids = menuOrderData.components(separatedBy: ",")
+            var orderedList: [MenuItem] = []
+            for id in ids {
+                if let item = allItems[id] { orderedList.append(item) }
+            }
+        menuItems = orderedList.count == 4 ? orderedList : [allItems["profile"]!, allItems["cards"]!, allItems["quiz"]!, allItems["dictionary"]!]
     }
 }

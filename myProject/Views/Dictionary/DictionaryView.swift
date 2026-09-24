@@ -149,7 +149,7 @@ struct DictionaryView: View {
                 .padding(.bottom, 8)
             }
         }
-        .background(Color.white)
+        .background(Color.cardBackground)
         .cornerRadius(16)
         .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 3)
     }
@@ -183,7 +183,7 @@ struct DictionaryView: View {
             .disabled(newEnglish.isEmpty || newRussian.isEmpty)
         }
         .padding(16)
-        .background(Color.white)
+        .background(Color.cardBackground)
         .cornerRadius(20)
         .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 2)
     }
@@ -263,7 +263,7 @@ struct WordRowCard: View {
             }
         }
         .padding(16)
-        .background(Color.white)
+        .background(Color.cardBackground)
         .cornerRadius(16)
         .shadow(color: Color.black.opacity(0.02), radius: 4, x: 0, y: 2)
         .contextMenu {
