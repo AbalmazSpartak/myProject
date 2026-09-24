@@ -22,16 +22,25 @@ final class Word {
     var russian: String
     var example: String
     var transcription: String
+    var isMistake: Bool = false // 👈 Новое поле для фиксации ошибок
     
     var category: Category?
     
-    init(english: String, russian: String, example: String = "", transcription: String = "", category: Category? = nil) {
+    init(
+        english: String,
+        russian: String,
+        example: String = "",
+        transcription: String = "",
+        category: Category? = nil,
+        isMistake: Bool = false
+    ) {
         self.id = UUID()
         self.english = english
         self.russian = russian
         self.example = example
         self.transcription = transcription
         self.category = category
+        self.isMistake = isMistake
     }
 }
 

@@ -1,18 +1,23 @@
 import SwiftUI
 import SwiftData
 
+enum QuizFilter: Equatable {
+    case all
+    case category(Category)
+    case mistakes
+}
+
 struct QuizView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
-    // Считываем направление перевода из настроек
     @AppStorage("translation_mode") private var translationMode: String = "en_ru"
     
     @Query(sort: \Category.name) private var categories: [Category]
     @Query private var allWords: [Word]
     @Query private var profiles: [UserProfile]
     
-    @State private var selectedCategory: Category?
+    @State private var currentFilter: QuizFilter = .all
     @State private var sessionWords: [Word] = []
     @State private var currentIndex = 0
     @State private var options: [String] = []
@@ -25,22 +30,31 @@ struct QuizView: View {
     private let brandDarkColor = Color.brandDark
     private let brandBgColor = Color.brandBackground
     
-    // Текущее слово сессии
+    private var mistakeWordsCount: Int {
+        allWords.filter { $0.isMistake }.count
+    }
+    
     private var currentWord: Word? {
         guard !sessionWords.isEmpty, currentIndex < sessionWords.count else { return nil }
         return sessionWords[currentIndex]
     }
     
-    // Вопрос в зависимости от режима перевода
     private var currentQuestion: String {
         guard let word = currentWord else { return "" }
         return translationMode == "en_ru" ? word.english : word.russian
     }
     
-    // Правильный ответ в зависимости от режима перевода
     private var currentCorrectAnswer: String {
         guard let word = currentWord else { return "" }
         return translationMode == "en_ru" ? word.russian : word.english
+    }
+    
+    private var filterTitle: String {
+        switch currentFilter {
+        case .all: return "Все слова"
+        case .category(let cat): return cat.name
+        case .mistakes: return "⚠️ Ошибки (\(mistakeWordsCount))"
+        }
     }
     
     var body: some View {
@@ -58,25 +72,32 @@ struct QuizView: View {
                 
                 Spacer()
                 
-                // Выбор категории
+                // Выбор категории / Ошибок
                 Menu {
-                    Button("Все слова") { changeCategory(to: nil) }
+                    Button("Все слова") { changeFilter(to: .all) }
+                    
+                    Button("⚠️ Работа над ошибками (\(mistakeWordsCount))") {
+                        changeFilter(to: .mistakes)
+                    }
+                    .disabled(mistakeWordsCount == 0)
+                    
                     Divider()
+                    
                     ForEach(categories) { category in
-                        Button(category.name) { changeCategory(to: category) }
+                        Button(category.name) { changeFilter(to: .category(category)) }
                     }
                 } label: {
                     HStack(spacing: 4) {
-                        Image(systemName: "folder.fill")
-                        Text(selectedCategory?.name ?? "Все слова")
+                        Image(systemName: currentFilter == .mistakes ? "exclamationmark.triangle.fill" : "folder.fill")
+                        Text(filterTitle)
                             .lineLimit(1)
                         Image(systemName: "chevron.down").font(.caption2)
                     }
                     .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundColor(.purple)
+                    .foregroundColor(currentFilter == .mistakes ? .orange : .purple)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
-                    .background(Color.purple.opacity(0.1))
+                    .background((currentFilter == .mistakes ? Color.orange : Color.purple).opacity(0.1))
                     .cornerRadius(8)
                 }
             }
@@ -96,10 +117,17 @@ struct QuizView: View {
             Spacer()
             
             if sessionWords.isEmpty {
-                Text(selectedCategory == nil ? "В словаре нет слов для викторины." : "В этой категории нет слов.")
-                    .font(.system(.body, design: .rounded))
-                    .foregroundColor(.gray)
-                    .padding(.horizontal, 40)
+                VStack(spacing: 12) {
+                    Image(systemName: currentFilter == .mistakes ? "checkmark.circle.fill" : "doc.text.magnifyingglass")
+                        .font(.system(size: 48))
+                        .foregroundColor(currentFilter == .mistakes ? .green : .gray)
+                    
+                    Text(currentFilter == .mistakes ? "Отлично! У вас нет неисправленных ошибок." : "В выбранном разделе нет слов.")
+                        .font(.system(.body, design: .rounded))
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.horizontal, 40)
             } else if let _ = currentWord {
                 // Карточка викторины
                 VStack(spacing: 0) {
@@ -160,8 +188,8 @@ struct QuizView: View {
                                     .font(.system(size: 18, weight: .bold, design: .rounded))
                                     .foregroundColor(.green)
                             } else {
-                                Text("❌ Неверно")
-                                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                                Text("❌ Неверно (добавлено в ошибки)")
+                                    .font(.system(size: 16, weight: .bold, design: .rounded))
                                     .foregroundColor(.red)
                             }
                         }
@@ -169,7 +197,6 @@ struct QuizView: View {
                     .frame(height: 44)
                     .padding(.top, 8)
                     
-                    // Кнопка перехода к следующему вопросу
                     if showResult {
                         Button(action: nextWord) {
                             Text("Следующий вопрос")
@@ -202,8 +229,6 @@ struct QuizView: View {
         }
     }
     
-    // --- Цвета вариантов ответов при проверке ---
-    
     private func optionTextColor(for option: String) -> Color {
         if !showResult { return .brandDark }
         if option == currentCorrectAnswer { return .green }
@@ -225,10 +250,8 @@ struct QuizView: View {
         return Color.clear
     }
     
-    // --- Вспомогательная логика ---
-    
-    private func changeCategory(to category: Category?) {
-        selectedCategory = category
+    private func changeFilter(to filter: QuizFilter) {
+        currentFilter = filter
         correctCount = 0
         totalAnswered = 0
         selectedOption = nil
@@ -239,11 +262,15 @@ struct QuizView: View {
     private func generateSession() {
         do {
             var descriptor = FetchDescriptor<Word>()
-            if let catID = selectedCategory?.id {
+            switch currentFilter {
+            case .all:
+                break
+            case .category(let cat):
+                let catID = cat.id
                 descriptor.predicate = #Predicate<Word> { $0.category?.id == catID }
+            case .mistakes:
+                descriptor.predicate = #Predicate<Word> { $0.isMistake == true }
             }
-            let totalCount = (try? modelContext.fetchCount(descriptor)) ?? 0
-            guard totalCount > 0 else { sessionWords = []; return }
             
             sessionWords = (try modelContext.fetch(descriptor)).shuffled()
             currentIndex = 0
@@ -257,7 +284,6 @@ struct QuizView: View {
         guard let word = currentWord else { return }
         let correct = currentCorrectAnswer
         
-        // Берем случайные варианты из общей базы слов на целевом языке
         let otherWords = allWords.filter { $0.id != word.id }
         let wrongCandidates = Array(Set(otherWords.map { translationMode == "en_ru" ? $0.russian : $0.english }))
             .filter { $0 != correct }
@@ -269,14 +295,21 @@ struct QuizView: View {
     }
     
     private func selectOption(_ option: String) {
-        guard !showResult else { return }
+        guard !showResult, let word = currentWord else { return }
         selectedOption = option
         isCorrect = (option == currentCorrectAnswer)
         
-        if isCorrect { correctCount += 1 }
+        if isCorrect {
+            correctCount += 1
+            // Если отвечено верно, снимаем флаг ошибки
+            word.isMistake = false
+        } else {
+            // Если ошибка — заносим в слова-ошибки
+            word.isMistake = true
+        }
         totalAnswered += 1
         
-        // Детализированная запись в профиль
+        // Запись в статистику
         if let userProfile = profiles.first {
             if translationMode == "en_ru" {
                 userProfile.quizEnRuTotal += 1

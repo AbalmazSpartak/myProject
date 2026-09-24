@@ -119,7 +119,8 @@ struct DictionaryView: View {
                                     Spacer()
                                     if selectedCategory == nil { Image(systemName: "checkmark").font(.system(size: 14, weight: .bold)).foregroundColor(.orange) }
                                 }
-                                .padding(.horizontal, 16).padding(.vertical, 12)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 12)
                             }
                             Divider().padding(.horizontal, 16)
                             ForEach(categories) { category in
@@ -132,6 +133,17 @@ struct DictionaryView: View {
                                     }
                                     .padding(.horizontal, 16).padding(.vertical, 12)
                                 }
+                            }
+                            // В выпадающем меню Словаря:
+                            Button(action: { selectCategoryAndClose(nil) }) {
+                                HStack {
+                                    Text("⚠️ Слова с ошибками (\(allWords.filter { $0.isMistake }.count))")
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(.orange)
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 12)
                             }
                         }
                     }

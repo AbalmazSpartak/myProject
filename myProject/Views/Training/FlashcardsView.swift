@@ -1,6 +1,12 @@
 import SwiftUI
 import SwiftData
 
+enum FlashcardsFilter: Equatable {
+    case all
+    case category(Category)
+    case mistakes
+}
+
 struct FlashcardsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -8,243 +14,258 @@ struct FlashcardsView: View {
     @AppStorage("translation_mode") private var translationMode: String = "en_ru"
     
     @Query(sort: \Category.name) private var categories: [Category]
+    @Query private var allWords: [Word]
     @Query private var profiles: [UserProfile]
     
-    @State private var selectedCategory: Category?
+    @State private var currentFilter: FlashcardsFilter = .all
     @State private var sessionWords: [Word] = []
     @State private var currentIndex = 0
+    
     @State private var userAnswer = ""
     @State private var showResult = false
     @State private var isCorrect = false
     @State private var correctCount = 0
     @State private var totalAnswered = 0
-    
     @FocusState private var isTextFieldFocused: Bool
     
-    private let brandDarkColor = Color.brandDark
-    private let brandBgColor = Color.brandBackground
-    
-    private var isAnswerEmpty: Bool {
-        userAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    private var mistakeWordsCount: Int {
+        allWords.filter { $0.isMistake }.count
     }
     
-    // --- ВЫЧИСЛЯЕМЫЕ СВОЙСТВА ДЛЯ НАПРАВЛЕНИЯ ПЕРЕВОДА ---
+    // ⬇️ Вычисляемое свойство текущего слова ⬇️
+    private var currentWord: Word? {
+        guard !sessionWords.isEmpty, currentIndex < sessionWords.count else { return nil }
+        return sessionWords[currentIndex]
+    }
     
-    // Вопрос на карточке
     private var currentQuestion: String {
-        guard !sessionWords.isEmpty, currentIndex < sessionWords.count else { return "" }
-        let word = sessionWords[currentIndex]
+        guard let word = currentWord else { return "" }
         return translationMode == "en_ru" ? word.english : word.russian
     }
     
-    // Правильный ответ (или варианты через запятую)
     private var currentCorrectAnswerString: String {
-        guard !sessionWords.isEmpty, currentIndex < sessionWords.count else { return "" }
-        let word = sessionWords[currentIndex]
+        guard let word = currentWord else { return "" }
         return translationMode == "en_ru" ? word.russian : word.english
     }
     
-    // Текст подсказки в поле ввода
-    private var placeholderText: String {
-        translationMode == "en_ru" ? "Введите перевод на русский" : "Введите перевод на английский"
+    private var filterTitle: String {
+        switch currentFilter {
+        case .all: return "Все слова"
+        case .category(let cat): return cat.name
+        case .mistakes: return "⚠️ Ошибки (\(mistakeWordsCount))"
+        }
     }
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header
+            // Шапка
             HStack {
-                Button(action: {
-                    isTextFieldFocused = false
-                    DispatchQueue.main.async { dismiss() }
-                }) {
-                    HStack(spacing: 5) { Image(systemName: "chevron.left"); Text("В меню") }
+                Button(action: { dismiss() }) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "chevron.left")
+                        Text("В меню")
+                    }
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .foregroundColor(.blue)
                 }
                 
                 Spacer()
                 
-                // Выбор категории
+                // Выбор категории / ошибок
                 Menu {
-                    Button("Все слова") { changeCategory(to: nil) }
+                    Button("Все слова") { changeFilter(to: .all) }
+                    
+                    Button("⚠️ Работа над ошибками (\(mistakeWordsCount))") {
+                        changeFilter(to: .mistakes)
+                    }
+                    .disabled(mistakeWordsCount == 0)
+                    
                     Divider()
+                    
                     ForEach(categories) { category in
-                        Button(category.name) { changeCategory(to: category) }
+                        Button(category.name) { changeFilter(to: .category(category)) }
                     }
                 } label: {
                     HStack(spacing: 4) {
-                        Image(systemName: "folder.fill")
-                        Text(selectedCategory?.name ?? "Все слова")
+                        Image(systemName: currentFilter == .mistakes ? "exclamationmark.triangle.fill" : "folder.fill")
+                        Text(filterTitle)
                             .lineLimit(1)
                         Image(systemName: "chevron.down").font(.caption2)
                     }
                     .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundColor(.blue)
+                    .foregroundColor(currentFilter == .mistakes ? .orange : .blue)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
-                    .background(Color.blue.opacity(0.1))
+                    .background((currentFilter == .mistakes ? Color.orange : Color.blue).opacity(0.1))
                     .cornerRadius(8)
                 }
             }
-            .padding(.horizontal, 24).padding(.top, 10)
+            .padding(.horizontal, 24)
+            .padding(.top, 10)
             
+            // Прогресс
             HStack {
                 Spacer()
                 Text("Прогресс: \(correctCount)/\(totalAnswered)")
                     .font(.system(size: 13, weight: .bold, design: .rounded))
                     .foregroundColor(.gray)
             }
-            .padding(.horizontal, 24).padding(.top, 12)
+            .padding(.horizontal, 24)
+            .padding(.top, 12)
             
             Spacer()
             
             if sessionWords.isEmpty {
-                Text(selectedCategory == nil ? "В словаре нет слов для тренировки." : "В этой категории нет слов.")
-                    .font(.system(.body, design: .rounded)).foregroundColor(.gray).padding(.horizontal, 40)
-            } else {
-                // Карточка со словом
-                VStack(spacing: 0) {
-                    HStack(spacing: 15) {
-                        // Показываем слово на нужном языке
+                VStack(spacing: 12) {
+                    Image(systemName: currentFilter == .mistakes ? "checkmark.circle.fill" : "doc.text.magnifyingglass")
+                        .font(.system(size: 48))
+                        .foregroundColor(currentFilter == .mistakes ? .green : .gray)
+                    
+                    Text(currentFilter == .mistakes ? "Отлично! У вас нет неисправленных ошибок." : "В выбранном разделе нет слов.")
+                        .font(.system(.body, design: .rounded))
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.horizontal, 40)
+            } else if let word = currentWord {
+                // Карточка
+                VStack(spacing: 20) {
+                    HStack(spacing: 12) {
                         Text(currentQuestion)
-                            .font(.system(size: 38, weight: .bold, design: .rounded))
-                            .foregroundColor(brandDarkColor)
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                            .foregroundColor(.brandDark)
+                            .multilineTextAlignment(.center)
                         
-                        Button(action: speakWord) {
+                        Button(action: { TextToSpeechManager.shared.speak(word.english) }) {
                             Image(systemName: "speaker.wave.2.bubble.fill")
                                 .font(.title2)
                                 .foregroundColor(.blue)
                         }
                     }
-                    .padding(.top, 30)
+                    .padding(.top, 24)
                     
-                    // Транскрипцию показываем только если вопрос на английском
-                    if translationMode == "en_ru" && !sessionWords[currentIndex].transcription.isEmpty {
-                        Text(sessionWords[currentIndex].transcription)
-                            .font(.system(size: 18, weight: .medium, design: .rounded))
+                    if translationMode == "en_ru" && !word.transcription.isEmpty {
+                        Text(word.transcription)
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
                             .foregroundColor(.orange)
-                            .padding(.top, 6)
                     }
                     
-                    if !sessionWords[currentIndex].example.isEmpty {
-                        VStack(alignment: .center, spacing: 4) {
-                            Text("Пример использования:")
-                                .font(.system(size: 11, weight: .bold, design: .rounded))
-                                .foregroundColor(.blue)
-                            Text(sessionWords[currentIndex].example)
-                                .font(.system(size: 15, weight: .medium, design: .rounded))
-                                .italic()
-                                .foregroundColor(.gray)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 20)
-                        }
-                        .padding(.top, 20)
-                    }
-                    
-                    TextField(isTextFieldFocused ? "" : placeholderText, text: $userAnswer)
-                        .multilineTextAlignment(.center)
+                    // Поле ввода
+                    TextField("Введите перевод...", text: $userAnswer)
                         .font(.system(size: 18, weight: .medium, design: .rounded))
-                        .foregroundColor(brandDarkColor)
-                        .padding(.vertical, 12)
-                        .padding(.horizontal, 16)
-                        .background(Color.cardBackground)
+                        .padding()
+                        .background(Color.brandInputBg)
                         .cornerRadius(12)
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.black.opacity(0.1), lineWidth: 1))
-                        .padding(.horizontal, 24).padding(.top, 25)
-                        .autocapitalization(.none).disableAutocorrection(true)
                         .focused($isTextFieldFocused)
-                        .submitLabel(showResult ? .next : .done)
+                        .disabled(showResult)
                         .onSubmit {
-                            if !showResult { if !isAnswerEmpty { checkAnswer() } } else { nextWord() }
-                        }
-                    
-                    ZStack {
-                        if showResult {
-                            if isCorrect {
-                                Text("🎉 Правильно!").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundColor(.green)
+                            if showResult {
+                                nextWord()
                             } else {
-                                VStack(spacing: 2) {
-                                    Text("❌ Ошибка").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundColor(.red)
-                                    Text("Правильный ответ: \(currentCorrectAnswerString)")
-                                        .font(.system(size: 14, weight: .medium, design: .rounded))
-                                        .foregroundColor(.gray)
-                                }
+                                checkAnswer()
                             }
                         }
-                    }
-                    .frame(height: 65).padding(.top, 10)
+                        .padding(.horizontal, 16)
                     
-                    Group {
-                        if !showResult {
-                            Button(action: checkAnswer) {
-                                Text("Проверить")
-                                    .font(.system(size: 16, weight: .bold, design: .rounded))
-                                    .frame(maxWidth: .infinity).padding(.vertical, 14)
-                                    .background(isAnswerEmpty ? Color.black.opacity(0.06) : Color.blue)
-                                    .foregroundColor(isAnswerEmpty ? .gray : .white)
-                                    .cornerRadius(16)
-                            }
-                            .disabled(isAnswerEmpty)
-                        } else {
-                            Button(action: nextWord) {
-                                Text("Следующее слово")
-                                    .font(.system(size: 16, weight: .bold, design: .rounded))
-                                    .frame(maxWidth: .infinity).padding(.vertical, 14)
-                                    .background(Color.green).foregroundColor(.white).cornerRadius(16)
+                    // Результат
+                    if showResult {
+                        VStack(spacing: 6) {
+                            Text(isCorrect ? "🎉 Правильно!" : "❌ Неверно (добавлено в ошибки)")
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .foregroundColor(isCorrect ? .green : .red)
+                            
+                            if !isCorrect {
+                                Text("Правильно: \(currentCorrectAnswerString)")
+                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                    .foregroundColor(.brandDark)
                             }
                         }
                     }
-                    .padding(.horizontal, 24).padding(.bottom, 30)
+                    
+                    // Кнопка
+                    Button(action: {
+                        if showResult {
+                            nextWord()
+                        } else {
+                            checkAnswer()
+                        }
+                    }) {
+                        Text(showResult ? "Следующее слово" : "Проверить")
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(showResult ? Color.blue : Color.teal)
+                            .foregroundColor(.white)
+                            .cornerRadius(16)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 20)
                 }
-                .frame(maxWidth: .infinity).background(Color.cardBackground).cornerRadius(24).shadow(color: Color.black.opacity(0.04), radius: 12, x: 0, y: 8).padding(.horizontal, 24)
+                .frame(maxWidth: .infinity)
+                .background(Color.cardBackground)
+                .cornerRadius(24)
+                .shadow(color: Color.black.opacity(0.04), radius: 12, x: 0, y: 8)
+                .padding(.horizontal, 20)
             }
             Spacer()
+            .onAppear {
+                generateSession()
+                // Автофокус при входе в раздел
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    isTextFieldFocused = true
+                }
+            }
+            .onChange(of: showResult) { _, isShowing in
+                // Как только карточка переключается на следующее слово (showResult становится false)
+                if !isShowing {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        isTextFieldFocused = true
+                    }
+                }
+            }
         }
-        .padding(.vertical).background(brandBgColor.ignoresSafeArea())
-        .onAppear { generateSession(); isTextFieldFocused = true }
+        .background(Color.brandBackground.ignoresSafeArea())
+        .onAppear {
+            generateSession()
+            isTextFieldFocused = true
+        }
     }
     
-    private func changeCategory(to category: Category?) {
-        selectedCategory = category
+    private func changeFilter(to filter: FlashcardsFilter) {
+        currentFilter = filter
         correctCount = 0
         totalAnswered = 0
         userAnswer = ""
         showResult = false
         generateSession()
-        isTextFieldFocused = true
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            isTextFieldFocused = true
+        }
     }
     
     private func generateSession() {
         do {
             var descriptor = FetchDescriptor<Word>()
-            
-            if let catID = selectedCategory?.id {
+            switch currentFilter {
+            case .all:
+                break
+            case .category(let cat):
+                let catID = cat.id
                 descriptor.predicate = #Predicate<Word> { $0.category?.id == catID }
+            case .mistakes:
+                descriptor.predicate = #Predicate<Word> { $0.isMistake == true }
             }
             
-            let totalCount = (try? modelContext.fetchCount(descriptor)) ?? 0
-            guard totalCount > 0 else { sessionWords = []; return }
-            
-            let limit = 30
-            if totalCount <= limit {
-                sessionWords = (try modelContext.fetch(descriptor)).shuffled()
-            } else {
-                let maxOffset = totalCount - limit
-                descriptor.fetchOffset = Int.random(in: 0...maxOffset)
-                descriptor.fetchLimit = limit
-                sessionWords = (try modelContext.fetch(descriptor)).shuffled()
-            }
+            sessionWords = (try modelContext.fetch(descriptor)).shuffled()
             currentIndex = 0
-        } catch { sessionWords = [] }
-    }
-    
-    func speakWord() {
-        guard !sessionWords.isEmpty else { return }
-        // Всегда озвучиваем английское слово
-        TextToSpeechManager.shared.speak(sessionWords[currentIndex].english)
+        } catch {
+            sessionWords = []
+        }
     }
     
     func checkAnswer() {
+        guard let word = currentWord else { return }
         let cleanUser = userAnswer.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         
         let correctVariants = currentCorrectAnswerString
@@ -252,10 +273,15 @@ struct FlashcardsView: View {
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
         
         isCorrect = correctVariants.contains(cleanUser)
-        if isCorrect { correctCount += 1 }
+        
+        if isCorrect {
+            correctCount += 1
+            word.isMistake = false
+        } else {
+            word.isMistake = true
+        }
         totalAnswered += 1
         
-        // Детализированная запись в профиль
         if let userProfile = profiles.first {
             if translationMode == "en_ru" {
                 userProfile.flashcardsEnRuTotal += 1
@@ -270,11 +296,20 @@ struct FlashcardsView: View {
         isTextFieldFocused = true
     }
     
-    func nextWord() {
-        userAnswer = ""; showResult = false
+    private func nextWord() {
+        userAnswer = ""
+        showResult = false
+        
         if !sessionWords.isEmpty {
-            if currentIndex + 1 >= sessionWords.count { generateSession() } else { currentIndex += 1 }
+            if currentIndex + 1 >= sessionWords.count {
+                generateSession()
+            } else {
+                currentIndex += 1
+            }
         }
-        isTextFieldFocused = true
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            isTextFieldFocused = true
+        }
     }
 }
