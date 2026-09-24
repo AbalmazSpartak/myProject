@@ -1,6 +1,6 @@
 import SwiftUI
 import SwiftData
-import PhotosUI // 1. Импортируем фреймворк для работы с галереей
+import PhotosUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
@@ -8,16 +8,16 @@ struct SettingsView: View {
     @Bindable var profile: UserProfile
     
     @AppStorage("app_theme") private var selectedTheme: String = "system"
-    @State private var showingResetAlert = false
+    @AppStorage("translation_mode") private var translationMode: String = "en_ru"
     
-    // 2. Состояние для выбора элемента из галереи
+    @State private var showingResetAlert = false
     @State private var selectedPhotoItem: PhotosPickerItem?
     
     var body: some View {
         NavigationStack {
             Form {
+                // Личные данные
                 Section(header: Text("Личные данные")) {
-                    // --- Выбор фотографии ---
                     HStack(spacing: 16) {
                         ZStack {
                             Circle()
@@ -59,6 +59,23 @@ struct SettingsView: View {
                         .autocorrectionDisabled()
                 }
                 
+                // Обучение
+                Section(header: Text("Обучение")) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Направление перевода")
+                            .font(.system(size: 14))
+                            .foregroundColor(.gray)
+                        
+                        Picker("Направление перевода", selection: $translationMode) {
+                            Text("Англ ➔ Рус").tag("en_ru")
+                            Text("Рус ➔ Англ").tag("ru_en")
+                        }
+                        .pickerStyle(.segmented)
+                    }
+                    .padding(.vertical, 4)
+                }
+                
+                // Оформление
                 Section(header: Text("Оформление")) {
                     Picker("Тема оформления", selection: $selectedTheme) {
                         Text("Системная").tag("system")
@@ -68,6 +85,7 @@ struct SettingsView: View {
                     .pickerStyle(.segmented)
                 }
                 
+                // Управление данными
                 Section(header: Text("Управление данными"), footer: Text("Сброс статистики удалит информацию о пройденных тестах и проценте правильных ответов. Ваши слова в словаре останутся нетронутыми.")) {
                     Button(role: .destructive, action: {
                         showingResetAlert = true
@@ -90,11 +108,9 @@ struct SettingsView: View {
                     .fontWeight(.bold)
                 }
             }
-            // 3. Обрабатываем выбор нового фото из галереи
             .onChange(of: selectedPhotoItem) { _, newItem in
                 Task {
                     if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                        // Сжимаем фото до 70% качества для оптимизации памяти
                         if let uiImage = UIImage(data: data),
                            let compressedData = uiImage.jpegData(compressionQuality: 0.7) {
                             profile.avatarData = compressedData

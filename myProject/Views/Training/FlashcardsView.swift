@@ -5,6 +5,8 @@ struct FlashcardsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
+    @AppStorage("translation_mode") private var translationMode: String = "en_ru"
+    
     @Query(sort: \Category.name) private var categories: [Category]
     @State private var selectedCategory: Category?
 
@@ -24,18 +26,39 @@ struct FlashcardsView: View {
         userAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
+    // --- ВЫЧИСЛЯЕМЫЕ СВОЙСТВА ДЛЯ НАПРАВЛЕНИЯ ПЕРЕВОДА ---
+    
+    // Вопрос на карточке
+    private var currentQuestion: String {
+        guard !sessionWords.isEmpty, currentIndex < sessionWords.count else { return "" }
+        let word = sessionWords[currentIndex]
+        return translationMode == "en_ru" ? word.english : word.russian
+    }
+    
+    // Правильный ответ (или варианты через запятую)
+    private var currentCorrectAnswerString: String {
+        guard !sessionWords.isEmpty, currentIndex < sessionWords.count else { return "" }
+        let word = sessionWords[currentIndex]
+        return translationMode == "en_ru" ? word.russian : word.english
+    }
+    
+    // Текст подсказки в поле ввода
+    private var placeholderText: String {
+        translationMode == "en_ru" ? "Введите перевод на русский" : "Введите перевод на английский"
+    }
+    
     var body: some View {
-            VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Button(action: {
-                        isTextFieldFocused = false
-                        DispatchQueue.main.async { dismiss() } // Изменено
-                    }) {
-                        HStack(spacing: 5) { Image(systemName: "chevron.left"); Text("В меню") }
-                        .font(.system(size: 16, weight: .semibold, design: .rounded))
-                        .foregroundColor(.blue)
-                    }
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Button(action: {
+                    isTextFieldFocused = false
+                    DispatchQueue.main.async { dismiss() }
+                }) {
+                    HStack(spacing: 5) { Image(systemName: "chevron.left"); Text("В меню") }
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundColor(.blue)
+                }
                 
                 Spacer()
                 
@@ -80,24 +103,43 @@ struct FlashcardsView: View {
                 // Карточка со словом
                 VStack(spacing: 0) {
                     HStack(spacing: 15) {
-                        Text(sessionWords[currentIndex].english).font(.system(size: 38, weight: .bold, design: .rounded)).foregroundColor(brandDarkColor)
-                        Button(action: speakWord) { Image(systemName: "speaker.wave.2.bubble.fill").font(.title2).foregroundColor(.blue) }
+                        // Показываем слово на нужном языке
+                        Text(currentQuestion)
+                            .font(.system(size: 38, weight: .bold, design: .rounded))
+                            .foregroundColor(brandDarkColor)
+                        
+                        Button(action: speakWord) {
+                            Image(systemName: "speaker.wave.2.bubble.fill")
+                                .font(.title2)
+                                .foregroundColor(.blue)
+                        }
                     }
                     .padding(.top, 30)
                     
-                    if !sessionWords[currentIndex].transcription.isEmpty {
-                        Text(sessionWords[currentIndex].transcription).font(.system(size: 18, weight: .medium, design: .rounded)).foregroundColor(.orange).padding(.top, 6)
+                    // Транскрипцию показываем только если вопрос на английском
+                    if translationMode == "en_ru" && !sessionWords[currentIndex].transcription.isEmpty {
+                        Text(sessionWords[currentIndex].transcription)
+                            .font(.system(size: 18, weight: .medium, design: .rounded))
+                            .foregroundColor(.orange)
+                            .padding(.top, 6)
                     }
                     
                     if !sessionWords[currentIndex].example.isEmpty {
                         VStack(alignment: .center, spacing: 4) {
-                            Text("Пример использования:").font(.system(size: 11, weight: .bold, design: .rounded)).foregroundColor(.blue)
-                            Text(sessionWords[currentIndex].example).font(.system(size: 15, weight: .medium, design: .rounded)).italic().foregroundColor(.gray).multilineTextAlignment(.center).padding(.horizontal, 20)
+                            Text("Пример использования:")
+                                .font(.system(size: 11, weight: .bold, design: .rounded))
+                                .foregroundColor(.blue)
+                            Text(sessionWords[currentIndex].example)
+                                .font(.system(size: 15, weight: .medium, design: .rounded))
+                                .italic()
+                                .foregroundColor(.gray)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 20)
                         }
                         .padding(.top, 20)
                     }
                     
-                    TextField(isTextFieldFocused ? "" : "Введите перевод на русский", text: $userAnswer)
+                    TextField(isTextFieldFocused ? "" : placeholderText, text: $userAnswer)
                         .multilineTextAlignment(.center)
                         .font(.system(size: 18, weight: .medium, design: .rounded))
                         .foregroundColor(brandDarkColor)
@@ -121,7 +163,9 @@ struct FlashcardsView: View {
                             } else {
                                 VStack(spacing: 2) {
                                     Text("❌ Ошибка").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundColor(.red)
-                                    Text("Правильный ответ: \(sessionWords[currentIndex].russian)").font(.system(size: 14, weight: .medium, design: .rounded)).foregroundColor(.gray)
+                                    Text("Правильный ответ: \(currentCorrectAnswerString)")
+                                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                                        .foregroundColor(.gray)
                                 }
                             }
                         }
@@ -172,7 +216,6 @@ struct FlashcardsView: View {
         do {
             var descriptor = FetchDescriptor<Word>()
             
-            // Фильтрация по категории, если она выбрана
             if let catID = selectedCategory?.id {
                 descriptor.predicate = #Predicate<Word> { $0.category?.id == catID }
             }
@@ -195,12 +238,15 @@ struct FlashcardsView: View {
     
     func speakWord() {
         guard !sessionWords.isEmpty else { return }
+        // Всегда озвучиваем английское слово
         TextToSpeechManager.shared.speak(sessionWords[currentIndex].english)
     }
     
     func checkAnswer() {
         let cleanUser = userAnswer.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        let correctVariants = sessionWords[currentIndex].russian
+        
+        // Разбиваем варианты правильного ответа по запятым
+        let correctVariants = currentCorrectAnswerString
             .components(separatedBy: ",")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
         

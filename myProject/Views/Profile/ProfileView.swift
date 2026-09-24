@@ -5,9 +5,10 @@ struct ProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     
-    @State private var showSettings = false
     @Query private var profiles: [UserProfile]
     @Query private var allWords: [Word]
+    
+    @State private var showSettings = false
     
     private var profile: UserProfile {
         if let existing = profiles.first {
@@ -42,13 +43,12 @@ struct ProfileView: View {
                 
                 Spacer()
                 
-                // Кнопка настроек
                 Button(action: { showSettings = true }) {
                     Image(systemName: "gearshape.fill")
                         .font(.system(size: 22))
                         .foregroundColor(.gray)
                 }
-                .frame(width: 70, alignment: .trailing) // Оставляем ширину 70 для баланса
+                .frame(width: 70, alignment: .trailing)
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)
@@ -60,7 +60,6 @@ struct ProfileView: View {
                         .fill(Color.teal.opacity(0.15))
                         .frame(width: 100, height: 100)
                     
-                    // Если фото есть — отображаем его, иначе системную иконку
                     if let data = profile.avatarData, let uiImage = UIImage(data: data) {
                         Image(uiImage: uiImage)
                             .resizable()
