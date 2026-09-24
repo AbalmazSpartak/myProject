@@ -32,7 +32,6 @@ struct FlashcardsView: View {
         allWords.filter { $0.isMistake }.count
     }
     
-    // ⬇️ Вычисляемое свойство текущего слова ⬇️
     private var currentWord: Word? {
         guard !sessionWords.isEmpty, currentIndex < sessionWords.count else { return nil }
         return sessionWords[currentIndex]
@@ -71,7 +70,7 @@ struct FlashcardsView: View {
                 
                 Spacer()
                 
-                // Выбор категории / ошибок
+                // Меню выбора фильтра
                 Menu {
                     Button("Все слова") { changeFilter(to: .all) }
                     
@@ -150,7 +149,7 @@ struct FlashcardsView: View {
                             .foregroundColor(.orange)
                     }
                     
-                    // Поле ввода
+                    // Ввод ответа
                     TextField("Введите перевод...", text: $userAnswer)
                         .font(.system(size: 18, weight: .medium, design: .rounded))
                         .padding()
@@ -207,27 +206,22 @@ struct FlashcardsView: View {
                 .shadow(color: Color.black.opacity(0.04), radius: 12, x: 0, y: 8)
                 .padding(.horizontal, 20)
             }
+            
             Spacer()
-            .onAppear {
-                generateSession()
-                // Автофокус при входе в раздел
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                    isTextFieldFocused = true
-                }
-            }
-            .onChange(of: showResult) { _, isShowing in
-                // Как только карточка переключается на следующее слово (showResult становится false)
-                if !isShowing {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        isTextFieldFocused = true
-                    }
-                }
-            }
         }
         .background(Color.brandBackground.ignoresSafeArea())
         .onAppear {
             generateSession()
-            isTextFieldFocused = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                isTextFieldFocused = true
+            }
+        }
+        .onChange(of: showResult) { oldValue, newValue in
+            if !newValue {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    isTextFieldFocused = true
+                }
+            }
         }
     }
     
@@ -245,23 +239,16 @@ struct FlashcardsView: View {
     }
     
     private func generateSession() {
-        do {
-            var descriptor = FetchDescriptor<Word>()
-            switch currentFilter {
-            case .all:
-                break
-            case .category(let cat):
-                let catID = cat.id
-                descriptor.predicate = #Predicate<Word> { $0.category?.id == catID }
-            case .mistakes:
-                descriptor.predicate = #Predicate<Word> { $0.isMistake == true }
-            }
-            
-            sessionWords = (try modelContext.fetch(descriptor)).shuffled()
-            currentIndex = 0
-        } catch {
-            sessionWords = []
+        switch currentFilter {
+        case .all:
+            sessionWords = allWords.shuffled()
+        case .category(let cat):
+            let catID = cat.id
+            sessionWords = allWords.filter { $0.category?.id == catID }.shuffled()
+        case .mistakes:
+            sessionWords = allWords.filter { $0.isMistake }.shuffled()
         }
+        currentIndex = 0
     }
     
     func checkAnswer() {
