@@ -8,8 +8,9 @@ struct FlashcardsView: View {
     @AppStorage("translation_mode") private var translationMode: String = "en_ru"
     
     @Query(sort: \Category.name) private var categories: [Category]
+    @Query private var profiles: [UserProfile]
+    
     @State private var selectedCategory: Category?
-
     @State private var sessionWords: [Word] = []
     @State private var currentIndex = 0
     @State private var userAnswer = ""
@@ -17,6 +18,7 @@ struct FlashcardsView: View {
     @State private var isCorrect = false
     @State private var correctCount = 0
     @State private var totalAnswered = 0
+    
     @FocusState private var isTextFieldFocused: Bool
     
     private let brandDarkColor = Color.brandDark
@@ -245,7 +247,6 @@ struct FlashcardsView: View {
     func checkAnswer() {
         let cleanUser = userAnswer.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         
-        // Разбиваем варианты правильного ответа по запятым
         let correctVariants = currentCorrectAnswerString
             .components(separatedBy: ",")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
@@ -253,6 +254,18 @@ struct FlashcardsView: View {
         isCorrect = correctVariants.contains(cleanUser)
         if isCorrect { correctCount += 1 }
         totalAnswered += 1
+        
+        // Детализированная запись в профиль
+        if let userProfile = profiles.first {
+            if translationMode == "en_ru" {
+                userProfile.flashcardsEnRuTotal += 1
+                if isCorrect { userProfile.flashcardsEnRuCorrect += 1 }
+            } else {
+                userProfile.flashcardsRuEnTotal += 1
+                if isCorrect { userProfile.flashcardsRuEnCorrect += 1 }
+            }
+        }
+        
         withAnimation { showResult = true }
         isTextFieldFocused = true
     }

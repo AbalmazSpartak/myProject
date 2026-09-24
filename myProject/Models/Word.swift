@@ -37,19 +37,51 @@ final class Word {
 
 @Model
 final class UserProfile {
-    var id: UUID
-    var name: String
-    var correctAnswers: Int
-    var totalAnswers: Int
+    var id: UUID = UUID()
+    var name: String = "Студент"
     
-    // Новое поле: бинарные данные фотографии профиля
+    // Статистика: Карточки с вводом (с дефолтными значениями = 0)
+    var flashcardsEnRuCorrect: Int = 0
+    var flashcardsEnRuTotal: Int = 0
+    var flashcardsRuEnCorrect: Int = 0
+    var flashcardsRuEnTotal: Int = 0
+    
+    // Статистика: Викторина (с дефолтными значениями = 0)
+    var quizEnRuCorrect: Int = 0
+    var quizEnRuTotal: Int = 0
+    var quizRuEnCorrect: Int = 0
+    var quizRuEnTotal: Int = 0
+    
     @Attribute(.externalStorage) var avatarData: Data?
     
-    init(name: String = "Студент", correctAnswers: Int = 0, totalAnswers: Int = 0) {
+    // Вычисляемые общие показатели
+    var totalAnswers: Int {
+        flashcardsEnRuTotal + flashcardsRuEnTotal + quizEnRuTotal + quizRuEnTotal
+    }
+    
+    var correctAnswers: Int {
+        flashcardsEnRuCorrect + flashcardsRuEnCorrect + quizEnRuCorrect + quizRuEnCorrect
+    }
+    
+    init(
+        name: String = "Студент",
+        flashcardsEnRuCorrect: Int = 0, flashcardsEnRuTotal: Int = 0,
+        flashcardsRuEnCorrect: Int = 0, flashcardsRuEnTotal: Int = 0,
+        quizEnRuCorrect: Int = 0, quizEnRuTotal: Int = 0,
+        quizRuEnCorrect: Int = 0, quizRuEnTotal: Int = 0,
+        avatarData: Data? = nil
+    ) {
         self.id = UUID()
         self.name = name
-        self.correctAnswers = correctAnswers
-        self.totalAnswers = totalAnswers
+        self.flashcardsEnRuCorrect = flashcardsEnRuCorrect
+        self.flashcardsEnRuTotal = flashcardsEnRuTotal
+        self.flashcardsRuEnCorrect = flashcardsRuEnCorrect
+        self.flashcardsRuEnTotal = flashcardsRuEnTotal
+        self.quizEnRuCorrect = quizEnRuCorrect
+        self.quizEnRuTotal = quizEnRuTotal
+        self.quizRuEnCorrect = quizRuEnCorrect
+        self.quizRuEnTotal = quizRuEnTotal
+        self.avatarData = avatarData
     }
 }
 

@@ -123,11 +123,17 @@ struct SettingsView: View {
             .alert("Сброс статистики", isPresented: $showingResetAlert) {
                 Button("Отмена", role: .cancel) { }
                 Button("Сбросить", role: .destructive) {
-                    profile.correctAnswers = 0
-                    profile.totalAnswers = 0
+                    profile.flashcardsEnRuCorrect = 0
+                    profile.flashcardsEnRuTotal = 0
+                    profile.flashcardsRuEnCorrect = 0
+                    profile.flashcardsRuEnTotal = 0
+                    profile.quizEnRuCorrect = 0
+                    profile.quizEnRuTotal = 0
+                    profile.quizRuEnCorrect = 0
+                    profile.quizRuEnTotal = 0
                 }
             } message: {
-                Text("Вы уверены, что хотите сбросить статистику? Это действие нельзя отменить.")
+                Text("Вы уверены, что хотите сбросить всю детализированную статистику? Это действие нельзя отменить.")
             }
         }
     }

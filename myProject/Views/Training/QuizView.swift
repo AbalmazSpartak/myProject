@@ -273,22 +273,21 @@ struct QuizView: View {
         selectedOption = option
         isCorrect = (option == currentCorrectAnswer)
         
-        if isCorrect {
-            correctCount += 1
-        }
+        if isCorrect { correctCount += 1 }
         totalAnswered += 1
         
-        // Сохраняем результат в общий профиль пользователя
+        // Детализированная запись в профиль
         if let userProfile = profiles.first {
-            userProfile.totalAnswers += 1
-            if isCorrect {
-                userProfile.correctAnswers += 1
+            if translationMode == "en_ru" {
+                userProfile.quizEnRuTotal += 1
+                if isCorrect { userProfile.quizEnRuCorrect += 1 }
+            } else {
+                userProfile.quizRuEnTotal += 1
+                if isCorrect { userProfile.quizRuEnCorrect += 1 }
             }
         }
         
-        withAnimation {
-            showResult = true
-        }
+        withAnimation { showResult = true }
     }
     
     private func nextWord() {
