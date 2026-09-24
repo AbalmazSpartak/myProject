@@ -42,6 +42,9 @@ final class UserProfile {
     var correctAnswers: Int
     var totalAnswers: Int
     
+    // Новое поле: бинарные данные фотографии профиля
+    @Attribute(.externalStorage) var avatarData: Data?
+    
     init(name: String = "Студент", correctAnswers: Int = 0, totalAnswers: Int = 0) {
         self.id = UUID()
         self.name = name

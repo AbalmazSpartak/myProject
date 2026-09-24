@@ -17,6 +17,16 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var navigationPath: [AppScreen] = []
     
+    @AppStorage("app_theme") private var selectedTheme: String = "system"
+
+    private var preferredColorScheme: ColorScheme? {
+        switch selectedTheme {
+        case "light": return .light
+        case "dark": return .dark
+        default: return nil // nil означает авто-переключение по настройкам iOS
+        }
+    }
+    
     var body: some View {
         NavigationStack(path: $navigationPath) {
             TitleScreenView(navigationPath: $navigationPath)
@@ -36,6 +46,7 @@ struct ContentView: View {
                     .toolbar(.hidden, for: .navigationBar)
                 }
         }
+        .preferredColorScheme(preferredColorScheme)
         .onAppear {
             DataPreloader.preloadSampleWords(context: modelContext)
         }

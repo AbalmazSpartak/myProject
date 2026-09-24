@@ -59,10 +59,21 @@ struct ProfileView: View {
                     Circle()
                         .fill(Color.teal.opacity(0.15))
                         .frame(width: 100, height: 100)
-                    Image(systemName: "person.fill")
-                        .font(.system(size: 50))
-                        .foregroundColor(.teal)
+                    
+                    // Если фото есть — отображаем его, иначе системную иконку
+                    if let data = profile.avatarData, let uiImage = UIImage(data: data) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 100, height: 100)
+                            .clipShape(Circle())
+                    } else {
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 50))
+                            .foregroundColor(.teal)
+                    }
                 }
+                
                 Text(profile.name)
                     .font(.system(size: 24, weight: .bold, design: .rounded))
                     .foregroundColor(.brandDark)
