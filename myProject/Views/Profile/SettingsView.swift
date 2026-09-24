@@ -111,11 +111,13 @@ struct SettingsView: View {
             .onChange(of: selectedPhotoItem) { _, newItem in
                 Task {
                     if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                        if let uiImage = UIImage(data: data),
-                           let compressedData = uiImage.jpegData(compressionQuality: 0.7) {
-                            profile.avatarData = compressedData
-                        } else {
-                            profile.avatarData = data
+                        await MainActor.run {
+                            if let uiImage = UIImage(data: data),
+                               let compressedData = uiImage.jpegData(compressionQuality: 0.7) {
+                                profile.avatarData = compressedData
+                            } else {
+                                profile.avatarData = data
+                            }
                         }
                     }
                 }
