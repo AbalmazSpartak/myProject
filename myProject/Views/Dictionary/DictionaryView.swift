@@ -63,13 +63,20 @@ struct DictionaryView: View {
     var body: some View {
         ZStack {
             Color.brandBackground.ignoresSafeArea()
+            
+            // Главный контейнер ловит тапы на любом пустом месте экрана
             VStack(spacing: 12) {
                 customHeader
-                ScrollView {
-                    VStack(spacing: 12) {
-                        categoryDropdownCard
-                        if !isDropdownExpanded {
+                
+                categoryDropdownCard
+                    .padding(.horizontal, 16)
+                
+                if !isDropdownExpanded {
+                    // Переносим ScrollView так, чтобы он включал в себя и поля ввода
+                    ScrollView {
+                        VStack(spacing: 12) {
                             addWordCard
+                                .padding(.top, 4) // Небольшой отступ сверху
                             
                             if filteredWords.isEmpty {
                                 VStack(spacing: 12) {
@@ -91,9 +98,19 @@ struct DictionaryView: View {
                                 }
                             }
                         }
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 20)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 20)
+                } else {
+                    Spacer()
+                }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                if isDropdownExpanded {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        isDropdownExpanded = false
+                    }
                 }
             }
         }
@@ -117,6 +134,7 @@ struct DictionaryView: View {
             EditWordView(word: word)
         }
     }
+
     
     private var customHeader: some View {
         HStack {
@@ -157,7 +175,6 @@ struct DictionaryView: View {
                 }
                 .padding(16)
             }
-            
             if isDropdownExpanded {
                 VStack(spacing: 0) {
                     ScrollView(.vertical, showsIndicators: true) {
@@ -176,9 +193,15 @@ struct DictionaryView: View {
                                 let isSelected = filter == .category(category)
                                 Button(action: { selectFilterAndClose(.category(category)) }) {
                                     HStack {
-                                        Text("\(category.name) (\(countWords(for: category)))").font(.system(size: 16, weight: isSelected ? .bold : .semibold)).foregroundColor(isSelected ? .orange : .brandDark)
+                                        Text("\(category.name) (\(countWords(for: category)))")
+                                            .font(.system(size: 16, weight: isSelected ? .bold : .semibold))
+                                            .foregroundColor(isSelected ? .orange : .brandDark)
                                         Spacer()
-                                        if isSelected { Image(systemName: "checkmark").font(.system(size: 14, weight: .bold)).foregroundColor(.orange) }
+                                        if isSelected {
+                                            Image(systemName: "checkmark")
+                                                .font(.system(size: 14, weight: .bold))
+                                                .foregroundColor(.orange)
+                                        }
                                     }
                                     .padding(.horizontal, 16).padding(.vertical, 12)
                                 }
@@ -194,7 +217,11 @@ struct DictionaryView: View {
                                         .font(.system(size: 16, weight: .bold))
                                         .foregroundColor(.orange)
                                     Spacer()
-                                    if filter == .mistakes { Image(systemName: "checkmark").font(.system(size: 14, weight: .bold)).foregroundColor(.orange) }
+                                    if filter == .mistakes {
+                                        Image(systemName: "checkmark")
+                                            .font(.system(size: 14, weight: .bold))
+                                            .foregroundColor(.orange)
+                                    }
                                 }
                                 .padding(.horizontal, 16).padding(.vertical, 12)
                             }
@@ -205,11 +232,23 @@ struct DictionaryView: View {
                     Divider().padding(.horizontal, 16)
                     
                     Button(action: { isDropdownExpanded = false; isShowingAddCategoryAlert = true }) {
-                        HStack(spacing: 10) { Image(systemName: "folder.badge.plus").font(.system(size: 16)); Text("Создать новую папку...").font(.system(size: 15, weight: .semibold)); Spacer() }
-                        .foregroundColor(Color(red: 0/255, green: 112/255, blue: 243/255)).padding(.horizontal, 16).padding(.vertical, 12)
+                        HStack(spacing: 10) {
+                            Image(systemName: "folder.badge.plus").font(.system(size: 16))
+                            Text("Создать новую папку...").font(.system(size: 15, weight: .semibold))
+                            Spacer()
+                        }
+                        .foregroundColor(Color(red: 0/255, green: 112/255, blue: 243/255))
+                        .padding(.horizontal, 16).padding(.vertical, 12)
                     }
-                    Button(action: { isDropdownExpanded = false; isShowingManageCategories = true }) {
-                        HStack(spacing: 10) { Image(systemName: "folder.badge.gearshape").font(.system(size: 16)); Text("Управление папками...").font(.system(size: 15, weight: .semibold)); Spacer() }
+                    Button(action: {
+                        isDropdownExpanded = false
+                        isShowingManageCategories = true
+                    }) {
+                        HStack(spacing: 10) {
+                            Image(systemName: "folder.badge.gearshape").font(.system(size: 16))
+                            Text("Управление папками...").font(.system(size: 15, weight: .semibold))
+                            Spacer()
+                        }
                         .foregroundColor(.gray).padding(.horizontal, 16).padding(.vertical, 12)
                     }
                 }
@@ -228,42 +267,51 @@ struct DictionaryView: View {
         }
     }
     
+    // ВЫРАЗИТЕЛЬНАЯ КАРТОЧКА ДОБАВЛЕНИЯ СЛОВ
     private var addWordCard: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 14) {
             customTextField(placeholder: "Слово на английском", text: $newEnglish)
             customTextField(placeholder: "Транскрипция (необязательно)", text: $newTranscription)
             customTextField(placeholder: "Перевод на русский", text: $newRussian)
             customTextField(placeholder: "Пример фразы (необязательно)", text: $newExample)
             
             Button(action: addNewWord) {
-                HStack {
+                HStack(spacing: 6) {
                     Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 16, weight: .bold))
                     Text("Добавить в \(currentCategoryForNewWord?.name ?? "Общий")")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
                 }
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(.gray)
+                .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(Color(.systemGray6))
-                .cornerRadius(12)
+                .padding(.vertical, 15)
+                .background(newEnglish.isEmpty || newRussian.isEmpty ? Color.gray.opacity(0.3) : Color.orange)
+                .cornerRadius(14)
             }
             .disabled(newEnglish.isEmpty || newRussian.isEmpty)
         }
-        .padding(16)
+        .padding(18)
         .background(Color.cardBackground)
         .cornerRadius(20)
-        .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 2)
+        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
     }
     
+    // ВЫРАЗИТЕЛЬНОЕ И ЯРКОЕ ТЕКСТОВОЕ ПОЛЕ
     private func customTextField(placeholder: String, text: Binding<String>) -> some View {
         TextField(placeholder, text: text)
+            .font(.system(size: 16, weight: .medium, design: .rounded))
             .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(Color.brandInputBg)
-            .cornerRadius(10)
-            .font(.system(size: 15))
+            .padding(.vertical, 14)
+            // Используем системный цвет systemGray5, который в темной теме значительно ярче вашего brandInputBg
+            .background(Color(.systemGray5))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    // Увеличили прозрачность рамки с 0.1 до 0.25 для максимальной выразительности границ
+                    .stroke(Color.brandDark.opacity(0.25), lineWidth: 1.5)
+            )
     }
-    
+
     private func addNewWord() {
         let trimmedEng = newEnglish.trimmingCharacters(in: .whitespaces)
         let trimmedRus = newRussian.trimmingCharacters(in: .whitespaces)
@@ -288,6 +336,9 @@ struct DictionaryView: View {
         newTranscription = ""
         newRussian = ""
         newExample = ""
+        
+        // Скрываем клавиатуру
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
     
     private func countWords(for category: Category) -> Int {
