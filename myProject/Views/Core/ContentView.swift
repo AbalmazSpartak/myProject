@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 enum AppScreen: String, Hashable {
-    case profile, cards, quiz, dictionary
+    case profile, cards, quiz, dictionary, tetris
 }
 
 struct MenuItem: Identifiable {
@@ -19,6 +19,7 @@ struct ContentView: View {
     
     // Переключатель темы оформления
     @AppStorage("app_theme") private var selectedTheme: String = "system"
+
     
     private var preferredColorScheme: ColorScheme? {
         switch selectedTheme {
@@ -42,6 +43,8 @@ struct ContentView: View {
                             QuizView()
                         case .dictionary:
                             DictionaryView()
+                        case .tetris: // 👈 Переход на новый экран
+                            TetrisView()
                         }
                     }
                     .toolbar(.hidden, for: .navigationBar)
@@ -57,7 +60,7 @@ struct ContentView: View {
 struct TitleScreenView: View {
     @Binding var navigationPath: [AppScreen]
     
-    @AppStorage("menu_order_v2") private var menuOrderData: String = "profile,cards,quiz,dictionary"
+    @AppStorage("menu_order_v3") private var menuOrderData: String = "profile,cards,quiz,dictionary,tetris"
     @State private var menuItems: [MenuItem] = []
     
     var body: some View {
@@ -96,7 +99,10 @@ struct TitleScreenView: View {
             
             VStack(spacing: 16) {
                 ForEach(menuItems) { item in
-                    Button(action: { navigationPath.append(item.id) }) {
+                    Button(action: {
+                        // 👇 ДОБАВЛЯЕМ ВИБРАЦИЮ ЗДЕСЬ
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                        navigationPath.append(item.id) }) {
                         HStack(spacing: 0) {
                             Rectangle().fill(item.color).frame(width: 6)
                             ZStack {
@@ -138,27 +144,27 @@ struct TitleScreenView: View {
             "profile": MenuItem(id: .profile, title: "Мой профиль", subtitle: "Статистика и успехи", icon: "person.fill", color: .teal),
             "cards": MenuItem(id: .cards, title: "Карточки с вводом", subtitle: "Учи новые слова", icon: "keyboard.fill", color: .blue),
             "quiz": MenuItem(id: .quiz, title: "Викторина", subtitle: "Тесты с вариантами", icon: "checkmark.seal.fill", color: .purple),
-            "dictionary": MenuItem(id: .dictionary, title: "Словарь", subtitle: "Все изученные слова", icon: "book.fill", color: .orange)
+            "dictionary": MenuItem(id: .dictionary, title: "Словарь", subtitle: "Все изученные слова", icon: "book.fill", color: .orange),
+            "tetris": MenuItem(id: .tetris, title: "Тетрис слов", subtitle: "Игровое повторение", icon: "gamecontroller.fill", color: .indigo) // 👈 Добавлен пункт
         ]
         
         let ids = menuOrderData.components(separatedBy: ",")
         var orderedList: [MenuItem] = []
         
-        // Безопасно собираем элементы по сохраненным ID
         for id in ids {
             if let item = allItems[id] {
                 orderedList.append(item)
             }
         }
         
-        // Стандартный порядок на случай, если данные повреждены или список неполный
         let defaultOrder: [MenuItem] = [
-            allItems["profile"]!, // Здесь '!' безопасен, так как ключи объявлены строкой выше в этом же файле
+            allItems["profile"]!,
             allItems["cards"]!,
             allItems["quiz"]!,
-            allItems["dictionary"]!
+            allItems["dictionary"]!,
+            allItems["tetris"]!
         ]
         
-        menuItems = orderedList.count == 4 ? orderedList : defaultOrder
+        menuItems = orderedList.count >= 5 ? orderedList : defaultOrder
     }
 }

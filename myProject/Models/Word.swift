@@ -49,17 +49,20 @@ final class UserProfile {
     var id: UUID = UUID()
     var name: String = "Студент"
     
-    // Статистика: Карточки с вводом (с дефолтными значениями = 0)
+    // Статистика: Карточки с вводом
     var flashcardsEnRuCorrect: Int = 0
     var flashcardsEnRuTotal: Int = 0
     var flashcardsRuEnCorrect: Int = 0
     var flashcardsRuEnTotal: Int = 0
     
-    // Статистика: Викторина (с дефолтными значениями = 0)
+    // Статистика: Викторина
     var quizEnRuCorrect: Int = 0
     var quizEnRuTotal: Int = 0
     var quizRuEnCorrect: Int = 0
     var quizRuEnTotal: Int = 0
+    
+    // Рекорд Тетриса
+    var tetrisHighScore: Int = 0
     
     @Attribute(.externalStorage) var avatarData: Data?
     
@@ -78,6 +81,7 @@ final class UserProfile {
         flashcardsRuEnCorrect: Int = 0, flashcardsRuEnTotal: Int = 0,
         quizEnRuCorrect: Int = 0, quizEnRuTotal: Int = 0,
         quizRuEnCorrect: Int = 0, quizRuEnTotal: Int = 0,
+        tetrisHighScore: Int = 0,
         avatarData: Data? = nil
     ) {
         self.id = UUID()
@@ -90,6 +94,7 @@ final class UserProfile {
         self.quizEnRuTotal = quizEnRuTotal
         self.quizRuEnCorrect = quizRuEnCorrect
         self.quizRuEnTotal = quizRuEnTotal
+        self.tetrisHighScore = tetrisHighScore
         self.avatarData = avatarData
     }
 }

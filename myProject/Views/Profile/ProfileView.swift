@@ -111,6 +111,15 @@ struct ProfileView: View {
                 )
                 .padding(.horizontal, 20)
                 
+                // Секция 3: Тетрис слов (Рекорд)
+                tetrisSectionCard(
+                    title: "Тетрис слов",
+                    icon: "gamecontroller.fill",
+                    color: .indigo,
+                    highScore: profile.tetrisHighScore
+                )
+                .padding(.horizontal, 20)
+                
                 Spacer().frame(height: 20)
             }
         }
@@ -168,19 +177,41 @@ struct ProfileView: View {
             
             Divider()
             
-            // Строка Англ -> Рус
-            detailRow(
-                label: "Английский ➔ Русский",
-                correct: enRuCorrect,
-                total: enRuTotal
-            )
+            detailRow(label: "Английский ➔ Русский", correct: enRuCorrect, total: enRuTotal)
+            detailRow(label: "Русский ➔ Английский", correct: ruEnCorrect, total: ruEnTotal)
+        }
+        .padding(16)
+        .background(Color.cardBackground)
+        .cornerRadius(20)
+        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
+    }
+    
+    // Блок рекорда Тетриса
+    private func tetrisSectionCard(title: String, icon: String, color: Color, highScore: Int) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(color.opacity(0.12))
+                    .frame(width: 36, height: 36)
+                Image(systemName: icon)
+                    .foregroundColor(color)
+                    .font(.system(size: 18))
+            }
             
-            // Строка Рус -> Англ
-            detailRow(
-                label: "Русский ➔ Английский",
-                correct: ruEnCorrect,
-                total: ruEnTotal
-            )
+            Text(title)
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .foregroundColor(.brandDark)
+            
+            Spacer()
+            
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("Рекорд")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.gray)
+                Text("\(highScore) очков")
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundColor(.indigo)
+            }
         }
         .padding(16)
         .background(Color.cardBackground)
