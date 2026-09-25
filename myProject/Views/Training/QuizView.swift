@@ -67,7 +67,7 @@ struct QuizView: View {
                         Text("В меню")
                             .font(.system(size: 17, weight: .semibold, design: .rounded))
                     }
-                    .foregroundColor(.indigo)
+                    .foregroundColor(.purple)
                 }
                 
                 Spacer()
@@ -96,7 +96,7 @@ struct QuizView: View {
                                 .font(.system(size: 11, weight: .bold))
                         }
                         .font(.system(size: 14, weight: .bold, design: .rounded))
-                        .foregroundColor(currentFilter == .mistakes ? .orange : .indigo)
+                        .foregroundColor(currentFilter == .mistakes ? .orange : .purple)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 7)
                         .background(

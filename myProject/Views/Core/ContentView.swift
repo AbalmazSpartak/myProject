@@ -140,11 +140,25 @@ struct TitleScreenView: View {
             "quiz": MenuItem(id: .quiz, title: "Викторина", subtitle: "Тесты с вариантами", icon: "checkmark.seal.fill", color: .purple),
             "dictionary": MenuItem(id: .dictionary, title: "Словарь", subtitle: "Все изученные слова", icon: "book.fill", color: .orange)
         ]
+        
         let ids = menuOrderData.components(separatedBy: ",")
         var orderedList: [MenuItem] = []
+        
+        // Безопасно собираем элементы по сохраненным ID
         for id in ids {
-            if let item = allItems[id] { orderedList.append(item) }
+            if let item = allItems[id] {
+                orderedList.append(item)
+            }
         }
-        menuItems = orderedList.count == 4 ? orderedList : [allItems["profile"]!, allItems["cards"]!, allItems["quiz"]!, allItems["dictionary"]!]
+        
+        // Стандартный порядок на случай, если данные повреждены или список неполный
+        let defaultOrder: [MenuItem] = [
+            allItems["profile"]!, // Здесь '!' безопасен, так как ключи объявлены строкой выше в этом же файле
+            allItems["cards"]!,
+            allItems["quiz"]!,
+            allItems["dictionary"]!
+        ]
+        
+        menuItems = orderedList.count == 4 ? orderedList : defaultOrder
     }
 }
