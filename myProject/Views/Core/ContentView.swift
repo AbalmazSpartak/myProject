@@ -151,20 +151,17 @@ struct ContentView: View {
             // Удален модификатор .preferredColorScheme(.dark), теперь тема зависит от устройства
             .navigationBarHidden(true)
             .fullScreenCover(item: $activeScreen) { screen in
-                switch screen {
-                case .profile:
-                    ProfileView()
-                case .flashcardsFSRS:
-                    FlashcardsView()
-                case .quiz:
-                    QuizView()
-                case .inputCards:
-                    InputFlashcardsView()
-                case .dictionary:
-                    DictionaryView()
-                case .tetris:
-                    TetrisView()
+                Group {
+                    switch screen {
+                    case .profile: ProfileView()
+                    case .flashcardsFSRS: FlashcardsView()
+                    case .quiz: QuizView()
+                    case .inputCards: InputFlashcardsView()
+                    case .dictionary: DictionaryView()
+                    case .tetris: TetrisView()
+                    }
                 }
+                .appThemedColorScheme()
             }
         }
     }

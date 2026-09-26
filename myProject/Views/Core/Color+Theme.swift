@@ -31,3 +31,25 @@ struct FlatButtonStyle: ButtonStyle {
             .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
     }
 }
+
+struct AppThemeModifier: ViewModifier {
+    @AppStorage("app_theme") private var appTheme: String = "system"
+
+    func body(content: Content) -> some View {
+        content.preferredColorScheme(resolvedScheme)
+    }
+
+    private var resolvedScheme: ColorScheme? {
+        switch appTheme {
+        case "light": return .light
+        case "dark": return .dark
+        default: return nil
+        }
+    }
+}
+
+extension View {
+    func appThemedColorScheme() -> some View {
+        modifier(AppThemeModifier())
+    }
+}

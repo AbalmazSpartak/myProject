@@ -126,6 +126,7 @@ struct ProfileView: View {
         .background(Color.brandBackground.ignoresSafeArea())
         .sheet(isPresented: $showSettings) {
             SettingsView(profile: profile)
+                .appThemedColorScheme()
         }
     }
     
