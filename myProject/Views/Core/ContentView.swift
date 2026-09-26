@@ -1,14 +1,13 @@
 import SwiftUI
 import SwiftData
 
-// Перечисление всех экранов для навигации
 enum ActiveScreen: Identifiable {
-    case profile           // Мой профиль
-    case flashcardsFSRS    // Карточки для запоминания (FSRS)
-    case quiz              // Викторина
-    case inputCards        // Карточки ввода (написание ответов)
-    case tetris            // Тетрис слов
-    case dictionary        // Словарь
+    case profile
+    case flashcardsFSRS
+    case quiz
+    case inputCards
+    case dictionary
+    case tetris
     
     var id: String { "\(self)" }
 }
@@ -18,138 +17,164 @@ struct ContentView: View {
     @Query private var profiles: [UserProfile]
     
     @State private var activeScreen: ActiveScreen?
+    @State private var isCardsExpanded: Bool = true
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    
-                    // 1. МОЙ ПРОФИЛЬ (Верхний баннер)
-                    Button(action: { activeScreen = .profile }) {
-                        HStack(spacing: 16) {
-                            Image(systemName: "person.crop.circle.fill")
-                                .font(.system(size: 44))
-                                .foregroundColor(.blue)
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(profiles.first?.name ?? "Мой профиль")
-                                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                                    .foregroundColor(.brandDark)
-                                
-                                Text("Статистика и достижения")
-                                    .font(.system(size: 13, weight: .medium, design: .rounded))
-                                    .foregroundColor(.gray)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.gray.opacity(0.6))
-                        }
-                        .padding(18)
-                        .background(Color.cardBackground)
-                        .cornerRadius(20)
-                        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
-                    }
-                    
-                    // 2. РАЗДЕЛ: КАРТОЧКИ (Группа из 2-х тренировок)
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "square.stack.3d.up.fill")
-                                .foregroundColor(.blue)
-                            Text("Карточки")
-                                .font(.system(size: 18, weight: .bold, design: .rounded))
-                                .foregroundColor(.brandDark)
-                        }
-                        .padding(.horizontal, 4)
+            ZStack {
+                // Адаптивный фон: Белый в светлой теме, Черный в темной
+                Color(.systemBackground).ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 16) {
                         
-                        VStack(spacing: 10) {
-                            // 2a. Карточки для запоминания (FSRS)
-                            MenuTileButton(
-                                title: "Карточки для запоминания",
-                                subtitle: "Интервальные повторения FSRS",
-                                icon: "brain.head.profile",
-                                color: .indigo
-                            ) {
-                                activeScreen = .flashcardsFSRS
+                        // MARK: - Логотип и заголовок приложения
+                        VStack(spacing: 24) {
+                            Spacer()
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                                    // Адаптивный цвет фона логотипа
+                                    .fill(Color(.secondarySystemBackground))
+                                    .frame(width: 90, height: 90)
+                                
+                                Image(systemName: "book.closed.fill")
+                                    .font(.system(size: 44, weight: .regular))
+                                    .foregroundColor(.blue)
                             }
                             
-                            // 2b. Викторина
-                            MenuTileButton(
-                                title: "Викторина",
-                                subtitle: "Тест с 4 вариантами ответов",
-                                icon: "checkmark.seal.fill",
-                                color: .orange
+                            Text("WordLearner")
+                                .font(.system(size: 34, weight: .heavy, design: .default))
+                                // Адаптивный цвет текста (черный днем, белый ночью)
+                                .foregroundColor(.primary)
+                        }
+                        .padding(.top, 80)
+                        .padding(.bottom, 20)
+                        
+                        // MARK: - Меню кнопок
+                        VStack(spacing: 14) {
+                            
+                            // 1. Мой профиль (Бирюзовый)
+                            MenuCardButton(
+                                title: "Мой профиль",
+                                icon: "person.fill",
+                                themeColor: .teal
                             ) {
-                                activeScreen = .quiz
+                                activeScreen = .profile
+                            }
+                            
+                            // 2. РАЗДЕЛ: КАРТОЧКИ (Выпадающий список)
+                            VStack(alignment: .leading, spacing: 14) {
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                        isCardsExpanded.toggle()
+                                    }
+                                }) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "square.stack.3d.up.fill")
+                                            .foregroundColor(.blue)
+                                            .font(.system(size: 18))
+                                        Text("Карточки")
+                                            .font(.system(size: 20, weight: .bold, design: .default))
+                                            .foregroundColor(.primary) // Адаптивный текст
+                                        Spacer()
+                                        Image(systemName: isCardsExpanded ? "chevron.up" : "chevron.down")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundColor(.gray)
+                                    }
+                                    .padding(.horizontal, 8)
+                                    .padding(.top, 4)
+                                    .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                                
+                                if isCardsExpanded {
+                                    VStack(spacing: 14) {
+                                        // 2a. Карточки для запоминания (Синий)
+                                        MenuCardButton(
+                                            title: "Карточки для\nзапоминания",
+                                            icon: "brain.head.profile",
+                                            themeColor: .blue
+                                        ) {
+                                            activeScreen = .flashcardsFSRS
+                                        }
+                                        
+                                        // 2b. Викторина (Фиолетовый)
+                                        MenuCardButton(
+                                            title: "Викторина",
+                                            icon: "checkmark.seal.fill",
+                                            themeColor: .purple
+                                        ) {
+                                            activeScreen = .quiz
+                                        }
+                                    }
+                                    .transition(.opacity.combined(with: .move(edge: .top)))
+                                }
+                            }
+                            .padding(14)
+                            // Адаптивный фон для выделения раздела
+                            .background(Color(.systemGray6))
+                            .cornerRadius(24)
+                            
+                            // 3. Карточки ввода (На главном уровне)
+                            MenuCardButton(
+                                title: "Карточки ввода",
+                                icon: "keyboard.fill",
+                                themeColor: .teal
+                            ) {
+                                activeScreen = .inputCards
+                            }
+                            
+                            // 4. Словарь (Оранжевый)
+                            MenuCardButton(
+                                title: "Словарь",
+                                icon: "book.fill",
+                                themeColor: .orange
+                            ) {
+                                activeScreen = .dictionary
+                            }
+                            
+                            // 5. Тетрис слов (Индиго)
+                            MenuCardButton(
+                                title: "Тетрис слов",
+                                icon: "gamecontroller.fill",
+                                themeColor: .indigo
+                            ) {
+                                activeScreen = .tetris
                             }
                         }
+                        .padding(.horizontal, 20)
+                        
                     }
-                    .padding(14)
-                    .background(Color.blue.opacity(0.06))
-                    .cornerRadius(22)
-                    
-                    // 3. КАРТОЧКИ ВВОДА (Практика написания)
-                    MenuTileButton(
-                        title: "Карточки ввода",
-                        subtitle: "Тренировка ручного ввода перевода",
-                        icon: "keyboard.fill",
-                        color: .teal
-                    ) {
-                        activeScreen = .inputCards
-                    }
-                    
-                    // 4. ТЕТРИС СЛОВ
-                    MenuTileButton(
-                        title: "Тетрис слов",
-                        subtitle: "Аркадная игра на скорость",
-                        icon: "gamecontroller.fill",
-                        color: .purple
-                    ) {
-                        activeScreen = .tetris
-                    }
-                    
-                    // 5. СЛОВАРЬ
-                    MenuTileButton(
-                        title: "Словарь",
-                        subtitle: "Управление словами и категориями",
-                        icon: "book.closed.fill",
-                        color: .green
-                    ) {
-                        activeScreen = .dictionary
-                    }
-                    
+                    .padding(.bottom, 40)
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
             }
-            .navigationTitle("Главное меню")
-            .background(Color.brandBackground.ignoresSafeArea())
-            // Открытие выбранного экрана на весь экран
+            // Удален модификатор .preferredColorScheme(.dark), теперь тема зависит от устройства
+            .navigationBarHidden(true)
             .fullScreenCover(item: $activeScreen) { screen in
                 switch screen {
                 case .profile:
-                    ProfileView() // Ваш экран профиля
+                    ProfileView()
                 case .flashcardsFSRS:
-                    FlashcardsView() // Карточки с алгоритмом FSRS
+                    FlashcardsView()
                 case .quiz:
-                    QuizView() // Викторина
+                    QuizView()
                 case .inputCards:
-                    InputFlashcardsView() // Экран ввода ответов (вручную)
-                case .tetris:
-                    TetrisView() // Тетрис
+                    InputFlashcardsView()
                 case .dictionary:
-                    DictionaryView() // Ваш экран словаря
+                    DictionaryView()
+                case .tetris:
+                    TetrisView()
                 }
             }
         }
     }
 }
 
-// MARK: - Вспомогательный компонент для карточек меню
-struct MenuTileButton: View {
+// MARK: - Вспомогательный компонент для кнопок меню
+struct MenuCardButton: View {
     let title: String
-    let subtitle: String
     let icon: String
-    let color: Color
+    let themeColor: Color
     let action: () -> Void
     
     var body: some View {
@@ -157,34 +182,35 @@ struct MenuTileButton: View {
             HStack(spacing: 16) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(color.opacity(0.15))
-                        .frame(width: 48, height: 48)
+                        // Адаптивный цвет квадрата под иконкой
+                        .fill(Color(.systemGray5))
+                        .frame(width: 52, height: 52)
                     
                     Image(systemName: icon)
                         .font(.system(size: 22, weight: .bold))
-                        .foregroundColor(color)
+                        .foregroundColor(themeColor)
                 }
                 
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(title)
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
-                        .foregroundColor(.brandDark)
-                    
-                    Text(subtitle)
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundColor(.gray)
-                }
+                Text(title)
+                    .font(.system(size: 19, weight: .bold, design: .default))
+                    // Адаптивный цвет текста
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(2)
                 
                 Spacer()
-                
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.gray.opacity(0.5))
             }
-            .padding(14)
-            .background(Color.cardBackground)
-            .cornerRadius(18)
-            .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 3)
+            .padding(.vertical, 12)
+            .padding(.horizontal, 16)
+            .background(
+                ZStack(alignment: .leading) {
+                    // Адаптивный цвет фона самой кнопки
+                    Color(.secondarySystemBackground)
+                    themeColor.frame(width: 6)
+                }
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
+        .buttonStyle(.plain)
     }
 }
