@@ -1,170 +1,190 @@
 import SwiftUI
 import SwiftData
 
-enum AppScreen: String, Hashable {
-    case profile, cards, quiz, dictionary, tetris
-}
-
-struct MenuItem: Identifiable {
-    let id: AppScreen
-    let title: String
-    let subtitle: String
-    let icon: String
-    let color: Color
+// Перечисление всех экранов для навигации
+enum ActiveScreen: Identifiable {
+    case profile           // Мой профиль
+    case flashcardsFSRS    // Карточки для запоминания (FSRS)
+    case quiz              // Викторина
+    case inputCards        // Карточки ввода (написание ответов)
+    case tetris            // Тетрис слов
+    case dictionary        // Словарь
+    
+    var id: String { "\(self)" }
 }
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @State private var navigationPath: [AppScreen] = []
+    @Query private var profiles: [UserProfile]
     
-    // Переключатель темы оформления
-    @AppStorage("app_theme") private var selectedTheme: String = "system"
-
-    
-    private var preferredColorScheme: ColorScheme? {
-        switch selectedTheme {
-        case "light": return .light
-        case "dark": return .dark
-        default: return nil
-        }
-    }
+    @State private var activeScreen: ActiveScreen?
     
     var body: some View {
-        NavigationStack(path: $navigationPath) {
-            TitleScreenView(navigationPath: $navigationPath)
-                .navigationDestination(for: AppScreen.self) { screen in
-                    Group {
-                        switch screen {
-                        case .profile:
-                            ProfileView()
-                        case .cards:
-                            FlashcardsView()
-                        case .quiz:
-                            QuizView()
-                        case .dictionary:
-                            DictionaryView()
-                        case .tetris: // 👈 Переход на новый экран
-                            TetrisView()
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 16) {
+                    
+                    // 1. МОЙ ПРОФИЛЬ (Верхний баннер)
+                    Button(action: { activeScreen = .profile }) {
+                        HStack(spacing: 16) {
+                            Image(systemName: "person.crop.circle.fill")
+                                .font(.system(size: 44))
+                                .foregroundColor(.blue)
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(profiles.first?.name ?? "Мой профиль")
+                                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                                    .foregroundColor(.brandDark)
+                                
+                                Text("Статистика и достижения")
+                                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                                    .foregroundColor(.gray)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.gray.opacity(0.6))
+                        }
+                        .padding(18)
+                        .background(Color.cardBackground)
+                        .cornerRadius(20)
+                        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
+                    }
+                    
+                    // 2. РАЗДЕЛ: КАРТОЧКИ (Группа из 2-х тренировок)
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "square.stack.3d.up.fill")
+                                .foregroundColor(.blue)
+                            Text("Карточки")
+                                .font(.system(size: 18, weight: .bold, design: .rounded))
+                                .foregroundColor(.brandDark)
+                        }
+                        .padding(.horizontal, 4)
+                        
+                        VStack(spacing: 10) {
+                            // 2a. Карточки для запоминания (FSRS)
+                            MenuTileButton(
+                                title: "Карточки для запоминания",
+                                subtitle: "Интервальные повторения FSRS",
+                                icon: "brain.head.profile",
+                                color: .indigo
+                            ) {
+                                activeScreen = .flashcardsFSRS
+                            }
+                            
+                            // 2b. Викторина
+                            MenuTileButton(
+                                title: "Викторина",
+                                subtitle: "Тест с 4 вариантами ответов",
+                                icon: "checkmark.seal.fill",
+                                color: .orange
+                            ) {
+                                activeScreen = .quiz
+                            }
                         }
                     }
-                    .toolbar(.hidden, for: .navigationBar)
+                    .padding(14)
+                    .background(Color.blue.opacity(0.06))
+                    .cornerRadius(22)
+                    
+                    // 3. КАРТОЧКИ ВВОДА (Практика написания)
+                    MenuTileButton(
+                        title: "Карточки ввода",
+                        subtitle: "Тренировка ручного ввода перевода",
+                        icon: "keyboard.fill",
+                        color: .teal
+                    ) {
+                        activeScreen = .inputCards
+                    }
+                    
+                    // 4. ТЕТРИС СЛОВ
+                    MenuTileButton(
+                        title: "Тетрис слов",
+                        subtitle: "Аркадная игра на скорость",
+                        icon: "gamecontroller.fill",
+                        color: .purple
+                    ) {
+                        activeScreen = .tetris
+                    }
+                    
+                    // 5. СЛОВАРЬ
+                    MenuTileButton(
+                        title: "Словарь",
+                        subtitle: "Управление словами и категориями",
+                        icon: "book.closed.fill",
+                        color: .green
+                    ) {
+                        activeScreen = .dictionary
+                    }
+                    
                 }
-        }
-        .preferredColorScheme(preferredColorScheme)
-        .onAppear {
-            DataPreloader.preloadSampleWords(context: modelContext)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
+            }
+            .navigationTitle("Главное меню")
+            .background(Color.brandBackground.ignoresSafeArea())
+            // Открытие выбранного экрана на весь экран
+            .fullScreenCover(item: $activeScreen) { screen in
+                switch screen {
+                case .profile:
+                    ProfileView() // Ваш экран профиля
+                case .flashcardsFSRS:
+                    FlashcardsView() // Карточки с алгоритмом FSRS
+                case .quiz:
+                    QuizView() // Викторина
+                case .inputCards:
+                    InputFlashcardsView() // Экран ввода ответов (вручную)
+                case .tetris:
+                    TetrisView() // Тетрис
+                case .dictionary:
+                    DictionaryView() // Ваш экран словаря
+                }
+            }
         }
     }
 }
 
-struct TitleScreenView: View {
-    @Binding var navigationPath: [AppScreen]
-    
-    @AppStorage("menu_order_v3") private var menuOrderData: String = "profile,cards,quiz,dictionary,tetris"
-    @State private var menuItems: [MenuItem] = []
+// MARK: - Вспомогательный компонент для карточек меню
+struct MenuTileButton: View {
+    let title: String
+    let subtitle: String
+    let icon: String
+    let color: Color
+    let action: () -> Void
     
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer().frame(minHeight: 20, maxHeight: 60)
-            
-            ZStack {
-                RoundedRectangle(cornerRadius: 24)
-                    .fill(Color.cardBackground)
-                    .frame(width: 100, height: 100)
-                    .shadow(color: Color.black.opacity(0.06), radius: 15, x: 0, y: 10)
-                
-                Image(systemName: "book.closed.fill")
-                    .font(.system(size: 44, weight: .semibold))
-                    .foregroundStyle(LinearGradient(
-                        colors: [Color.blue, Color.cyan],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ))
-            }
-            .padding(.bottom, 25)
-            
-            VStack(spacing: 12) {
-                Text("WordLearner")
-                    .font(.system(size: 36, weight: .bold, design: .rounded))
-                    .foregroundColor(.brandDark)
-                
-                /*Text("Твой персональный тренажер\nанглийского языка")
-                    .font(.system(size: 16, weight: .medium, design: .rounded))
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(4)*/
-            }
-            
-            Spacer().frame(minHeight: 20, maxHeight: 50)
-            
-            VStack(spacing: 16) {
-                ForEach(menuItems) { item in
-                    Button(action: {
-                        // 👇 ДОБАВЛЯЕМ ВИБРАЦИЮ ЗДЕСЬ
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        navigationPath.append(item.id) }) {
-                        HStack(spacing: 0) {
-                            Rectangle().fill(item.color).frame(width: 6)
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(item.color.opacity(0.12))
-                                    .frame(width: 48, height: 48)
-                                Image(systemName: item.icon)
-                                    .font(.title3)
-                                    .foregroundColor(item.color)
-                            }
-                            .padding(.leading, 16)
-                            
-                            Text(item.title)
-                                .font(.system(size: 18, weight: .bold, design: .rounded))
-                                .foregroundColor(.primary)
-                                .padding(.leading, 16)
-                            
-                            Spacer()
-                        }
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 70)
-                        .background(Color.cardBackground)
-                        .cornerRadius(20)
-                        .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 6)
-                    }
-                    .buttonStyle(FlatButtonStyle())
+        Button(action: action) {
+            HStack(spacing: 16) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(color.opacity(0.15))
+                        .frame(width: 48, height: 48)
+                    
+                    Image(systemName: icon)
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundColor(color)
                 }
+                
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title)
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundColor(.brandDark)
+                    
+                    Text(subtitle)
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundColor(.gray)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.gray.opacity(0.5))
             }
-            .padding(.horizontal, 24)
-            Spacer().frame(height: 10)
+            .padding(14)
+            .background(Color.cardBackground)
+            .cornerRadius(18)
+            .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 3)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.brandBackground)
-        .onAppear(perform: loadMenuOrder)
-    }
-    
-    private func loadMenuOrder() {
-        let allItems: [String: MenuItem] = [
-            "profile": MenuItem(id: .profile, title: "Мой профиль", subtitle: "Статистика и успехи", icon: "person.fill", color: .teal),
-            "cards": MenuItem(id: .cards, title: "Карточки для запоминания", subtitle: "Учи новые слова", icon: "keyboard.fill", color: .blue),
-            "quiz": MenuItem(id: .quiz, title: "Викторина", subtitle: "Тесты с вариантами", icon: "checkmark.seal.fill", color: .purple),
-            "dictionary": MenuItem(id: .dictionary, title: "Словарь", subtitle: "Все изученные слова", icon: "book.fill", color: .orange),
-            "tetris": MenuItem(id: .tetris, title: "Тетрис слов", subtitle: "Игровое повторение", icon: "gamecontroller.fill", color: .indigo) // 👈 Добавлен пункт
-        ]
-        
-        let ids = menuOrderData.components(separatedBy: ",")
-        var orderedList: [MenuItem] = []
-        
-        for id in ids {
-            if let item = allItems[id] {
-                orderedList.append(item)
-            }
-        }
-        
-        let defaultOrder: [MenuItem] = [
-            allItems["profile"]!,
-            allItems["cards"]!,
-            allItems["quiz"]!,
-            allItems["dictionary"]!,
-            allItems["tetris"]!
-        ]
-        
-        menuItems = orderedList.count >= 5 ? orderedList : defaultOrder
     }
 }
