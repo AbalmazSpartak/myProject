@@ -87,9 +87,9 @@ struct ProfileView: View {
                 }
                 .padding(.horizontal, 20)
                 
-                // Секция 1: Карточки с вводом
+                // Секция 1: Карточки для запоминания
                 sectionCard(
-                    title: "Карточки с вводом",
+                    title: "Карточки для запоминания",
                     icon: "keyboard.fill",
                     color: .blue,
                     enRuCorrect: profile.flashcardsEnRuCorrect,

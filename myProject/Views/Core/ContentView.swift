@@ -142,7 +142,7 @@ struct TitleScreenView: View {
     private func loadMenuOrder() {
         let allItems: [String: MenuItem] = [
             "profile": MenuItem(id: .profile, title: "Мой профиль", subtitle: "Статистика и успехи", icon: "person.fill", color: .teal),
-            "cards": MenuItem(id: .cards, title: "Карточки с вводом", subtitle: "Учи новые слова", icon: "keyboard.fill", color: .blue),
+            "cards": MenuItem(id: .cards, title: "Карточки для запоминания", subtitle: "Учи новые слова", icon: "keyboard.fill", color: .blue),
             "quiz": MenuItem(id: .quiz, title: "Викторина", subtitle: "Тесты с вариантами", icon: "checkmark.seal.fill", color: .purple),
             "dictionary": MenuItem(id: .dictionary, title: "Словарь", subtitle: "Все изученные слова", icon: "book.fill", color: .orange),
             "tetris": MenuItem(id: .tetris, title: "Тетрис слов", subtitle: "Игровое повторение", icon: "gamecontroller.fill", color: .indigo) // 👈 Добавлен пункт

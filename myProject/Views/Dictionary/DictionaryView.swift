@@ -326,8 +326,8 @@ struct DictionaryView: View {
         let word = Word(
             english: trimmedEng,
             russian: trimmedRus,
-            example: newExample.trimmingCharacters(in: .whitespaces),
             transcription: trans,
+            example: newExample.trimmingCharacters(in: .whitespaces),
             category: currentCategoryForNewWord
         )
         

@@ -34,8 +34,8 @@ final class DataPreloader {
                 let newWord = Word(
                     english: cleanEnglish,
                     russian: dto.russian,
-                    example: dto.example,
                     transcription: dto.transcription,
+                    example: dto.example,
                     category: category
                 )
                 context.insert(newWord)

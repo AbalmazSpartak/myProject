@@ -15,32 +15,45 @@ final class Category {
     }
 }
 
+// Добавьте эти перечисления вне класса или в отдельный файл
+enum FSRSState: Int, Codable {
+    case new = 0
+    case learning = 1
+    case review = 2
+    case relearning = 3
+}
+
+enum FSRSRating: Int {
+    case again = 1 // Снова (Забыл)
+    case hard = 2  // Трудно
+    case good = 3  // Хорошо
+    case easy = 4  // Легко
+}
+
 @Model
-final class Word {
-    var id: UUID
+class Word {
     var english: String
     var russian: String
-    var example: String
     var transcription: String
-    var isMistake: Bool = false // 👈 Новое поле для фиксации ошибок
-    
+    var example: String = ""
     var category: Category?
+    var isMistake: Bool = false
     
-    init(
-        english: String,
-        russian: String,
-        example: String = "",
-        transcription: String = "",
-        category: Category? = nil,
-        isMistake: Bool = false
-    ) {
-        self.id = UUID()
+    // MARK: - FSRS параметры
+    var state: FSRSState = FSRSState.new
+    var difficulty: Double = 0.0
+    var stability: Double = 0.0
+    var dueDate: Date = Date()
+    var reps: Int = 0
+    var lapses: Int = 0
+    var lastReview: Date? = nil
+
+    init(english: String, russian: String, transcription: String = "",example: String = "", category: Category? = nil) {
         self.english = english
         self.russian = russian
-        self.example = example
         self.transcription = transcription
+        self.example = example
         self.category = category
-        self.isMistake = isMistake
     }
 }
 
@@ -49,7 +62,7 @@ final class UserProfile {
     var id: UUID = UUID()
     var name: String = "Студент"
     
-    // Статистика: Карточки с вводом
+    // Статистика: Карточки для запоминания
     var flashcardsEnRuCorrect: Int = 0
     var flashcardsEnRuTotal: Int = 0
     var flashcardsRuEnCorrect: Int = 0
