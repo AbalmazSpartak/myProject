@@ -18,7 +18,8 @@ struct ContentView: View {
     
     @State private var activeScreen: ActiveScreen?
     @State private var isCardsExpanded: Bool = false
-    
+    @State private var isMiniGamesExpanded: Bool = false
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -108,6 +109,52 @@ struct ContentView: View {
                             .background(Color(.systemGray6))
                             .cornerRadius(24)
                             
+                            VStack(alignment: .leading, spacing: 14) {
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                        isMiniGamesExpanded.toggle()
+                                    }
+                                }) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "gamecontroller.fill")
+                                            .foregroundColor(.indigo)
+                                            .font(.system(size: 18))
+                                        Text("Мини-игры")
+                                            .font(.system(size: 20, weight: .bold, design: .default))
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                        Image(systemName: isMiniGamesExpanded ? "chevron.up" : "chevron.down")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundColor(.gray)
+                                    }
+                                    .padding(.horizontal, 8)
+                                    .padding(.top, 4)
+                                    .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                                
+                                if isMiniGamesExpanded {
+                                    VStack(spacing: 14) {
+                                        MenuCardButton(
+                                            title: "Тетрис слов",
+                                            icon: "gamecontroller.fill",
+                                            themeColor: .indigo
+                                        ) {
+                                            activeScreen = .tetris
+                                        }
+                                        
+                                        // Следующую мини-игру добавлять сюда же, новым MenuCardButton
+                                    }
+                                    .transition(.asymmetric(
+                                        insertion: .opacity.combined(with: .scale(scale: 0.95, anchor: .top)),
+                                        removal: .opacity
+                                    ))
+                                }
+                            }
+                            .padding(14)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(24)
+                            
                             MenuCardButton(
                                 title: "Карточки ввода",
                                 icon: "keyboard.fill",
@@ -123,14 +170,7 @@ struct ContentView: View {
                             ) {
                                 activeScreen = .dictionary
                             }
-                            
-                            MenuCardButton(
-                                title: "Тетрис слов",
-                                icon: "gamecontroller.fill",
-                                themeColor: .indigo
-                            ) {
-                                activeScreen = .tetris
-                            }
+
                         }
                         .padding(.horizontal, 20)
                         
