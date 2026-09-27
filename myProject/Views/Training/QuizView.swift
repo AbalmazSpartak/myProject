@@ -29,6 +29,11 @@ struct QuizView: View {
     @State private var correctCount = 0
     @State private var totalAnswered = 0
     
+    private func countWords(for category: Category) -> Int {
+        let catID = category.id
+        return allWords.filter { $0.category?.id == catID }.count
+    }
+    
     private var mistakeWordsCount: Int {
         allWords.filter { $0.isMistake }.count
     }
@@ -83,7 +88,7 @@ struct QuizView: View {
                         Divider()
                         
                         ForEach(categories) { category in
-                            Button(category.name) { changeFilter(to: .category(category)) }
+                            Button("\(category.name) (\(countWords(for: category)))") { changeFilter(to: .category(category)) }
                         }
                     } label: {
                         HStack(spacing: 6) {

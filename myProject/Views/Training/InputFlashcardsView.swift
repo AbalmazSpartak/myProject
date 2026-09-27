@@ -30,6 +30,11 @@ struct InputFlashcardsView: View {
     
     @FocusState private var isInputFocused: Bool
     
+    private func countWords(for category: Category) -> Int {
+        let catID = category.id
+        return allWords.filter { $0.category?.id == catID }.count
+    }
+    
     private var mistakeWordsCount: Int {
         allWords.filter { $0.isMistake }.count
     }
@@ -84,7 +89,7 @@ struct InputFlashcardsView: View {
                         Divider()
                         
                         ForEach(categories) { category in
-                            Button(category.name) { changeFilter(to: .category(category)) }
+                            Button("\(category.name) (\(countWords(for: category)))") { changeFilter(to: .category(category)) }
                         }
                     } label: {
                         HStack(spacing: 6) {
@@ -345,10 +350,21 @@ struct InputFlashcardsView: View {
         guard !cleanedInput.isEmpty else { return false }
         
         let separators = CharacterSet(charactersIn: ",;/")
-        let targetVariants = target
+        let rawVariants = target
             .components(separatedBy: separators)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased().replacingOccurrences(of: "ё", with: "е") }
             .filter { !$0.isEmpty }
+        
+        // Дополнительно: те же варианты, но без текста в скобках (например, "(не переводится)")
+        let variantsWithoutParentheses = rawVariants.map { variant -> String in
+            var result = variant
+            while let openRange = result.range(of: "("), let closeRange = result.range(of: ")", range: openRange.upperBound..<result.endIndex) {
+                result.removeSubrange(openRange.lowerBound...closeRange.lowerBound)
+            }
+            return result.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        
+        let targetVariants = Set(rawVariants + variantsWithoutParentheses).filter { !$0.isEmpty }
         
         return targetVariants.contains(cleanedInput)
     }

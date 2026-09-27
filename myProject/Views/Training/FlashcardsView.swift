@@ -27,6 +27,11 @@ struct FlashcardsView: View {
     @State private var reviewedCount = 0
     private let fsrs = FSRSCalculator()
     
+    private func countWords(for category: Category) -> Int {
+        let catID = category.id
+        return allWords.filter { $0.category?.id == catID }.count
+    }
+    
     private var mistakeWordsCount: Int {
         allWords.filter { $0.isMistake }.count
     }
@@ -87,7 +92,7 @@ struct FlashcardsView: View {
                     Divider()
                     
                     ForEach(categories) { category in
-                        Button(category.name) { changeFilter(to: .category(category)) }
+                        Button("\(category.name) (\(countWords(for: category)))") { changeFilter(to: .category(category)) }
                     }
                 } label: {
                     HStack(spacing: 4) {

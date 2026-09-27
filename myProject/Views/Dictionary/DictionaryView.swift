@@ -60,6 +60,11 @@ struct DictionaryView: View {
         }
     }
     
+    private func countWords(for category: Category) -> Int {
+        let catID = category.id
+        return allWords.filter { $0.category?.id == catID }.count
+    }
+    
     var body: some View {
         ZStack {
             Color.brandBackground.ignoresSafeArea()
@@ -332,10 +337,5 @@ struct DictionaryView: View {
         newExample = ""
         
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
-    
-    private func countWords(for category: Category) -> Int {
-        let catID = category.id
-        return allWords.filter { $0.category?.id == catID }.count
     }
 }

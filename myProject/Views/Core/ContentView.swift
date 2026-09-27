@@ -17,7 +17,7 @@ struct ContentView: View {
     @Query private var profiles: [UserProfile]
     
     @State private var activeScreen: ActiveScreen?
-    @State private var isCardsExpanded: Bool = true
+    @State private var isCardsExpanded: Bool = false
     
     var body: some View {
         NavigationStack {

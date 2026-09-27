@@ -14,7 +14,6 @@ struct TetrisView: View {
     // Поле 10х20
     private let cols = 10
     private let rows = 20
-    
     @State private var grid: [[Color?]] = Array(repeating: Array(repeating: nil, count: 10), count: 20)
     
     // Падающая фигура
@@ -31,6 +30,9 @@ struct TetrisView: View {
     // Динамическая скорость
     @State private var dropInterval: Double = 0.6
     @State private var lastTickTime = Date()
+    
+    @State private var isSoftDropping: Bool = false
+    @State private var lastHorizontalStep: Int = 0
     
     // Высокочастотный таймер для плавного учета переменной скорости
     let timer = Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()
@@ -111,34 +113,50 @@ struct TetrisView: View {
                 .background(Color.cardBackground)
                 .cornerRadius(16)
                 .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 3)
-                .onTapGesture {
-                    rotate()
-                }
-                
-                HStack(spacing: 16) {
-                    Button(action: moveLeft) {
-                        Image(systemName: "arrow.left.circle.fill")
-                            .font(.system(size: 42))
-                    }
-                    
-                    Button(action: rotate) {
-                        Image(systemName: "rotate.right.circle.fill")
-                            .font(.system(size: 42))
-                    }
-                    
-                    Button(action: moveRight) {
-                        Image(systemName: "arrow.right.circle.fill")
-                            .font(.system(size: 42))
-                    }
-                    
-                    Button(action: dropDown) {
-                        Image(systemName: "arrow.down.circle.fill")
-                            .font(.system(size: 42))
-                    }
-                }
-                .foregroundColor(.indigo)
-                .padding(.top, 6)
-                
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            let dx = value.translation.width
+                            let dy = value.translation.height
+                            let smallThreshold: CGFloat = 10
+                            let horizontalStepSize: CGFloat = 45 // пикселей на одну клетку сдвига
+                            
+                            if abs(dx) > abs(dy) && abs(dx) > smallThreshold {
+                                // Горизонтальное удержание — двигаем фигуру по шагам, пока ведут палец дальше
+                                isSoftDropping = false
+                                let currentStep = Int(dx / horizontalStepSize)
+                                if currentStep != lastHorizontalStep {
+                                    let diff = currentStep - lastHorizontalStep
+                                    if diff > 0 {
+                                        for _ in 0..<diff { moveRight() }
+                                    } else {
+                                        for _ in 0..<(-diff) { moveLeft() }
+                                    }
+                                    lastHorizontalStep = currentStep
+                                }
+                            } else if dy > smallThreshold {
+                                // Небольшое/долгое движение вниз — ускоренное падение, пока палец удерживают
+                                isSoftDropping = true
+                            } else {
+                                isSoftDropping = false
+                            }
+                        }
+                        .onEnded { value in
+                            let dx = value.translation.width
+                            let dy = value.translation.height
+                            let smallThreshold: CGFloat = 10
+                            
+                            isSoftDropping = false
+                            lastHorizontalStep = 0
+                            
+                            if abs(dx) < smallThreshold && abs(dy) < smallThreshold {
+                                // Почти нет сдвига — переворот фигуры
+                                rotate()
+                            }
+                            // Горизонтальное перемещение и ускорение вниз уже отработали в onChanged —
+                            // на отпускание пальца больше ничего делать не нужно
+                        }
+                )
                 Spacer()
             }
             .background(Color.brandBackground.ignoresSafeArea())
@@ -234,7 +252,8 @@ struct TetrisView: View {
         }
         .onReceive(timer) { _ in
             if !isGameOver && !isPaused {
-                if Date().timeIntervalSince(lastTickTime) >= dropInterval {
+                let effectiveInterval = isSoftDropping ? max(0.05, dropInterval / 4) : dropInterval
+                if Date().timeIntervalSince(lastTickTime) >= effectiveInterval {
                     gameTick()
                     lastTickTime = Date()
                 }
@@ -247,6 +266,7 @@ struct TetrisView: View {
             return staticColor
         }
         if !isGameOver {
+            // Падающая фигура — в приоритете
             for b in currentBlocks {
                 let absoluteX = currentOffset.x + b.x
                 let absoluteY = currentOffset.y + b.y
@@ -254,8 +274,26 @@ struct TetrisView: View {
                     return currentShape.color
                 }
             }
+            // Тень фигуры на месте приземления
+            let ghost = ghostOffset
+            for b in currentBlocks {
+                let absoluteX = ghost.x + b.x
+                let absoluteY = ghost.y + b.y
+                if absoluteX == c && absoluteY == r {
+                    return currentShape.color.opacity(0.25)
+                }
+            }
         }
         return Color.gray.opacity(0.15)
+    }
+    
+    // Позиция, куда фигура упадёт, если сбросить её сейчас
+    private var ghostOffset: BlockPosition {
+        var testY = currentOffset.y
+        while canMove(blocks: currentBlocks, offset: BlockPosition(x: currentOffset.x, y: testY + 1)) {
+            testY += 1
+        }
+        return BlockPosition(x: currentOffset.x, y: testY)
     }
     
     private func gameTick() {
