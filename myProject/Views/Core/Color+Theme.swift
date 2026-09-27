@@ -21,17 +21,6 @@ extension Color {
         trait.userInterfaceStyle == .dark ? .secondarySystemGroupedBackground : .white
     })
 }
-
-
-struct FlatButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
-            .opacity(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
-    }
-}
-
 struct AppThemeModifier: ViewModifier {
     @AppStorage("app_theme") private var appTheme: String = "system"
 

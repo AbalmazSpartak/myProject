@@ -64,7 +64,6 @@ struct DictionaryView: View {
         ZStack {
             Color.brandBackground.ignoresSafeArea()
             
-            // Главный контейнер ловит тапы на любом пустом месте экрана
             VStack(spacing: 12) {
                 customHeader
                 
@@ -72,11 +71,10 @@ struct DictionaryView: View {
                     .padding(.horizontal, 16)
                 
                 if !isDropdownExpanded {
-                    // Переносим ScrollView так, чтобы он включал в себя и поля ввода
                     ScrollView {
                         VStack(spacing: 12) {
                             addWordCard
-                                .padding(.top, 4) // Небольшой отступ сверху
+                                .padding(.top, 4)
                             
                             if filteredWords.isEmpty {
                                 VStack(spacing: 12) {
@@ -267,7 +265,6 @@ struct DictionaryView: View {
         }
     }
     
-    // ВЫРАЗИТЕЛЬНАЯ КАРТОЧКА ДОБАВЛЕНИЯ СЛОВ
     private var addWordCard: some View {
         VStack(spacing: 14) {
             customTextField(placeholder: "Слово на английском", text: $newEnglish)
@@ -296,18 +293,15 @@ struct DictionaryView: View {
         .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
     }
     
-    // ВЫРАЗИТЕЛЬНОЕ И ЯРКОЕ ТЕКСТОВОЕ ПОЛЕ
     private func customTextField(placeholder: String, text: Binding<String>) -> some View {
         TextField(placeholder, text: text)
             .font(.system(size: 16, weight: .medium, design: .rounded))
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            // Используем системный цвет systemGray5, который в темной теме значительно ярче вашего brandInputBg
             .background(Color(.systemGray5))
             .cornerRadius(12)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    // Увеличили прозрачность рамки с 0.1 до 0.25 для максимальной выразительности границ
                     .stroke(Color.brandDark.opacity(0.25), lineWidth: 1.5)
             )
     }
@@ -337,101 +331,11 @@ struct DictionaryView: View {
         newRussian = ""
         newExample = ""
         
-        // Скрываем клавиатуру
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
     
     private func countWords(for category: Category) -> Int {
         let catID = category.id
         return allWords.filter { $0.category?.id == catID }.count
-    }
-}
-
-// MARK: - Вспомогательные представления
-
-struct WordRowCard: View {
-    let word: Word
-    var onEdit: () -> Void
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 8) {
-                    Text(word.english)
-                        .font(.system(size: 17, weight: .bold, design: .rounded))
-                        .foregroundColor(.brandDark)
-                    
-                    if !word.transcription.isEmpty {
-                        Text(word.transcription)
-                            .font(.system(size: 14, weight: .regular, design: .rounded))
-                            .foregroundColor(.orange)
-                    }
-                }
-                
-                Text(word.russian)
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
-                    .foregroundColor(.gray)
-                
-                if !word.example.isEmpty {
-                    Text(word.example)
-                        .font(.system(size: 13, weight: .regular, design: .rounded))
-                        .italic()
-                        .foregroundColor(.gray.opacity(0.8))
-                        .padding(.top, 2)
-                }
-            }
-            
-            Spacer()
-            
-            Button(action: {
-                TextToSpeechManager.shared.speak(word.english)
-            }) {
-                Image(systemName: "speaker.wave.2.fill")
-                    .foregroundColor(.orange)
-                    .font(.system(size: 18))
-            }
-            .buttonStyle(.plain)
-            
-            Button(action: onEdit) {
-                Image(systemName: "ellipsis.circle")
-                    .foregroundColor(.gray)
-                    .font(.system(size: 18))
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(16)
-        .background(Color.cardBackground)
-        .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 2)
-    }
-}
-
-struct ManageCategoriesView: View {
-    @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Category.name) private var categories: [Category]
-    
-    var body: some View {
-        NavigationStack {
-            List {
-                ForEach(categories) { category in
-                    Text(category.name)
-                }
-                .onDelete(perform: deleteCategories)
-            }
-            .navigationTitle("Управление папками")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Готово") { dismiss() }
-                }
-            }
-        }
-    }
-    
-    private func deleteCategories(at offsets: IndexSet) {
-        for index in offsets {
-            modelContext.delete(categories[index])
-        }
     }
 }

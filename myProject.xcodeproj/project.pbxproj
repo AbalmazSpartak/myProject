@@ -12,7 +12,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		000000000000000000000120 /* myProject.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = myProject.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000120 /* myProject.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = myProject.app; path = "/Users/spartak/Documents/myProject/test-git/build/Debug/myProject.app"; sourceTree = "<absolute>"; };
 		C88898D5305E6FBF0018B20D /* full_code.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = full_code.txt; sourceTree = "<group>"; };
 		C8889928306070560018B20D /* sample_words.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sample_words.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -40,7 +40,6 @@
 				C8889928306070560018B20D /* sample_words.json */,
 				C88898D5305E6FBF0018B20D /* full_code.txt */,
 				000000000000000000000010 /* myProject */,
-				000000000000000000000120 /* myProject.app */,
 			);
 			sourceTree = "<group>";
 		};

@@ -62,7 +62,6 @@ struct FlashcardsView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // MARK: - Шапка
             HStack {
                 Button(action: { dismiss() }) {
                     HStack(spacing: 5) {
@@ -75,7 +74,6 @@ struct FlashcardsView: View {
                 
                 Spacer()
                 
-                // Выпадающий фильтр
                 Menu {
                     Button("⏰ На повторение (FSRS)") { changeFilter(to: .due) }
                     
@@ -109,7 +107,6 @@ struct FlashcardsView: View {
             .padding(.horizontal, 24)
             .padding(.top, 10)
             
-            // Прогресс сессии
             HStack {
                 Spacer()
                 Text("Повторено: \(reviewedCount)")
@@ -121,7 +118,6 @@ struct FlashcardsView: View {
             
             Spacer()
             
-            // MARK: - Карточка слова
             if sessionWords.isEmpty {
                 VStack(spacing: 16) {
                     Image(systemName: "checkmark.circle.fill")
@@ -136,7 +132,6 @@ struct FlashcardsView: View {
                 .padding(.horizontal, 40)
             } else if let word = currentWord {
                 VStack(spacing: 24) {
-                    // Вопрос (слово)
                     VStack(spacing: 10) {
                         HStack(spacing: 12) {
                             Text(currentQuestion)
@@ -162,7 +157,6 @@ struct FlashcardsView: View {
                     Divider()
                         .padding(.horizontal, 20)
                     
-                    // Ответ и кнопки FSRS
                     if isAnswerRevealed {
                         VStack(spacing: 20) {
                             Text(currentAnswer)
@@ -170,7 +164,6 @@ struct FlashcardsView: View {
                                 .foregroundColor(.blue)
                                 .multilineTextAlignment(.center)
                             
-                            // 4 кнопки оценки FSRS
                             VStack(spacing: 8) {
                                 Text("Как сложно было вспомнить?")
                                     .font(.system(size: 12, weight: .medium, design: .rounded))
@@ -225,7 +218,6 @@ struct FlashcardsView: View {
         }
     }
     
-    // MARK: - Логика переключения фильтров
     private func changeFilter(to filter: FlashcardsFilter) {
         currentFilter = filter
         isAnswerRevealed = false
@@ -236,7 +228,6 @@ struct FlashcardsView: View {
         let now = Date()
         switch currentFilter {
         case .due:
-            // Фильтруем слова, у которых подошёл срок или которые новые
             sessionWords = allWords.filter { $0.state == .new || $0.dueDate <= now }
                 .sorted { $0.dueDate < $1.dueDate }
         case .all:
@@ -250,21 +241,17 @@ struct FlashcardsView: View {
         currentIndex = 0
     }
     
-    // MARK: - Обработка ответа через FSRS
     private func processRating(_ rating: FSRSRating) {
         guard let word = currentWord else { return }
         
-        // 1. Рассчитываем новую стабильность и дату через FSRS
         fsrs.calculateNextReview(word: word, rating: rating)
         
-        // 2. Обновляем статус ошибки для статистики
         if rating == .again {
             word.isMistake = true
         } else if rating == .good || rating == .easy {
             word.isMistake = false
         }
         
-        // 3. Записываем прогресс профиля
         reviewedCount += 1
         if let userProfile = profiles.first {
             if translationMode == "en_ru" {
@@ -276,7 +263,6 @@ struct FlashcardsView: View {
             }
         }
         
-        // 4. Переходим к следующему слову
         isAnswerRevealed = false
         if currentIndex + 1 >= sessionWords.count {
             generateSession()

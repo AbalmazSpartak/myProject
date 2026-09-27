@@ -59,7 +59,6 @@ struct InputFlashcardsView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // MARK: - Шапка управления
             HStack(alignment: .top) {
                 Button(action: { dismiss() }) {
                     HStack(spacing: 4) {
@@ -74,7 +73,6 @@ struct InputFlashcardsView: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 6) {
-                    // Выпадающее меню выбора категории
                     Menu {
                         Button("Все слова") { changeFilter(to: .all) }
                         
@@ -106,7 +104,6 @@ struct InputFlashcardsView: View {
                         .cornerRadius(10)
                     }
                     
-                    // Статистика сессии
                     Text("Ввод: \(correctCount)/\(totalAnswered)")
                         .font(.system(size: 13, weight: .bold, design: .rounded))
                         .foregroundColor(.gray)
@@ -118,7 +115,6 @@ struct InputFlashcardsView: View {
             
             Spacer()
             
-            // MARK: - Контент карточки
             if sessionWords.isEmpty {
                 VStack(spacing: 12) {
                     Image(systemName: currentFilter == .mistakes ? "checkmark.circle.fill" : "keyboard")
@@ -133,7 +129,6 @@ struct InputFlashcardsView: View {
                 .padding(.horizontal, 40)
             } else if let word = currentWord {
                 VStack(spacing: 20) {
-                    // Вопрос и озвучка
                     VStack(spacing: 8) {
                         HStack(spacing: 10) {
                             Text(currentQuestion)
@@ -159,7 +154,6 @@ struct InputFlashcardsView: View {
                     Divider()
                         .padding(.horizontal, 10)
                     
-                    // Текстовое поле ввода
                     VStack(alignment: .leading, spacing: 8) {
                         Text(translationMode == "en_ru" ? "Введите перевод на русский:" : "Введите перевод на английский:")
                             .font(.system(size: 13, weight: .medium, design: .rounded))
@@ -189,7 +183,6 @@ struct InputFlashcardsView: View {
                     }
                     .padding(.horizontal, 16)
                     
-                    // Результат ответа
                     if showResult {
                         VStack(spacing: 10) {
                             HStack(spacing: 8) {
@@ -226,7 +219,6 @@ struct InputFlashcardsView: View {
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))
                     }
                     
-                    // Кнопки действия (Проверить / Далее)
                     VStack {
                         if !showResult {
                             Button(action: checkAnswer) {
@@ -269,7 +261,6 @@ struct InputFlashcardsView: View {
         }
     }
     
-    // MARK: - Вычисление цвета границы поля ввода
     private var inputBorderColor: Color {
         guard showResult else {
             return isInputFocused ? Color.teal : Color.brandDark.opacity(0.15)
@@ -277,7 +268,6 @@ struct InputFlashcardsView: View {
         return isCorrect ? Color.green : Color.red
     }
     
-    // MARK: - Переключение фильтров
     private func changeFilter(to filter: InputFlashcardsFilter) {
         currentFilter = filter
         correctCount = 0
@@ -312,7 +302,6 @@ struct InputFlashcardsView: View {
         }
     }
     
-    // MARK: - Проверка ответа
     private func checkAnswer() {
         guard let word = currentWord else { return }
         
@@ -330,10 +319,8 @@ struct InputFlashcardsView: View {
         
         totalAnswered += 1
         
-        // Озвучиваем слово при завершении ответа
         TextToSpeechManager.shared.speak(word.english)
         
-        // Обновляем статистику пользователя
         if let userProfile = profiles.first {
             if translationMode == "en_ru" {
                 userProfile.flashcardsEnRuTotal += 1
@@ -349,7 +336,6 @@ struct InputFlashcardsView: View {
         }
     }
     
-    // Сравнение текста (с поддержкой синонимов через запятую/слэш и замену 'ё' -> 'е')
     private func validateInput(_ input: String, target: String) -> Bool {
         let cleanedInput = input
             .trimmingCharacters(in: .whitespacesAndNewlines)

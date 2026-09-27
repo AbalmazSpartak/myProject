@@ -2,41 +2,6 @@ import SwiftUI
 import SwiftData
 import Combine
 
-// Структура относительной позиции блока в фигуре
-struct BlockPosition {
-    var x: Int
-    var y: Int
-}
-
-// 7 классических фигур Тетриса
-enum TetrominoShape: CaseIterable {
-    case I, J, L, O, S, T, Z
-
-    var relativeBlocks: [BlockPosition] {
-        switch self {
-        case .I: return [BlockPosition(x: 0, y: 0), BlockPosition(x: -1, y: 0), BlockPosition(x: 1, y: 0), BlockPosition(x: 2, y: 0)]
-        case .J: return [BlockPosition(x: 0, y: 0), BlockPosition(x: -1, y: 0), BlockPosition(x: 1, y: 0), BlockPosition(x: -1, y: -1)]
-        case .L: return [BlockPosition(x: 0, y: 0), BlockPosition(x: -1, y: 0), BlockPosition(x: 1, y: 0), BlockPosition(x: 1, y: -1)]
-        case .O: return [BlockPosition(x: 0, y: 0), BlockPosition(x: 1, y: 0), BlockPosition(x: 0, y: -1), BlockPosition(x: 1, y: -1)]
-        case .S: return [BlockPosition(x: 0, y: 0), BlockPosition(x: -1, y: 0), BlockPosition(x: 0, y: -1), BlockPosition(x: 1, y: -1)]
-        case .T: return [BlockPosition(x: 0, y: 0), BlockPosition(x: -1, y: 0), BlockPosition(x: 1, y: 0), BlockPosition(x: 0, y: -1)]
-        case .Z: return [BlockPosition(x: 0, y: 0), BlockPosition(x: 1, y: 0), BlockPosition(x: 0, y: -1), BlockPosition(x: -1, y: -1)]
-        }
-    }
-
-    var color: Color {
-        switch self {
-        case .I: return .cyan
-        case .J: return .blue
-        case .L: return .orange
-        case .O: return .yellow
-        case .S: return .green
-        case .T: return .purple
-        case .Z: return .red
-        }
-    }
-}
-
 struct TetrisView: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var allWords: [Word]
@@ -73,7 +38,6 @@ struct TetrisView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 10) {
-                // Верхняя панель
                 HStack {
                     Button(action: { dismiss() }) {
                         HStack(spacing: 4) {
@@ -90,7 +54,6 @@ struct TetrisView: View {
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(.brandDark)
                     
-                    // 👈 Кнопка паузы
                     Button(action: { isPaused.toggle() }) {
                         Image(systemName: isPaused ? "play.fill" : "pause.fill")
                             .font(.system(size: 18))
@@ -106,7 +69,6 @@ struct TetrisView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
                 
-                // Словарная карточка над полем
                 if let word = currentWord {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
@@ -133,7 +95,6 @@ struct TetrisView: View {
                     .padding(.horizontal, 16)
                 }
                 
-                // Игровое сетчатое поле
                 VStack(spacing: 2) {
                     ForEach(0..<rows, id: \.self) { r in
                         HStack(spacing: 2) {
@@ -154,7 +115,6 @@ struct TetrisView: View {
                     rotate()
                 }
                 
-                // Кнопки управления (4 кнопки: Влево, Поворот, Вправо, Ускорение)
                 HStack(spacing: 16) {
                     Button(action: moveLeft) {
                         Image(systemName: "arrow.left.circle.fill")
@@ -183,7 +143,6 @@ struct TetrisView: View {
             }
             .background(Color.brandBackground.ignoresSafeArea())
             
-            // Кастомный оверлей Game Over
             if isGameOver {
                 Color.black.opacity(0.7)
                     .ignoresSafeArea()
@@ -241,7 +200,6 @@ struct TetrisView: View {
                 .padding(.horizontal, 32)
                 .shadow(radius: 20)
             }
-            // Кастомный оверлей Паузы
             if isPaused && !isGameOver {
                 Color.black.opacity(0.6)
                     .ignoresSafeArea()
@@ -284,7 +242,6 @@ struct TetrisView: View {
         }
     }
     
-    // Цвет клетки с учетом зафиксированных и падающих блоков
     private func cellColor(r: Int, c: Int) -> Color {
         if let staticColor = grid[r][c] {
             return staticColor
@@ -301,7 +258,6 @@ struct TetrisView: View {
         return Color.gray.opacity(0.15)
     }
     
-    // Игровой тик падения
     private func gameTick() {
         if canMove(blocks: currentBlocks, offset: BlockPosition(x: currentOffset.x, y: currentOffset.y + 1)) {
             currentOffset.y += 1
@@ -312,7 +268,6 @@ struct TetrisView: View {
         }
     }
     
-    // Движение влево
     private func moveLeft() {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         if canMove(blocks: currentBlocks, offset: BlockPosition(x: currentOffset.x - 1, y: currentOffset.y)) {
@@ -320,7 +275,6 @@ struct TetrisView: View {
         }
     }
     
-    // Движение вправо
     private func moveRight() {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         if canMove(blocks: currentBlocks, offset: BlockPosition(x: currentOffset.x + 1, y: currentOffset.y)) {
@@ -328,12 +282,10 @@ struct TetrisView: View {
         }
     }
     
-    // Поворот фигуры с проверкой сдвига от стен (Wall Kick)
     private func rotate() {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         let rotated = currentBlocks.map { BlockPosition(x: -$0.y, y: $0.x) }
         
-        // Пробуем повернуть на текущей позиции, а если мешает стена — со сдвигом на 1 клетку влево/вправо
         let kickOffsets = [
             BlockPosition(x: 0, y: 0),
             BlockPosition(x: -1, y: 0),
@@ -352,7 +304,6 @@ struct TetrisView: View {
         }
     }
     
-    // Быстрое сбрасывание вниз
     private func dropDown() {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         var newY = currentOffset.y
@@ -363,7 +314,6 @@ struct TetrisView: View {
         gameTick()
     }
     
-    // Проверка коллизий со стенами и зафиксированными блоками
     private func canMove(blocks: [BlockPosition], offset: BlockPosition) -> Bool {
         for b in blocks {
             let x = offset.x + b.x
@@ -379,7 +329,6 @@ struct TetrisView: View {
         return true
     }
     
-    // Фиксация фигуры на сетке
     private func lockPiece() {
         for b in currentBlocks {
             let x = currentOffset.x + b.x
@@ -390,7 +339,6 @@ struct TetrisView: View {
         }
     }
     
-    // Проверка и удаление заполненных рядов
     private func clearLines() {
         var linesCleared = 0
         for r in 0..<rows {
@@ -404,7 +352,6 @@ struct TetrisView: View {
         if linesCleared > 0 {
             score += linesCleared * 100
             
-            // Динамическое ускорение: каждые 300 очков ускоряем падение (мин. 0.15 сек)
             dropInterval = max(0.15, 0.6 - Double(score / 300) * 0.05)
             
             UINotificationFeedbackGenerator().notificationOccurred(.success)
@@ -420,7 +367,6 @@ struct TetrisView: View {
         }
     }
     
-    // Создание новой детали вверху
     private func spawnNewPiece() {
         guard let newShape = TetrominoShape.allCases.randomElement() else { return }
         currentShape = newShape
@@ -430,7 +376,6 @@ struct TetrisView: View {
         if !canMove(blocks: currentBlocks, offset: currentOffset) {
             isGameOver = true
             
-            // 👈 Запоминаем слово как ошибку при проигрыше
             if let word = currentWord {
                 word.isMistake = true
             }
@@ -443,14 +388,11 @@ struct TetrisView: View {
     }
     
     private func pickRandomWord() {
-        // 1. Ищем слова, в которых ранее были ошибки
         let mistakeWords = allWords.filter { $0.isMistake }
         
         if !mistakeWords.isEmpty {
-            // Если есть ошибки — берем случайное из них
             currentWord = mistakeWords.randomElement()
         } else if !allWords.isEmpty {
-            // Если ошибок нет — берем любое слово из базы
             currentWord = allWords.randomElement()
         }
     }
@@ -464,7 +406,6 @@ struct TetrisView: View {
         spawnNewPiece()
     }
     
-    // Сохранение рекорда при завершении игры
     private func handleGameOver() {
         if let profile = userProfile {
             if score > profile.tetrisHighScore {

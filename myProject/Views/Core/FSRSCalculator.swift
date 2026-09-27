@@ -19,12 +19,10 @@ struct FSRSCalculator {
         var newState = word.state
         
         if word.state == .new {
-            // Инициализация нового слова
             newDifficulty = initDifficulty(rating: rating)
             newStability = initStability(rating: rating)
             newState = (rating == .again) ? .learning : .review
         } else {
-            // Обновление существующего слова
             let retrievability = exp(log(0.9) * daysElapsed / word.stability)
             newDifficulty = nextDifficulty(d: word.difficulty, rating: rating)
             
@@ -38,21 +36,18 @@ struct FSRSCalculator {
             }
         }
         
-        // Расчет следующего интервала (в днях)
         let interval = newStability * (pow(targetRetention, -1) - 1) * 9
         
-        // Применяем изменения к слову
         word.difficulty = newDifficulty
         word.stability = newStability
         word.state = newState
         word.reps += 1
         word.lastReview = now
         
-        // Устанавливаем дату следующего повторения (если "Снова", то через 5 минут)
         if rating == .again {
-            word.dueDate = now.addingTimeInterval(5 * 60) // 5 минут для забытых
+            word.dueDate = now.addingTimeInterval(5 * 60)
         } else {
-            word.dueDate = now.addingTimeInterval(interval * 86400) // В днях
+            word.dueDate = now.addingTimeInterval(interval * 86400)
         }
     }
     

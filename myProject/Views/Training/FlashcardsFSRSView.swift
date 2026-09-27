@@ -36,7 +36,6 @@ struct FlashcardsFSRSView: View {
                             .font(.system(size: 28, weight: .semibold))
                             .foregroundColor(.blue)
                         
-                        // Кнопки оценки FSRS
                         HStack(spacing: 12) {
                             FSRSButton(title: "Снова", color: .red) {
                                 rateWord(rating: .again)
@@ -71,7 +70,6 @@ struct FlashcardsFSRSView: View {
     
     private func loadDueWords() {
         let now = Date()
-        // Фильтруем слова: новые или те, у которых наступил срок повторения
         dueWords = allWords.filter { $0.state == .new || $0.dueDate <= now }
             .sorted { $0.dueDate < $1.dueDate }
     }
@@ -79,7 +77,6 @@ struct FlashcardsFSRSView: View {
     private func rateWord(rating: FSRSRating) {
         guard let word = currentWord else { return }
         
-        // Рассчитываем и обновляем данные слова с помощью FSRS
         fsrs.calculateNextReview(word: word, rating: rating)
         
         isAnswerRevealed = false

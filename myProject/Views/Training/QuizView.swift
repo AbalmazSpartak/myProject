@@ -58,7 +58,6 @@ struct QuizView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Верхняя панель управления
             HStack(alignment: .top) {
                 Button(action: { dismiss() }) {
                     HStack(spacing: 4) {
@@ -73,7 +72,6 @@ struct QuizView: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 6) {
-                    // Выпадающее меню категорий
                     Menu {
                         Button("Все слова") { changeFilter(to: .all) }
                         
@@ -105,7 +103,6 @@ struct QuizView: View {
                         .cornerRadius(10)
                     }
                     
-                    // Надпись "Тест: X/Y"
                     Text("Тест: \(correctCount)/\(totalAnswered)")
                         .font(.system(size: 13, weight: .bold, design: .rounded))
                         .foregroundColor(.gray)
@@ -130,9 +127,7 @@ struct QuizView: View {
                 }
                 .padding(.horizontal, 40)
             } else if let word = currentWord {
-                // Карточка вопроса
                 VStack(spacing: 16) {
-                    // Слово + озвучка
                     HStack(spacing: 10) {
                         Text(currentQuestion)
                             .font(.system(size: 38, weight: .bold, design: .rounded))
@@ -146,14 +141,12 @@ struct QuizView: View {
                     }
                     .padding(.top, 28)
                     
-                    // Транскрипция
                     if translationMode == "en_ru" && !word.transcription.isEmpty {
                         Text(word.transcription)
                             .font(.system(size: 18, weight: .bold, design: .rounded))
                             .foregroundColor(.orange)
                     }
                     
-                    // Варианты ответов (плашки)
                     VStack(spacing: 12) {
                         ForEach(options, id: \.self) { option in
                             Button(action: { selectOption(option) }) {
@@ -258,7 +251,6 @@ struct QuizView: View {
         guard let word = currentWord else { return }
         selectedOption = option
         
-        // Точная проверка совпадения ответа без разбиения строки
         isCorrect = (option == currentCorrectAnswerString)
         
         if isCorrect {
@@ -286,7 +278,6 @@ struct QuizView: View {
         return option == currentCorrectAnswerString
     }
     
-    // Цвет фона плашек
     private func optionBackgroundColor(_ option: String) -> Color {
         guard showResult else {
             return colorScheme == .dark
@@ -302,7 +293,6 @@ struct QuizView: View {
         return colorScheme == .dark ? Color(white: 0.12) : Color(red: 0.95, green: 0.95, blue: 0.97)
     }
     
-    // Цвет текста плашек
     private func optionForegroundColor(_ option: String) -> Color {
         guard showResult else {
             return colorScheme == .dark
@@ -318,7 +308,6 @@ struct QuizView: View {
         return .gray.opacity(0.6)
     }
     
-    // Тонкая обводка плашек для объема
     private func optionBorderColor(_ option: String) -> Color {
         guard showResult else {
             return colorScheme == .dark
