@@ -6,4 +6,6 @@ struct WordDTO: Decodable {
     let transcription: String
     let example: String
     let categoryName: String
+    let cefrLevel: String
+
 }

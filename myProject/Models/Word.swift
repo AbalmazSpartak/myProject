@@ -15,6 +15,15 @@ enum FSRSRating: Int {
     case easy = 4  // Легко
 }
 
+enum CEFRLevel: String, Codable, CaseIterable {
+    case a1 = "A1"
+    case a2 = "A2"
+    case b1 = "B1"
+    case b2 = "B2"
+    case c1 = "C1"
+    case c2 = "C2"
+}
+
 @Model
 class Word {
     var english: String
@@ -23,6 +32,7 @@ class Word {
     var example: String = ""
     var category: Category?
     var isMistake: Bool = false
+    var cefrLevel: String = "A1"
     
     // MARK: - FSRS параметры
     var state: FSRSState = FSRSState.new
@@ -33,11 +43,12 @@ class Word {
     var lapses: Int = 0
     var lastReview: Date? = nil
 
-    init(english: String, russian: String, transcription: String = "", example: String = "", category: Category? = nil) {
+    init(english: String, russian: String, transcription: String = "", example: String = "", category: Category? = nil, cefrLevel: String = "A1") {
         self.english = english
         self.russian = russian
         self.transcription = transcription
         self.example = example
         self.category = category
+        self.cefrLevel = cefrLevel
     }
 }

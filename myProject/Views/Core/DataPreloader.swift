@@ -38,7 +38,7 @@ final class DataPreloader {
                     example: dto.example,
                     category: category
                 )
-                context.insert(newWord)
+                newWord.cefrLevel = dto.cefrLevel
             }
             try context.save()
         } catch {

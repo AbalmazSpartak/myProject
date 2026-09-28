@@ -26,6 +26,9 @@ struct TetrisView: View {
     @State private var isGameOver: Bool = false
     @State private var isPaused: Bool = false
     @State private var currentWord: Word?
+    @State private var currentOptions: [String] = []
+    @State private var selectedAnswer: String? = nil
+    @State private var speedBoostUntil: Date? = nil
     
     // Динамическая скорость
     @State private var dropInterval: Double = 0.6
@@ -72,22 +75,38 @@ struct TetrisView: View {
                 .padding(.top, 8)
                 
                 if let word = currentWord {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
+                    VStack(spacing: 8) {
+                        HStack {
                             Text(word.english)
                                 .font(.system(size: 18, weight: .bold, design: .rounded))
                                 .foregroundColor(.brandDark)
-                            Text(word.russian)
-                                .font(.system(size: 14, weight: .medium, design: .rounded))
-                                .foregroundColor(.gray)
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                TextToSpeechManager.shared.speak(word.english)
+                            }) {
+                                Image(systemName: "speaker.wave.2.fill")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(.indigo)
+                            }
                         }
-                        Spacer()
-                        Button(action: {
-                            TextToSpeechManager.shared.speak(word.english)
-                        }) {
-                            Image(systemName: "speaker.wave.2.fill")
-                                .font(.system(size: 20))
-                                .foregroundColor(.indigo)
+                        
+                        HStack(spacing: 8) {
+                            ForEach(currentOptions, id: \.self) { option in
+                                Button(action: { selectAnswer(option) }) {
+                                    Text(option)
+                                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.7)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 8)
+                                        .background(optionBackground(option, word: word))
+                                        .foregroundColor(optionForeground(option, word: word))
+                                        .cornerRadius(10)
+                                }
+                                .disabled(selectedAnswer != nil)
+                            }
                         }
                     }
                     .padding(.horizontal, 16)
@@ -252,7 +271,10 @@ struct TetrisView: View {
         }
         .onReceive(timer) { _ in
             if !isGameOver && !isPaused {
-                let effectiveInterval = isSoftDropping ? max(0.05, dropInterval / 4) : dropInterval
+                var effectiveInterval = isSoftDropping ? max(0.05, dropInterval / 4) : dropInterval
+                if let boostUntil = speedBoostUntil, Date() < boostUntil {
+                    effectiveInterval *= 2
+                }
                 if Date().timeIntervalSince(lastTickTime) >= effectiveInterval {
                     gameTick()
                     lastTickTime = Date()
@@ -433,6 +455,78 @@ struct TetrisView: View {
         } else if !allWords.isEmpty {
             currentWord = allWords.randomElement()
         }
+        
+        selectedAnswer = nil
+        if let word = currentWord {
+            generateOptions(for: word)
+        }
+    }
+    private func generateOptions(for word: Word) {
+        let correctAnswer = word.russian
+        var otherAnswers = allWords
+            .map { $0.russian }
+            .filter { $0.lowercased() != correctAnswer.lowercased() }
+            .shuffled()
+        
+        var generated = [correctAnswer]
+        while generated.count < 3 && !otherAnswers.isEmpty {
+            let next = otherAnswers.removeFirst()
+            if !generated.contains(next) {
+                generated.append(next)
+            }
+        }
+        currentOptions = generated.shuffled()
+    }
+
+    private func selectAnswer(_ answer: String) {
+        guard let word = currentWord, selectedAnswer == nil else { return }
+        selectedAnswer = answer
+        
+        let isCorrect = answer.lowercased() == word.russian.lowercased()
+        
+        if isCorrect {
+            word.isMistake = false
+            speedBoostUntil = Date().addingTimeInterval(5)
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        } else {
+            word.isMistake = true
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            // Если слово уже сменилось (например, из-за очистки линии), выбор не сбрасываем повторно
+            if currentWord?.id == word.id {
+                withAnimation {
+                    selectedAnswer = nil
+                }
+            }
+        }
+    }
+
+    private func optionBackground(_ option: String, word: Word) -> Color {
+        guard let selected = selectedAnswer else {
+            return Color(.systemGray5)
+        }
+        if option.lowercased() == word.russian.lowercased() {
+            return Color.green.opacity(0.25)
+        }
+        if option == selected {
+            return Color.red.opacity(0.25)
+        }
+        return Color(.systemGray5)
+    }
+
+    private func optionForeground(_ option: String, word: Word) -> Color {
+        guard let selected = selectedAnswer else {
+            return .brandDark
+        }
+        if option.lowercased() == word.russian.lowercased() {
+            return .green
+        }
+        if option == selected {
+            return .red
+        }
+        return .gray
     }
     
     private func restartGame() {
