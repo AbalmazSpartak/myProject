@@ -16,6 +16,14 @@ struct EditWordView: View {
                 Section(header: Text("Контекст")) {
                     TextField("Пример предложения", text: $word.example).disableAutocorrection(true)
                 }
+                Section(header: Text("Уровень CEFR")) {
+                    Picker("Уровень", selection: $word.cefrLevel) {
+                        ForEach(CEFRLevel.allCases, id: \.rawValue) { level in
+                            Text(level.rawValue).tag(level.rawValue)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
             }
             .navigationTitle("Редактирование")
             .navigationBarTitleDisplayMode(.inline)

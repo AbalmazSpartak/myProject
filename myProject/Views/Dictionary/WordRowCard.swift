@@ -13,9 +13,13 @@ struct WordRowCard: View {
                         .foregroundColor(.brandDark)
                     
                     if !word.transcription.isEmpty {
-                        Text(word.transcription)
-                            .font(.system(size: 14, weight: .regular, design: .rounded))
-                            .foregroundColor(.orange)
+                        Text(word.cefrLevel)
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                            .foregroundColor(.indigo)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.indigo.opacity(0.12))
+                            .cornerRadius(6)
                     }
                 }
                 

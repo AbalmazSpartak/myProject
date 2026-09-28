@@ -25,6 +25,7 @@ struct DictionaryView: View {
     @State private var newTranscription = ""
     @State private var newRussian = ""
     @State private var newExample = ""
+    @State private var newLevel: String = "A1"
     
     private var mistakeWords: [Word] {
         allWords.filter { $0.isMistake }
@@ -277,6 +278,13 @@ struct DictionaryView: View {
             customTextField(placeholder: "Перевод на русский", text: $newRussian)
             customTextField(placeholder: "Пример фразы (необязательно)", text: $newExample)
             
+            Picker("Уровень", selection: $newLevel) {
+                ForEach(CEFRLevel.allCases, id: \.rawValue) { level in
+                    Text(level.rawValue).tag(level.rawValue)
+                }
+            }
+            .pickerStyle(.segmented)
+            
             Button(action: addNewWord) {
                 HStack(spacing: 6) {
                     Image(systemName: "plus.circle.fill")
@@ -327,7 +335,8 @@ struct DictionaryView: View {
             russian: trimmedRus,
             transcription: trans,
             example: newExample.trimmingCharacters(in: .whitespaces),
-            category: currentCategoryForNewWord
+            category: currentCategoryForNewWord,
+            cefrLevel: newLevel
         )
         
         modelContext.insert(word)
