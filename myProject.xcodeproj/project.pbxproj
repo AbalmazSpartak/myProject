@@ -12,14 +12,27 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		000000000000000000000120 /* myProject.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = myProject.app; path = "/Users/spartak/Documents/myProject/test-git/build/Debug/myProject.app"; sourceTree = "<absolute>"; };
 		C88898D5305E6FBF0018B20D /* full_code.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = full_code.txt; sourceTree = "<group>"; };
 		C8889928306070560018B20D /* sample_words.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sample_words.json; sourceTree = "<group>"; };
+		C8CC0B5B306B4BEE00E8C3A6 /* myProject.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = myProject.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C8CC0B5D306B4E0E00E8C3A6 /* Exceptions for "myProject" folder in "myProject" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 000000000000000100000000 /* myProject */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		000000000000000000000010 /* myProject */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C8CC0B5D306B4E0E00E8C3A6 /* Exceptions for "myProject" folder in "myProject" target */,
+			);
 			path = myProject;
 			sourceTree = "<group>";
 		};
@@ -40,6 +53,7 @@
 				C8889928306070560018B20D /* sample_words.json */,
 				C88898D5305E6FBF0018B20D /* full_code.txt */,
 				000000000000000000000010 /* myProject */,
+				C8CC0B5B306B4BEE00E8C3A6 /* myProject.app */,
 			);
 			sourceTree = "<group>";
 		};
@@ -61,7 +75,7 @@
 			);
 			name = myProject;
 			productName = MyApp;
-			productReference = 000000000000000000000120 /* myProject.app */;
+			productReference = C8CC0B5B306B4BEE00E8C3A6 /* myProject.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -260,6 +274,8 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = myProject/Info.plist;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Приложению нужен доступ к локальной сети, чтобы находить других игроков для гонки слов.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -300,6 +316,8 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = myProject/Info.plist;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Приложению нужен доступ к локальной сети, чтобы находить других игроков для гонки слов.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

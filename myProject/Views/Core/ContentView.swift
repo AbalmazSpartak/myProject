@@ -8,6 +8,7 @@ enum ActiveScreen: Identifiable {
     case inputCards
     case dictionary
     case tetris
+    case race
     
     var id: String { "\(self)" }
 }
@@ -131,6 +132,7 @@ struct ContentView: View {
                                     .padding(.top, 4)
                                     .contentShape(Rectangle())
                                 }
+                                
                                 .buttonStyle(.plain)
                                 
                                 if isMiniGamesExpanded {
@@ -141,6 +143,14 @@ struct ContentView: View {
                                             themeColor: .indigo
                                         ) {
                                             activeScreen = .tetris
+                                        }
+                                        
+                                        MenuCardButton(
+                                            title: "Гонка слов",
+                                            icon: "car.fill",
+                                            themeColor: .green
+                                        ) {
+                                            activeScreen = .race
                                         }
                                         
                                         // Следующую мини-игру добавлять сюда же, новым MenuCardButton
@@ -193,6 +203,8 @@ struct ContentView: View {
                     DictionaryView()
                 case .tetris:
                     TetrisView()
+                case .race:
+                    RaceLobbyView()
                 }
             }
         }
