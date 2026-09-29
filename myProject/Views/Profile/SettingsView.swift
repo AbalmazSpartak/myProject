@@ -84,7 +84,13 @@ struct SettingsView: View {
                     }
                     .pickerStyle(.segmented)
                 }
-                
+                #if DEBUG
+                Section {
+                    NavigationLink("🛠️ Раздел разработчика") {
+                        DeveloperView()
+                    }
+                }
+                #endif
                 // Управление данными
                 Section(header: Text("Управление данными"), footer: Text("Сброс статистики удалит информацию о пройденных тестах и проценте правильных ответов. Ваши слова в словаре останутся нетронутыми.")) {
                     Button(role: .destructive, action: {

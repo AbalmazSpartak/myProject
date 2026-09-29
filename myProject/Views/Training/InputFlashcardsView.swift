@@ -5,6 +5,7 @@ enum InputFlashcardsFilter: Equatable {
     case all
     case category(Category)
     case mistakes
+    case level(CEFRLevel)   // новая строка
 }
 
 struct InputFlashcardsView: View {
@@ -59,6 +60,7 @@ struct InputFlashcardsView: View {
         case .all: return "Все слова"
         case .category(let cat): return cat.name
         case .mistakes: return "⚠️ Ошибки (\(mistakeWordsCount))"
+        case .level(let level): return "Уровень \(level.rawValue)"
         }
     }
     
@@ -90,6 +92,15 @@ struct InputFlashcardsView: View {
                         
                         ForEach(categories) { category in
                             Button("\(category.name) (\(countWords(for: category)))") { changeFilter(to: .category(category)) }
+                        }
+                        // ↓ новый блок
+                        Divider()
+                        
+                        ForEach(CEFRLevel.allCases, id: \.rawValue) { level in
+                            Button("Уровень \(level.rawValue) (\(countWords(level: level)))") {
+                                changeFilter(to: .level(level))
+                            }
+                            .disabled(countWords(level: level) == 0)
                         }
                     } label: {
                         HStack(spacing: 6) {
@@ -273,6 +284,10 @@ struct InputFlashcardsView: View {
         return isCorrect ? Color.green : Color.red
     }
     
+    private func countWords(level: CEFRLevel) -> Int {
+        allWords.filter { $0.cefrLevel == level.rawValue }.count
+    }
+    
     private func changeFilter(to filter: InputFlashcardsFilter) {
         currentFilter = filter
         correctCount = 0
@@ -291,6 +306,8 @@ struct InputFlashcardsView: View {
             sessionWords = allWords.filter { $0.category?.id == catID }.shuffled()
         case .mistakes:
             sessionWords = allWords.filter { $0.isMistake }.shuffled()
+        case .level(let level):
+            sessionWords = allWords.filter { $0.cefrLevel == level.rawValue }.shuffled()
         }
         
         currentIndex = 0

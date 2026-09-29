@@ -6,6 +6,7 @@ enum FlashcardsFilter: Equatable {
     case all           // Все слова подряд
     case category(Category)
     case mistakes      // Ошибки
+    case level(CEFRLevel)   // новая строка
 }
 
 struct FlashcardsView: View {
@@ -62,6 +63,8 @@ struct FlashcardsView: View {
         case .all: return "Все слова"
         case .category(let cat): return cat.name
         case .mistakes: return "⚠️ Ошибки (\(mistakeWordsCount))"
+        case .level(let level): return "Уровень \(level.rawValue)"
+        
         }
     }
     
@@ -93,6 +96,15 @@ struct FlashcardsView: View {
                     
                     ForEach(categories) { category in
                         Button("\(category.name) (\(countWords(for: category)))") { changeFilter(to: .category(category)) }
+                    }
+                    // ↓ новый блок
+                    Divider()
+                    
+                    ForEach(CEFRLevel.allCases, id: \.rawValue) { level in
+                        Button("Уровень \(level.rawValue) (\(countWords(level: level)))") {
+                            changeFilter(to: .level(level))
+                        }
+                        .disabled(countWords(level: level) == 0)
                     }
                 } label: {
                     HStack(spacing: 4) {
@@ -223,6 +235,10 @@ struct FlashcardsView: View {
         }
     }
     
+    private func countWords(level: CEFRLevel) -> Int {
+        allWords.filter { $0.cefrLevel == level.rawValue }.count
+    }
+    
     private func changeFilter(to filter: FlashcardsFilter) {
         currentFilter = filter
         isAnswerRevealed = false
@@ -242,6 +258,8 @@ struct FlashcardsView: View {
             sessionWords = allWords.filter { $0.category?.id == catID }.shuffled()
         case .mistakes:
             sessionWords = allWords.filter { $0.isMistake }.shuffled()
+        case .level(let level):
+            sessionWords = allWords.filter { $0.cefrLevel == level.rawValue }.shuffled()
         }
         currentIndex = 0
     }
