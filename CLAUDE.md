@@ -6,8 +6,8 @@
 - Target: iOS 17+ / macOS
 
 ## Build and Test Commands
-- Build: xcodebuild -scheme "My App" -destination "platform=iOS Simulator,name=iPhone 12" build
-- Test: xcodebuild -scheme "My App" -destination "platform=iOS Simulator,name=iPhone 12" test
+- Build: xcodebuild -project myProject.xcodeproj -scheme myProject -destination "platform=iOS Simulator,name=iPhone 16e,OS=18.6" build
+- Test: xcodebuild -project myProject.xcodeproj -scheme myProject -destination "platform=iOS Simulator,name=iPhone 16e,OS=18.6" test
 
 ## Code Style Guide
 - Use modern Swift concurrency (async/await), avoid completion handlers.

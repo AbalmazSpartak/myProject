@@ -5,9 +5,9 @@ import MultipeerConnectivity
 @MainActor
 final class MultipeerRaceManager: NSObject, ObservableObject {
     private let serviceType = "wl-race"
-    private let myPeerID = MCPeerID(displayName: UIDevice.current.name)
-    
-    private var session: MCSession!
+    private var myPeerID: MCPeerID
+
+    private var session: MCSession
     private var advertiser: MCNearbyServiceAdvertiser?
     private var browser: MCNearbyServiceBrowser?
     
@@ -20,10 +20,28 @@ final class MultipeerRaceManager: NSObject, ObservableObject {
     
     var myName: String { myPeerID.displayName }
     
-    override init() {
+    init(playerName: String = "Игрок") {
+        myPeerID = MCPeerID(displayName: Self.uniqueDisplayName(for: playerName))
+        session = MCSession(peer: myPeerID, securityIdentity: nil, encryptionPreference: .none)
         super.init()
+        session.delegate = self
+    }
+
+    // Игроки различаются по displayName, поэтому к имени из профиля добавляется
+    // короткий суффикс: иначе два "Студента" (или два "iPhone") путают прогресс
+    func setPlayerName(_ name: String) {
+        guard advertiser == nil, browser == nil else { return }
+        session.disconnect()
+        myPeerID = MCPeerID(displayName: Self.uniqueDisplayName(for: name))
         session = MCSession(peer: myPeerID, securityIdentity: nil, encryptionPreference: .none)
         session.delegate = self
+    }
+
+    private static func uniqueDisplayName(for name: String) -> String {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Лимит MCPeerID — 63 байта UTF-8, кириллица занимает по 2 байта на символ
+        let base = trimmed.isEmpty ? "Игрок" : String(trimmed.prefix(20))
+        return "\(base) #\(UUID().uuidString.prefix(4))"
     }
     
     // MARK: - Хост
@@ -49,6 +67,8 @@ final class MultipeerRaceManager: NSObject, ObservableObject {
     func stop() {
         advertiser?.stopAdvertisingPeer()
         browser?.stopBrowsingForPeers()
+        advertiser = nil
+        browser = nil
         session.disconnect()
     }
     

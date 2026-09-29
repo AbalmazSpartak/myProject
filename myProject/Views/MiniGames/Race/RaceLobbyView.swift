@@ -5,7 +5,8 @@ import MultipeerConnectivity
 struct RaceLobbyView: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var allWords: [Word]
-    
+    @Query private var profiles: [UserProfile]
+
     @StateObject private var manager = MultipeerRaceManager()
     @State private var mode: LobbyMode = .choosing
     @State private var showEmptyPoolAlert = false
@@ -27,6 +28,9 @@ struct RaceLobbyView: View {
                 }
             }
             .padding()
+            .onAppear {
+                manager.setPlayerName(profiles.first?.name ?? "Игрок")
+            }
             .navigationTitle("Гонка слов")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

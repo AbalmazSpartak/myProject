@@ -24,15 +24,29 @@ extension Color {
 struct AppThemeModifier: ViewModifier {
     @AppStorage("app_theme") private var appTheme: String = "system"
 
+    // preferredColorScheme не обновляет уже открытые fullScreenCover/sheet
+    // и не сбрасывается обратно на системную тему, поэтому стиль задаётся
+    // всему окну — его сразу наследуют все экраны, включая модальные
     func body(content: Content) -> some View {
-        content.preferredColorScheme(resolvedScheme)
+        content
+            .onAppear(perform: applyThemeToWindows)
+            .onChange(of: appTheme) { _, _ in applyThemeToWindows() }
     }
 
-    private var resolvedScheme: ColorScheme? {
+    private var resolvedStyle: UIUserInterfaceStyle {
         switch appTheme {
         case "light": return .light
         case "dark": return .dark
-        default: return nil
+        default: return .unspecified
+        }
+    }
+
+    private func applyThemeToWindows() {
+        let windows = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+        for window in windows {
+            window.overrideUserInterfaceStyle = resolvedStyle
         }
     }
 }

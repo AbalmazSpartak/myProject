@@ -36,9 +36,10 @@ final class DataPreloader {
                     russian: dto.russian,
                     transcription: dto.transcription,
                     example: dto.example,
-                    category: category
+                    category: category,
+                    cefrLevel: dto.cefrLevel
                 )
-                newWord.cefrLevel = dto.cefrLevel
+                context.insert(newWord)
             }
             try context.save()
         } catch {
