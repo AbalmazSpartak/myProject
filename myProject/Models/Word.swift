@@ -43,6 +43,12 @@ class Word {
     var lapses: Int = 0
     var lastReview: Date? = nil
 
+    // MARK: - Картинка из интернета (кэш)
+    @Attribute(.externalStorage) var imageData: Data? = nil
+    var isImageHidden: Bool = false
+    var imageNotFound: Bool = false   // поиск ничего не дал — повторно не ищем
+    var imageVariant: Int = 0         // номер кандидата, растёт при «обновить»
+
     init(english: String, russian: String, transcription: String = "", example: String = "", category: Category? = nil, cefrLevel: String = "A1") {
         self.english = english
         self.russian = russian

@@ -9,7 +9,8 @@ enum ActiveScreen: Identifiable {
     case dictionary
     case tetris
     case race
-    
+    case help
+
     var id: String { "\(self)" }
 }
 
@@ -181,6 +182,14 @@ struct ContentView: View {
                                 activeScreen = .dictionary
                             }
 
+                            MenuCardButton(
+                                title: "Справка",
+                                icon: "questionmark.circle.fill",
+                                themeColor: .gray
+                            ) {
+                                activeScreen = .help
+                            }
+
                         }
                         .padding(.horizontal, 20)
                         
@@ -205,6 +214,8 @@ struct ContentView: View {
                     TetrisView()
                 case .race:
                     RaceLobbyView()
+                case .help:
+                    HelpView()
                 }
             }
         }
