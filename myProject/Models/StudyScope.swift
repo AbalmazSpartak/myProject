@@ -14,9 +14,15 @@ struct StudyScope: Equatable {
     var disabledPartsOfSpeech: Set<String> = []
     var disabledTopics: Set<String> = []
     var includeCustomWords = true
+    /// Отмеченные свои словари (WordList.id). Если есть хоть один — учим только их слова, остальные фильтры не действуют
+    var enabledLists: Set<UUID> = []
 
     /// `ignoring` — проверить слово без одного из фильтров (для счётчиков в настройках)
     func includes(_ word: Word, ignoring dimension: Dimension? = nil) -> Bool {
+        // Счётчики фильтров (dimension != nil) показывают числа без учёта своих словарей
+        if !enabledLists.isEmpty, dimension == nil {
+            return word.lists.contains { enabledLists.contains($0.id) }
+        }
         // Свои слова пользователя управляются одной галочкой «Мои слова»
         if word.isCustom { return includeCustomWords }
         if dimension != .level, disabledLevels.contains(word.cefrLevel) { return false }
@@ -26,7 +32,7 @@ struct StudyScope: Equatable {
     }
 
     var isEverythingEnabled: Bool {
-        disabledLevels.isEmpty && disabledPartsOfSpeech.isEmpty && disabledTopics.isEmpty && includeCustomWords
+        disabledLevels.isEmpty && disabledPartsOfSpeech.isEmpty && disabledTopics.isEmpty && includeCustomWords && enabledLists.isEmpty
     }
 
     // MARK: - Группы
@@ -70,6 +76,7 @@ extension StudyScope: RawRepresentable {
         var disabledPartsOfSpeech: [String]
         var disabledTopics: [String]
         var includeCustomWords: Bool
+        var enabledLists: [UUID]?   // необязательное — старые сохранённые настройки без него
     }
 
     init?(rawValue: String) {
@@ -81,7 +88,8 @@ extension StudyScope: RawRepresentable {
             disabledLevels: Set(stored.disabledLevels),
             disabledPartsOfSpeech: Set(stored.disabledPartsOfSpeech),
             disabledTopics: Set(stored.disabledTopics),
-            includeCustomWords: stored.includeCustomWords
+            includeCustomWords: stored.includeCustomWords,
+            enabledLists: Set(stored.enabledLists ?? [])
         )
     }
 
@@ -90,7 +98,8 @@ extension StudyScope: RawRepresentable {
             disabledLevels: disabledLevels.sorted(),
             disabledPartsOfSpeech: disabledPartsOfSpeech.sorted(),
             disabledTopics: disabledTopics.sorted(),
-            includeCustomWords: includeCustomWords
+            includeCustomWords: includeCustomWords,
+            enabledLists: enabledLists.sorted { $0.uuidString < $1.uuidString }
         )
         guard let data = try? JSONEncoder().encode(stored) else { return "" }
         return String(decoding: data, as: UTF8.self)

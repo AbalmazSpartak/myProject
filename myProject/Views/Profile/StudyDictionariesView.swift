@@ -6,6 +6,7 @@ struct StudyDictionariesView: View {
     @AppStorage(StudyScope.storageKey) private var scope = StudyScope()
     @Environment(\.modelContext) private var modelContext
     @State private var allWords: [Word] = []
+    @Query(sort: \WordList.createdAt, order: .reverse) private var lists: [WordList]
 
     private struct ScopeGroup: Identifiable {
         let key: String
@@ -27,20 +28,38 @@ struct StudyDictionariesView: View {
                 Text("Слово попадает в тренировки, если отмечены его уровень, часть речи и тема. Например, уровень A1 и только «Глаголы» — это глаголы A1.")
             }
 
-            Section("Уровни") {
-                ForEach(levelGroups) { group in
-                    checkRow(group, isOn: !scope.disabledLevels.contains(group.key)) {
-                        scope.disabledLevels.formSymmetricDifference([group.key])
+            if !lists.isEmpty {
+                Section {
+                    ForEach(lists) { list in
+                        checkRow(ScopeGroup(key: list.id.uuidString, title: list.name, count: list.words.count),
+                                 isOn: scope.enabledLists.contains(list.id)) {
+                            scope.enabledLists.formSymmetricDifference([list.id])
+                        }
                     }
-                }
-                checkRow(ScopeGroup(key: "custom", title: "Мои слова", count: allWords.filter(\.isCustom).count),
-                         isOn: scope.includeCustomWords) {
-                    scope.includeCustomWords.toggle()
+                } header: {
+                    Text("Мои словари")
+                } footer: {
+                    Text("Если отмечен хотя бы один свой словарь, тренировки идут только по его словам — фильтры ниже не действуют.")
                 }
             }
 
-            groupSection("Части речи", groups: partOfSpeechGroups, disabled: \.disabledPartsOfSpeech)
-            groupSection("Темы", groups: topicGroups, disabled: \.disabledTopics)
+            Group {
+                Section("Уровни") {
+                    ForEach(levelGroups) { group in
+                        checkRow(group, isOn: !scope.disabledLevels.contains(group.key)) {
+                            scope.disabledLevels.formSymmetricDifference([group.key])
+                        }
+                    }
+                    checkRow(ScopeGroup(key: "custom", title: "Мои слова", count: allWords.filter(\.isCustom).count),
+                             isOn: scope.includeCustomWords) {
+                        scope.includeCustomWords.toggle()
+                    }
+                }
+
+                groupSection("Части речи", groups: partOfSpeechGroups, disabled: \.disabledPartsOfSpeech)
+                groupSection("Темы", groups: topicGroups, disabled: \.disabledTopics)
+            }
+            .disabled(!scope.enabledLists.isEmpty)
         }
         .navigationTitle("Словари")
         .onAppear { allWords = modelContext.fetchAllWords() }

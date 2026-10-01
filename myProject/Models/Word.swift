@@ -36,6 +36,7 @@ class Word {
     var partOfSpeech: String = ""   // n., v., adj., prep. …
     var tags: String = ""           // доп. теги из мастер-базы через запятую (Oxford …)
     var isCustom: Bool = false      // добавлено пользователем — пересев базы не трогает
+    var lists: [WordList] = []      // свои словари пользователя, в которых состоит слово
     
     // MARK: - FSRS параметры
     var state: FSRSState = FSRSState.new
