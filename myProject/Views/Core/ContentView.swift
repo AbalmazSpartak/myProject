@@ -5,6 +5,7 @@ enum ActiveScreen: Identifiable {
     case profile
     case flashcardsFSRS
     case quiz
+    case cloze
     case inputCards
     case dictionary
     case tetris
@@ -96,6 +97,14 @@ struct ContentView: View {
                                             themeColor: .purple
                                         ) {
                                             activeScreen = .quiz
+                                        }
+                                        
+                                        MenuCardButton(
+                                            title: "Слово в контексте",
+                                            icon: "text.insert",
+                                            themeColor: .pink
+                                        ) {
+                                            activeScreen = .cloze
                                         }
                                     }
                                     .transition(.asymmetric(
@@ -203,6 +212,8 @@ struct ContentView: View {
                     FlashcardsView()
                 case .quiz:
                     QuizView()
+                case .cloze:
+                    ClozeView()
                 case .inputCards:
                     InputFlashcardsView()
                 case .dictionary:

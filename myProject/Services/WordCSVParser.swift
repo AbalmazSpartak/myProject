@@ -32,6 +32,19 @@ enum WordCSVParser {
         }
     }
 
+    /// Строка мастер-базы для слова — чтобы перенести правку из приложения в таблицу
+    static func line(for word: Word) -> String {
+        let fields = [
+            word.english, word.partOfSpeech, Word.bareTranscription(word.transcription), word.russian,
+            word.example, word.cefrLevel, word.category?.name ?? "", word.tags
+        ]
+        return fields.map { field in
+            guard field.contains(where: { ",\"\n".contains($0) }) else { return field }
+            return "\"" + field.replacingOccurrences(of: "\"", with: "\"\"") + "\""
+        }
+        .joined(separator: ",")
+    }
+
     // MARK: - RFC 4180
 
     private static func parseRows(_ text: String) -> [[String]] {

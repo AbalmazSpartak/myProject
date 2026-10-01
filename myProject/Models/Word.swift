@@ -79,6 +79,23 @@ extension Word {
         return bare.isEmpty ? "" : "/\(bare)/"
     }
 
+    /// Пример без разметки — для озвучки
+    var plainExample: String {
+        example.replacingOccurrences(of: "<b>", with: "").replacingOccurrences(of: "</b>", with: "")
+    }
+
+    /// Пример, разрезанный по первому выделенному слову: "I eat an <b>apple</b>." → ("I eat an ", "apple", ".")
+    var clozeParts: (before: String, answer: String, after: String)? {
+        guard let open = example.range(of: "<b>"),
+              let close = example.range(of: "</b>", range: open.upperBound..<example.endIndex) else {
+            return nil
+        }
+        let answer = String(example[open.upperBound..<close.lowerBound])
+        guard !answer.trimmingCharacters(in: .whitespaces).isEmpty else { return nil }
+        let strip = { (s: Substring) in String(s).replacingOccurrences(of: "<b>", with: "").replacingOccurrences(of: "</b>", with: "") }
+        return (strip(example[..<open.lowerBound]), answer, strip(example[close.upperBound...]))
+    }
+
     /// Пример с целевым словом, выделенным жирным (в базе — <b>слово</b>)
     var attributedExample: AttributedString {
         var result = AttributedString()
