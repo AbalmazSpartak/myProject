@@ -20,6 +20,7 @@ struct DictionaryView: View {
     @State private var isShowingAddCategoryAlert = false
     @State private var newCategoryName = ""
     @State private var wordToEdit: Word?
+    @State private var isShowingSearch = false
     
     @State private var newEnglish = ""
     @State private var newTranscription = ""
@@ -137,6 +138,9 @@ struct DictionaryView: View {
         .sheet(item: $wordToEdit) { word in
             EditWordView(word: word)
         }
+        .sheet(isPresented: $isShowingSearch) {
+            WordSearchView()
+        }
     }
 
     
@@ -152,10 +156,18 @@ struct DictionaryView: View {
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(.brandDark)
             Spacer()
-            Button(action: { isShowingManageCategories = true }) {
-                Image(systemName: "doc.badge.plus")
-                    .font(.system(size: 20))
-                    .foregroundColor(.orange)
+            HStack(spacing: 18) {
+                Button(action: { isShowingSearch = true }) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 20))
+                        .foregroundColor(.orange)
+                }
+                .accessibilityLabel("Поиск слов")
+                Button(action: { isShowingManageCategories = true }) {
+                    Image(systemName: "doc.badge.plus")
+                        .font(.system(size: 20))
+                        .foregroundColor(.orange)
+                }
             }
         }
         .padding(.horizontal, 16)

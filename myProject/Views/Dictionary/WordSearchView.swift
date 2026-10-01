@@ -1,14 +1,16 @@
-#if DEBUG
 import SwiftUI
 import SwiftData
 
-/// Раздел разработчика → быстрый поиск слова и его правка
-struct DeveloperWordSearchView: View {
+/// Словарь → поиск слова по всей базе и его правка
+struct WordSearchView: View {
+    @Environment(\.dismiss) private var dismiss
     @Query(sort: \Word.english) private var allWords: [Word]
 
     @State private var query = ""
     @State private var editingWord: Word?
+    #if DEBUG
     @State private var copiedWordID: PersistentIdentifier?
+    #endif
 
     private let resultLimit = 100
 
@@ -30,35 +32,47 @@ struct DeveloperWordSearchView: View {
     }
 
     var body: some View {
-        List {
-            if query.trimmingCharacters(in: .whitespaces).isEmpty {
-                Text("Введите слово на английском или русском. Всего слов: \(allWords.count)")
-                    .foregroundStyle(.secondary)
-            } else if results.isEmpty {
-                Text("Ничего не найдено")
-                    .foregroundStyle(.secondary)
-            } else {
-                Section(footer: footer) {
-                    ForEach(results) { word in
-                        row(for: word)
+        NavigationStack {
+            List {
+                if query.trimmingCharacters(in: .whitespaces).isEmpty {
+                    Text("Введите слово на английском или русском. Всего слов: \(allWords.count)")
+                        .foregroundStyle(.secondary)
+                } else if results.isEmpty {
+                    Text("Ничего не найдено")
+                        .foregroundStyle(.secondary)
+                } else {
+                    Section(footer: footer) {
+                        ForEach(results) { word in
+                            row(for: word)
+                        }
                     }
                 }
             }
-        }
-        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Поиск слова")
-        .autocorrectionDisabled()
-        .textInputAutocapitalization(.never)
-        .navigationTitle("Поиск и правка слов")
-        .navigationBarTitleDisplayMode(.inline)
-        .sheet(item: $editingWord) { word in
-            EditWordView(word: word)
+            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Поиск слова")
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
+            .navigationTitle("Поиск слов")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Готово") { dismiss() }.bold()
+                }
+            }
+            .sheet(item: $editingWord) { word in
+                EditWordView(word: word)
+            }
         }
     }
 
+    @ViewBuilder
     private var footer: some View {
-        Text(results.count == resultLimit
-             ? "Показаны первые \(resultLimit). Уточните запрос."
-             : "Правка меняет слово только на этом устройстве. Чтобы она не потерялась при перезагрузке словаря, скопируйте CSV-строку в мастер-таблицу.")
+        if results.count == resultLimit {
+            Text("Показаны первые \(resultLimit). Уточните запрос.")
+        } else {
+            #if DEBUG
+            Text("Правка меняет слово только на этом устройстве. Чтобы она не потерялась при перезагрузке словаря, скопируйте CSV-строку (свайп влево) в мастер-базу.")
+            #endif
+        }
     }
 
     private func row(for word: Word) -> some View {
@@ -76,13 +90,16 @@ struct DeveloperWordSearchView: View {
                 if !word.example.isEmpty {
                     Text(word.attributedExample).font(.caption).foregroundStyle(.secondary).lineLimit(2)
                 }
+                #if DEBUG
                 if copiedWordID == word.persistentModelID {
                     Label("CSV-строка скопирована", systemImage: "checkmark")
                         .font(.caption.bold())
                         .foregroundStyle(.green)
                 }
+                #endif
             }
         }
+        #if DEBUG
         .swipeActions(edge: .trailing) {
             Button { copyCSV(of: word) } label: {
                 Label("CSV", systemImage: "doc.on.doc")
@@ -93,12 +110,14 @@ struct DeveloperWordSearchView: View {
             Button { editingWord = word } label: { Label("Редактировать", systemImage: "pencil") }
             Button { copyCSV(of: word) } label: { Label("Скопировать CSV-строку", systemImage: "doc.on.doc") }
         }
+        #endif
     }
 
+    #if DEBUG
     private func copyCSV(of word: Word) {
         UIPasteboard.general.string = WordCSVParser.line(for: word)
         copiedWordID = word.persistentModelID
         UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
+    #endif
 }
-#endif

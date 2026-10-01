@@ -27,14 +27,6 @@ struct DeveloperView: View {
                     LabeledContent("Слов с ошибками", value: "\(allWords.filter { $0.isMistake }.count)")
                 }
                 
-                Section {
-                    NavigationLink {
-                        DeveloperWordSearchView()
-                    } label: {
-                        Label("Поиск и правка слов", systemImage: "magnifyingglass")
-                    }
-                }
-
                 Section("Уровни CEFR") {
                     ForEach(CEFRLevel.allCases, id: \.rawValue) { level in
                         LabeledContent(level.rawValue, value: "\(allWords.filter { $0.cefrLevel == level.rawValue }.count)")
