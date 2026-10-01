@@ -4,11 +4,12 @@ import Combine
 
 struct TetrisView: View {
     @Environment(\.dismiss) private var dismiss
-    @Query private var allWords: [Word]
+    @Environment(\.modelContext) private var modelContext
+    @State private var allWords: [Word] = []
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
 
     /// Слова из словарей, выбранных в настройках
-    private var studyWords: [Word] { allWords.filter { studyScope.includes($0) } }
+    @State private var studyWords: [Word] = []
     @Query private var profiles: [UserProfile]
     
     private var userProfile: UserProfile? {
@@ -271,6 +272,7 @@ struct TetrisView: View {
             }
         }
         .onAppear {
+            loadWords()
             restartGame()
         }
         .onReceive(timer) { _ in
@@ -451,6 +453,11 @@ struct TetrisView: View {
         }
     }
     
+    private func loadWords() {
+        allWords = modelContext.fetchAllWords()
+        studyWords = allWords.filter { studyScope.includes($0) }
+    }
+
     private func pickRandomWord() {
         // Если в настройках не выбрано ни одного слова, играем по всему словарю
         let pool = studyWords.isEmpty ? allWords : studyWords

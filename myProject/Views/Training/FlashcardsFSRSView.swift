@@ -3,11 +3,11 @@ import SwiftData
 
 struct FlashcardsFSRSView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var allWords: [Word]
+    @State private var allWords: [Word] = []
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
 
     /// Слова из словарей, выбранных в настройках
-    private var studyWords: [Word] { allWords.filter { studyScope.includes($0) } }
+    @State private var studyWords: [Word] = []
     
     @State private var dueWords: [Word] = []
     @State private var currentIndex = 0
@@ -72,7 +72,13 @@ struct FlashcardsFSRSView: View {
         .onAppear(perform: loadDueWords)
     }
     
+    private func loadWords() {
+        allWords = modelContext.fetchAllWords()
+        studyWords = allWords.filter { studyScope.includes($0) }
+    }
+
     private func loadDueWords() {
+        loadWords()
         let now = Date()
         dueWords = studyWords.filter { $0.state == .new || $0.dueDate <= now }
             .sorted { $0.dueDate < $1.dueDate }

@@ -4,9 +4,11 @@ import SwiftData
 /// Словарь → поиск слова по всей базе и его правка
 struct WordSearchView: View {
     @Environment(\.dismiss) private var dismiss
-    @Query(sort: \Word.english) private var allWords: [Word]
+    @Environment(\.modelContext) private var modelContext
 
     @State private var query = ""
+    @State private var results: [Word] = []
+    @State private var index: [SearchEntry] = []
     @State private var editingWord: Word?
     #if DEBUG
     @State private var copiedWordID: PersistentIdentifier?
@@ -14,28 +16,46 @@ struct WordSearchView: View {
 
     private let resultLimit = 100
 
+    /// Слово с заранее приведёнными к нижнему регистру полями — чтобы не делать это на каждое нажатие клавиши
+    private struct SearchEntry {
+        let word: Word
+        let english: String
+        let russian: String
+    }
+
+    private static func normalized(_ text: String) -> String {
+        text.lowercased().replacingOccurrences(of: "ё", with: "е")
+    }
+
+    /// Читаем слова из базы один раз, а не через @Query: тот перечитывает все слова при каждой перерисовке (~0,6 с на букву)
+    private func rebuildIndex() {
+        let words = (try? modelContext.fetch(FetchDescriptor<Word>(sortBy: [SortDescriptor(\.english)]))) ?? []
+        index = words.map { SearchEntry(word: $0, english: Self.normalized($0.english), russian: Self.normalized($0.russian)) }
+        updateResults()
+    }
+
     /// Сначала слова, начинающиеся с запроса, затем содержащие его (по английскому и русскому)
-    private var results: [Word] {
-        let q = query.trimmingCharacters(in: .whitespaces).lowercased()
-        guard !q.isEmpty else { return [] }
+    private func updateResults() {
+        let q = Self.normalized(query.trimmingCharacters(in: .whitespaces))
+        guard !q.isEmpty else { results = []; return }
         var prefix: [Word] = []
         var contains: [Word] = []
-        for word in allWords {
-            let english = word.english.lowercased()
-            if english.hasPrefix(q) {
-                prefix.append(word)
-            } else if english.contains(q) || word.russian.lowercased().contains(q) {
-                contains.append(word)
+        for entry in index {
+            if entry.english.hasPrefix(q) {
+                prefix.append(entry.word)
+                if prefix.count == resultLimit { break }
+            } else if contains.count < resultLimit, entry.english.contains(q) || entry.russian.contains(q) {
+                contains.append(entry.word)
             }
         }
-        return Array((prefix + contains).prefix(resultLimit))
+        results = Array((prefix + contains).prefix(resultLimit))
     }
 
     var body: some View {
         NavigationStack {
             List {
                 if query.trimmingCharacters(in: .whitespaces).isEmpty {
-                    Text("Введите слово на английском или русском. Всего слов: \(allWords.count)")
+                    Text("Введите слово на английском или русском. Всего слов: \(index.count)")
                         .foregroundStyle(.secondary)
                 } else if results.isEmpty {
                     Text("Ничего не найдено")
@@ -58,7 +78,9 @@ struct WordSearchView: View {
                     Button("Готово") { dismiss() }.bold()
                 }
             }
-            .sheet(item: $editingWord) { word in
+            .onChange(of: query) { updateResults() }
+            .task { rebuildIndex() }
+            .sheet(item: $editingWord, onDismiss: rebuildIndex) { word in
                 EditWordView(word: word)
             }
         }

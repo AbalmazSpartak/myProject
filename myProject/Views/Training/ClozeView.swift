@@ -6,7 +6,8 @@ struct ClozeView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
 
-    @Query private var allWords: [Word]
+    @Environment(\.modelContext) private var modelContext
+    @State private var allWords: [Word] = []
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
 
     @State private var sessionWords: [Word] = []
@@ -43,7 +44,10 @@ struct ClozeView: View {
             Spacer()
         }
         .background(Color.brandBackground.ignoresSafeArea())
-        .onAppear(perform: startSession)
+        .onAppear {
+            allWords = modelContext.fetchAllWords()
+            startSession()
+        }
     }
 
     // MARK: - Части экрана

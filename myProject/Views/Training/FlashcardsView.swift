@@ -18,11 +18,11 @@ struct FlashcardsView: View {
     @AppStorage("show_word_images") private var showWordImages: Bool = true
 
     @Query(sort: \Category.name) private var categories: [Category]
-    @Query private var allWords: [Word]
+    @State private var allWords: [Word] = []
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
 
     /// Слова из словарей, выбранных в настройках
-    private var studyWords: [Word] { allWords.filter { studyScope.includes($0) } }
+    @State private var studyWords: [Word] = []
     @Query private var profiles: [UserProfile]
     
     @State private var currentFilter: FlashcardsFilter = .due
@@ -248,6 +248,7 @@ struct FlashcardsView: View {
         }
         .background(Color.brandBackground.ignoresSafeArea())
         .onAppear {
+            loadWords()
             generateSession()
         }
         // Картинка грузится заранее, пока пользователь вспоминает перевод
@@ -278,6 +279,11 @@ struct FlashcardsView: View {
         generateSession()
     }
     
+    private func loadWords() {
+        allWords = modelContext.fetchAllWords()
+        studyWords = allWords.filter { studyScope.includes($0) }
+    }
+
     private func generateSession() {
         let now = Date()
         switch currentFilter {

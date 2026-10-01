@@ -4,11 +4,12 @@ import MultipeerConnectivity
 
 struct RaceLobbyView: View {
     @Environment(\.dismiss) private var dismiss
-    @Query private var allWords: [Word]
+    @Environment(\.modelContext) private var modelContext
+    @State private var allWords: [Word] = []
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
 
     /// Слова из словарей, выбранных в настройках
-    private var studyWords: [Word] { allWords.filter { studyScope.includes($0) } }
+    @State private var studyWords: [Word] = []
     @Query private var profiles: [UserProfile]
 
     @StateObject private var manager = MultipeerRaceManager()
@@ -33,6 +34,7 @@ struct RaceLobbyView: View {
             }
             .padding()
             .onAppear {
+                loadWords()
                 manager.setPlayerName(profiles.first?.name ?? "Игрок")
             }
             .navigationTitle("Гонка слов")
@@ -145,6 +147,11 @@ struct RaceLobbyView: View {
         }
     }
     
+    private func loadWords() {
+        allWords = modelContext.fetchAllWords()
+        studyWords = allWords.filter { studyScope.includes($0) }
+    }
+
     private func startRaceAsHost() {
         let generated = RaceWordGenerator.generate(from: studyWords.count >= 4 ? studyWords : allWords)
         guard !generated.isEmpty else {

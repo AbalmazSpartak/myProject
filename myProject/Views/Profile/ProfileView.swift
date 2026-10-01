@@ -6,7 +6,6 @@ struct ProfileView: View {
     @Environment(\.modelContext) private var modelContext
     
     @Query private var profiles: [UserProfile]
-    @Query private var allWords: [Word]
     
     @State private var showSettings = false
     
@@ -81,7 +80,7 @@ struct ProfileView: View {
                 
                 // Общая сводка
                 HStack(spacing: 12) {
-                    summaryCard(title: "Слов в словаре", value: "\(allWords.count)", icon: "book.closed.fill", color: .orange)
+                    summaryCard(title: "Слов в словаре", value: "\((try? modelContext.fetchCount(FetchDescriptor<Word>())) ?? 0)", icon: "book.closed.fill", color: .orange)
                     summaryCard(title: "Общая точность", value: "\(winRate)%", icon: "target", color: .green)
                     summaryCard(title: "Всего ответов", value: "\(profile.totalAnswers)", icon: "checkmark.seal.fill", color: .purple)
                 }

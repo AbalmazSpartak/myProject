@@ -16,11 +16,11 @@ struct InputFlashcardsView: View {
     @AppStorage("translation_mode") private var translationMode: String = "en_ru"
     
     @Query(sort: \Category.name) private var categories: [Category]
-    @Query private var allWords: [Word]
+    @State private var allWords: [Word] = []
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
 
     /// Слова из словарей, выбранных в настройках
-    private var studyWords: [Word] { allWords.filter { studyScope.includes($0) } }
+    @State private var studyWords: [Word] = []
     @Query private var profiles: [UserProfile]
     
     @State private var currentFilter: InputFlashcardsFilter = .all
@@ -277,6 +277,7 @@ struct InputFlashcardsView: View {
         }
         .background(Color.brandBackground.ignoresSafeArea())
         .onAppear {
+            loadWords()
             generateSession()
         }
     }
@@ -301,6 +302,11 @@ struct InputFlashcardsView: View {
         generateSession()
     }
     
+    private func loadWords() {
+        allWords = modelContext.fetchAllWords()
+        studyWords = allWords.filter { studyScope.includes($0) }
+    }
+
     private func generateSession() {
         switch currentFilter {
         case .all:

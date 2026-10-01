@@ -6,11 +6,12 @@ struct RaceGameView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var manager: MultipeerRaceManager
 
-    @Query private var allWords: [Word]
+    @Environment(\.modelContext) private var modelContext
+    @State private var allWords: [Word] = []
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
 
     /// Слова из словарей, выбранных в настройках
-    private var studyWords: [Word] { allWords.filter { studyScope.includes($0) } }
+    @State private var studyWords: [Word] = []
 
     @State private var players: [RacePlayer] = []
     @State private var currentIndex = 0
@@ -141,7 +142,13 @@ struct RaceGameView: View {
         }
     }
     
+    private func loadWords() {
+        allWords = modelContext.fetchAllWords()
+        studyWords = allWords.filter { studyScope.includes($0) }
+    }
+
     private func setupPlayers() {
+        loadWords()
         var initial = [RacePlayer(id: manager.myName, name: manager.myName, isMe: true)]
         for peer in manager.connectedPeers {
             initial.append(RacePlayer(id: peer.displayName, name: peer.displayName))

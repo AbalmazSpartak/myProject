@@ -112,3 +112,11 @@ extension Word {
         return result
     }
 }
+
+extension ModelContext {
+    /// Все слова одним запросом. Экраны берут слова так при открытии, а не через @Query:
+    /// тот перечитывает ~3000 слов при каждой перерисовке — 0,6 с и больше на любое нажатие.
+    func fetchAllWords() -> [Word] {
+        (try? fetch(FetchDescriptor<Word>())) ?? []
+    }
+}

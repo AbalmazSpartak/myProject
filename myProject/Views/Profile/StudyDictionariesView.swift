@@ -4,7 +4,8 @@ import SwiftData
 /// Настройки → Словари: какие уровни, части речи и темы участвуют в тренировках
 struct StudyDictionariesView: View {
     @AppStorage(StudyScope.storageKey) private var scope = StudyScope()
-    @Query private var allWords: [Word]
+    @Environment(\.modelContext) private var modelContext
+    @State private var allWords: [Word] = []
 
     private struct ScopeGroup: Identifiable {
         let key: String
@@ -42,6 +43,7 @@ struct StudyDictionariesView: View {
             groupSection("Темы", groups: topicGroups, disabled: \.disabledTopics)
         }
         .navigationTitle("Словари")
+        .onAppear { allWords = modelContext.fetchAllWords() }
         .navigationBarTitleDisplayMode(.inline)
     }
 
