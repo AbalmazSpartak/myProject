@@ -32,15 +32,12 @@ struct ContentView: View {
                         
                         VStack(spacing: 24) {
                             Spacer()
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                                    .fill(Color(.secondarySystemBackground))
-                                    .frame(width: 90, height: 90)
-                                
-                                Image(systemName: "book.closed.fill")
-                                    .font(.system(size: 44, weight: .regular))
-                                    .foregroundColor(.blue)
-                            }
+                            Image("AppLogo")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 90, height: 90)
+                                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                                .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
                             
                             Text("WordLearner")
                                 .font(.system(size: 34, weight: .heavy, design: .default))
