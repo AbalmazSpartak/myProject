@@ -24,6 +24,7 @@ struct DictionaryView: View {
     @State private var newCategoryName = ""
     @State private var wordToEdit: Word?
     @State private var isShowingSearch = false
+    @State private var isShowingScan = false
     @State private var listToRename: WordList?
     @State private var listToDelete: WordList?
     @State private var listName = ""
@@ -172,6 +173,11 @@ struct DictionaryView: View {
         .sheet(isPresented: $isShowingSearch) {
             WordSearchView()
         }
+        .fullScreenCover(isPresented: $isShowingScan) {
+            TextScanView { list in
+                filter = .list(list)
+            }
+        }
     }
 
     
@@ -194,6 +200,12 @@ struct DictionaryView: View {
                         .foregroundColor(.orange)
                 }
                 .accessibilityLabel("Поиск слов")
+                Button(action: { isShowingScan = true }) {
+                    Image(systemName: "text.viewfinder")
+                        .font(.system(size: 20))
+                        .foregroundColor(.orange)
+                }
+                .accessibilityLabel("Слова из текста")
                 Button(action: { isShowingManageCategories = true }) {
                     Image(systemName: "doc.badge.plus")
                         .font(.system(size: 20))

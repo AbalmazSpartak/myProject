@@ -99,6 +99,10 @@ extension Word {
 
     /// Пример с целевым словом, выделенным жирным (в базе — <b>слово</b>)
     var attributedExample: AttributedString {
+        Word.attributedExample(example)
+    }
+
+    static func attributedExample(_ example: String) -> AttributedString {
         var result = AttributedString()
         var rest = Substring(example)
         while let open = rest.range(of: "<b>"),
