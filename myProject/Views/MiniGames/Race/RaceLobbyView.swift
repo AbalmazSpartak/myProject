@@ -5,6 +5,10 @@ import MultipeerConnectivity
 struct RaceLobbyView: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var allWords: [Word]
+    @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
+
+    /// Слова из словарей, выбранных в настройках
+    private var studyWords: [Word] { allWords.filter { studyScope.includes($0) } }
     @Query private var profiles: [UserProfile]
 
     @StateObject private var manager = MultipeerRaceManager()
@@ -142,7 +146,7 @@ struct RaceLobbyView: View {
     }
     
     private func startRaceAsHost() {
-        let generated = RaceWordGenerator.generate(from: allWords)
+        let generated = RaceWordGenerator.generate(from: studyWords.count >= 4 ? studyWords : allWords)
         guard !generated.isEmpty else {
             showEmptyPoolAlert = true
             return

@@ -7,6 +7,10 @@ struct RaceGameView: View {
     @ObservedObject var manager: MultipeerRaceManager
 
     @Query private var allWords: [Word]
+    @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
+
+    /// Слова из словарей, выбранных в настройках
+    private var studyWords: [Word] { allWords.filter { studyScope.includes($0) } }
 
     @State private var players: [RacePlayer] = []
     @State private var currentIndex = 0
@@ -160,7 +164,7 @@ struct RaceGameView: View {
     }
 
     private func playAgain() {
-        let generated = RaceWordGenerator.generate(from: allWords)
+        let generated = RaceWordGenerator.generate(from: studyWords.count >= 4 ? studyWords : allWords)
         guard !generated.isEmpty else { return }
         manager.startRaceAsHost(with: generated)
     }

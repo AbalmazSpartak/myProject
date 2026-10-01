@@ -17,6 +17,10 @@ struct InputFlashcardsView: View {
     
     @Query(sort: \Category.name) private var categories: [Category]
     @Query private var allWords: [Word]
+    @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
+
+    /// Слова из словарей, выбранных в настройках
+    private var studyWords: [Word] { allWords.filter { studyScope.includes($0) } }
     @Query private var profiles: [UserProfile]
     
     @State private var currentFilter: InputFlashcardsFilter = .all
@@ -33,11 +37,11 @@ struct InputFlashcardsView: View {
     
     private func countWords(for category: Category) -> Int {
         let catID = category.id
-        return allWords.filter { $0.category?.id == catID }.count
+        return studyWords.filter { $0.category?.id == catID }.count
     }
     
     private var mistakeWordsCount: Int {
-        allWords.filter { $0.isMistake }.count
+        studyWords.filter { $0.isMistake }.count
     }
     
     private var currentWord: Word? {
@@ -285,7 +289,7 @@ struct InputFlashcardsView: View {
     }
     
     private func countWords(level: CEFRLevel) -> Int {
-        allWords.filter { $0.cefrLevel == level.rawValue }.count
+        studyWords.filter { $0.cefrLevel == level.rawValue }.count
     }
     
     private func changeFilter(to filter: InputFlashcardsFilter) {
@@ -300,14 +304,14 @@ struct InputFlashcardsView: View {
     private func generateSession() {
         switch currentFilter {
         case .all:
-            sessionWords = allWords.shuffled()
+            sessionWords = studyWords.shuffled()
         case .category(let cat):
             let catID = cat.id
-            sessionWords = allWords.filter { $0.category?.id == catID }.shuffled()
+            sessionWords = studyWords.filter { $0.category?.id == catID }.shuffled()
         case .mistakes:
-            sessionWords = allWords.filter { $0.isMistake }.shuffled()
+            sessionWords = studyWords.filter { $0.isMistake }.shuffled()
         case .level(let level):
-            sessionWords = allWords.filter { $0.cefrLevel == level.rawValue }.shuffled()
+            sessionWords = studyWords.filter { $0.cefrLevel == level.rawValue }.shuffled()
         }
         
         currentIndex = 0

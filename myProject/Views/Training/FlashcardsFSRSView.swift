@@ -4,6 +4,10 @@ import SwiftData
 struct FlashcardsFSRSView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var allWords: [Word]
+    @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
+
+    /// Слова из словарей, выбранных в настройках
+    private var studyWords: [Word] { allWords.filter { studyScope.includes($0) } }
     
     @State private var dueWords: [Word] = []
     @State private var currentIndex = 0
@@ -70,7 +74,7 @@ struct FlashcardsFSRSView: View {
     
     private func loadDueWords() {
         let now = Date()
-        dueWords = allWords.filter { $0.state == .new || $0.dueDate <= now }
+        dueWords = studyWords.filter { $0.state == .new || $0.dueDate <= now }
             .sorted { $0.dueDate < $1.dueDate }
     }
     

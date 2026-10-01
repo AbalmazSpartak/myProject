@@ -10,6 +10,7 @@ struct SettingsView: View {
     @AppStorage("app_theme") private var selectedTheme: String = "system"
     @AppStorage("translation_mode") private var translationMode: String = "en_ru"
     @AppStorage("show_word_images") private var showWordImages: Bool = true
+    @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
 
     @State private var showingResetAlert = false
     @State private var selectedPhotoItem: PhotosPickerItem?
@@ -76,6 +77,12 @@ struct SettingsView: View {
                     .padding(.vertical, 4)
 
                     Toggle("Картинки к словам", isOn: $showWordImages)
+
+                    NavigationLink {
+                        StudyDictionariesView()
+                    } label: {
+                        LabeledContent("Словари", value: studyScope.isEverythingEnabled ? "Все" : "Выбранные")
+                    }
                 }
                 
                 // Оформление

@@ -5,6 +5,10 @@ import Combine
 struct TetrisView: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var allWords: [Word]
+    @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
+
+    /// Слова из словарей, выбранных в настройках
+    private var studyWords: [Word] { allWords.filter { studyScope.includes($0) } }
     @Query private var profiles: [UserProfile]
     
     private var userProfile: UserProfile? {
@@ -448,12 +452,14 @@ struct TetrisView: View {
     }
     
     private func pickRandomWord() {
-        let mistakeWords = allWords.filter { $0.isMistake }
+        // Если в настройках не выбрано ни одного слова, играем по всему словарю
+        let pool = studyWords.isEmpty ? allWords : studyWords
+        let mistakeWords = pool.filter { $0.isMistake }
         
         if !mistakeWords.isEmpty {
             currentWord = mistakeWords.randomElement()
-        } else if !allWords.isEmpty {
-            currentWord = allWords.randomElement()
+        } else if !pool.isEmpty {
+            currentWord = pool.randomElement()
         }
         
         selectedAnswer = nil
