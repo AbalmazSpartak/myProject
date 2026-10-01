@@ -157,8 +157,8 @@ struct QuizView: View {
                     }
                     .padding(.top, 28)
                     
-                    if translationMode == "en_ru" && !word.transcription.isEmpty {
-                        Text(word.transcription)
+                    if translationMode == "en_ru" && !word.displayTranscription.isEmpty {
+                        Text(word.displayTranscription)
                             .font(.system(size: 18, weight: .bold, design: .rounded))
                             .foregroundColor(.orange)
                     }

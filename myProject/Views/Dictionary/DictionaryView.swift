@@ -322,21 +322,17 @@ struct DictionaryView: View {
     private func addNewWord() {
         let trimmedEng = newEnglish.trimmingCharacters(in: .whitespaces)
         let trimmedRus = newRussian.trimmingCharacters(in: .whitespaces)
-        var trans = newTranscription.trimmingCharacters(in: .whitespaces)
-        
+
         guard !trimmedEng.isEmpty && !trimmedRus.isEmpty else { return }
-        
-        if !trans.isEmpty && !trans.hasPrefix("[") {
-            trans = "[\(trans)]"
-        }
-        
+
         let word = Word(
             english: trimmedEng,
             russian: trimmedRus,
-            transcription: trans,
+            transcription: Word.bareTranscription(newTranscription),
             example: newExample.trimmingCharacters(in: .whitespaces),
             category: currentCategoryForNewWord,
-            cefrLevel: newLevel
+            cefrLevel: newLevel,
+            isCustom: true
         )
         
         modelContext.insert(word)

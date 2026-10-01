@@ -33,8 +33,8 @@ struct DeveloperView: View {
                     }
                 }
                 
-                Section(footer: Text("Полностью удаляет слова и категории и заново грузит sample_words.json. Профиль и статистику не трогает.")) {
-                    Button("Перезагрузить словарь из JSON") {
+                Section(footer: Text("Удаляет встроенные слова и заново грузит words.csv. Свои слова пользователя, профиль и статистику не трогает.")) {
+                    Button("Перезагрузить встроенный словарь") {
                         showConfirmReseed = true
                     }
                 }
@@ -85,7 +85,7 @@ struct DeveloperView: View {
             .alert("Перезагрузить словарь?", isPresented: $showConfirmReseed) {
                 Button("Отмена", role: .cancel) {}
                 Button("Перезагрузить", role: .destructive) {
-                    DataPreloader.forceReloadFromJSON(context: modelContext)
+                    DataPreloader.forceReloadBundledWords(context: modelContext)
                     lastActionMessage = "Словарь перезагружен из JSON."
                 }
             }

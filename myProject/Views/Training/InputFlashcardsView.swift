@@ -159,8 +159,8 @@ struct InputFlashcardsView: View {
                             }
                         }
                         
-                        if translationMode == "en_ru" && !word.transcription.isEmpty {
-                            Text(word.transcription)
+                        if translationMode == "en_ru" && !word.displayTranscription.isEmpty {
+                            Text(word.displayTranscription)
                                 .font(.system(size: 16, weight: .semibold, design: .rounded))
                                 .foregroundColor(.orange)
                         }
@@ -223,7 +223,7 @@ struct InputFlashcardsView: View {
                             }
                             
                             if !word.example.isEmpty {
-                                Text("Пример: \(word.example)")
+                                (Text("Пример: ") + Text(word.attributedExample))
                                     .font(.system(size: 13, weight: .regular, design: .rounded))
                                     .italic()
                                     .foregroundColor(.gray)
@@ -367,19 +367,20 @@ struct InputFlashcardsView: View {
         guard !cleanedInput.isEmpty else { return false }
         
         let separators = CharacterSet(charactersIn: ",;/")
-        let rawVariants = target
-            .components(separatedBy: separators)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased().replacingOccurrences(of: "ё", with: "е") }
-            .filter { !$0.isEmpty }
-        
-        // Дополнительно: те же варианты, но без текста в скобках (например, "(не переводится)")
-        let variantsWithoutParentheses = rawVariants.map { variant -> String in
-            var result = variant
-            while let openRange = result.range(of: "("), let closeRange = result.range(of: ")", range: openRange.upperBound..<result.endIndex) {
-                result.removeSubrange(openRange.lowerBound...closeRange.lowerBound)
-            }
-            return result.trimmingCharacters(in: .whitespacesAndNewlines)
+        func variants(of text: String) -> [String] {
+            text.components(separatedBy: separators)
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased().replacingOccurrences(of: "ё", with: "е") }
+                .filter { !$0.isEmpty }
         }
+        let rawVariants = variants(of: target)
+
+        // Дополнительно: варианты без текста в скобках (например, "(не переводится)").
+        // Скобки убираем до разбиения, иначе "статья (в газете/журнале)" разрежется по "/"
+        var withoutParentheses = target
+        while let openRange = withoutParentheses.range(of: "("), let closeRange = withoutParentheses.range(of: ")", range: openRange.upperBound..<withoutParentheses.endIndex) {
+            withoutParentheses.removeSubrange(openRange.lowerBound...closeRange.lowerBound)
+        }
+        let variantsWithoutParentheses = variants(of: withoutParentheses)
         
         let targetVariants = Set(rawVariants + variantsWithoutParentheses).filter { !$0.isEmpty }
         

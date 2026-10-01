@@ -11,7 +11,14 @@ struct WordRowCard: View {
                     Text(word.english)
                         .font(.system(size: 17, weight: .bold, design: .rounded))
                         .foregroundColor(.brandDark)
-                    
+
+                    if !word.partOfSpeech.isEmpty {
+                        Text(word.partOfSpeech)
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .italic()
+                            .foregroundColor(.gray)
+                    }
+
                     if !word.transcription.isEmpty {
                         Text(word.cefrLevel)
                             .font(.system(size: 11, weight: .bold, design: .rounded))
@@ -28,7 +35,7 @@ struct WordRowCard: View {
                     .foregroundColor(.gray)
                 
                 if !word.example.isEmpty {
-                    Text(word.example)
+                    Text(word.attributedExample)
                         .font(.system(size: 13, weight: .regular, design: .rounded))
                         .italic()
                         .foregroundColor(.gray.opacity(0.8))

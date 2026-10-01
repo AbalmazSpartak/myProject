@@ -172,8 +172,8 @@ struct FlashcardsView: View {
                             }
                         }
                         
-                        if translationMode == "en_ru" && !word.transcription.isEmpty {
-                            Text(word.transcription)
+                        if translationMode == "en_ru" && !word.displayTranscription.isEmpty {
+                            Text(word.displayTranscription)
                                 .font(.system(size: 16, weight: .medium, design: .rounded))
                                 .foregroundColor(.orange)
                         }
