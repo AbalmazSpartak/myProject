@@ -20,6 +20,8 @@ struct DictionaryView: View {
     @State private var filteredWords: [Word] = []
     @State private var categoryCounts: [UUID: Int] = [:]
     @State private var mistakeCount = 0
+    /// Слова по написанию (нижний регистр) — чтобы при добавлении брать слово из базы, а не делать дубль
+    @State private var wordsByEnglish: [String: [Word]] = [:]
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
     
     @State private var filter: DictionaryFilter = .general
@@ -55,6 +57,7 @@ struct DictionaryView: View {
         }
         categoryCounts = counts
         mistakeCount = allWords.count(where: \.isMistake)
+        wordsByEnglish = Dictionary(grouping: allWords) { $0.english.lowercased() }
         refilter()
     }
 
@@ -433,6 +436,9 @@ struct DictionaryView: View {
     private var addWordCard: some View {
         VStack(spacing: 14) {
             customTextField(placeholder: "Слово на английском", text: $newEnglish)
+            if !existingMatches.isEmpty {
+                existingMatchesCard
+            }
             customTextField(placeholder: "Транскрипция (необязательно)", text: $newTranscription)
             customTextField(placeholder: "Перевод на русский", text: $newRussian)
             customTextField(placeholder: "Пример фразы (необязательно)", text: $newExample)
@@ -454,10 +460,10 @@ struct DictionaryView: View {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 15)
-                .background(newEnglish.isEmpty || newRussian.isEmpty ? Color.gray.opacity(0.3) : Color.orange)
+                .background(canAddNewWord ? Color.orange : Color.gray.opacity(0.3))
                 .cornerRadius(14)
             }
-            .disabled(newEnglish.isEmpty || newRussian.isEmpty)
+            .disabled(!canAddNewWord)
         }
         .padding(18)
         .background(Color.cardBackground)
@@ -465,6 +471,84 @@ struct DictionaryView: View {
         .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
     }
     
+    /// Такое же слово уже есть (в базе или среди своих) — по написанию без учёта регистра
+    private var existingMatches: [Word] {
+        let key = newEnglish.trimmingCharacters(in: .whitespaces).lowercased()
+        guard !key.isEmpty else { return [] }
+        return wordsByEnglish[key] ?? []
+    }
+
+    private var canAddNewWord: Bool {
+        !newEnglish.trimmingCharacters(in: .whitespaces).isEmpty
+            && !newRussian.trimmingCharacters(in: .whitespaces).isEmpty
+            && existingMatches.isEmpty
+    }
+
+    /// Вместо дубля — взять слово из базы: в свой словарь добавить ссылку, в темах — открыть правку
+    private var existingMatchesCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Уже есть")
+                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .foregroundColor(.orange)
+
+            ForEach(existingMatches.prefix(3)) { word in
+                HStack(alignment: .center, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("\(word.english)\(word.partOfSpeech.isEmpty ? "" : " (\(word.partOfSpeech))") — \(word.russian)")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundColor(.brandDark)
+                        Text(matchDetails(word))
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundColor(.gray)
+                    }
+                    Spacer()
+                    matchAction(for: word)
+                }
+            }
+
+            // Нужного значения нет (bank — «берег», а в базе только «банк») — своё слово, но только явно
+            Button("Другое значение — добавить своё", action: addNewWord)
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundColor(.gray)
+                .disabled(newRussian.trimmingCharacters(in: .whitespaces).isEmpty)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color.orange.opacity(0.08))
+        .cornerRadius(12)
+    }
+
+    private func matchDetails(_ word: Word) -> String {
+        let place = word.category.map { "тема «\($0.name)»" } ?? (word.isCustom ? "ваше слово" : "Общий")
+        return "\(word.cefrLevel) · \(place)"
+    }
+
+    @ViewBuilder
+    private func matchAction(for word: Word) -> some View {
+        if case .list(let list) = filter {
+            if word.lists.contains(where: { $0.id == list.id }) {
+                Text("уже в словаре")
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundColor(.gray)
+            } else {
+                Button("Добавить") { add(word, to: list) }
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundColor(.orange)
+            }
+        } else {
+            Button("Открыть") { wordToEdit = word }
+                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .foregroundColor(.orange)
+        }
+    }
+
+    /// Ссылка на существующее слово в своём словаре — без копии
+    private func add(_ word: Word, to list: WordList) {
+        word.lists.append(list)
+        try? modelContext.save()
+        clearNewWordForm()
+    }
+
     private func customTextField(placeholder: String, text: Binding<String>) -> some View {
         TextField(placeholder, text: text)
             .font(.system(size: 16, weight: .medium, design: .rounded))
@@ -499,11 +583,14 @@ struct DictionaryView: View {
             word.lists.append(list)
         }
         try? modelContext.save()
+        clearNewWordForm()
+    }
+
+    private func clearNewWordForm() {
         newEnglish = ""
         newTranscription = ""
         newRussian = ""
         newExample = ""
-        
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
