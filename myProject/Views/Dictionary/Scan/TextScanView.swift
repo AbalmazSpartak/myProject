@@ -168,7 +168,8 @@ struct TextScanView: View {
     private func findWords() {
         let found = TextWordExtractor.extract(from: text)
         guard !found.isEmpty else {
-            errorMessage = "В тексте не нашлось английских слов."
+            // Английские слова могут быть, но только служебные — сканер их пропускает намеренно
+            errorMessage = "Не нашлось слов для изучения. Сканер берёт существительные, глаголы, прилагательные и наречия, а служебные слова (the, is, this…) пропускает."
             return
         }
         candidates = ScanMatcher.match(found, in: modelContext.fetchAllWords())
