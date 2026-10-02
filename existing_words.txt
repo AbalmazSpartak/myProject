@@ -1,0 +1,3046 @@
+# Слова мастер-базы (myProject/Resources/words.csv) — для сверки новых слов
+# Обновить: python3 scripts/export_word_list.py
+# Значений: 3041, разных слов: 2879; A1 1062, A2 1279, B1 419, B2 281
+# слово | часть речи | уровень | перевод
+
+a | det. | A1 | неопределенный артикль
+abandon | v. | B2 | покидать
+ability | n. | A2 | способность, умение
+able | adj. | A2 | способный (что-то сделать)
+about | adv. | A1 | около, приблизительно
+about | prep. | A1 | о, про
+above | prep. | A1 | над, выше
+abroad | adv. | A2 | за границей, за границу
+absolute | adj. | B1 | абсолютный
+absolutely | adv. | B1 | абсолютно
+absorb | v. | B2 | поглощать, впитывать
+abstract | adj. | B2 | абстрактный
+academic | adj. | B1 | академический
+accept | v. | A2 | принимать, соглашаться
+acceptable | adj. | B1 | приемлемый
+access | n. | B1 | доступ
+accident | n. | A2 | несчастный случай, авария
+accidental | adj. | B2 | случайный
+accommodation | n. | B1 | жилье, размещение
+accompany | v. | B1 | сопровождать
+according to | prep. | A2 | согласно, в соответствии с
+account | n. | B1 | счет, аккаунт
+accountant | n. | B2 | бухгалтер
+accurate | adj. | B1 | точный
+accurately | adv. | B2 | точно, достоверно
+accuse | v. | B1 | обвинять
+achieve | v. | A2 | достигать, добиваться
+achievement | n. | B1 | достижение
+acknowledge | v. | B1 | признавать
+acquire | v. | B1 | приобретать
+across | prep. | A1 | через, на той стороне
+action | n. | A1 | действие
+active | adj. | A2 | активный, деятельный
+activity | n. | A1 | деятельность, занятие
+actor | n. | A1 | актер
+actress | n. | A1 | актриса
+actual | adj. | B2 | фактический, реальный
+actually | adv. | A2 | на самом деле, фактически
+ad | n. | A2 | реклама, объявление
+adapt | v. | A2 | адаптироваться, приспосабливаться
+add | v. | A1 | добавлять
+addiction | n. | A2 | зависимость, вредная привычка
+addition | n. | B1 | дополнение
+additional | adj. | B1 | дополнительный
+address | n. | A1 | адрес
+address | v. | B2 | решать (проблему)
+adequate | adj. | B2 | адекватный, достаточный
+adjust | v. | B2 | регулировать, настраивать
+administration | n. | A2 | администрация, управление
+admire | v. | A2 | восхищаться, любоваться
+admit | v. | A2 | признавать, допускать
+adopt | v. | B1 | принимать
+adult | adj. | A1 | взрослый
+adult | n. | A1 | взрослый
+advance | n. | B1 | продвижение, прогресс
+advanced | adj. | A2 | продвинутый, передовой
+advantage | n. | A2 | преимущество, выгода
+adventure | n. | A2 | приключение
+advertise | v. | A2 | рекламировать
+advertisement | n. | A2 | реклама, объявление
+advice | n. | A1 | совет
+advise | v. | B1 | советовать
+affect | v. | A2 | влиять, воздействовать
+afford | v. | B1 | позволить себе (финансово)
+afraid | adj. | A1 | испуганный, боящийся
+after | prep. | A1 | после, за
+afternoon | n. | A1 | день (после полудня)
+again | adv. | A1 | снова, опять
+against | prep. | A2 | против
+age | n. | A1 | возраст
+aged | adj. | A2 | в возрасте
+agency | n. | B1 | агентство
+agenda | n. | B1 | повестка дня
+agent | n. | A2 | агент, представитель
+aggressive | adj. | B1 | агрессивный
+ago | adv. | A1 | тому назад
+agree | v. | A1 | соглашаться
+agreement | n. | A2 | соглашение, договор
+ahead | adv. | A2 | впереди, вперед
+aid | n. | B1 | помощь
+aim | n. | A2 | цель
+aim | v. | B1 | целиться, стремиться
+air | n. | A1 | воздух
+air conditioning | n. | A2 | кондиционер
+aircraft | n. | B1 | воздушное судно
+airline | n. | A2 | авиакомпания
+airport | n. | A1 | аэропорт
+alarm | n. | A2 | тревога, будильник
+album | n. | A2 | альбом
+alcohol | n. | A2 | алкоголь
+alive | adj. | A2 | живой
+all | det. | A1 | все, всё
+all right | adj. | A2 | в порядке
+allow | v. | A2 | разрешать, позволять
+almost | adv. | A2 | почти
+alone | adj. | A2 | один, в одиночку
+along | prep. | A2 | вдоль, по
+already | adv. | A2 | уже
+also | adv. | A1 | также, тоже
+alter | v. | B1 | изменять
+alternative | n. | A2 | альтернатива
+although | conj. | A2 | хотя, несмотря на то что
+altogether | adv. | B1 | в целом, полностью
+always | adv. | A1 | всегда
+amazed | adj. | B1 | пораженный, изумленный
+amazing | adj. | A1 | удивительный, потрясающий
+ambition | n. | B1 | амбиция, стремление
+ambitious | adj. | B1 | амбициозный
+among | prep. | A2 | среди, между
+amount | n. | A2 | количество, сумма
+an | det. | A1 | неопределенный артикль
+analyse | v. | B1 | анализировать
+analysis | n. | B1 | анализ
+ancient | adj. | A2 | древний, старинный
+and | conj. | A1 | и, а
+anger | n. | B1 | гнев
+angry | adj. | A1 | сердитый, злой
+animal | n. | A1 | животное
+ankle | n. | A2 | лодыжка, щиколотка
+anniversary | n. | A2 | годовщина, юбилей
+announce | v. | A2 | объявлять, заявлять
+announcement | n. | A2 | объявление, извещение
+annoy | v. | A2 | раздражать
+annoyed | adj. | A2 | раздраженный
+annoying | adj. | A2 | раздражающий
+annual | adj. | B1 | ежегодный
+another | det. | A1 | другой, еще один
+answer | n. | A1 | ответ
+answer | v. | A1 | отвечать
+anxious | adj. | A2 | тревожный, беспокоящийся
+any | det. | A1 | любой, какой-нибудь
+anybody | pron. | A1 | кто-нибудь, никто
+anyone | pron. | A1 | кто-нибудь, никто
+anything | pron. | A1 | что-нибудь, ничто
+anyway | adv. | A2 | в любом случае, так или иначе
+anywhere | adv. | A2 | где-нибудь, куда-нибудь
+apartment | n. | A1 | квартира
+apologize | v. | A2 | извиняться
+apparent | adj. | B1 | очевидный
+apparently | adv. | B1 | по-видимому
+appeal | n. | B1 | привлекательность
+appearance | n. | A2 | внешность, появление
+apple | n. | A1 | яблоко
+application | n. | B1 | заявление
+apply | v. | A2 | подавать заявление
+appointment | n. | A2 | встреча, прием (у врача)
+appreciate | v. | B1 | ценить
+approach | n. | B1 | подход
+approach | v. | B2 | приближаться
+appropriate | adj. | B1 | соответствующий
+approval | n. | B1 | одобрение
+approve | v. | B1 | одобрять
+approximately | adv. | B1 | приблизительно
+April | n. | A1 | апрель
+architect | n. | A2 | архитектор
+architecture | n. | B1 | архитектура
+area | n. | A1 | площадь, область, район
+argue | v. | A2 | спорить
+argument | n. | A2 | спор, аргумент
+arise | v. | B1 | возникать
+arm | n. | A1 | рука (от кисти до плеча)
+armed | adj. | B1 | вооруженный
+arms | n. | B1 | оружие
+army | n. | A2 | армия
+around | prep. | A1 | вокруг, около
+arrange | v. | A2 | организовывать
+arrangement | n. | B1 | договоренность
+arrest | v. | A2 | арестовывать
+arrival | n. | A2 | прибытие, приезд
+arrive | v. | A1 | прибывать, приезжать
+art | n. | A1 | искусство
+article | n. | A1 | статья (в газете/журнале)
+artificial | adj. | B2 | искусственный
+artist | n. | A1 | художник, артист
+artistic | adj. | B1 | художественный
+as | prep. | A1 | как, в качестве
+ashamed | adj. | B1 | стыдящийся
+ask | v. | A1 | спрашивать, просить
+asleep | adj. | A2 | спящий
+aspect | n. | B1 | аспект
+assess | v. | B1 | оценивать
+assessment | n. | B1 | оценка
+assignment | n. | B1 | задание
+assist | v. | B1 | содействовать, помогать
+assistance | n. | B2 | помощь
+assistant | n. | A2 | ассистент, помощник
+associate | v. | B1 | ассоциировать
+association | n. | B1 | ассоциация
+assume | v. | B1 | предполагать
+at | prep. | A1 | в, у, около
+athlete | n. | A2 | спортсмен, атлет
+atmosphere | n. | B1 | атмосфера
+attach | v. | A2 | прикреплять, присоединять
+attack | n. | B1 | атака, нападение
+attack | v. | A2 | нападать
+attempt | n. | B1 | попытка
+attend | v. | A2 | посещать, присутствовать
+attention | n. | A2 | внимание
+attitude | n. | A2 | отношение, позиция
+attract | v. | B1 | привлекать
+attraction | n. | B1 | достопримечательность
+attractive | adj. | A2 | привлекательный
+audience | n. | A2 | аудитория, зрители
+August | n. | A1 | август
+aunt | n. | A1 | тётя
+author | n. | A2 | автор
+authority | n. | A2 | власть, авторитет
+autumn | n. | A1 | осень
+available | adj. | A2 | доступный
+average | adj. | A2 | средний
+avoid | v. | A2 | избегать, уклоняться
+award | n. | A2 | награда, премия
+aware | adj. | B1 | осведомленный, знающий
+awareness | n. | B2 | осведомленность
+away | adv. | A1 | прочь, далеко
+awful | adj. | A2 | ужасный, отвратительный
+baby | n. | A1 | младенец, малыш
+back | adv. | A1 | назад
+back | n. | A1 | спина
+background | n. | A2 | фон, задний план
+backward | adv. | A2 | назад, в обратном направлении
+backwards | adv. | B1 | назад, в обратном направлении
+bacteria | n. | B1 | бактерии
+bad | adj. | A1 | плохой
+bag | n. | A1 | сумка, пакет
+baggage | n. | A2 | багаж
+bake | v. | A2 | печь, выпекать
+balance | n. | A2 | баланс, равновесие
+ball | n. | A1 | мяч
+ban | v. | B1 | запрещать
+banana | n. | A1 | банан
+band | n. | A1 | музыкальная группа
+bank | n. | A1 | банк
+bank | n. | A2 | берег (реки)
+bar | n. | A1 | бар, плитка
+bargain | n. | B1 | выгодная покупка, сделка
+barrier | n. | B1 | барьер, преграда
+base | v. | B1 | основывать
+based | adj. | B1 | основанный
+basement | n. | B1 | подвал, цокольный этаж
+basic | adj. | A2 | базовый, основной
+basically | adv. | A2 | в основном, по сути
+basis | n. | B1 | основа, базис
+basketball | n. | A1 | баскетбол
+bath | n. | A1 | ванна
+bathroom | n. | A1 | ванная комната
+battery | n. | A2 | батарейка, аккумулятор
+battle | n. | A2 | сражение, битва
+be | v. | A1 | быть
+beach | n. | A1 | пляж
+bear | v. | B1 | выносить, терпеть
+beat | v. | B1 | победить, обыграть
+beautiful | adj. | A1 | красивый, прекрасный
+beauty | n. | A2 | красота
+because | conj. | A1 | потому что
+become | v. | A1 | становиться
+bed | n. | A1 | кровать
+bedroom | n. | A1 | спальня
+bee | n. | A2 | пчела
+beef | n. | A2 | говядина
+beer | n. | A1 | пиво
+before | prep. | A1 | до, перед
+beg | v. | B1 | умолять, просить
+begin | v. | A1 | начинать
+beginning | n. | A1 | начало
+behave | v. | A2 | вести себя
+behaviour | n. | A2 | поведение
+behind | prep. | A1 | за, сзади
+believe | v. | A1 | верить, полагать
+belong | v. | A2 | принадлежать
+below | prep. | A1 | под, ниже
+belt | n. | A2 | ремень
+bend | v. | B1 | сгибать(ся)
+beneath | prep. | B1 | под, ниже
+beneficial | adj. | B2 | полезный, благоприятный
+benefit | n. | A2 | польза, выгода
+bent | adj. | B1 | изогнутый
+beside | prep. | B1 | рядом с
+besides | prep. | B1 | кроме того, помимо
+best | adj. | A1 | лучший
+bet | v. | B1 | держать пари, ставить
+better | adj. | A1 | лучший, лучше
+between | prep. | A1 | между
+beyond | prep. | B1 | за пределами, дальше
+bias | n. | B2 | предвзятость, уклон
+bicycle | n. | A1 | велосипед
+big | adj. | A1 | большой
+bike | n. | A1 | велосипед
+bill | n. | A1 | счет
+bill | n. | B1 | законопроект
+bin | n. | A2 | мусорное ведро
+biology | n. | A2 | биология
+bird | n. | A1 | птица
+birth | n. | A2 | рождение
+birthday | n. | A1 | день рождения
+biscuit | n. | A1 | печенье
+bit | n. | A2 | кусочек, немного
+bite | v. | A2 | кусать, укусить
+bitter | adj. | A2 | горький
+black | adj. | A1 | черный
+blame | v. | A2 | винить, обвинять
+blank | adj. | A2 | пустой, чистый
+blanket | n. | B1 | одеяло
+blind | adj. | A2 | слепой
+block | n. | A2 | блок, квартал
+block | v. | B1 | блокировать, преграждать
+blog | n. | A1 | блог
+blonde | adj. | A1 | светлый (о волосах)
+blood | n. | A2 | кровь
+blow | v. | A2 | дуть
+blue | adj. | A1 | синий, голубой
+board | n. | A1 | доска
+board | v. | A2 | садиться на борт (самолета/корабля)
+boast | v. | B1 | хвастаться
+boat | n. | A1 | лодка, катер
+body | n. | A1 | тело
+boil | v. | A2 | кипеть, варить
+bold | adj. | B1 | смелый
+bomb | n. | A2 | бомба
+bond | n. | B1 | связь, узы
+bone | n. | A2 | кость
+book | n. | A1 | книга
+book | v. | A1 | бронировать, резервировать
+boost | v. | B2 | повышать, стимулировать
+boot | n. | A1 | ботинок, сапог
+border | n. | A2 | граница
+bored | adj. | A1 | скучающий
+boring | adj. | A1 | скучный
+born | v. | A1 | рожденный
+boss | n. | A2 | босс, начальник
+both | det. | A1 | оба, обе
+bother | v. | A2 | беспокоить, мешать
+bottle | n. | A1 | бутылка
+bound | adj. | B1 | обязанный
+boundary | n. | B2 | граница, рубеж
+bowl | n. | A2 | миска
+box | n. | A1 | коробка
+boy | n. | A1 | мальчик
+boyfriend | n. | A1 | парень
+brain | n. | A2 | мозг
+branch | n. | A2 | ветка, филиал
+brand | n. | B1 | бренд, торговая марка
+brave | adj. | A2 | храбрый, смелый
+bread | n. | A1 | хлеб
+break | n. | A1 | перерыв
+break | v. | A1 | ломать
+breakfast | n. | A1 | завтрак
+breath | n. | B1 | дыхание
+breathe | v. | A2 | дышать
+brick | n. | B1 | кирпич
+bride | n. | A2 | невеста
+bridge | n. | A2 | мост
+brief | adj. | B1 | краткий
+briefly | adv. | B1 | вкратце
+bright | adj. | A2 | яркий, светлый
+brilliant | adj. | A2 | блестящий, отличный
+bring | v. | A1 | приносить, приводить
+broad | adj. | A2 | широкий
+broadcast | v. | B1 | транслировать, вещать
+broaden | v. | B2 | расширять
+brother | n. | A1 | брат
+brown | adj. | A1 | коричневый
+brush | v. | A2 | чистить (щеткой), причесывать
+budget | n. | B1 | бюджет
+build | v. | A1 | строить
+builder | n. | A2 | строитель
+building | n. | A1 | здание
+bullet | n. | B1 | пуля
+bunch | n. | A2 | букет, связка
+burden | n. | B2 | бремя, обуза
+burn | v. | A2 | гореть, жечь, обжигаться
+bury | v. | B1 | хоронить, закопать
+bus | n. | A1 | автобус
+bush | n. | B1 | куст
+business | n. | A1 | бизнес, дело
+busy | adj. | A1 | занятой
+but | conj. | A1 | но
+butcher | n. | A2 | мясник
+butter | n. | A1 | сливочное масло
+buy | v. | A1 | покупать
+by | prep. | A1 | у, около, путем
+cabinet | n. | A2 | шкафчик, комод
+cable | n. | A2 | кабель, шнур
+cafe | n. | A1 | кафе
+cake | n. | A1 | торт, пирожное
+calculate | v. | A2 | рассчитывать, вычислять
+call | n. | A1 | звонок
+call | v. | A1 | звонить, звать
+calm | adj. | A2 | спокойный, тихий
+camera | n. | A1 | фотоаппарат, камера
+campaign | n. | B2 | кампания, акция
+camping | n. | A2 | кемпинг, отдых в палатках
+can | modal v. | A1 | мочь, уметь
+cancel | v. | A2 | отменять, аннулировать
+cancer | n. | A2 | рак (заболевание)
+candidate | n. | A2 | кандидат, соискатель
+candle | n. | A2 | свеча
+cap | n. | A2 | кепка, бейсболка
+capable | adj. | B2 | способный
+capacity | n. | B1 | емкость, вместимость
+capital | n. | A1 | столица
+captain | n. | A2 | капитан, командир
+capture | v. | B1 | запечатлевать
+car | n. | A1 | машина, автомобиль
+card | n. | A1 | карта, карточка
+care | v. | A2 | заботиться, волноваться
+career | n. | A2 | карьера
+careful | adj. | A1 | осторожный
+carefully | adv. | A2 | осторожно, внимательно
+careless | adj. | A2 | невнимательный, беспечный
+carpet | n. | A2 | ковер
+carrot | n. | A1 | морковь
+carry | v. | A1 | нести, носить
+cartoon | n. | A2 | мультфильм
+case | n. | A2 | случай, чехол, дело
+cash | n. | A2 | наличные деньги
+castle | n. | A2 | замок
+cat | n. | A1 | кошка, кот
+catch | v. | A2 | ловить, успевать (на транспорт)
+category | n. | B2 | категория
+cause | v. | A2 | вызывать, быть причиной
+cease | v. | B2 | прекращать
+celebrate | v. | A2 | праздновать
+celebration | n. | A2 | празднование
+celebrity | n. | A2 | знаменитость
+cell | n. | B1 | клетка
+central | adj. | A2 | центральный
+centre | n. | A1 | центр
+century | n. | A2 | век, столетие
+ceremony | n. | A2 | церемония
+certain | adj. | A2 | уверенный, определенный
+certainly | adv. | A2 | конечно, безусловно
+chain | n. | A2 | цепь, цепочка, сеть
+chair | n. | A1 | стул
+chairman | n. | B1 | председатель
+challenge | n. | A2 | вызов, сложная задача
+challenging | adj. | B2 | сложный, требующий усилий
+champion | n. | A2 | чемпион
+chance | n. | A2 | шанс, возможность
+change | n. | A1 | сдача
+change | n. | A1 | изменение
+change | v. | A1 | менять
+character | n. | A2 | персонаж, характер
+characteristic | n. | B1 | характеристика, черта
+charge | v. | A2 | заряжать (устройство), взимать плату
+charity | n. | A2 | благотворительность
+chat | v. | A2 | болтать, переписываться
+cheap | adj. | A1 | дешевый
+cheat | v. | A2 | жульничать, списывать
+check | n. | A1 | чек
+check | v. | A1 | проверять
+cheese | n. | A1 | сыр
+chef | n. | A2 | шеф-повар
+chemistry | n. | A2 | химия
+chest | n. | A2 | грудная клетка
+chicken | n. | A1 | курица
+chief | adj. | A2 | главный, основной
+child | n. | A1 | ребенок
+childhood | n. | A2 | детство
+children | n. | A1 | дети
+chocolate | n. | A1 | шоколад
+choice | n. | A2 | выбор
+choose | v. | A1 | выбирать
+cinema | n. | A1 | кинотеатр
+circle | n. | A2 | круг, окружность
+circumstance | n. | B1 | обстоятельство
+circus | n. | A2 | цирк
+cite | v. | B2 | цитировать, ссылаться
+citizen | n. | B1 | гражданин
+city | n. | A1 | город
+civil | adj. | B1 | гражданский
+clarify | v. | B2 | прояснять, уточнять
+class | n. | A1 | класс, урок
+classic | adj. | B1 | классический
+classify | v. | B2 | классифицировать
+classroom | n. | A1 | классная комната
+clean | adj. | A1 | чистый
+clean | v. | A1 | чистить
+clear | adj. | A1 | ясный, понятный
+clever | adj. | A1 | умный, сообразительный
+climate | n. | A2 | климат
+climb | v. | A2 | карабкаться, подниматься
+clock | n. | A1 | часы
+close | adj. | A1 | близкий
+close | v. | A1 | закрывать
+closed | adj. | A1 | закрытый
+cloth | n. | A2 | ткань, тряпка
+clothes | n. | A1 | одежда
+club | n. | A1 | клуб
+coach | n. | A2 | тренер, междугородний автобус
+coal | n. | A2 | уголь
+coast | n. | A2 | побережье
+coat | n. | A1 | пальто, куртка
+coffee | n. | A1 | кофе
+coin | n. | A2 | монета
+coincidence | n. | B2 | совпадение
+cold | adj. | A1 | холодный
+cold | n. | A1 | холод, простуда
+collapse | v. | B1 | рухнуть, обвалиться
+colleague | n. | B1 | коллега
+collect | v. | A2 | собирать, коллекционировать
+collection | n. | A2 | коллекция
+college | n. | A1 | колледж
+colour | n. | A1 | цвет
+comb | n. | A2 | расческа
+combination | n. | B1 | комбинация, сочетание
+combine | v. | B1 | объединять
+come | v. | A1 | приходить, приезжать
+comedy | n. | A2 | комедия
+comfort | n. | B1 | утешение
+comfortable | adj. | A2 | удобный
+command | n. | B1 | команда, приказ
+commerce | n. | B2 | коммерция, торговля
+commercial | adj. | B1 | коммерческий
+commission | n. | B1 | комиссия
+commit | v. | B1 | совершать (ошибку/преступление)
+commit | v. | B2 | брать на себя обязательство
+commitment | n. | B1 | обязательство
+committee | n. | B1 | комитет
+common | adj. | A1 | общий, распространенный
+commonly | adv. | B1 | обычно, часто
+company | n. | A1 | компания, фирма
+compare | v. | A2 | сравнивать
+comparison | n. | B2 | сравнение
+compete | v. | B2 | соревноваться
+competition | n. | A2 | соревнование, конкурс
+competitive | adj. | B2 | конкурентоспособный
+competitor | n. | B2 | конкурент
+complain | v. | A2 | жаловаться
+complete | v. | A2 | завершать, заполнять
+completely | adv. | A2 | полностью, совершенно
+complex | adj. | A2 | сложный
+complicated | adj. | B1 | запутанный, сложный
+component | n. | B1 | компонент
+computer | n. | A1 | компьютер
+concentrate | v. | A2 | концентрироваться
+concept | n. | B1 | концепция, понятие
+concern | n. | B1 | обеспокоенность, забота
+concerned | adj. | B1 | обеспокоенный
+concert | n. | A1 | концерт
+conclude | v. | B1 | завершать
+conclude | v. | B2 | делать вывод
+conclusion | n. | A2 | вывод, заключение
+condition | n. | A2 | состояние, условие
+conduct | v. | B1 | проводить (исследование/мероприятие)
+conference | n. | A2 | конференция
+confidence | n. | B1 | уверенность
+confident | adj. | B1 | уверенный
+confirm | v. | B1 | подтверждать
+conflict | n. | B1 | конфликт
+confuse | v. | B1 | путать
+confused | adj. | B1 | озадаченный
+connect | v. | A2 | соединять, подключать
+connection | n. | B1 | связь, соединение
+conscious | adj. | B2 | сознательный, осознанный
+consequence | n. | B1 | следствие, последствие
+consequently | adv. | B2 | следовательно
+consider | v. | A2 | рассматривать, обдумывать
+considerable | adj. | B1 | значительный
+considerably | adv. | B2 | значительно
+consist | v. | B1 | состоять из
+consistent | adj. | B2 | последовательный, постоянный
+constant | adj. | B1 | постоянный
+construct | v. | B1 | строить, конструировать
+construction | n. | B1 | строительство
+consume | v. | B2 | потреблять
+consumer | n. | B1 | потребитель
+contact | v. | B1 | связываться
+contain | v. | A2 | содержать в себе, вмещать
+container | n. | B1 | контейнер
+contemporary | adj. | B1 | современный
+content | n. | B1 | содержание, контент
+contest | n. | B1 | конкурс, состязание
+context | n. | A2 | контекст
+continue | v. | A2 | продолжать
+continuous | adj. | B1 | непрерывный
+contract | n. | B1 | контракт, договор
+contrast | n. | B1 | контраст
+contribute | v. | B1 | вносить вклад
+contribution | n. | B1 | вклад
+control | v. | A2 | контролировать
+convenient | adj. | B1 | удобный
+conversation | n. | A1 | разговор, беседа
+convert | v. | B1 | преобразовывать
+convince | v. | B2 | убеждать
+convinced | adj. | B1 | убежденный
+cook | v. | A1 | готовить
+cooker | n. | A2 | кухонная плита
+cooking | n. | A1 | кулинария
+cool | adj. | A1 | прохладный, крутой
+cope | v. | B1 | справляться
+copy | n. | A2 | копия
+core | n. | B1 | суть
+corner | n. | A2 | угол
+corporate | adj. | B1 | корпоративный
+correct | adj. | A1 | правильный
+correct | v. | A1 | исправлять
+correctly | adv. | A2 | правильно
+cost | n. | A1 | стоимость
+cost | v. | A1 | стоить
+council | n. | B1 | совет (орган)
+count | v. | A2 | считать, подсчитывать
+country | n. | A1 | страна, сельская местность
+county | n. | B1 | округ, графство
+couple | n. | A2 | пара
+courage | n. | B1 | смелость, мужество
+course | n. | A2 | курс, блюдо
+court | n. | A2 | суд, корт
+cousin | n. | A1 | двоюродный брат, сестра
+cow | n. | A1 | корова
+crash | n. | B1 | авария, крушение
+crazy | adj. | A2 | сумасшедший
+cream | n. | A1 | сливки, крем
+create | v. | A2 | создавать
+creation | n. | B1 | создание, творение
+creative | adj. | A2 | творческий
+creativity | n. | B1 | творчество, креативность
+creature | n. | B1 | существо, создание
+credit | n. | B1 | заслуга
+credit card | n. | A2 | кредитная карта
+crew | n. | B1 | экипаж, команда
+crime | n. | A2 | преступление
+criminal | n. | A2 | преступник
+crisis | n. | B1 | кризис
+criterion | n. | B1 | критерий
+critical | adj. | B1 | критический
+criticism | n. | B1 | критика
+criticize | v. | B1 | критиковать
+crop | n. | B1 | урожай
+cross | n. | A1 | крест
+cross | v. | A1 | пересекать
+crowd | n. | A2 | толпа
+crowded | adj. | A2 | переполненный людьми
+crucial | adj. | B1 | ключевой, решающий
+cruel | adj. | A2 | жестокий
+cultural | adj. | B1 | культурный
+culture | n. | A2 | культура
+cup | n. | A1 | чашка
+cupboard | n. | A2 | шкаф для посуды, буфет
+curly | adj. | A2 | кудрявый
+currency | n. | B1 | валюта
+current | adj. | B1 | текущий, современный
+currently | adv. | B1 | в настоящее время
+curve | n. | B1 | кривая, изгиб
+custom | n. | B1 | обычай, традиция
+customer | n. | A2 | покупатель, клиент
+cut | v. | A1 | резать
+dad | n. | A1 | папа
+daily | adj. | A2 | ежедневный, суточный
+damage | n. | B2 | ущерб, повреждение
+damage | v. | A2 | повреждать, вредить
+dance | n. | A1 | танец
+dance | v. | A1 | танцевать
+dancer | n. | A1 | танцор
+danger | n. | A2 | опасность
+dangerous | adj. | A1 | опасный
+dark | adj. | A1 | темный
+dark | n. | A2 | темнота, мрак
+data | n. | A2 | данные, информация
+date | n. | A1 | дата
+date | n. | A1 | свидание
+date | v. | A2 | встречаться (с кем-то)
+daughter | n. | A1 | дочь
+day | n. | A1 | день
+dead | adj. | A2 | мертвый
+deaf | adj. | A2 | глухой
+deal | v. | A2 | иметь дело, справляться
+dear | adj. | A1 | дорогой, милый
+death | n. | A2 | смерть
+debt | n. | B1 | долг
+decade | n. | B1 | десятилетие
+December | n. | A1 | декабрь
+decent | adj. | B1 | приличный, достойный
+decide | v. | A1 | решать, принимать решение
+decision | n. | A2 | решение
+declare | v. | A2 | объявлять, заявлять
+decline | v. | A2 | снижаться, отклонять
+decorate | v. | A2 | украшать
+decrease | v. | A2 | уменьшаться, снижаться
+deep | adj. | A2 | глубокий
+deeply | adv. | A2 | глубоко, сильно
+defeat | v. | A2 | побеждать, наносить поражение
+defence | n. | A2 | защита, оборона
+defend | v. | A2 | защищать
+define | v. | B1 | определять
+definite | adj. | B1 | определенный, точный
+definitely | adv. | A2 | определенно, точно
+definition | n. | B2 | определение
+degree | n. | A2 | градус, степень, диплом
+delay | v. | A2 | задерживать, откладывать
+deliberately | adv. | A2 | намеренно, нарочно
+delicious | adj. | A1 | вкусный
+delight | n. | A2 | восторг, удовольствие
+delightful | adj. | B1 | восхитительный
+deliver | v. | A2 | доставлять
+delivery | n. | A2 | доставка
+demand | n. | A2 | спрос, требование
+demonstrate | v. | B1 | демонстрировать
+dentist | n. | A2 | зубной врач, стоматолог
+deny | v. | B1 | отрицать
+depart | v. | A2 | отправляться, уезжать
+department | n. | A2 | отдел, департамент
+departure | n. | A2 | отправление, вылет
+depend | v. | A2 | зависеть
+deposit | n. | B1 | залог
+depress | v. | B2 | угнетать, вгонять в тоску
+depressed | adj. | A2 | подавленный, унылый
+depressing | adj. | A2 | вгоняющий в тоску, грустный
+depth | n. | A2 | глубина
+describe | v. | A1 | описывать
+description | n. | A2 | описание
+desert | n. | A2 | пустыня
+deserve | v. | A2 | заслуживать
+design | n. | A2 | дизайн, проект
+designer | n. | A2 | дизайнер
+desire | n. | B2 | желание, стремление
+desk | n. | A1 | письменный стол
+desperate | adj. | B2 | отчаянный
+desperately | adv. | B1 | отчаянно
+despite | prep. | B1 | несмотря на
+destroy | v. | A2 | разрушать, уничтожать
+destruction | n. | B1 | разрушение
+detail | n. | A1 | деталь, подробность
+detailed | adj. | A2 | подробный, детальный
+detective | n. | A2 | детектив, следователь
+determination | n. | B1 | решимость
+determine | v. | A2 | определять, устанавливать
+determined | adj. | B2 | решительный, целеустремленный
+develop | v. | A2 | развивать, разрабатывать
+device | n. | B1 | устройство, прибор
+diagram | n. | A2 | диаграмма, схема
+diamond | n. | A2 | алмаз, бриллиант
+diary | n. | A2 | дневник
+dictionary | n. | A1 | словарь
+die | v. | A1 | умирать
+diet | n. | A1 | диета, питание
+difference | n. | A1 | разница, различие
+different | adj. | A1 | разный
+differently | adv. | A2 | по-другому, иначе
+difficult | adj. | A1 | трудный, сложный
+digital | adj. | A2 | цифровой
+dinner | n. | A1 | ужин, обед
+direct | adj. | A2 | прямой, непосредственный
+direction | n. | A2 | направление
+directly | adv. | A2 | прямо, непосредственно
+director | n. | A1 | директор, режиссер
+dirty | adj. | A1 | грязный
+disabled | adj. | B1 | с ограниченными возможностями
+disadvantage | n. | B2 | недостаток
+disagree | v. | A2 | не соглашаться
+disappear | v. | A2 | исчезать
+disappoint | v. | A2 | разочаровывать
+disappointed | adj. | A2 | разочарованный
+disappointing | adj. | A2 | разочаровывающий
+disappointment | n. | B1 | разочарование
+disaster | n. | B2 | катастрофа, бедствие
+discipline | n. | B2 | дисциплина
+discount | n. | A2 | скидка
+discourage | v. | B1 | обескураживать
+discover | v. | A2 | совершать открытие, обнаруживать
+discovery | n. | A2 | открытие
+discuss | v. | A1 | обсуждать
+discussion | n. | A2 | обсуждение, дискуссия
+disease | n. | A2 | болезнь, заболевание
+dish | n. | A1 | блюдо, тарелка
+dishonest | adj. | A2 | нечестный
+dislike | v. | A2 | не любить, недолюбливать
+dismiss | v. | B2 | отклонять
+display | v. | B2 | показывать, выставлять
+distance | n. | A2 | расстояние, дистанция
+distinct | adj. | B2 | различный, отдельный
+distinguish | v. | B1 | различать
+distribute | v. | B1 | распределять, раздавать
+district | n. | B1 | район, округ
+disturb | v. | B2 | беспокоить, мешать
+divorced | adj. | A2 | разведенный
+do | v. | A1 | делать
+doctor | n. | A1 | врач, доктор
+document | n. | A2 | документ
+dog | n. | A1 | собака
+dollar | n. | A1 | доллар
+dominate | v. | B1 | доминировать
+donate | v. | A2 | жертвовать, передавать в дар
+door | n. | A1 | дверь
+double | adj. | A2 | двойной
+doubt | n. | A2 | сомнение
+down | adv. | A1 | вниз
+downstairs | adv. | A1 | внизу, на нижнем этаже
+drama | n. | A2 | драма
+dramatic | adj. | A2 | драматический, резкий
+dramatically | adv. | B2 | резко, существенно
+draw | v. | A1 | рисовать
+drawing | n. | A1 | рисунок
+dream | n. | A1 | сон, мечта
+dream | v. | A1 | мечтать, видеть сон
+dress | n. | A1 | платье
+dress | v. | A1 | одеваться
+drink | n. | A1 | напиток
+drink | v. | A1 | пить
+drive | v. | A1 | водить
+driver | n. | A1 | водитель
+drop | n. | A1 | капля
+drop | v. | A1 | ронять
+drought | n. | B2 | засуха
+drug | n. | A2 | лекарство, наркотик
+dry | adj. | A1 | сухой
+dry | v. | A1 | сушить
+duck | n. | A2 | утка
+due | adj. | B2 | подлежащий оплате (о сроке)
+during | prep. | A1 | в течение, во время
+dust | n. | A2 | пыль
+duty | n. | A2 | обязанность, долг
+each | det. | A1 | каждый
+ear | n. | A1 | ухо
+early | adj. | A1 | ранний
+early | adv. | A1 | рано
+earn | v. | A2 | зарабатывать
+earth | n. | A2 | Земля (планета), суша
+earthquake | n. | B1 | землетрясение
+easily | adv. | A2 | легко, без труда
+east | n. | A1 | восток
+easy | adj. | A1 | легкий, простой
+eat | v. | A1 | есть
+economic | adj. | A2 | экономический
+economy | n. | A2 | экономика
+edge | n. | A2 | край, кромка
+edition | n. | B2 | издание, выпуск
+editor | n. | B1 | редактор
+educate | v. | A2 | воспитывать, обучать
+educated | adj. | A2 | образованный
+education | n. | A2 | образование
+effect | n. | A2 | эффект, влияние
+effective | adj. | A2 | эффективный
+effectively | adv. | B2 | эффективно
+efficiency | n. | B2 | эффективность, производительность
+efficient | adj. | B1 | рациональный, продуктивный
+effort | n. | A2 | усилие, попытка
+egg | n. | A1 | яйцо
+eight | num. | A1 | восемь
+eighteen | num. | A1 | восемнадцать
+eighty | num. | A1 | восемьдесят
+elderly | adj. | B1 | пожилой
+elect | v. | B2 | избирать
+election | n. | A2 | выборы
+element | n. | A2 | элемент
+elephant | n. | A1 | слон
+else | adv. | A1 | еще
+email | n. | A1 | электронное письмо
+email | v. | A1 | писать письмо
+embarrass | v. | A2 | смущать, ставить в неловкое положение
+embarrassed | adj. | A2 | смущенный
+embarrassing | adj. | A2 | смущающий, неловкий
+emerge | v. | B1 | появляться, возникать
+emergency | n. | A2 | чрезвычайная ситуация
+emotion | n. | A2 | эмоция, чувство
+emotional | adj. | A2 | эмоциональный
+emphasis | n. | B2 | акцент, особое внимание
+emphasize | v. | B1 | подчеркивать, акцентировать
+employ | v. | A2 | нанимать на работу
+employee | n. | A2 | сотрудник, работник
+employer | n. | A2 | работодатель
+employment | n. | A2 | трудоустройство, занятость
+empty | adj. | A2 | пустой
+enable | v. | B1 | позволять, давать возможность
+encounter | v. | B1 | сталкиваться
+encourage | v. | A2 | поощрять, поддерживать
+encouraging | adj. | B2 | обнадеживающий
+end | n. | A1 | конец
+end | v. | A1 | заканчивать
+enemy | n. | A2 | враг, противник
+energy | n. | A2 | энергия
+engage | v. | B1 | вовлекать(ся)
+engineer | n. | A2 | инженер
+engineering | n. | A2 | инженерия, технические науки
+enhance | v. | B2 | улучшать, усиливать
+enjoy | v. | A1 | наслаждаться
+enormous | adj. | A2 | огромный, громадный
+enough | det. | A1 | достаточно
+ensure | v. | B1 | обеспечивать, гарантировать
+enter | v. | A1 | входить
+entertain | v. | A2 | развлекать
+entertainment | n. | A2 | развлечение
+enthusiasm | n. | B1 | энтузиазм
+enthusiastic | adj. | B2 | восторженный, увлеченный
+entire | adj. | B2 | весь, целиком
+entirely | adv. | B1 | полностью, целиком
+entrance | n. | A2 | вход
+entry | n. | A2 | вход, запись
+environment | n. | A2 | окружающая среда
+environmental | adj. | A2 | экологический
+equal | adj. | A2 | равный, одинаковый
+equally | adv. | A2 | в равной степени, одинаково
+equipment | n. | A2 | оборудование, снаряжение
+error | n. | A2 | ошибка
+escape | v. | A2 | сбегать, спасаться
+especially | adv. | A2 | особенно, в особенности
+essay | n. | A2 | эссе, сочинение
+essential | adj. | A2 | важный, необходимый
+establish | v. | A2 | основывать, устанавливать
+estate | n. | A2 | поместье, имущество
+estimate | v. | A2 | оценивать, подсчитывать
+ethical | adj. | B2 | этический, нравственный
+euro | n. | A1 | евро
+evaluate | v. | B1 | оценивать
+evaluation | n. | B2 | оценка, анализ
+even | adv. | A1 | даже
+evening | n. | A1 | вечер
+event | n. | A1 | событие, мероприятие
+eventually | adv. | B2 | в конце концов
+ever | adv. | A1 | когда-либо, никогда
+every | det. | A1 | каждый
+everybody | pron. | A1 | все
+everyone | pron. | A1 | все
+everything | pron. | A1 | всё
+everywhere | adv. | A1 | везде
+evidence | n. | B1 | доказательство, улики
+exact | adj. | A1 | точный
+exactly | adv. | A2 | точно, именно
+exaggerate | v. | B1 | преувеличивать
+examination | n. | A2 | экзамен, обследование
+examine | v. | A2 | осматривать, проверять
+example | n. | A1 | пример
+excellent | adj. | A2 | отличный, превосходный
+except | prep. | A2 | кроме, за исключением
+exception | n. | B2 | исключение
+excess | n. | B2 | избыток, излишек
+exchange | v. | A2 | обменивать(ся)
+excited | adj. | A1 | взволнованный, воодушевленный
+excitement | n. | A2 | волнение, восторг
+exciting | adj. | A1 | захватывающий, увлекательный
+exclude | v. | B2 | исключать
+excuse | n. | A2 | оправдание, предлог
+executive | n. | B1 | руководитель
+exercise | n. | A1 | упражнение, зарядка
+exercise | v. | A1 | тренироваться
+exhibition | n. | A2 | выставка
+exist | v. | A2 | существовать
+existence | n. | B1 | существование
+expand | v. | B1 | расширять(ся)
+expect | v. | A2 | ожидать, рассчитывать
+expectation | n. | A2 | ожидание
+expense | n. | B1 | расход, трата
+expensive | adj. | A1 | дорогой
+experience | n. | A2 | опыт, впечатления
+experience | v. | B2 | испытывать, переживать
+experiment | n. | A2 | эксперимент, опыт
+expert | n. | A2 | эксперт, специалист
+explain | v. | A1 | объяснять
+explanation | n. | A2 | объяснение
+exploit | v. | B2 | эксплуатировать
+explore | v. | B2 | исследовать
+express | v. | A2 | выражать
+expression | n. | A2 | выражение
+extend | v. | B2 | продлевать
+extent | n. | B2 | степень, мера
+external | adj. | B2 | внешний
+extra | adj. | A1 | дополнительный
+extraordinary | adj. | B2 | необычайный, выдающийся
+extreme | adj. | A2 | крайний, экстремальный
+extremely | adv. | A2 | чрезвычайно, крайне
+eye | n. | A1 | глаз
+face | n. | A1 | лицо
+face | v. | A2 | сталкиваться, быть обращенным к
+facility | n. | A2 | объект, удобство, оборудование
+fact | n. | A1 | факт
+factor | n. | A2 | фактор
+factory | n. | A2 | фабрика, завод
+fail | v. | A2 | потерпеть неудачу, не сдать
+failure | n. | A2 | неудача, провал
+failure | n. | B2 | сбой
+fair | adj. | A2 | справедливый, честный
+fairly | adv. | A2 | довольно, весьма
+faith | n. | B1 | вера, доверие
+fall | n. | A1 | падение, осень
+fall | v. | A1 | падать
+false | adj. | A1 | ложный, неверный
+familiar | adj. | A2 | знакомый
+family | n. | A1 | семья
+famous | adj. | A1 | знаменитый
+fan | n. | A1 | фанат, поклонник
+fan | n. | A1 | вентилятор
+fancy | v. | B1 | хотеть, нравиться
+fantastic | adj. | A1 | фантастический
+far | adv. | A1 | далеко
+farm | n. | A1 | ферма
+farm | v. | A2 | заниматься фермерством
+farmer | n. | A1 | фермер
+farming | n. | A2 | сельское хозяйство
+fashion | n. | A2 | мода
+fashionable | adj. | A2 | модный
+fast | adj. | A1 | быстрый
+fast | adv. | A1 | быстро
+fasten | v. | A2 | пристегивать, застегивать
+fat | adj. | A1 | толстый
+fat | n. | A2 | жир
+father | n. | A1 | отец
+fault | n. | B1 | вина
+favour | n. | B1 | одолжение
+favourite | adj. | A1 | любимый
+fear | n. | B1 | страх
+feature | n. | A2 | особенность, черта
+February | n. | A1 | февраль
+federal | adj. | B2 | федеральный
+fee | n. | B1 | плата, сбор
+feed | v. | A2 | кормить
+feel | v. | A1 | чувствовать
+feeling | n. | A1 | чувство, ощущение
+female | adj. | A2 | женский
+festival | n. | A1 | фестиваль
+few | det. | A1 | мало
+fiction | n. | A2 | художественная литература
+field | n. | A1 | поле
+fifteen | num. | A1 | пятнадцать
+fifty | num. | A1 | пятьдесят
+fight | v. | A2 | драться, бороться
+figure | n. | A2 | цифра, фигура
+fill | v. | A1 | наполнять
+film | n. | A1 | фильм
+film | v. | A2 | снимать фильм
+final | adj. | A1 | конечный, финальный
+finally | adv. | A2 | наконец, в конце концов
+finance | n. | A2 | финансы
+financial | adj. | A2 | финансовый
+find | v. | A1 | находить
+finding | n. | B1 | результат, находка
+fine | adj. | A1 | прекрасный
+fine | n. | B1 | штраф
+finger | n. | A2 | палец (на руке)
+finish | n. | A2 | финиш, конец
+finish | v. | A1 | заканчивать
+fire | n. | A1 | огонь
+fire | v. | A2 | увольнять, стрелять
+firefighter | n. | A2 | пожарный
+firm | n. | A2 | фирма, компания
+first | adv. | A1 | сначала
+first | det. | A1 | первый
+firstly | adv. | A2 | во-первых
+fish | n. | A1 | рыба
+fish | v. | A1 | ловить рыбу
+fishing | n. | A1 | рыбалка
+fit | adj. | A1 | в хорошей форме, здоровый
+five | num. | A1 | пять
+fix | v. | A2 | чинить, исправлять
+flame | n. | B1 | пламя
+flat | adj. | A2 | плоский
+flat | n. | A1 | квартира
+flexible | adj. | B1 | гибкий
+flight | n. | A1 | рейс, полет
+flood | n. | B1 | наводнение
+floor | n. | A1 | пол, этаж
+flourish | v. | B2 | процветать
+flow | n. | B1 | поток, течение
+flower | n. | A1 | цветок
+fluctuate | v. | B2 | колебаться
+fluent | adj. | B1 | свободно владеющий (языком)
+fly | n. | A2 | муха
+fly | v. | A1 | летать
+flying | n. | A1 | полет
+focus | v. | A2 | фокусироваться
+fold | v. | A2 | складывать, сгибать
+folk | adj. | A2 | народный
+follow | v. | A1 | следовать
+following | adj. | A2 | следующий
+food | n. | A1 | еда
+foot | n. | A1 | нога
+football | n. | A1 | футбол
+for | prep. | A1 | для, на протяжении
+force | n. | B1 | сила, воздействие
+force | v. | A2 | заставлять, принуждать
+forecast | n. | B1 | прогноз
+foreign | adj. | A2 | иностранный
+foreigner | n. | A2 | иностранец
+forest | n. | A2 | лес
+forever | adv. | A2 | навсегда
+forget | v. | A1 | забывать
+fork | n. | A1 | вилка
+form | n. | A1 | форма
+formal | adj. | A2 | официальный
+former | adj. | A2 | бывший
+fortunately | adv. | A2 | к счастью
+fortune | n. | B1 | состояние (богатство)
+forty | num. | A1 | сорок
+forward | adv. | A2 | вперед, дальше
+foundation | n. | B1 | основа
+four | num. | A1 | четыре
+fourteen | num. | A1 | четырнадцать
+framework | n. | B2 | структура, рамки
+free | adj. | A1 | свободный, бесплатный
+free | v. | A2 | освобождать, делать свободным
+freedom | n. | A2 | свобода
+freeze | v. | A2 | замерзать, замораживать
+freezer | n. | A2 | морозилка
+frequency | n. | B2 | частота
+frequent | adj. | B2 | частый
+frequently | adv. | A2 | часто
+fresh | adj. | A1 | свежий
+Friday | n. | A1 | пятница
+fridge | n. | A1 | холодильник
+friend | n. | A1 | друг
+friendly | adj. | A1 | дружелюбный
+frighten | v. | A2 | пугать
+frightened | adj. | A2 | испуганный
+frightening | adj. | A2 | пугающий
+frog | n. | A2 | лягушка
+front | n. | A2 | передняя часть, фронт
+frozen | adj. | A2 | замороженный
+fruit | n. | A1 | фрукты
+fry | v. | A2 | жарить
+fuel | n. | A2 | топливо
+fulfil | v. | B2 | выполнять, осуществлять
+full | adj. | A1 | полный
+full-time | adj. | A2 | с полной занятостью, полный день
+fully | adv. | A2 | полностью
+fun | adj. | A2 | веселый, забавный
+fun | n. | A1 | веселье
+function | n. | A2 | функция
+fund | n. | B1 | фонд, средства
+fundamental | adj. | B1 | фундаментальный, основной
+funny | adj. | A1 | смешной
+furniture | n. | A1 | мебель
+further | adj. | B1 | дальнейший, дополнительный
+further | adv. | A2 | дальше, далее
+furthermore | adv. | B2 | более того, кроме того
+future | n. | A1 | будущее
+gain | v. | A2 | получать, приобретать
+game | n. | A1 | игра
+garage | n. | A2 | гараж
+garbage | n. | A2 | мусор
+garden | n. | A1 | сад
+gardening | n. | A2 | садоводство, работа в саду
+garlic | n. | A1 | чеснок
+gas | n. | A1 | газ
+gate | n. | A2 | ворота
+gather | v. | B1 | собирать(ся)
+general | adj. | A2 | общий, генеральный
+generally | adv. | A2 | обычно, в целом
+generate | v. | B1 | генерировать, производить
+generation | n. | A2 | поколение
+generous | adj. | A2 | щедрый
+gentle | adj. | A2 | мягкий, нежный
+gentleman | n. | A2 | джентльмен
+genuine | adj. | B1 | настоящий, искренний
+geography | n. | A2 | география
+gesture | n. | B1 | жест
+get | v. | A1 | получать, становиться
+ghost | n. | A2 | привидение
+giant | adj. | A2 | гигантский
+gift | n. | A1 | подарок
+giraffe | n. | A2 | жираф
+girl | n. | A1 | девочка
+girlfriend | n. | A1 | девушка
+give | v. | A1 | давать
+glad | adj. | A2 | рад
+glass | n. | A1 | стакан
+glasses | n. | A1 | очки
+global | adj. | A2 | глобальный
+glove | n. | A1 | перчатка
+go | v. | A1 | идти, ехать
+goal | n. | A1 | цель
+god | n. | A2 | бог
+gold | adj. | A1 | золотой
+gold | n. | A1 | золото
+golf | n. | A2 | гольф
+good | adj. | A1 | хороший
+good-looking | adj. | A2 | привлекательный, симпатичный
+goodbye | excl. | A1 | до свидания
+goods | n. | A2 | товары
+govern | v. | A2 | управлять, править
+government | n. | A2 | правительство
+grade | n. | A2 | оценка, класс
+gradual | adj. | B1 | постепенный
+gradually | adv. | B2 | постепенно
+graduate | v. | A2 | выпускаться (из учебного заведения)
+grain | n. | A2 | зерно
+gram | n. | A2 | грамм
+grammar | n. | A2 | грамматика
+grandad | n. | A2 | дедушка
+grandfather | n. | A1 | дедушка
+grandmother | n. | A1 | бабушка
+grandparent | n. | A1 | дедушка или бабушка
+grant | n. | B1 | грант, субсидия
+grant | v. | B2 | предоставлять, даровать
+grape | n. | A2 | виноград
+grass | n. | A1 | трава
+grateful | adj. | A2 | благодарный
+great | adj. | A1 | великий, замечательный
+green | adj. | A1 | зеленый
+greet | v. | A2 | приветствовать
+greeting | n. | A2 | приветствие
+grey | adj. | A1 | серый
+grill | v. | A2 | жарить на гриле
+grocery | n. | A2 | продуктовый магазин, продукты
+ground | n. | A1 | земля
+group | n. | A1 | группа
+grow | v. | A1 | расти
+growth | n. | A2 | рост
+guarantee | v. | B1 | гарантировать
+guard | n. | A2 | охранник
+guess | v. | A1 | угадывать
+guest | n. | A2 | гость
+guidance | n. | B1 | руководство, помощь
+guide | n. | A2 | гид
+guidebook | n. | A2 | путеводитель
+guidelines | n. | B2 | руководящие принципы, правила
+guilty | adj. | A2 | виновный
+guitar | n. | A1 | гитара
+gun | n. | A2 | пистолет
+guy | n. | A1 | парень, чувак
+gym | n. | A2 | тренажерный зал, спортзал
+habit | n. | A2 | привычка
+hair | n. | A1 | волосы
+hairdresser | n. | A2 | парикмахер
+half | n. | A1 | половина
+hall | n. | A2 | холл, коридор
+hand | n. | A1 | рука
+hand | v. | A2 | передавать, вручать
+handle | v. | A2 | справляться, управлять
+hang | v. | A2 | вешать, висеть
+happen | v. | A1 | происходить, случаться
+happiness | n. | A2 | счастье
+happy | adj. | A1 | счастливый
+hard | adj. | A1 | трудный, твердый
+hard | adv. | A1 | усердно
+hardly | adv. | A2 | едва, едва ли
+harm | n. | B1 | вред, ущерб
+harmful | adj. | B1 | вредный
+hat | n. | A1 | шляпа
+hate | v. | A1 | ненавидеть
+have | v. | A1 | иметь
+have to | modal v. | A1 | быть должным, вынужденным
+he | pron. | A1 | он
+head | n. | A1 | голова
+headache | n. | A1 | головная боль
+heading | n. | B2 | заголовок
+headline | n. | A2 | заголовок
+headquarters | n. | B1 | штаб-квартира
+heal | v. | B1 | заживать, исцелять
+health | n. | A1 | здоровье
+healthy | adj. | A1 | здоровый
+hear | v. | A1 | слышать
+hearing | n. | B1 | слух
+heart | n. | A1 | сердце
+heat | n. | A1 | жара, тепло
+heating | n. | A2 | отопление
+heaven | n. | B1 | небо
+heavy | adj. | A1 | тяжелый
+height | n. | A2 | рост, высота
+hello | excl. | A1 | привет
+help | n. | A1 | помощь
+help | v. | A1 | помогать
+helpful | adj. | A2 | полезный, отзывчивый
+helpless | adj. | B1 | беспомощный
+her | pron. | A1 | её, ей
+here | adv. | A1 | здесь
+hero | n. | A2 | герой
+herself | pron. | A2 | (она) сама, себя
+hi | excl. | A1 | привет
+hide | v. | A2 | прятать(ся)
+high | adj. | A1 | высокий
+highlight | v. | A2 | выделять, подчеркивать
+highly | adv. | A2 | очень, весьма
+hill | n. | A1 | холм
+him | pron. | A1 | его, ему
+himself | pron. | A2 | (он) сам, себя
+hire | v. | A2 | нанимать, арендовать
+his | det. | A1 | его
+historic | adj. | A2 | исторический
+historical | adj. | A2 | исторический (относящийся к истории)
+history | n. | A1 | история
+hit | v. | A2 | ударять, бить
+hobby | n. | A1 | хобби, увлечение
+hold | v. | A2 | держать, проводить
+hole | n. | A2 | дыра, отверстие
+holiday | n. | A1 | каникулы, отпуск
+home | n. | A1 | дом
+homework | n. | A1 | домашняя работа
+honest | adj. | A2 | честный
+honesty | n. | A2 | честность
+hope | v. | A1 | надеяться
+horrible | adj. | A2 | ужасный
+horror | n. | A2 | ужас, хоррор
+horse | n. | A1 | лошадь
+hospital | n. | A1 | больница
+host | n. | A2 | хозяин (вечеринки/дома)
+hot | adj. | A1 | горячий
+hotel | n. | A1 | отель
+hour | n. | A1 | час
+house | n. | A1 | дом
+household | n. | B1 | домохозяйство, семья
+how | adv. | A1 | как
+however | adv. | A1 | однако, тем не менее
+huge | adj. | A2 | огромный
+human | n. | A2 | человек
+humorous | adj. | B1 | юмористический, смешной
+humour | n. | A2 | юмор
+hundred | num. | A1 | сто
+hunger | n. | B1 | голод
+hungry | adj. | A1 | голодный
+hunt | v. | A2 | охотиться
+hurricane | n. | A2 | ураган
+hurt | v. | A2 | ранить, болеть
+husband | n. | A1 | муж
+hypothesis | n. | B1 | гипотеза
+I | pron. | A1 | я
+ice | n. | A1 | лёд
+ice cream | n. | A1 | мороженое
+idea | n. | A1 | идея
+ideal | adj. | A2 | идеальный
+identical | adj. | B1 | идентичный, одинаковый
+identify | v. | A2 | определять, опознавать
+identity | n. | A2 | личность, идентичность
+if | conj. | A1 | если
+ignore | v. | A2 | игнорировать, не замечать
+ill | adj. | A2 | больной
+illegal | adj. | A2 | незаконный
+illness | n. | A2 | болезнь, заболевание
+illustrate | v. | A2 | иллюстрировать, пояснять
+image | n. | A2 | изображение
+imagination | n. | A2 | воображение
+imagine | v. | A1 | представлять
+immediate | adj. | A2 | немедленный, срочный
+immediately | adv. | A2 | немедленно
+impact | n. | A2 | влияние, воздействие
+impatient | adj. | A2 | нетерпеливый
+implement | v. | B1 | внедрять, реализовывать
+implication | n. | B1 | последствие
+imply | v. | B2 | подразумевать, намекать
+import | v. | A2 | импортировать
+importance | n. | A2 | важность
+important | adj. | A1 | важный
+impose | v. | B1 | налагать, навязывать
+impossible | adj. | A2 | невозможный
+impress | v. | A2 | производить впечатление
+impressed | adj. | A2 | впечатленный
+impression | n. | A2 | впечатление
+impressive | adj. | A2 | впечатляющий
+improve | v. | A1 | улучшать
+improvement | n. | A2 | улучшение
+in | prep. | A1 | в
+incentive | n. | B2 | стимул, поощрение
+incident | n. | A2 | инцидент, происшествие
+include | v. | A1 | включать
+included | adj. | A2 | включенный
+including | prep. | A2 | включая
+income | n. | B1 | доход
+increase | v. | A2 | увеличивать(ся), расти
+increasingly | adv. | B1 | все больше, в большей степени
+incredible | adj. | A2 | невероятный
+incredibly | adv. | A2 | невероятно
+indeed | adv. | A2 | действительно, в самом деле
+independent | adj. | A2 | независимый
+indicate | v. | A2 | указывать, показывать
+indirect | adj. | B2 | косвенный
+individual | adj. | B2 | индивидуальный
+individual | n. | A2 | индивидуум, личность
+indoor | adj. | A2 | комнатный, для помещений
+indoors | adv. | A2 | в помещении
+industrial | adj. | B1 | индустриальный, промышленный
+industry | n. | A2 | промышленность
+infection | n. | A2 | инфекция
+influence | n. | A2 | влияние
+influence | v. | B2 | влиять
+inform | v. | A2 | информировать, сообщать
+informal | adj. | A2 | неформальный
+information | n. | A1 | информация
+ingredient | n. | A2 | ингредиент, составная часть
+initial | adj. | A2 | первоначальный, начальный
+initially | adv. | A2 | изначально
+initiative | n. | B2 | инициатива
+injure | v. | A2 | травмировать, калечить
+injured | adj. | A2 | травмированный
+injury | n. | A2 | травма
+inner | adj. | B1 | внутренний
+innocent | adj. | A2 | невиновный
+insect | n. | A2 | насекомое
+inside | prep. | A2 | внутри
+insight | n. | B1 | понимание, инсайт
+insist | v. | A2 | настаивать
+inspire | v. | A2 | вдохновлять
+install | v. | A2 | устанавливать
+instance | n. | A2 | пример
+instead | adv. | A2 | вместо этого
+institute | n. | B2 | институт, учреждение
+institution | n. | B1 | учреждение, институт
+instruction | n. | A2 | инструкция
+instructor | n. | A2 | инструктор
+instrument | n. | A2 | инструмент
+insurance | n. | B1 | страховка
+integrate | v. | B2 | интегрировать, объединять
+intelligent | adj. | A2 | умный
+intend | v. | A2 | намереваться
+intended | adj. | B2 | предназначенный, целевой
+intense | adj. | B2 | интенсивный, сильный
+intention | n. | A2 | намерение
+interaction | n. | B2 | взаимодействие
+interest | n. | A1 | интерес
+interested | adj. | A1 | заинтересованный
+interesting | adj. | A1 | интересный
+internal | adj. | A2 | внутренний
+international | adj. | A2 | международный
+internet | n. | A1 | интернет
+interpret | v. | B1 | переводить (устно)
+interpret | v. | B2 | интерпретировать, толковать
+interrupt | v. | A2 | перебивать
+interview | n. | A2 | интервью
+into | prep. | A1 | в, внутрь
+introduce | v. | A2 | представлять
+introduction | n. | A2 | введение
+invent | v. | A2 | изобретать
+invention | n. | A2 | изобретение
+invest | v. | A2 | инвестировать
+investigate | v. | A2 | расследовать
+investigation | n. | A2 | расследование
+investment | n. | B1 | инвестиция
+invitation | n. | A2 | приглашение
+invite | v. | A1 | приглашать
+involve | v. | A2 | включать в себя, вовлекать
+involved | adj. | A2 | вовлеченный
+iron | n. | A2 | железо, утюг
+island | n. | A1 | остров
+issue | n. | A2 | проблема, вопрос
+it | pron. | A1 | оно
+item | n. | A2 | предмет, пункт
+its | det. | A1 | его, её (неодуш.)
+itself | pron. | A2 | сам, себя (для предметов)
+jacket | n. | A1 | куртка, пиджак
+jam | n. | A2 | джем, варенье
+January | n. | A1 | январь
+jazz | n. | A2 | джаз
+jeans | n. | A1 | джинсы
+jewellery | n. | A2 | ювелирные изделия
+job | n. | A1 | работа
+join | v. | A1 | присоединяться, вступать
+joke | n. | A2 | шутка
+journal | n. | A2 | журнал, дневник
+journalist | n. | A2 | журналист
+journey | n. | A1 | путешествие, поездка
+judge | n. | A2 | судья
+judgment | n. | B1 | суждение
+jug | n. | A2 | кувшин
+juice | n. | A1 | сок
+July | n. | A1 | июль
+jump | v. | A2 | прыгать
+jumper | n. | A2 | джемпер, свитер
+June | n. | A1 | июнь
+jungle | n. | A2 | джунгли
+just | adv. | A1 | только что, просто
+justice | n. | B1 | справедливость, правосудие
+justify | v. | B1 | оправдывать, обосновывать
+keen | adj. | B1 | увлечённый
+keep | v. | A1 | держать, сохранять
+key | adj. | B1 | ключевой, главный
+key | n. | A1 | ключ
+keyboard | n. | A2 | клавиатура
+kick | n. | A1 | пинок
+kick | v. | A1 | пинать, бить ногой
+kid | n. | A1 | ребенок, малыш
+kill | v. | A1 | убивать
+kilo | n. | A1 | килограмм
+kilogram | n. | A2 | килограмм
+kilometer | n. | A1 | километр
+kind | adj. | A1 | добрый, любезный
+kind | n. | A1 | вид
+kindness | n. | B1 | доброта
+king | n. | A2 | король
+kiss | v. | A2 | целовать
+kit | n. | A2 | набор, комплект
+kitchen | n. | A1 | кухня
+knee | n. | A1 | колено
+knife | n. | A1 | нож
+knock | v. | A2 | стучать
+know | v. | A1 | знать
+knowledge | n. | A1 | знание
+label | n. | A2 | этикетка, ярлык
+laboratory | n. | A2 | лаборатория
+lack | n. | A2 | нехватка, недостаток
+lady | n. | A2 | дама, леди
+lake | n. | A2 | озеро
+lamp | n. | A1 | лампа
+land | v. | A2 | приземляться, садиться
+landscape | n. | A2 | пейзаж, ландшафт
+language | n. | A1 | язык
+laptop | n. | A2 | ноутбук
+large | adj. | A1 | большой, крупный
+largely | adv. | B2 | в значительной степени
+last | det. | A1 | последний
+last | v. | A1 | длиться
+late | adj. | A1 | поздний
+late | adv. | A1 | поздно
+later | adv. | A1 | позже
+latest | adj. | A2 | последний, свежий
+laugh | n. | A1 | смех
+laugh | v. | A1 | смеяться
+launch | v. | B2 | запускать, начинать
+law | n. | A2 | закон
+lawyer | n. | A2 | юрист, адвокат
+lay | v. | A2 | класть, раскладывать
+layer | n. | B1 | слой
+lazy | adj. | A2 | ленивый
+lead | v. | A2 | вести, руководить
+leader | n. | A2 | лидер, руководитель
+leadership | n. | B1 | лидерство, руководство
+leaf | n. | A2 | лист (растения)
+league | n. | A2 | лига, союз
+lean | v. | A2 | наклоняться, опираться
+learn | v. | A1 | учить
+leather | n. | A2 | кожа (материал)
+leave | v. | A1 | уходить, покидать
+lecture | n. | A2 | лекция
+left | adj. | A1 | левый
+left | adv. | A1 | налево
+leg | n. | A1 | нога
+legal | adj. | B1 | законный, легальный
+lemon | n. | A1 | лимон
+lend | v. | A1 | одалживать, давать взаймы
+length | n. | A2 | длина
+less | det. | A2 | меньше
+lesson | n. | A1 | урок
+let | v. | A1 | позволять
+letter | n. | A1 | письмо
+letter | n. | A1 | буква
+level | n. | A2 | уровень
+library | n. | A1 | библиотека
+lie | n. | A1 | ложь
+lie | v. | A1 | лежать
+lie | v. | A1 | лгать
+life | n. | A1 | жизнь
+lift | v. | A2 | поднимать
+light | adj. | A1 | лёгкий
+light | adj. | A1 | светлый
+light | n. | A1 | свет
+like | prep. | A1 | как, подобно
+like | v. | A1 | нравиться
+likely | adj. | A2 | вероятный
+limit | n. | A2 | предел, ограничение
+limitation | n. | B2 | ограничение
+limited | adj. | A2 | ограниченный
+line | n. | A1 | линия
+link | n. | A2 | ссылка, связь
+lion | n. | A1 | лев
+lip | n. | A1 | губа
+liquid | n. | A2 | жидкость
+list | n. | A1 | список
+listen | v. | A1 | слушать
+literature | n. | B1 | литература
+little | adj. | A1 | маленький
+live | adj. | B1 | прямой (эфир)
+live | v. | A1 | жить
+lively | adj. | A2 | оживленный, бодрый
+loan | n. | B2 | кредит, заем
+local | adj. | A1 | местный
+locate | v. | A2 | обнаруживать, размещать
+location | n. | A2 | местоположение, локация
+lock | v. | A2 | запирать на замок
+logical | adj. | A2 | логичный
+lonely | adj. | A2 | одинокий
+long | adj. | A1 | длинный
+look | n. | A1 | взгляд
+look | v. | A1 | смотреть, выглядеть
+loose | adj. | A2 | свободный, широкий
+lorry | n. | A2 | грузовик
+lose | v. | A1 | терять
+loss | n. | A2 | потеря, утрата
+lot | pron. | A1 | много
+loud | adj. | A1 | громкий
+loudly | adv. | A2 | громко
+love | n. | A1 | любовь
+love | v. | A1 | любить
+lovely | adj. | A2 | прекрасный, милый
+low | adj. | A2 | низкий
+luck | n. | A2 | удача, везение
+lucky | adj. | A2 | удачливый, везучий
+luggage | n. | A2 | багаж
+lunch | n. | A1 | обед
+luxury | n. | A2 | роскошь
+machine | n. | A1 | машина, станок
+mad | adj. | A1 | сумасшедший, безумный
+magazine | n. | A1 | журнал
+magic | n. | A2 | магия
+mail | n. | A2 | почта
+main | adj. | A2 | главный, основной
+mainly | adv. | A2 | в основном, главным образом
+maintain | v. | B1 | поддерживать, сохранять
+major | adj. | A2 | крупный, значительный
+majority | n. | A2 | большинство
+make | v. | A1 | делать, создавать
+make-up | n. | A2 | макияж
+male | adj. | A2 | мужской
+mall | n. | A2 | торговый центр
+man | n. | A1 | мужчина
+manage | v. | A2 | управлять, справляться
+managed | adj. | B2 | управляемый, регулируемый
+management | n. | A2 | управление
+manager | n. | A2 | менеджер, управляющий
+manner | n. | A2 | манера, способ
+manufacture | v. | B1 | производить, изготовлять
+manufacturer | n. | B2 | производитель
+manufacturing | n. | B2 | производство
+many | det. | A1 | много
+map | n. | A1 | карта
+March | n. | A1 | март
+march | v. | A2 | маршировать, шагать
+mark | n. | A2 | оценка, отметка
+market | n. | A1 | рынок
+market | v. | B2 | продвигать на рынке
+marketing | n. | A2 | маркетинг
+marriage | n. | A2 | брак
+married | adj. | A1 | женатый, замужем
+marry | v. | A2 | жениться, выходить замуж
+massive | adj. | B1 | массивный, огромный
+master | v. | B1 | осваивать, овладевать
+match | n. | A1 | матч
+match | n. | A1 | спичка
+material | n. | A2 | материал
+mathematics | n. | A2 | математика
+matter | n. | A1 | дело, вопрос
+maximum | adj. | A2 | максимальный
+May | n. | A1 | май
+maybe | adv. | A1 | может быть
+me | pron. | A1 | мне
+meal | n. | A1 | прием пищи, еда
+mean | v. | A1 | означать, иметь в виду
+meaning | n. | A1 | значение
+means | n. | A2 | средство, способы
+meanwhile | adv. | A2 | тем временем, между тем
+measure | v. | A2 | измерять
+measurement | n. | A2 | измерение
+meat | n. | A1 | мясо
+mechanic | n. | A2 | механик
+media | n. | A2 | средства массовой информации
+medical | adj. | A2 | медицинский
+medicine | n. | A2 | лекарство
+medium | adj. | A2 | средний
+meet | v. | A1 | встречать
+meeting | n. | A1 | встреча
+melt | v. | A2 | таять, плавить
+member | n. | A1 | участник, член (организации)
+memory | n. | A2 | память
+mental | adj. | B1 | умственный, ментальный
+mention | v. | A2 | упоминать
+menu | n. | A1 | меню
+mess | n. | A2 | беспорядок
+message | n. | A1 | сообщение
+metal | n. | A2 | металл
+meter | n. | A1 | метр
+method | n. | A2 | метод
+middle | n. | A2 | середина
+midnight | n. | A1 | полночь
+mild | adj. | A2 | мягкий
+mile | n. | A1 | миля
+military | adj. | A2 | военный
+milk | n. | A1 | молоко
+million | num. | A1 | миллион
+mind | n. | A2 | разум, ум
+mine | pron. | A2 | мой
+mineral | n. | A2 | минерал
+minimum | adj. | A2 | минимальный
+minister | n. | A2 | министр
+minor | adj. | B1 | незначительный, мелкий
+minority | n. | B1 | меньшинство
+minute | n. | A1 | минута
+mirror | n. | A2 | зеркало
+miserable | adj. | A2 | несчастный, жалкий
+miss | v. | A1 | скучать
+miss | v. | A1 | опоздать, пропустить
+missing | adj. | A2 | недостающий, пропавший
+mission | n. | B2 | миссия, задание
+mistake | n. | A1 | ошибка
+mix | v. | A2 | смешивать
+mixed | adj. | A2 | смешанный
+mixture | n. | A2 | смесь
+model | n. | A1 | модель
+modern | adj. | A2 | современный
+modify | v. | B1 | видоизменять, модифицировать
+moment | n. | A1 | момент
+Monday | n. | A1 | понедельник
+money | n. | A1 | деньги
+monitor | n. | A2 | монитор
+monitor | v. | B2 | отслеживать, контролировать
+monkey | n. | A1 | обезьяна
+month | n. | A1 | месяц
+mood | n. | A2 | настроение
+moon | n. | A1 | луна
+moral | adj. | B2 | моральный, нравственный
+more | det. | A1 | больше
+moreover | adv. | B1 | более того
+morning | n. | A1 | утро
+most | det. | A2 | большинство
+mostly | adv. | A2 | в основном
+mother | n. | A1 | мать
+motivate | v. | B1 | мотивировать
+motivation | n. | B2 | мотивация
+motorbike | n. | A2 | мотоцикл
+mountain | n. | A1 | гора
+mouse | n. | A1 | мышь
+mouth | n. | A1 | рот
+move | v. | A1 | двигаться, переезжать
+movement | n. | A2 | движение
+movie | n. | A1 | фильм
+much | det. | A1 | много
+mud | n. | A2 | грязь
+multiple | adj. | B2 | множественные, неоднократные
+mum | n. | A1 | мама
+murder | n. | A2 | убийство
+muscle | n. | A2 | мускул
+museum | n. | A1 | музей
+music | n. | A1 | музыка
+musician | n. | A2 | музыкант
+must | modal v. | A1 | должен
+my | det. | A1 | мой
+mystery | n. | A2 | тайна
+nail | n. | A2 | гвоздь, ноготь
+naked | adj. | A2 | голый
+name | n. | A1 | имя
+name | v. | A1 | называть
+narrow | adj. | A2 | узкий
+nation | n. | A2 | нация, народ
+national | adj. | A2 | национальный
+native | adj. | A2 | родной
+natural | adj. | A1 | естественный, природный
+naturally | adv. | A2 | естественно
+nature | n. | A2 | природа
+near | prep. | A1 | около
+nearly | adv. | A2 | почти
+neat | adj. | A2 | аккуратный
+necessary | adj. | A2 | необходимый
+necessity | n. | B1 | необходимость
+neck | n. | A2 | шея
+need | v. | A1 | нуждаться
+needle | n. | A2 | игла
+negative | adj. | B1 | негативный, отрицательный
+negotiate | v. | B1 | вести переговоры
+negotiation | n. | B2 | переговоры
+neighbor | n. | A1 | сосед
+neighbourhood | n. | A2 | район, окрестности
+neither | det. | A2 | ни тот ни другой
+nerve | n. | B1 | нерв
+nervous | adj. | A2 | нервный, взволнованный
+nest | n. | A2 | гнездо
+net | n. | A2 | сетка
+network | n. | A2 | сеть
+neutral | adj. | B1 | нейтральный
+never | adv. | A1 | никогда
+nevertheless | adv. | B1 | тем не менее
+new | adj. | A1 | новый
+news | n. | A1 | новости
+newspaper | n. | A1 | газета
+next | adj. | A1 | следующий
+next to | prep. | A1 | рядом с
+nice | adj. | A1 | приятный, хороший
+night | n. | A1 | ночь
+nightmare | n. | A2 | кошмар
+nine | num. | A1 | девять
+nineteen | num. | A1 | девятнадцать
+ninety | num. | A1 | девяносто
+no | excl. | A1 | нет
+nobody | pron. | A1 | никто
+noise | n. | A1 | шум
+noisy | adj. | A2 | шумный
+none | pron. | A2 | никто, нисколько
+noodle | n. | A1 | лапша
+noon | n. | A1 | полдень
+normal | adj. | A1 | обычный
+normally | adv. | A2 | обычно
+north | n. | A1 | север
+northeast | n. | A2 | северо-восток
+northwest | n. | A2 | северо-запад
+nose | n. | A1 | нос
+not | adv. | A1 | не
+note | n. | A1 | заметка, записка
+notebook | n. | A2 | блокнот
+nothing | pron. | A1 | ничего
+notice | v. | A2 | замечать, обращать внимание
+noticeable | adj. | B2 | заметный, ощутимый
+notion | n. | B2 | понятие, представление
+novel | n. | A2 | роман
+November | n. | A1 | ноябрь
+now | adv. | A1 | сейчас
+nowhere | adv. | A2 | нигде, никуда
+number | n. | A1 | номер
+numerous | adj. | B1 | многочисленный
+nurse | n. | A1 | медсестра
+nut | n. | A2 | орех
+nutrition | n. | B1 | питание
+o'clock | adv. | A1 | часов
+obey | v. | A2 | подчиняться, слушаться
+object | n. | A1 | предмет, объект
+objective | n. | B1 | цель, задача
+obligation | n. | B1 | обязательство, обязанность
+observation | n. | B1 | наблюдение
+observe | v. | B1 | наблюдать
+obtain | v. | B1 | получать, приобретать
+obvious | adj. | A2 | очевидный
+obviously | adv. | A2 | очевидно
+occasion | n. | A2 | случай, повод
+occasionally | adv. | A2 | время от времени
+occupy | v. | B2 | занимать (место/пространство)
+occur | v. | B1 | происходить, случаться
+ocean | n. | A2 | океан
+October | n. | A1 | октябрь
+of | prep. | A1 | из, о
+off | adv. | A1 | выключенный
+offence | n. | B2 | правонарушение
+offend | v. | B1 | обижать, задевать
+offensive | adj. | B1 | оскорбительный
+offer | v. | A2 | предлагать
+office | n. | A1 | офис
+officer | n. | A2 | офицер, сотрудник
+official | adj. | A2 | официальный
+often | adv. | A1 | часто
+oh | excl. | A1 | о
+oil | n. | A1 | масло
+OK | excl. | A1 | хорошо
+old | adj. | A1 | старый
+old-fashioned | adj. | A2 | старомодный
+on | prep. | A1 | на
+once | adv. | A1 | один раз
+one | num. | A1 | один
+onion | n. | A1 | лук
+online | adj. | A1 | онлайн, сетевой
+only | adj. | A1 | единственный
+onto | prep. | A2 | на (поверхность)
+open | adj. | A1 | открытый
+open | v. | A1 | открывать
+opening | n. | A2 | открытие, вакансия
+operate | v. | A2 | работать, управлять
+operation | n. | B2 | операция, деятельность
+opinion | n. | A1 | мнение
+opponent | n. | B1 | оппонент, соперник
+opportunity | n. | A2 | возможность
+oppose | v. | B1 | выступать против
+opposite | adj. | A1 | противоположный, напротив
+opposition | n. | B2 | оппозиция, сопротивление
+option | n. | A2 | вариант, выбор
+or | conj. | A1 | или
+orange | adj. | A1 | оранжевый
+orange | n. | A1 | апельсин
+order | n. | A1 | заказ
+order | v. | A1 | заказывать
+ordinary | adj. | A2 | обычный
+organization | n. | A2 | организация
+organize | v. | A2 | организовывать
+origin | n. | B1 | происхождение
+original | adj. | A2 | оригинальный, первоначальный
+originally | adv. | A2 | изначально
+other | adj. | A1 | другой
+other | det. | A2 | другой
+otherwise | adv. | A2 | иначе, в противном случае
+ought to | modal v. | A2 | следует, должен
+our | det. | A1 | наш
+ourselves | pron. | A2 | мы сами, себя
+out | adv. | A1 | снаружи
+outcome | n. | B1 | результат, исход
+outdoor | adj. | A2 | открытый, на свежем воздухе
+outdoors | adv. | A2 | на улице, на открытом воздухе
+outer | adj. | A2 | внешний
+outline | v. | B1 | излагать, очерчивать
+outside | adv. | A1 | на улице
+outside | prep. | A2 | снаружи, вне
+oven | n. | A2 | духовка, печь
+over | prep. | A1 | над
+overall | adj. | B1 | общий, в целом
+overcome | v. | B1 | преодолевать
+owe | v. | B1 | быть должным
+own | adj. | A1 | собственный
+owner | n. | A2 | владелец
+ownership | n. | B2 | право собственности, владение
+pace | n. | B2 | темп, скорость
+pack | v. | A2 | упаковывать
+page | n. | A1 | страница
+pain | n. | A2 | боль
+painful | adj. | A2 | болезненный
+paint | n. | A1 | краска
+paint | v. | A1 | рисовать красками
+painter | n. | A2 | художник, маляр
+painting | n. | A1 | картина, живопись
+pair | n. | A1 | пара
+palace | n. | A2 | дворец
+pale | adj. | A2 | бледный
+paper | n. | A1 | бумага
+paragraph | n. | A1 | абзац
+parcel | n. | A2 | посылка
+pardon | excl. | A2 | прошу прощения
+parent | n. | A1 | родитель
+park | n. | A1 | парк
+park | v. | A1 | парковать
+parking | n. | A2 | парковка
+part | n. | A1 | часть
+participate | v. | B2 | участвовать
+participation | n. | B2 | участие
+particular | adj. | A2 | особенный, конкретный
+particularly | adv. | B2 | в особенности, особенно
+partner | n. | A1 | партнер
+party | n. | A1 | вечеринка
+pass | v. | A2 | проходить, сдавать (экзамен)
+passenger | n. | A2 | пассажир
+passion | n. | B2 | страсть, увлечение
+passionate | adj. | B2 | страстный, увлеченный
+passport | n. | A1 | паспорт
+password | n. | A2 | пароль
+past | adj. | A1 | прошлый
+past | prep. | A2 | мимо, после
+path | n. | A1 | тропинка, путь
+patience | n. | B2 | терпение
+patient | adj. | B1 | терпеливый
+patient | n. | A2 | пациент
+pattern | n. | A2 | узор, шаблон
+pay | v. | A1 | платить
+payment | n. | A2 | платеж, оплата
+peace | n. | A2 | мир, покой
+peaceful | adj. | A2 | мирный, спокойный
+pen | n. | A1 | ручка
+penalty | n. | B1 | штраф, наказание
+pencil | n. | A1 | карандаш
+pension | n. | B1 | пенсия
+people | n. | A1 | люди
+pepper | n. | A1 | перец
+perceive | v. | B2 | воспринимать
+perception | n. | B2 | восприятие
+perfect | adj. | A1 | идеальный
+perform | v. | A2 | выступать, исполнять
+performance | n. | A2 | выступление, представление
+perhaps | adv. | A2 | возможно, может быть
+period | n. | A1 | период, время
+permanent | adj. | A2 | постоянный
+permanently | adv. | B2 | навсегда, постоянно
+permission | n. | A2 | разрешение
+permit | v. | B2 | разрешать, позволять
+person | n. | A1 | человек
+personal | adj. | A2 | личный
+personality | n. | A2 | личность, характер
+perspective | n. | B2 | перспектива, взгляд
+persuade | v. | B1 | убеждать
+pet | n. | A1 | питомец, домашнее животное
+petrol | n. | A2 | бензин
+phenomenon | n. | B2 | феномен, явление
+phone | n. | A1 | телефон
+phone | v. | A1 | звонить
+photo | n. | A1 | фотография
+photograph | n. | A1 | фотография
+phrase | n. | A1 | фраза, выражение
+physical | adj. | A2 | физический
+physics | n. | A2 | физика
+piano | n. | A1 | пианино
+pick | v. | A2 | выбирать, собирать
+picnic | n. | A2 | пикник
+picture | n. | A1 | картинка
+piece | n. | A1 | кусок, часть
+pig | n. | A1 | свинья
+pile | n. | A2 | куча, стопка
+pill | n. | A2 | таблетка
+pilot | n. | A2 | пилот
+pink | adj. | A1 | розовый
+pink | n. | A1 | розовый цвет
+pipe | n. | A2 | труба
+pity | n. | A2 | жалость, сожаление
+pizza | n. | A2 | пицца
+place | n. | A1 | место
+plain | adj. | A2 | простой, однотонный
+plan | n. | A1 | план
+plan | v. | A1 | планировать
+plane | n. | A1 | самолет
+plant | n. | A1 | растение
+plant | v. | A1 | сажать
+plastic | adj. | A1 | пластиковый
+plastic | n. | A1 | пластик
+plate | n. | A1 | тарелка
+platform | n. | A1 | платформа, перрон
+play | n. | A1 | спектакль
+play | v. | A1 | играть
+player | n. | A1 | игрок
+pleasant | adj. | A1 | приятный
+please | excl. | A1 | пожалуйста
+pleased | adj. | A2 | довольный
+pleasure | n. | A2 | удовольствие
+plenty | pron. | A2 | много, достаточно
+pocket | n. | A2 | карман
+poem | n. | A2 | стихотворение
+point | n. | A1 | суть, мысль
+police | n. | A1 | полиция
+police officer | n. | A1 | офицер полиции
+policeman | n. | A1 | полицейский
+policy | n. | A2 | политика, правила
+polite | adj. | A2 | вежливый
+pollution | n. | A2 | загрязнение
+pool | n. | A1 | бассейн
+poor | adj. | A1 | бедный
+popular | adj. | A1 | популярный
+population | n. | A2 | население
+pork | n. | A1 | свинина
+position | n. | A2 | позиция, должность
+positive | adj. | A2 | положительный
+possess | v. | B2 | обладать, владеть
+possibility | n. | A2 | возможность
+possible | adj. | A1 | возможный
+possibly | adv. | A1 | возможно
+post | n. | A1 | почта
+post | v. | A1 | отправлять по почте
+post office | n. | A1 | почтовое отделение
+poster | n. | A1 | плакат
+potato | n. | A1 | картофелина
+potential | adj. | B1 | потенциальный
+potentially | adv. | B2 | потенциально
+pound | n. | A1 | фунт
+pour | v. | A2 | наливать
+power | n. | A2 | сила, энергия
+powerful | adj. | A2 | мощный, сильный
+practical | adj. | A2 | практичный
+practice | n. | A1 | практика, тренировка
+practise | v. | A1 | практиковаться
+praise | v. | B1 | хвалить
+predict | v. | A2 | предсказывать
+prediction | n. | B2 | прогноз, предсказание
+prefer | v. | A1 | предпочитать
+preferable | adj. | B2 | предпочтительный
+preference | n. | B2 | предпочтение
+preparation | n. | B1 | подготовка
+prepare | v. | A1 | готовить
+presence | n. | B2 | присутствие
+present | adj. | A1 | настоящий
+present | n. | A1 | подарок
+presentation | n. | A2 | презентация
+preserve | v. | B1 | сохранять, оберегать
+president | n. | A2 | президент
+press | v. | A2 | нажимать
+pressure | n. | B1 | давление
+pretty | adj. | A1 | симпатичный
+pretty | adv. | A1 | довольно
+prevent | v. | A2 | предотвращать
+previous | adj. | A2 | предыдущий
+previously | adv. | B2 | ранее, прежде
+price | n. | A1 | цена
+priest | n. | A2 | священник
+primarily | adv. | B2 | преимущественно
+primary | adj. | A2 | начальный
+prince | n. | A2 | принц
+princess | n. | A2 | принцесса
+principle | n. | B1 | принцип
+print | v. | A2 | печатать
+printer | n. | A1 | принтер
+priority | n. | B1 | приоритет
+prison | n. | A2 | тюрьма
+privacy | n. | B1 | конфиденциальность, приватность
+private | adj. | A2 | частный, личный
+prize | n. | A2 | приз, награда
+probability | n. | B2 | вероятность
+probably | adv. | A2 | вероятно
+problem | n. | A1 | проблема
+procedure | n. | B1 | процедура, порядок действий
+process | n. | A2 | процесс
+produce | v. | A2 | производить
+producer | n. | B2 | продюсер
+product | n. | A2 | продукт, товар
+productive | adj. | B2 | продуктивный
+productivity | n. | B2 | производительность
+profession | n. | B1 | профессия
+professional | adj. | A2 | профессиональный
+professor | n. | A2 | профессор
+profile | n. | A2 | профиль
+profit | n. | B1 | прибыль
+program | n. | A2 | программа
+programme | n. | A1 | программа
+progress | n. | A2 | прогресс, успехи
+project | n. | A1 | проект
+promise | v. | A2 | обещать
+promote | v. | A2 | продвигать
+promotion | n. | B2 | повышение (по службе)
+pronounce | v. | A2 | произносить
+pronunciation | n. | A2 | произношение
+proof | n. | A2 | доказательство
+proper | adj. | A2 | правильный, надлежащий
+properly | adv. | A2 | должным образом
+property | n. | A2 | собственность, имущество
+proportion | n. | B2 | пропорция, доля
+proposal | n. | B1 | предложение, проект
+propose | v. | B2 | предлагать
+prospect | n. | B2 | перспектива, шанс
+protect | v. | A2 | защищать
+protection | n. | B2 | защита
+protest | n. | B2 | протест
+proud | adj. | A2 | гордый
+prove | v. | A2 | доказывать
+provide | v. | A2 | предоставлять
+public | adj. | A2 | общественный
+publication | n. | B2 | публикация, издание
+publish | v. | A2 | публиковать
+pull | v. | A1 | тянуть
+punish | v. | A2 | наказывать
+pupil | n. | A2 | ученик
+puppy | n. | A1 | щенок
+purchase | v. | B1 | покупать, приобретать
+purple | adj. | A1 | фиолетовый
+purple | n. | A1 | фиолетовый цвет
+purpose | n. | A2 | цель, назначение
+purse | n. | A2 | женский кошелек
+pursue | v. | B2 | стремиться к, добиваться
+push | v. | A1 | толкать
+put | v. | A1 | класть, ставить
+puzzle | n. | A2 | головоломка, пазл
+qualification | n. | A2 | квалификация, диплом
+qualified | adj. | B2 | квалифицированный
+qualify | v. | B1 | квалифицироваться, получать право
+quality | n. | A2 | качество
+quantity | n. | A2 | количество
+quarter | n. | A1 | четверть
+queen | n. | A2 | королева
+question | n. | A1 | вопрос
+queue | n. | A2 | очередь
+quick | adj. | A1 | быстрый
+quickly | adv. | A1 | быстро
+quiet | adj. | A1 | тихий
+quietly | adv. | A2 | тихо
+quit | v. | A2 | бросать, увольняться
+quite | adv. | A1 | достаточно, вполне
+quiz | n. | A2 | викторина, тест
+quote | v. | B1 | цитировать
+rabbit | n. | A1 | кролик
+race | n. | A1 | гонка, состязание
+race | v. | A1 | соревноваться в скорости
+radio | n. | A1 | радио
+railway | n. | A1 | железная дорога
+rain | n. | A1 | дождь
+rain | v. | A1 | идти (о дожде)
+raise | v. | A2 | поднимать, воспитывать
+range | n. | B2 | диапазон, ассортимент
+rapid | adj. | B2 | быстрый, стремительный
+rapidly | adv. | B2 | быстро
+rare | adj. | B2 | редкий
+rarely | adv. | B1 | редко
+rate | n. | B2 | ставка
+rational | adj. | B2 | рациональный, разумный
+raw | adj. | B2 | сырой, необработанный
+reach | v. | A2 | достигать, добираться
+react | v. | A2 | реагировать
+reaction | n. | B1 | реакция
+read | v. | A1 | читать
+reader | n. | A1 | читатель
+reading | n. | A1 | чтение
+ready | adj. | A1 | готовый
+real | adj. | A1 | настоящий, реальный
+reality | n. | B1 | реальность
+realize | v. | A2 | осознавать, понимать
+really | adv. | A1 | действительно, очень
+reason | n. | A1 | причина
+reasonable | adj. | B2 | разумный, приемлемый
+recall | v. | B2 | вспоминать
+receive | v. | A1 | получать
+recent | adj. | A2 | недавний
+recently | adv. | A2 | недавно
+reception | n. | A2 | регистрация, приемная
+recipe | n. | A2 | рецепт
+recognition | n. | B2 | признание
+recognize | v. | A2 | узнавать, признавать
+recommend | v. | A2 | рекомендовать
+recommendation | n. | B2 | рекомендация
+record | n. | A2 | запись, рекорд
+recover | v. | A2 | выздоравливать, восстанавливаться
+recovery | n. | B2 | восстановление
+red | adj. | A1 | красный
+red | n. | A1 | красный цвет
+reduce | v. | A2 | уменьшать, снижать
+reduction | n. | B1 | сокращение, снижение
+refer | v. | B1 | обращаться, ссылаться
+reflect | v. | B1 | отражать
+refund | n. | B1 | возврат денег
+refuse | v. | A2 | отказываться
+regard | v. | B1 | расценивать, считать
+regional | adj. | A2 | региональный
+register | v. | A2 | регистрироваться
+regret | v. | A2 | сожалеть
+regular | adj. | A2 | регулярный, обычный
+regularly | adv. | A2 | регулярно
+regulation | n. | B1 | правило, предписание
+reject | v. | B1 | отклонять, отвергать
+relate | v. | B2 | связывать, относиться
+relation | n. | B2 | отношение, связь
+relationship | n. | A2 | отношения
+relative | adj. | B2 | относительный
+relative | n. | B1 | родственник
+relatively | adv. | B2 | относительно
+relax | v. | A1 | расслабляться
+relaxed | adj. | A2 | расслабленный
+relaxing | adj. | A2 | расслабляющий
+release | v. | B2 | выпускать
+relevant | adj. | B1 | актуальный, имеющий отношение
+reliable | adj. | A2 | надежный
+relief | n. | B1 | облегчение
+religion | n. | A2 | религия
+rely | v. | B1 | полагаться
+remain | v. | A2 | оставаться
+remarkable | adj. | B2 | замечательный, удивительный
+remember | v. | A1 | помнить, вспоминать
+remind | v. | A2 | напоминать
+remote | adj. | A2 | удаленный, далекий
+remove | v. | A2 | удалять, снимать
+rent | v. | A2 | арендовать, снимать
+repair | v. | A2 | ремонтировать
+repeat | v. | A1 | повторять
+replace | v. | A2 | заменять
+reply | v. | A2 | отвечать
+report | n. | A1 | отчет, доклад
+report | v. | B2 | сообщать, докладывать
+reporter | n. | A2 | репортер
+represent | v. | B1 | представлять
+representative | n. | B2 | представитель
+reputation | n. | B1 | репутация
+request | n. | A2 | просьба, запрос
+require | v. | A2 | требовать
+requirement | n. | B1 | требование
+rescue | v. | A2 | спасать
+research | n. | A2 | исследование
+researcher | n. | B2 | исследователь
+reservation | n. | A2 | бронирование
+reserve | v. | A2 | бронировать, резервировать
+resident | n. | B1 | житель
+resist | v. | B1 | сопротивляться, противостоять
+resolution | n. | B2 | разрешение (конфликта)
+resolve | v. | B2 | решать, урегулировать
+resource | n. | B1 | ресурс
+respect | n. | A2 | уважение
+respond | v. | A2 | отвечать, реагировать
+response | n. | A2 | ответ, реакция
+responsibility | n. | B2 | ответственность
+responsible | adj. | A2 | ответственный
+rest | n. | A2 | отдых, остаток
+restaurant | n. | A1 | ресторан
+restore | v. | B2 | восстанавливать
+restrict | v. | B2 | ограничивать
+restriction | n. | B2 | ограничение
+result | n. | A1 | результат
+retain | v. | B2 | сохранять, удерживать
+retire | v. | A2 | уходить на пенсию
+retired | adj. | A2 | на пенсии, в отставке
+return | n. | A1 | возвращение
+return | v. | A1 | возвращаться, возвращать
+reveal | v. | B1 | раскрывать, выявлять
+revenue | n. | B2 | доход, выручка
+review | n. | A2 | обзор, отзыв
+revise | v. | A2 | повторять, пересматривать
+revolution | n. | B2 | революция
+reward | n. | A2 | награда
+rice | n. | A1 | рис
+rich | adj. | A1 | богатый
+ride | n. | A1 | поездка
+ride | v. | A1 | ехать верхом, на велосипеде
+ridiculous | adj. | B1 | нелепый, смехотворный
+right | adj. | A1 | правый, верный
+right | adv. | A1 | прямо
+right | n. | A1 | право, правота
+ring | n. | A2 | кольцо, звонок
+rise | v. | A2 | подниматься, расти
+risk | n. | A2 | риск
+river | n. | A1 | река
+road | n. | A1 | дорога
+robot | n. | A2 | робот
+rock | n. | A2 | скала, рок-музыка
+role | n. | A2 | роль
+roll | v. | A2 | катить(ся), сворачивать
+romantic | adj. | A2 | романтичный
+roof | n. | A2 | крыша
+room | n. | A1 | комната
+rope | n. | A2 | веревка
+rough | adj. | A2 | грубый, шероховатый
+round | adj. | A2 | круглый
+route | n. | A2 | маршрут
+routine | n. | A1 | рутина, режим
+royal | adj. | A2 | королевский
+rub | v. | A2 | тереть
+rubber | n. | A2 | резина, ластик
+rubbish | n. | A2 | мусор
+rude | adj. | A2 | грубый, невоспитанный
+rugby | n. | A2 | регби
+rule | n. | A1 | правило
+ruler | n. | A2 | линейка, правитель
+rumour | n. | B2 | слух, сплетня
+run | v. | A1 | бегать
+runner | n. | A1 | бегун
+running | n. | A1 | бег
+rural | adj. | A2 | сельский
+rush | v. | A2 | спешить, торопиться
+sad | adj. | A1 | грустный
+safe | adj. | A2 | безопасный
+safety | n. | A2 | безопасность
+sail | v. | A2 | плыть под парусом, плавать
+sailing | n. | A2 | парусный спорт
+salad | n. | A1 | салат
+salary | n. | A2 | зарплата
+sale | n. | A2 | распродажа, продажа
+salt | n. | A1 | соль
+same | adj. | A1 | тот же
+sample | n. | B1 | образец, проба
+sandwich | n. | A1 | бутерброд
+Saturday | n. | A1 | суббота
+sauce | n. | A1 | соус
+save | v. | A1 | копить, экономить
+say | v. | A1 | говорить
+scare | v. | A2 | пугать
+scared | adj. | A2 | испуганный
+scary | adj. | A2 | страшный
+scenario | n. | B2 | сценарий, расклад
+scene | n. | A2 | сцена
+schedule | n. | A2 | расписание, график
+scheme | n. | B1 | схема, план
+school | n. | A1 | школа
+science | n. | A1 | наука
+scientist | n. | A1 | ученый
+scope | n. | B2 | масштаб, объем
+score | n. | A2 | счет, результат
+screen | n. | A2 | экран
+sea | n. | A1 | море
+search | v. | A2 | искать
+season | n. | A2 | время года
+seat | n. | A2 | сиденье, место
+second | adj. | A2 | второй
+second | n. | A1 | секунда
+second | num. | A1 | второй
+secondary | adj. | A2 | средний (о школе)
+secret | adj. | B1 | секретный
+secret | n. | A2 | секрет
+secretary | n. | A2 | секретарь
+section | n. | A1 | секция
+sector | n. | B1 | сектор, отрасль
+secure | adj. | B2 | безопасный, надежный
+security | n. | A2 | безопасность
+see | v. | A1 | видеть
+seek | v. | B1 | искать
+seem | v. | A2 | казаться
+select | v. | A2 | выбирать
+selection | n. | B2 | выбор, подборка
+sell | v. | A1 | продавать
+send | v. | A1 | отправлять
+senior | adj. | B2 | старший, руководящий
+sensation | n. | B2 | ощущение
+sense | n. | A2 | чувство
+sensible | adj. | A2 | благоразумный, разумный
+sensitive | adj. | B1 | чувствительный
+sentence | n. | A1 | предложение
+sentence | n. | B1 | приговор
+separate | adj. | A2 | отдельный, обособленный
+September | n. | A1 | сентябрь
+sequence | n. | B2 | последовательность
+series | n. | B2 | серия, ряд
+serious | adj. | A2 | серьезный
+seriously | adv. | A2 | серьезно
+servant | n. | A2 | слуга
+serve | v. | A2 | обслуживать
+service | n. | A2 | служба, сервис
+session | n. | A2 | сессия, занятие
+set | v. | A2 | устанавливать, ставить
+seven | num. | A1 | семь
+seventeen | num. | A1 | семнадцать
+seventy | num. | A1 | семьдесят
+several | det. | A2 | несколько
+severe | adj. | B1 | суровый, тяжелый
+severely | adv. | B2 | сильно, сурово
+shade | n. | B1 | тень
+shadow | n. | B1 | тень (от объекта)
+shake | v. | A2 | трясти(сь)
+shall | modal v. | A2 | должен, следует
+shape | n. | A2 | форма
+share | v. | A1 | делиться
+sharp | adj. | A2 | острый
+shave | v. | A2 | бриться
+she | pron. | A1 | она
+sheep | n. | A1 | овца
+sheet | n. | A2 | простыня, лист
+shelf | n. | A2 | полка
+shift | n. | B1 | смена
+shift | v. | B2 | сдвигать, менять
+shine | v. | A2 | светить
+shiny | adj. | A2 | блестящий
+ship | n. | A2 | корабль
+shirt | n. | A1 | рубашка
+shock | n. | A2 | шок
+shocked | adj. | A2 | шокированный
+shoe | n. | A1 | туфля, ботинок
+shoot | v. | A2 | стрелять
+shop | n. | A1 | магазин
+shop | v. | A1 | делать покупки
+shopping | n. | A1 | покупки
+short | adj. | A1 | короткий, низкий
+shortage | n. | B2 | нехватка, дефицит
+shortly | adv. | B2 | вскорости, вскоре
+shot | n. | A2 | выстрел, удар
+should | modal v. | A1 | следует
+shoulder | n. | A2 | плечо
+shout | v. | A2 | кричать
+show | n. | A1 | шоу
+show | v. | A1 | показывать
+shower | n. | A1 | душ
+shut | v. | A2 | закрывать
+shy | adj. | A2 | застенчивый
+sick | adj. | A1 | больной
+side | n. | A1 | сторона
+sight | n. | A2 | зрение, достопримечательность
+signal | n. | A2 | сигнал
+signature | n. | A2 | подпись
+significant | adj. | B1 | значительный
+significantly | adv. | B2 | значительно
+silent | adj. | A2 | тихий
+silk | n. | A2 | шелк
+silly | adj. | A2 | глупый
+silver | n. | A2 | серебро
+similar | adj. | A1 | похожий
+similarity | n. | B2 | сходство
+simple | adj. | A2 | простой
+simplify | v. | B2 | упрощать
+simply | adv. | A2 | просто
+since | prep. | A2 | с (какого-то времени)
+sing | v. | A1 | петь
+singer | n. | A1 | певец
+single | adj. | A2 | один, холостой
+sink | v. | A2 | тонуть
+sister | n. | A1 | сестра
+sit | v. | A1 | сидеть
+site | n. | A2 | сайт, место
+situation | n. | A1 | ситуация
+six | num. | A1 | шесть
+sixteen | num. | A1 | шестнадцать
+sixty | num. | A1 | шестьдесят
+size | n. | A2 | размер
+skill | n. | A1 | навык
+skilled | adj. | B2 | квалифицированный, умелый
+skin | n. | A2 | кожа
+skirt | n. | A1 | юбка
+sky | n. | A1 | небо
+sleep | n. | A1 | сон
+sleep | v. | A1 | спать
+sleeve | n. | A2 | рукав
+slice | n. | A2 | ломтик, кусок
+slight | adj. | B1 | незначительный, легкий
+slightly | adv. | B2 | слегка, немного
+slim | adj. | A2 | стройный
+slip | v. | A2 | поскользнуться
+slow | adj. | A1 | медленный
+slowly | adv. | A1 | медленно
+small | adj. | A1 | маленький
+smart | adj. | A2 | умный, элегантный
+smell | v. | A2 | пахнуть
+smile | v. | A2 | улыбаться
+smoke | v. | A2 | курить
+smoking | n. | A2 | курение
+smooth | adj. | B1 | гладкий, плавный
+snake | n. | A1 | змея
+snow | n. | A1 | снег
+snow | v. | A1 | идти (о снеге)
+so | adv. | A1 | так
+soap | n. | A1 | мыло
+soccer | n. | A2 | футбол
+social | adj. | A2 | социальный
+society | n. | A2 | общество
+sock | n. | A1 | носок
+soft | adj. | A1 | мягкий
+software | n. | A2 | софт, ПО
+soil | n. | A2 | почва
+soldier | n. | A2 | солдат
+sole | adj. | B2 | единственный
+solely | adv. | B2 | исключительно, только
+solid | adj. | B2 | надёжный, прочный
+solution | n. | A2 | решение
+solve | v. | A2 | решать
+some | det. | A1 | некоторые, немного
+somebody | pron. | A1 | кто-то
+someone | pron. | A1 | кто-то
+something | pron. | A1 | что-то
+sometimes | adv. | A1 | иногда
+somewhere | adv. | A2 | где-то, куда-то
+son | n. | A1 | сын
+song | n. | A1 | песня
+soon | adv. | A1 | скоро
+sophisticated | adj. | B2 | сложный, современный
+sorry | adj. | A1 | сожалеющий
+sound | n. | A1 | звук
+sound | v. | A1 | звучать
+soup | n. | A1 | суп
+sour | adj. | A2 | кислый
+source | n. | B1 | источник
+south | n. | A1 | юг
+southern | adj. | A2 | южный
+space | n. | A1 | пространство, космос
+spare | adj. | A2 | запасной
+speak | v. | A1 | говорить
+speaker | n. | A1 | динамик
+special | adj. | A1 | особенный
+specific | adj. | B1 | конкретный, специфический
+specifically | adv. | B2 | конкретно, специально
+specify | v. | B2 | указывать, уточнять
+speech | n. | A2 | речь
+speed | n. | A2 | скорость
+spell | v. | A1 | писать по буквам
+spelling | n. | A1 | правописание
+spend | v. | A1 | тратить, проводить
+spice | n. | A2 | специя
+spicy | adj. | A2 | острый (о еде)
+spider | n. | A2 | паук
+spill | v. | A2 | проливать
+spin | v. | A2 | крутить(ся)
+spirit | n. | A2 | дух
+sponsor | v. | B2 | спонсировать
+spoon | n. | A2 | ложка
+sport | n. | A1 | спорт
+spot | n. | A2 | пятно, место
+spread | v. | A2 | распространять, намазывать
+spring | n. | A1 | весна
+square | n. | A2 | квадрат, площадь
+stability | n. | B2 | стабильность
+stable | adj. | B1 | стабильный
+stadium | n. | A2 | стадион
+staff | n. | A2 | персонал
+stage | n. | A2 | сцена
+stair | n. | A2 | ступенька, лестница
+stamp | n. | A2 | почтовая марка
+stand | v. | A1 | стоять
+star | n. | A1 | звезда
+start | v. | A1 | начинать, стартовать
+state | n. | A2 | состояние, штат
+statement | n. | A1 | заявление
+statement | n. | B1 | выписка (из банка)
+station | n. | A1 | станция, вокзал
+statistic | n. | B2 | статистика, показатель
+statue | n. | A2 | статуя
+status | n. | B2 | статус, положение
+stay | v. | A1 | оставаться
+steady | adj. | B2 | постоянный, устойчивый
+steal | v. | A2 | воровать
+steam | n. | A2 | пар
+steel | n. | A2 | сталь
+step | n. | A2 | шаг
+stick | v. | A2 | приклеивать(ся)
+sticky | adj. | A2 | липкий
+still | adv. | A1 | все еще
+stomach | n. | A2 | живот, желудок
+stone | n. | A2 | камень
+stop | n. | A1 | остановка
+stop | v. | A1 | останавливать
+store | n. | A2 | магазин
+storm | n. | A2 | шторм, буря
+story | n. | A1 | история, рассказ
+stove | n. | A2 | плита
+straight | adj. | A2 | прямой
+strange | adj. | A2 | странный
+stranger | n. | A2 | незнакомец
+strategy | n. | A2 | стратегия
+stream | n. | A2 | ручей
+street | n. | A1 | улица
+strength | n. | A2 | сила
+stress | n. | A2 | стресс
+stretch | v. | A2 | тянуть(ся)
+strict | adj. | A2 | строгий
+strike | v. | A2 | ударять
+string | n. | A2 | веревка, струна
+strong | adj. | A1 | сильный
+strongly | adv. | A2 | сильно
+structure | n. | A2 | структура
+struggle | v. | B1 | бороться
+student | n. | A1 | студент
+studio | n. | A2 | студия
+study | n. | A1 | учеба
+study | v. | A1 | учиться
+stuff | n. | A2 | вещи, штуки
+stupid | adj. | A2 | глупый
+style | n. | A1 | стиль
+subject | n. | A1 | предмет
+subsequent | adj. | B2 | последующий
+subsequently | adv. | B2 | впоследствии, позже
+substance | n. | B2 | вещество
+substantial | adj. | B2 | существенный, значительный
+substantially | adv. | B2 | существенно
+substitute | n. | B2 | заменитель, суррогат
+succeed | v. | A2 | добиваться успеха
+success | n. | A1 | успех
+successful | adj. | A2 | успешный
+successfully | adv. | B2 | успешно
+such | det. | A2 | такой
+sudden | adj. | A2 | внезапный
+suddenly | adv. | A2 | вдруг, внезапно
+suffer | v. | A2 | страдать
+sufficient | adj. | B2 | достаточный
+sufficiently | adv. | B2 | достаточно
+sugar | n. | A1 | сахар
+suggest | v. | A2 | предлагать
+suggestion | n. | A2 | предложение
+suit | n. | A2 | костюм
+suitable | adj. | A2 | подходящий
+suitcase | n. | A2 | чемодан
+sum | n. | B2 | сумма
+summarize | v. | B2 | суммировать, резюмировать
+summary | n. | A2 | краткое изложение
+summer | n. | A1 | лето
+sun | n. | A1 | солнце
+Sunday | n. | A1 | воскресенье
+sunny | adj. | A2 | солнечный
+supermarket | n. | A1 | супермаркет
+supper | n. | A2 | ужин
+supply | n. | B1 | поставка, запасы
+supply | v. | B2 | поставлять, снабжать
+support | v. | A2 | поддерживать
+suppose | v. | A2 | предполагать
+sure | adj. | A1 | уверенный
+surface | n. | A2 | поверхность
+surge | n. | B2 | всплеск, резкий рост
+surpass | v. | B2 | превосходить
+surprise | n. | A2 | сюрприз
+surprised | adj. | A2 | удивленный
+surprising | adj. | A2 | удивительный
+surround | v. | A2 | окружать
+surrounding | adj. | B2 | окружающий
+survey | n. | A2 | опрос, исследование
+survival | n. | B2 | выживание
+survive | v. | A2 | выживать
+suspect | v. | B1 | подозревать
+suspend | v. | B2 | приостанавливать
+sustain | v. | B2 | поддерживать, подпитывать
+sustainable | adj. | B2 | устойчивый, экологичный
+sweater | n. | A1 | свитер
+sweet | adj. | A1 | сладкий
+sweet | n. | A1 | конфета
+swim | v. | A1 | плавать
+swimming | n. | A1 | плавание
+switch | v. | A2 | переключать
+symbol | n. | A2 | символ
+symptom | n. | B2 | симптом
+system | n. | A2 | система
+T-shirt | n. | A1 | футболка
+table | n. | A1 | стол
+table tennis | n. | A1 | настольный теннис
+tablet | n. | A2 | планшет
+take | v. | A1 | брать
+talent | n. | A2 | талант
+talented | adj. | A2 | талантливый
+talk | n. | A1 | разговор
+talk | v. | A1 | разговаривать
+tall | adj. | A1 | высокий
+target | n. | A2 | цель, мишень
+task | n. | A2 | задача
+taste | n. | B1 | вкус
+taste | v. | A2 | пробовать, иметь вкус
+tasty | adj. | A2 | вкусный
+tax | n. | A2 | налог
+taxi | n. | A1 | такси
+tea | n. | A1 | чай
+teach | v. | A1 | учить
+teacher | n. | A1 | учитель
+team | n. | A1 | команда
+tear | v. | A2 | рвать
+technical | adj. | B2 | технический
+technique | n. | B1 | техника, метод
+technology | n. | A2 | технология
+teenager | n. | A1 | подросток
+telephone | n. | A1 | телефон
+telephone | v. | A1 | звонить
+television | n. | A1 | телевизор
+tell | v. | A1 | рассказывать
+temperature | n. | A2 | температура
+temporary | adj. | A2 | временный
+ten | num. | A1 | десять
+tend | v. | B1 | иметь тенденцию
+tendency | n. | B2 | тенденция, склонность
+tennis | n. | A1 | теннис
+tension | n. | B1 | напряжение
+tent | n. | A2 | палатка
+term | n. | A2 | семестр, термин
+term | n. | B2 | условия (договора)
+terrible | adj. | A1 | ужасный
+test | n. | A1 | тест, проверка
+test | v. | A1 | проверять
+text | n. | A1 | текст
+text | v. | A1 | писать сообщение
+textbook | n. | A2 | учебник
+than | conj. | A1 | чем
+thank | v. | A1 | благодарить
+thanks | excl. | A1 | спасибо
+that | conj. | A1 | что
+that | det. | A1 | тот
+that | pron. | A1 | то
+the | det. | A1 | определенный артикль
+theatre | n. | A1 | театр
+their | det. | A1 | их
+them | pron. | A1 | их
+theme | n. | B2 | тема, мотив
+then | adv. | A1 | затем, тогда
+theory | n. | B2 | теория
+there | adv. | A1 | там
+therefore | adv. | B2 | поэтому, следовательно
+they | pron. | A1 | они
+thief | n. | A2 | вор
+thin | adj. | A2 | тонкий, худой
+thing | n. | A1 | вещь
+think | v. | A1 | думать
+thinking | n. | A2 | мышление
+third | num. | A1 | третий
+thirsty | adj. | A1 | испытывающий жажду
+thirteen | num. | A1 | тринадцать
+thirty | num. | A1 | тридцать
+this | det. | A1 | этот
+this | pron. | A1 | это
+thorough | adj. | B2 | тщательный, детальный
+thoroughly | adv. | B2 | тщательно, основательно
+thought | n. | A2 | мысль
+thousand | num. | A1 | тысяча
+threat | n. | B1 | угроза
+threaten | v. | B1 | угрожать
+three | num. | A1 | три
+throat | n. | A2 | горло
+through | prep. | A1 | через
+throw | v. | A2 | бросать
+thumb | n. | A2 | большой палец
+thunder | n. | A2 | гром
+Thursday | n. | A1 | четверг
+thus | adv. | B2 | таким образом
+ticket | n. | A1 | билет
+tidy | adj. | A1 | аккуратный
+tidy | v. | A1 | убирать
+tie | v. | A2 | завязывать, галстук
+tight | adj. | A2 | тесный, плотный
+tight | adj. | B2 | сжатый (о сроках)
+time | n. | A1 | время
+timetable | n. | A2 | расписание
+tin | n. | A2 | консервная банка
+tiny | adj. | A2 | крошечный
+tip | n. | A2 | совет, чаевые
+tired | adj. | A1 | уставший
+tiring | adj. | A2 | утомительный
+tissue | n. | A2 | бумажная салфетка
+title | n. | A2 | заглавие, название
+to | prep. | A1 | в, к
+today | adv. | A1 | сегодня
+today | n. | A1 | сегодня
+toe | n. | A2 | палец ноги
+together | adv. | A1 | вместе
+toilet | n. | A1 | туалет
+tolerance | n. | B2 | толерантность, терпимость
+tomato | n. | A1 | помидор
+tomorrow | adv. | A1 | завтра
+tomorrow | n. | A1 | завтра
+tongue | n. | A2 | язык (орган)
+tonight | adv. | A1 | сегодня вечером
+tonight | n. | A1 | сегодняшний вечер
+too | adv. | A1 | тоже, слишком
+tool | n. | A2 | инструмент
+tooth | n. | A1 | зуб
+toothache | n. | A2 | зубная боль
+toothbrush | n. | A2 | зубная щетка
+toothpaste | n. | A2 | зубная паста
+topic | n. | A1 | тема
+total | adj. | A1 | общий, полный
+total | n. | A1 | итог
+touch | v. | A2 | прикасаться
+tough | adj. | A2 | трудный, жесткий
+tour | n. | A1 | тур, экскурсия
+tourism | n. | A2 | туризм
+tourist | n. | A1 | турист
+tournament | n. | B1 | турнир
+towel | n. | A2 | полотенце
+tower | n. | A2 | башня
+town | n. | A1 | город
+toy | n. | A1 | игрушка
+trace | v. | B1 | отслеживать, находить
+track | n. | A2 | трек, дорожка
+track | v. | B2 | отслеживать, следить
+trade | n. | A2 | торговля
+tradition | n. | B1 | традиция
+traditional | adj. | A2 | традиционный
+traffic | n. | A2 | дорожное движение
+train | n. | A1 | поезд
+trainer | n. | A2 | кроссовок, инструктор
+training | n. | A2 | тренировка, обучение
+transfer | v. | B1 | переводить (деньги)
+transform | v. | B1 | преобразовывать
+transformation | n. | B2 | преобразование
+transition | n. | B2 | переход
+translate | v. | B2 | переводить (с языка)
+translation | n. | B2 | перевод
+transparent | adj. | B2 | прозрачный, открытый
+transport | n. | A2 | транспорт
+transport | v. | B2 | транспортировать, перевозить
+travel | n. | A1 | путешествие
+travel | v. | A1 | путешествовать
+traveller | n. | A2 | путешественник
+treasure | n. | A2 | сокровище
+treat | v. | A2 | лечить, относиться
+treatment | n. | A2 | лечение
+tree | n. | A1 | дерево
+trend | n. | A2 | тренд, тенденция
+trial | n. | B1 | судебный процесс
+trick | n. | A2 | трюк, фокус
+trigger | v. | B2 | вызывать, запускать (триггерить)
+trip | n. | A1 | поездка
+tropical | adj. | B1 | тропический
+trouble | n. | A2 | неприятности, проблема
+trousers | n. | A1 | брюки
+truck | n. | A2 | грузовик
+true | adj. | A1 | правдивый
+trust | v. | A2 | доверять
+truth | n. | A2 | правда
+try | v. | A1 | пробовать
+tube | n. | A2 | труба, тюбик
+Tuesday | n. | A1 | вторник
+tunnel | n. | A2 | тоннель
+turkey | n. | A2 | индейка
+turn | n. | A1 | поворот
+turn | v. | A1 | поворачивать
+TV | n. | A1 | телевизор
+twelve | num. | A1 | двенадцать
+twenty | num. | A1 | двадцать
+twice | adv. | A1 | дважды
+twin | n. | A2 | близнец
+two | num. | A1 | два
+type | n. | A1 | тип
+typical | adj. | A2 | типичный
+tyre | n. | A2 | шина
+ugly | adj. | A2 | уродливый
+ultimate | adj. | B1 | конечный, максимальный
+ultimately | adv. | B1 | в конечном счете
+umbrella | n. | A1 | зонт
+unable | adj. | A2 | неспособный
+uncle | n. | A1 | дядя
+uncomfortable | adj. | A2 | неудобный
+unconscious | adj. | B1 | без сознания
+under | prep. | A1 | под
+undergo | v. | B1 | подвергаться, проходить
+underground | adj. | A2 | подземный, метро
+underlie | v. | B2 | лежать в основе
+underlying | adj. | B2 | лежащий в основе, скрытый
+understand | v. | A1 | понимать
+understanding | n. | A2 | понимание
+undertake | v. | B2 | предпринимать, браться за
+underwear | n. | A2 | нижнее белье
+undressed | adj. | A2 | раздетый
+unemployed | adj. | A2 | безработный
+unemployment | n. | A2 | безработица
+unexpected | adj. | A2 | неожиданный
+unfair | adj. | A2 | несправедливый
+unfortunately | adv. | B1 | к сожалению
+unfriendly | adj. | A2 | недружелюбный
+unhappy | adj. | A2 | несчастный
+uniform | adj. | B2 | единообразный, одинаковый
+uniform | n. | A2 | униформа
+union | n. | A2 | союз, профсоюз
+unique | adj. | B1 | уникальный
+unit | n. | A2 | единица, раздел
+unite | v. | B1 | объединять(ся)
+universal | adj. | B1 | универсальный, всеобщий
+universe | n. | B2 | вселенная
+university | n. | A1 | университет
+unkind | adj. | A2 | недобрый
+unknown | adj. | A2 | неизвестный
+unless | conj. | A2 | если не
+unlikely | adj. | B1 | маловероятный
+unlucky | adj. | A2 | невезучий
+unnecessary | adj. | A2 | ненужный
+unpleasant | adj. | A2 | неприятный
+untidy | adj. | A2 | неаккуратный
+until | prep. | A1 | до, пока не
+unusual | adj. | A2 | необычный
+unusually | adv. | A2 | необычно
+up | adv. | A1 | вверх
+up | prep. | A1 | наверх
+update | v. | B1 | обновлять
+upload | v. | A2 | загружать (в сеть)
+upper | adj. | A2 | верхний
+upset | adj. | A2 | расстроенный
+upstairs | adv. | A1 | наверху, наверх
+urban | adj. | A2 | городской
+urge | v. | B2 | побуждать, призывать
+urgent | adj. | A2 | срочный
+us | pron. | A1 | нам
+use | v. | A1 | использовать
+useful | adj. | A1 | полезный
+user | n. | A2 | пользователь
+usual | adj. | A2 | обычный
+usually | adv. | A1 | обычно
+utility | n. | B2 | коммунальные услуги
+utilize | v. | B2 | использовать, задействовать
+vacation | n. | A1 | отпуск
+valid | adj. | B2 | действительный
+valley | n. | A2 | долина
+valuable | adj. | A2 | ценный
+value | n. | A2 | стоимость, значение
+van | n. | A2 | фургон
+variable | adj. | B2 | переменный, изменчивый
+variation | n. | B2 | вариация, отклонение
+variety | n. | A2 | разнообразие
+various | adj. | A2 | различный, разный
+vary | v. | B1 | варьироваться, меняться
+vase | n. | A2 | ваза
+vast | adj. | B1 | обширный, огромный
+vegetable | n. | A1 | овощ
+vegetarian | n. | A2 | вегетарианец
+vehicle | n. | A2 | транспортное средство
+version | n. | A2 | версия
+very | adv. | A1 | очень
+via | prep. | B2 | через, с помощью
+victim | n. | A2 | жертва
+video | n. | A1 | видео
+view | n. | A2 | вид, мнение
+village | n. | A1 | деревня, село
+violate | v. | B2 | нарушать
+violation | n. | B2 | нарушение
+violence | n. | B1 | насилие
+violent | adj. | B1 | жестокий
+violin | n. | A2 | скрипка
+virtual | adj. | B1 | виртуальный
+virus | n. | A2 | вирус
+visible | adj. | B2 | видимый, заметный
+vision | n. | B1 | видение
+visit | n. | A1 | визит
+visit | v. | A1 | посещать
+visitor | n. | A1 | посетитель
+visual | adj. | B2 | визуальный
+vital | adj. | B1 | жизненно важный
+vocabulary | n. | A2 | словарный запас
+voice | n. | A2 | голос
+volume | n. | A2 | громкость, объем
+voluntary | adj. | B2 | добровольный
+volunteer | n. | A2 | волонтер
+vote | v. | A2 | голосовать
+wage | n. | A2 | заработная плата
+wait | v. | A1 | ждать
+waiter | n. | A1 | официант
+wake | v. | A1 | просыпаться
+walk | n. | A1 | прогулка
+walk | v. | A1 | гулять, ходить пешком
+wall | n. | A1 | стена
+wallet | n. | A2 | бумажник, кошелек
+want | v. | A1 | хотеть
+war | n. | A2 | война
+warm | adj. | A1 | тёплый
+warn | v. | A2 | предупреждать
+warning | n. | A2 | предупреждение
+wash | v. | A1 | мыть
+waste | n. | A2 | отходы, пустая трата
+watch | n. | A1 | наручные часы
+watch | v. | A1 | смотреть, наблюдать
+water | n. | A1 | вода
+wave | n. | A2 | волна
+way | n. | A1 | путь, способ
+we | pron. | A1 | мы
+weak | adj. | A2 | слабый
+wealth | n. | A2 | богатство
+wealthy | adj. | A2 | богатый
+weapon | n. | A2 | оружие
+wear | v. | A1 | носить (одежду)
+weather | n. | A1 | погода
+web | n. | A2 | сеть, паутина
+website | n. | A1 | веб-сайт
+wedding | n. | A2 | свадьба
+Wednesday | n. | A1 | среда
+week | n. | A1 | неделя
+weekend | n. | A1 | выходные
+weekly | adj. | B1 | еженедельный
+weigh | v. | A2 | взвешивать
+weight | n. | A2 | вес
+welcome | adj. | A1 | желанный
+welcome | excl. | A1 | добро пожаловать
+well | adv. | A1 | хорошо
+well | excl. | A1 | ну
+west | n. | A1 | запад
+western | adj. | A2 | западный
+wet | adj. | A1 | мокрый
+what | pron. | A1 | что
+whatever | det. | B1 | что бы ни
+wheel | n. | A2 | колесо
+when | adv. | A1 | когда
+whenever | conj. | B1 | когда бы ни
+where | adv. | A1 | где
+wherever | conj. | B1 | где бы ни
+whether | conj. | B1 | ли
+which | det. | A1 | который
+while | conj. | A2 | пока, в то время как
+whisper | v. | A2 | шептать
+white | adj. | A1 | белый
+white | n. | A1 | белый цвет
+who | pron. | A1 | кто
+why | adv. | A1 | почему
+wide | adj. | A2 | широкий
+widespread | adj. | B2 | широко распространенный
+wife | n. | A1 | жена
+wild | adj. | A2 | дикий
+wildlife | n. | B1 | дикая природа
+will | modal v. | A1 | вспом. глагол буд. времени
+willing | adj. | B1 | готовый, согласный
+win | v. | A1 | побеждать
+wind | n. | A2 | ветер
+window | n. | A1 | окно
+windy | adj. | A2 | ветреный
+wine | n. | A1 | вино
+wing | n. | A2 | крыло
+winner | n. | A2 | победитель
+winter | n. | A1 | зима
+wire | n. | A2 | провод
+wise | adj. | A2 | мудрый
+wish | v. | A2 | желать, хотеть
+withdraw | v. | B2 | снимать (деньги)
+withdrawal | n. | B2 | снятие (денег)
+without | prep. | A2 | без
+witness | n. | B1 | свидетель
+woman | n. | A1 | женщина
+wonder | v. | A2 | интересоваться, удивляться
+wonderful | adj. | A1 | чудесный
+wood | n. | A2 | древесина, лес
+wooden | adj. | A2 | деревянный
+wool | n. | A2 | шерсть
+word | n. | A1 | слово
+work | n. | A1 | работа
+work | v. | A1 | работать
+worker | n. | A1 | рабочий
+workforce | n. | B2 | рабочая сила, коллектив
+world | n. | A1 | мир
+worldwide | adj. | B2 | всемирный, глобальный
+worry | v. | A2 | беспокоиться
+worse | adj. | A2 | хуже
+worst | adj. | A2 | худший
+worth | adj. | A2 | стоящий
+would | modal v. | A1 | бы (сослагательное наклонение)
+wound | n. | B1 | рана
+write | v. | A1 | писать
+writer | n. | A1 | писатель
+writing | n. | A1 | письмо, написание
+wrong | adj. | A1 | неправильный, неверный
+X-ray | n. | A2 | рентген
+yard | n. | A2 | двор
+yeah | excl. | A1 | да
+year | n. | A1 | год
+yellow | adj. | A1 | желтый
+yellow | n. | A1 | желтый цвет
+yes | excl. | A1 | да
+yesterday | adv. | A1 | вчера
+yet | adv. | A2 | еще, уже
+yield | v. | B2 | давать (результат), приносить
+yoga | n. | A2 | йога
+yoghurt | n. | A2 | йогурт
+you | pron. | A1 | ты, вы
+young | adj. | A1 | молодой
+your | det. | A1 | твой, ваш
+yours | pron. | A2 | твой, ваш
+yourself | pron. | A1 | себя, сам
+youth | n. | A2 | молодежь, юность
+zero | num. | A2 | ноль
+zone | n. | A2 | зона
+zoo | n. | A2 | зоопарк

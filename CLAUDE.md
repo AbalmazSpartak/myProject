@@ -13,7 +13,7 @@
 - `myProject/Resources/words.csv` is the single source of truth for built-in words. Edit it, never regenerate it from an external spreadsheet export without merging.
 - Columns: `Word,PoS,IPA,Translation,Example,Level,Topic,Tags`. IPA without brackets, translation variants separated by commas, target word in the example marked `<b>…</b>`, one meaning per row.
 - After any change run: `python3 scripts/validate_words.py` (exit code 1 = errors). New level files: `python3 scripts/validate_words.py path/to/file.csv`.
-
+- Then regenerate the lookup list for checking new words against the base: `python3 scripts/export_word_list.py` (writes `existing_words.txt`).
 ## Code Style Guide
 - Use modern Swift concurrency (async/await), avoid completion handlers.
 - Keep SwiftUI views small and decomposed.
