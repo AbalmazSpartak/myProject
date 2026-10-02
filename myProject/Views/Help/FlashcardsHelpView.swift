@@ -64,9 +64,9 @@ struct HelpCard<Content: View>: View {
             HStack(spacing: 10) {
                 Image(systemName: icon)
                     .foregroundColor(color)
-                    .font(.system(size: 18))
+                    .scaledFont(size: 18)
                 Text(title)
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .scaledFont(size: 18, weight: .bold, design: .rounded)
                     .foregroundColor(.brandDark)
             }
 
@@ -91,7 +91,7 @@ struct HelpParagraph: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 15))
+            .scaledFont(size: 15)
             .foregroundColor(.brandDark)
             .fixedSize(horizontal: false, vertical: true)
     }
@@ -120,7 +120,7 @@ struct HelpStep: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Text("\(number)")
-                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .scaledFont(size: 13, weight: .bold, design: .rounded)
                 .foregroundColor(.white)
                 .frame(width: 22, height: 22)
                 .background(Circle().fill(Color.blue))
@@ -137,7 +137,7 @@ struct HelpRating: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Text(title)
-                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .scaledFont(size: 13, weight: .bold, design: .rounded)
                 .foregroundColor(color)
                 .frame(width: 64)
                 .padding(.vertical, 4)

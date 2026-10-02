@@ -40,13 +40,13 @@ struct RaceGameView: View {
             if let word = currentWord, !raceEnded {
                 VStack(spacing: 16) {
                     Text(word.english)
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .scaledFont(size: 32, weight: .bold, design: .rounded)
                     
                     VStack(spacing: 10) {
                         ForEach(word.options, id: \.self) { option in
                             Button(action: { selectAnswer(option, word: word) }) {
                                 Text(option)
-                                    .font(.system(size: 16, weight: .bold))
+                                    .scaledFont(size: 16, weight: .bold)
                                     .foregroundColor(optionTextColor(option))
                                     .frame(maxWidth: .infinity)
                                     .padding()
@@ -84,20 +84,20 @@ struct RaceGameView: View {
         }
         .frame(height: 24)
         .overlay(alignment: .trailing) {
-            Text(player.name).font(.system(size: 11)).foregroundColor(.gray).padding(.trailing, 4)
+            Text(player.name).scaledFont(size: 11).foregroundColor(.gray).padding(.trailing, 4)
         }
     }
     
     private var finishedView: some View {
         VStack(spacing: 16) {
             Text("Гонка окончена!")
-                .font(.system(size: 22, weight: .bold))
+                .scaledFont(size: 22, weight: .bold)
             
             VStack(spacing: 8) {
                 ForEach(Array(rankedPlayers.enumerated()), id: \.element.id) { index, player in
                     HStack {
                         Text("\(index + 1).")
-                            .font(.system(size: 16, weight: .bold))
+                            .scaledFont(size: 16, weight: .bold)
                         Text(player.name)
                         Spacer()
                         Text("\(player.correctCount)/\(words.count)")
@@ -110,7 +110,7 @@ struct RaceGameView: View {
             HStack(spacing: 12) {
                 Button(action: { dismiss() }) {
                     Text("Выйти")
-                        .font(.system(size: 16, weight: .bold))
+                        .scaledFont(size: 16, weight: .bold)
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color(.systemGray5))
@@ -120,7 +120,7 @@ struct RaceGameView: View {
                 
                 Button(action: playAgain) {
                     Text(isHost ? "Играть ещё" : "Ждём хоста...")
-                        .font(.system(size: 16, weight: .bold))
+                        .scaledFont(size: 16, weight: .bold)
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(isHost ? Color.green : Color.gray.opacity(0.3))

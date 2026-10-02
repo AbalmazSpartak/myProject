@@ -31,14 +31,14 @@ struct ProfileView: View {
                 HStack {
                     Button(action: { dismiss() }) {
                         HStack(spacing: 4) { Image(systemName: "chevron.left"); Text("Меню") }
-                            .font(.system(size: 17, weight: .semibold))
+                            .scaledFont(size: 17, weight: .semibold)
                             .foregroundColor(.teal)
                     }
                     
                     Spacer()
                     
                     Text("Профиль")
-                        .font(.system(size: 20, weight: .bold))
+                        .scaledFont(size: 20, weight: .bold)
                         .foregroundColor(.brandDark)
                     
                     Spacer()
@@ -47,7 +47,7 @@ struct ProfileView: View {
                         HelpButton(topic: .profile)
                         Button(action: { showSettings = true }) {
                             Image(systemName: "gearshape.fill")
-                                .font(.system(size: 22))
+                                .scaledFont(size: 22)
                                 .foregroundColor(.gray)
                         }
                     }
@@ -77,7 +77,7 @@ struct ProfileView: View {
                     }
                     
                     Text(profile.name)
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .scaledFont(size: 24, weight: .bold, design: .rounded)
                         .foregroundColor(.brandDark)
                 }
                 
@@ -139,10 +139,10 @@ struct ProfileView: View {
                 .foregroundColor(color)
                 .font(.title3)
             Text(value)
-                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .scaledFont(size: 20, weight: .bold, design: .rounded)
                 .foregroundColor(.brandDark)
             Text(title)
-                .font(.system(size: 11, weight: .medium))
+                .scaledFont(size: 11, weight: .medium)
                 .foregroundColor(.gray)
                 .multilineTextAlignment(.center)
         }
@@ -171,10 +171,10 @@ struct ProfileView: View {
                         .frame(width: 36, height: 36)
                     Image(systemName: icon)
                         .foregroundColor(color)
-                        .font(.system(size: 18))
+                        .scaledFont(size: 18)
                 }
                 Text(title)
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .scaledFont(size: 18, weight: .bold, design: .rounded)
                     .foregroundColor(.brandDark)
             }
             
@@ -198,21 +198,21 @@ struct ProfileView: View {
                     .frame(width: 36, height: 36)
                 Image(systemName: icon)
                     .foregroundColor(color)
-                    .font(.system(size: 18))
+                    .scaledFont(size: 18)
             }
             
             Text(title)
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .scaledFont(size: 18, weight: .bold, design: .rounded)
                 .foregroundColor(.brandDark)
             
             Spacer()
             
             VStack(alignment: .trailing, spacing: 2) {
                 Text("Рекорд")
-                    .font(.system(size: 11, weight: .medium))
+                    .scaledFont(size: 11, weight: .medium)
                     .foregroundColor(.gray)
                 Text("\(highScore) очков")
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .scaledFont(size: 16, weight: .bold, design: .rounded)
                     .foregroundColor(.indigo)
             }
         }
@@ -229,17 +229,17 @@ struct ProfileView: View {
         return HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .scaledFont(size: 14, weight: .semibold, design: .rounded)
                     .foregroundColor(.brandDark)
                 Text("\(correct) из \(total) ответов")
-                    .font(.system(size: 12))
+                    .scaledFont(size: 12)
                     .foregroundColor(.gray)
             }
             
             Spacer()
             
             Text("\(percent)%")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .scaledFont(size: 16, weight: .bold, design: .rounded)
                 .foregroundColor(total > 0 ? (percent >= 70 ? .green : .orange) : .gray)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)

@@ -43,7 +43,7 @@ struct MenuGroupEditorView: View {
                         ForEach(MenuPalette.icons, id: \.self) { symbol in
                             Button { icon = symbol } label: {
                                 Image(systemName: symbol)
-                                    .font(.system(size: 20))
+                                    .scaledFont(size: 20)
                                     .foregroundColor(symbol == icon ? .white : MenuPalette.color(named: colorName))
                                     .frame(width: 40, height: 40)
                                     .background(symbol == icon ? MenuPalette.color(named: colorName) : Color(.systemGray5))
@@ -108,13 +108,13 @@ struct MenuGroupEditorView: View {
         HStack(spacing: 8) {
             Image(systemName: icon)
                 .foregroundColor(MenuPalette.color(named: colorName))
-                .font(.system(size: 18))
+                .scaledFont(size: 18)
             Text(trimmedName.isEmpty ? "Название группы" : trimmedName)
-                .font(.system(size: 20, weight: .bold))
+                .scaledFont(size: 20, weight: .bold)
                 .foregroundColor(trimmedName.isEmpty ? .secondary : .primary)
             Spacer()
             Image(systemName: "chevron.down")
-                .font(.system(size: 14, weight: .semibold))
+                .scaledFont(size: 14, weight: .semibold)
                 .foregroundColor(.gray)
         }
         .padding(14)

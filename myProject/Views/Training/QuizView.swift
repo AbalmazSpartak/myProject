@@ -55,9 +55,9 @@ struct QuizView: View {
                 Button(action: { dismiss() }) {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold))
+                            .scaledFont(size: 16, weight: .semibold)
                         Text("В меню")
-                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                            .scaledFont(size: 17, weight: .semibold, design: .rounded)
                     }
                     .foregroundColor(.purple)
                 }
@@ -79,7 +79,7 @@ struct QuizView: View {
                     )
                     
                     Text("Тест: \(correctCount)/\(totalAnswered)")
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .scaledFont(size: 13, weight: .bold, design: .rounded)
                         .foregroundColor(.gray)
                         .padding(.trailing, 2)
                 }
@@ -112,12 +112,12 @@ struct QuizView: View {
                 VStack(spacing: 16) {
                     HStack(spacing: 10) {
                         Text(currentQuestion)
-                            .font(.system(size: 38, weight: .bold, design: .rounded))
+                            .scaledFont(size: 38, weight: .bold, design: .rounded)
                             .foregroundColor(.primary)
                         
                         Button(action: { TextToSpeechManager.shared.speak(word.english) }) {
                             Image(systemName: "speaker.wave.2.bubble.fill")
-                                .font(.system(size: 22))
+                                .scaledFont(size: 22)
                                 .foregroundColor(.purple)
                         }
                     }
@@ -125,7 +125,7 @@ struct QuizView: View {
                     
                     if translationMode == "en_ru" && !word.displayTranscription.isEmpty {
                         Text(word.displayTranscription)
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .scaledFont(size: 18, weight: .bold, design: .rounded)
                             .foregroundColor(.orange)
                     }
                     
@@ -133,7 +133,7 @@ struct QuizView: View {
                         ForEach(options, id: \.self) { option in
                             Button(action: { selectOption(option) }) {
                                 Text(option)
-                                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                                    .scaledFont(size: 16, weight: .bold, design: .rounded)
                                     .multilineTextAlignment(.center)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 16)
@@ -156,7 +156,7 @@ struct QuizView: View {
                     if showResult {
                         Button(action: nextWord) {
                             Text("Следующее слово")
-                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .scaledFont(size: 16, weight: .bold, design: .rounded)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
                                 .background(Color.indigo)

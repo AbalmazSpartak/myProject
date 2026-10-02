@@ -15,12 +15,12 @@ struct MenuCardButton: View {
                         .frame(width: 52, height: 52)
                     
                     Image(systemName: icon)
-                        .font(.system(size: 22, weight: .bold))
+                        .scaledFont(size: 22, weight: .bold)
                         .foregroundColor(themeColor)
                 }
                 
                 Text(title)
-                    .font(.system(size: 19, weight: .bold, design: .default))
+                    .scaledFont(size: 19, weight: .bold, design: .default)
                     .foregroundColor(.primary)
                     .multilineTextAlignment(.leading)
                     .lineLimit(2)

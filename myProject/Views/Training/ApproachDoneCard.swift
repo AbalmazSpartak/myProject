@@ -16,17 +16,17 @@ struct ApproachDoneCard: View {
 
             VStack(spacing: 6) {
                 Text("Подход завершён")
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .scaledFont(size: 24, weight: .bold, design: .rounded)
                     .foregroundColor(.brandDark)
                 Text(summary)
-                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                    .scaledFont(size: 16, weight: .medium, design: .rounded)
                     .foregroundColor(.gray)
             }
 
             VStack(spacing: 10) {
                 Button(action: onContinue) {
                     Text("Ещё подход")
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .scaledFont(size: 16, weight: .bold, design: .rounded)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(tint)
@@ -35,7 +35,7 @@ struct ApproachDoneCard: View {
                 }
                 Button(action: onExit) {
                     Text("В меню")
-                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .scaledFont(size: 16, weight: .semibold, design: .rounded)
                         .foregroundColor(tint)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)

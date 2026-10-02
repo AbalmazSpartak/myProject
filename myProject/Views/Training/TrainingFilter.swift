@@ -90,9 +90,9 @@ struct TrainingFilterMenu: View {
                 Text(current.title(counts: counts))
                     .lineLimit(1)
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 11, weight: .bold))
+                    .scaledFont(size: 11, weight: .bold)
             }
-            .font(.system(size: 14, weight: .bold, design: .rounded))
+            .scaledFont(size: 14, weight: .bold, design: .rounded)
             .foregroundColor(isMistakes ? .orange : tint)
             .padding(.horizontal, 12)
             .padding(.vertical, 7)

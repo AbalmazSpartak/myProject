@@ -44,7 +44,7 @@ struct SettingsView: View {
                                     .clipShape(Circle())
                             } else {
                                 Image(systemName: "person.fill")
-                                    .font(.system(size: 30))
+                                    .scaledFont(size: 30)
                                     .foregroundColor(.teal)
                             }
                         }
@@ -54,7 +54,7 @@ struct SettingsView: View {
                             let photoButtonTitle = profile.avatarData == nil ? "Загрузить фото" : "Изменить фото"
                             PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
                                 Text(photoButtonTitle)
-                                    .font(.system(size: 15, weight: .semibold))
+                                    .scaledFont(size: 15, weight: .semibold)
                                     .foregroundColor(.teal)
                             }
                             
@@ -63,7 +63,7 @@ struct SettingsView: View {
                                     profile.avatarData = nil
                                     selectedPhotoItem = nil
                                 }
-                                .font(.system(size: 13))
+                                .scaledFont(size: 13)
                             }
                         }
                     }
@@ -77,7 +77,7 @@ struct SettingsView: View {
                 Section(header: Text("Обучение"), footer: Text("Новые слова в «На повторение» идут от простых к сложным, счётчик обнуляется в полночь. После подхода можно продолжить или вернуться в меню.")) {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Направление перевода")
-                            .font(.system(size: 14))
+                            .scaledFont(size: 14)
                             .foregroundColor(.gray)
                         
                         Picker("Направление перевода", selection: $translationMode) {

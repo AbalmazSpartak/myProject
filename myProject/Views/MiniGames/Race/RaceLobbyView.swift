@@ -67,7 +67,7 @@ struct RaceLobbyView: View {
     private var chooserView: some View {
         VStack(spacing: 16) {
             Text("Нужно минимум 2 игрока на одном Wi-Fi")
-                .font(.system(size: 14))
+                .scaledFont(size: 14)
                 .foregroundColor(.gray)
             
             Button(action: {
@@ -75,7 +75,7 @@ struct RaceLobbyView: View {
                 manager.startHosting()
             }) {
                 Text("Создать комнату")
-                    .font(.system(size: 17, weight: .bold))
+                    .scaledFont(size: 17, weight: .bold)
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color.indigo)
@@ -88,7 +88,7 @@ struct RaceLobbyView: View {
                 manager.startBrowsing()
             }) {
                 Text("Найти комнату")
-                    .font(.system(size: 17, weight: .bold))
+                    .scaledFont(size: 17, weight: .bold)
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color(.systemGray5))
@@ -102,7 +102,7 @@ struct RaceLobbyView: View {
         VStack(spacing: 16) {
             ProgressView()
             Text("Комната создана: \(manager.myName)")
-                .font(.system(size: 16, weight: .semibold))
+                .scaledFont(size: 16, weight: .semibold)
             
             Text("Подключились: \(manager.connectedPeers.count)")
                 .foregroundColor(.gray)
@@ -113,7 +113,7 @@ struct RaceLobbyView: View {
             
             Button(action: startRaceAsHost) {
                 Text("Начать гонку")
-                    .font(.system(size: 17, weight: .bold))
+                    .scaledFont(size: 17, weight: .bold)
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(manager.connectedPeers.isEmpty ? Color.gray.opacity(0.3) : Color.green)

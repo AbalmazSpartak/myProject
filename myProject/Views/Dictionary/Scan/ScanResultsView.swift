@@ -202,7 +202,7 @@ struct ScanResultsView: View {
             selected.formSymmetricDifference([candidate.id])
         } label: {
             Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
-                .font(.system(size: 22))
+                .scaledFont(size: 22)
                 .foregroundStyle(isOn ? Color.teal : Color.gray.opacity(0.5))
         }
         .buttonStyle(.borderless)

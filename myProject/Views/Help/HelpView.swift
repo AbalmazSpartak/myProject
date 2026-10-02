@@ -80,7 +80,7 @@ struct HelpButton: View {
             isShowing = true
         } label: {
             Image(systemName: "questionmark.circle")
-                .font(.system(size: 20, weight: .semibold))
+                .scaledFont(size: 20, weight: .semibold)
                 .foregroundColor(topic.color)
         }
         .accessibilityLabel("Справка")
@@ -129,7 +129,7 @@ struct HelpView: View {
                         Image(systemName: "chevron.left")
                         Text("Меню")
                     }
-                    .font(.system(size: 17, weight: .semibold))
+                    .scaledFont(size: 17, weight: .semibold)
                 }
             }
         }
@@ -147,17 +147,17 @@ private struct HelpTopicRow: View {
                     .frame(width: 40, height: 40)
                 Image(systemName: topic.icon)
                     .foregroundColor(topic.color)
-                    .font(.system(size: 18))
+                    .scaledFont(size: 18)
             }
 
             Text(topic.title)
-                .font(.system(size: 17, weight: .bold, design: .rounded))
+                .scaledFont(size: 17, weight: .bold, design: .rounded)
                 .foregroundColor(.brandDark)
 
             Spacer()
 
             Image(systemName: "chevron.right")
-                .font(.system(size: 14, weight: .semibold))
+                .scaledFont(size: 14, weight: .semibold)
                 .foregroundColor(.gray)
         }
         .padding(16)

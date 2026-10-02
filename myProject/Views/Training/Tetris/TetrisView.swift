@@ -54,19 +54,19 @@ struct TetrisView: View {
                             Image(systemName: "chevron.left")
                             Text("Меню")
                         }
-                        .font(.system(size: 17, weight: .semibold))
+                        .scaledFont(size: 17, weight: .semibold)
                         .foregroundColor(.indigo)
                     }
                     
                     Spacer()
                     
                     Text("Тетрис слов")
-                        .font(.system(size: 20, weight: .bold))
+                        .scaledFont(size: 20, weight: .bold)
                         .foregroundColor(.brandDark)
                     
                     Button(action: { isPaused.toggle() }) {
                         Image(systemName: isPaused ? "play.fill" : "pause.fill")
-                            .font(.system(size: 18))
+                            .scaledFont(size: 18)
                             .foregroundColor(.indigo)
                     }
 
@@ -75,7 +75,7 @@ struct TetrisView: View {
                     Spacer()
                     
                     Text("Счет: \(score)")
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .scaledFont(size: 16, weight: .bold, design: .rounded)
                         .foregroundColor(.indigo)
                 }
                 .padding(.horizontal, 16)
@@ -85,7 +85,7 @@ struct TetrisView: View {
                     VStack(spacing: 8) {
                         HStack {
                             Text(word.english)
-                                .font(.system(size: 18, weight: .bold, design: .rounded))
+                                .scaledFont(size: 18, weight: .bold, design: .rounded)
                                 .foregroundColor(.brandDark)
                             
                             Spacer()
@@ -94,7 +94,7 @@ struct TetrisView: View {
                                 TextToSpeechManager.shared.speak(word.english)
                             }) {
                                 Image(systemName: "speaker.wave.2.fill")
-                                    .font(.system(size: 20))
+                                    .scaledFont(size: 20)
                                     .foregroundColor(.indigo)
                             }
                         }
@@ -103,7 +103,7 @@ struct TetrisView: View {
                             ForEach(currentOptions, id: \.self) { option in
                                 Button(action: { selectAnswer(option) }) {
                                     Text(option)
-                                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                                        .scaledFont(size: 13, weight: .bold, design: .rounded)
                                         .lineLimit(1)
                                         .minimumScaleFactor(0.7)
                                         .frame(maxWidth: .infinity)
@@ -197,17 +197,17 @@ struct TetrisView: View {
                         .foregroundColor(.yellow)
                     
                     Text("Игра окончена")
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .scaledFont(size: 24, weight: .bold, design: .rounded)
                         .foregroundColor(.brandDark)
                     
                     VStack(spacing: 8) {
                         Text("Ваш счет: \(score)")
-                            .font(.system(size: 20, weight: .heavy, design: .rounded))
+                            .scaledFont(size: 20, weight: .heavy, design: .rounded)
                             .foregroundColor(.indigo)
                         
                         if let highScore = userProfile?.tetrisHighScore, highScore > 0 {
                             Text("Рекорд: \(highScore)")
-                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .scaledFont(size: 14, weight: .semibold, design: .rounded)
                                 .foregroundColor(.gray)
                         }
                     }
@@ -219,7 +219,7 @@ struct TetrisView: View {
                     HStack(spacing: 14) {
                         Button(action: restartGame) {
                             Text("Заново")
-                                .font(.system(size: 16, weight: .bold))
+                                .scaledFont(size: 16, weight: .bold)
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
@@ -229,7 +229,7 @@ struct TetrisView: View {
                         
                         Button(action: { dismiss() }) {
                             Text("В меню")
-                                .font(.system(size: 16, weight: .bold))
+                                .scaledFont(size: 16, weight: .bold)
                                 .foregroundColor(.brandDark)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
@@ -254,12 +254,12 @@ struct TetrisView: View {
                         .foregroundColor(.indigo)
                     
                     Text("Пауза")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .scaledFont(size: 22, weight: .bold, design: .rounded)
                         .foregroundColor(.brandDark)
                     
                     Button(action: { isPaused = false }) {
                         Text("Продолжить")
-                            .font(.system(size: 16, weight: .bold))
+                            .scaledFont(size: 16, weight: .bold)
                             .foregroundColor(.white)
                             .padding(.vertical, 12)
                             .padding(.horizontal, 28)

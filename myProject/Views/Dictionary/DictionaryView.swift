@@ -122,7 +122,7 @@ struct DictionaryView: View {
                                         .font(.system(size: 44))
                                         .foregroundColor(filter == .mistakes ? .green : .gray)
                                     Text(filter == .mistakes ? "В этом разделе нет ошибочных слов!" : "В выбранном разделе нет слов.")
-                                        .font(.system(size: 15, weight: .medium))
+                                        .scaledFont(size: 15, weight: .medium)
                                         .foregroundColor(.gray)
                                 }
                                 .padding(.top, 30)
@@ -223,31 +223,31 @@ struct DictionaryView: View {
         HStack {
             Button(action: { dismiss() }) {
                 HStack(spacing: 4) { Image(systemName: "chevron.left"); Text("Меню") }
-                .font(.system(size: 17, weight: .semibold))
+                .scaledFont(size: 17, weight: .semibold)
                 .foregroundColor(.orange)
             }
             Spacer()
             Text("Мой словарь")
-                .font(.system(size: 20, weight: .bold))
+                .scaledFont(size: 20, weight: .bold)
                 .foregroundColor(.brandDark)
             Spacer()
             HStack(spacing: 18) {
                 HelpButton(topic: .dictionary)
                 Button(action: { isShowingSearch = true }) {
                     Image(systemName: "magnifyingglass")
-                        .font(.system(size: 20))
+                        .scaledFont(size: 20)
                         .foregroundColor(.orange)
                 }
                 .accessibilityLabel("Поиск слов")
                 Button(action: { isShowingScan = true }) {
                     Image(systemName: "text.viewfinder")
-                        .font(.system(size: 20))
+                        .scaledFont(size: 20)
                         .foregroundColor(.orange)
                 }
                 .accessibilityLabel("Слова из текста")
                 Button(action: { isShowingManageCategories = true }) {
                     Image(systemName: "doc.badge.plus")
-                        .font(.system(size: 20))
+                        .scaledFont(size: 20)
                         .foregroundColor(.orange)
                 }
             }
@@ -262,13 +262,13 @@ struct DictionaryView: View {
                 HStack(spacing: 12) {
                     Image(systemName: dropdownIcon)
                         .foregroundColor(.orange)
-                        .font(.system(size: 18))
+                        .scaledFont(size: 18)
                     Text(dropdownTitle)
-                        .font(.system(size: 17, weight: .bold))
+                        .scaledFont(size: 17, weight: .bold)
                         .foregroundColor(.brandDark)
                     Spacer()
                     Image(systemName: isDropdownExpanded ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 14, weight: .semibold))
+                        .scaledFont(size: 14, weight: .semibold)
                         .foregroundColor(.gray)
                 }
                 .padding(16)
@@ -279,9 +279,9 @@ struct DictionaryView: View {
                         VStack(spacing: 0) {
                             Button(action: { selectFilterAndClose(.general) }) {
                                 HStack {
-                                    Text("Общий").font(.system(size: 16, weight: .bold)).foregroundColor(filter == .general ? .orange : .brandDark)
+                                    Text("Общий").scaledFont(size: 16, weight: .bold).foregroundColor(filter == .general ? .orange : .brandDark)
                                     Spacer()
-                                    if filter == .general { Image(systemName: "checkmark").font(.system(size: 14, weight: .bold)).foregroundColor(.orange) }
+                                    if filter == .general { Image(systemName: "checkmark").scaledFont(size: 14, weight: .bold).foregroundColor(.orange) }
                                 }
                                 .padding(.horizontal, 16).padding(.vertical, 12)
                             }
@@ -297,12 +297,12 @@ struct DictionaryView: View {
                                 Button(action: { selectFilterAndClose(.category(category)) }) {
                                     HStack {
                                         Text("\(category.name) (\(categoryCounts[category.id, default: 0]))")
-                                            .font(.system(size: 16, weight: isSelected ? .bold : .semibold))
+                                            .scaledFont(size: 16, weight: isSelected ? .bold : .semibold)
                                             .foregroundColor(isSelected ? .orange : .brandDark)
                                         Spacer()
                                         if isSelected {
                                             Image(systemName: "checkmark")
-                                                .font(.system(size: 14, weight: .bold))
+                                                .scaledFont(size: 14, weight: .bold)
                                                 .foregroundColor(.orange)
                                         }
                                     }
@@ -315,14 +315,14 @@ struct DictionaryView: View {
                                 HStack(spacing: 8) {
                                     Image(systemName: "exclamationmark.triangle.fill")
                                         .foregroundColor(.orange)
-                                        .font(.system(size: 15))
+                                        .scaledFont(size: 15)
                                     Text("Слова с ошибками (\(mistakeCount))")
-                                        .font(.system(size: 16, weight: .bold))
+                                        .scaledFont(size: 16, weight: .bold)
                                         .foregroundColor(.orange)
                                     Spacer()
                                     if filter == .mistakes {
                                         Image(systemName: "checkmark")
-                                            .font(.system(size: 14, weight: .bold))
+                                            .scaledFont(size: 14, weight: .bold)
                                             .foregroundColor(.orange)
                                     }
                                 }
@@ -336,8 +336,8 @@ struct DictionaryView: View {
                     
                     Button(action: { isDropdownExpanded = false; isShowingAddCategoryAlert = true }) {
                         HStack(spacing: 10) {
-                            Image(systemName: "folder.badge.plus").font(.system(size: 16))
-                            Text("Создать новую папку...").font(.system(size: 15, weight: .semibold))
+                            Image(systemName: "folder.badge.plus").scaledFont(size: 16)
+                            Text("Создать новую папку...").scaledFont(size: 15, weight: .semibold)
                             Spacer()
                         }
                         .foregroundColor(Color(red: 0/255, green: 112/255, blue: 243/255))
@@ -348,8 +348,8 @@ struct DictionaryView: View {
                         isShowingManageCategories = true
                     }) {
                         HStack(spacing: 10) {
-                            Image(systemName: "folder.badge.gearshape").font(.system(size: 16))
-                            Text("Управление папками...").font(.system(size: 15, weight: .semibold))
+                            Image(systemName: "folder.badge.gearshape").scaledFont(size: 16)
+                            Text("Управление папками...").scaledFont(size: 15, weight: .semibold)
                             Spacer()
                         }
                         .foregroundColor(.gray).padding(.horizontal, 16).padding(.vertical, 12)
@@ -378,15 +378,15 @@ struct DictionaryView: View {
             Button(action: { selectFilterAndClose(.list(list)) }) {
                 HStack(spacing: 8) {
                     Image(systemName: "text.book.closed.fill")
-                        .font(.system(size: 14))
+                        .scaledFont(size: 14)
                         .foregroundColor(.teal)
                     Text("\(list.name) (\(list.words.count))")
-                        .font(.system(size: 16, weight: isSelected ? .bold : .semibold))
+                        .scaledFont(size: 16, weight: isSelected ? .bold : .semibold)
                         .foregroundColor(isSelected ? .orange : .brandDark)
                     Spacer()
                     if isSelected {
                         Image(systemName: "checkmark")
-                            .font(.system(size: 14, weight: .bold))
+                            .scaledFont(size: 14, weight: .bold)
                             .foregroundColor(.orange)
                     }
                 }
@@ -454,9 +454,9 @@ struct DictionaryView: View {
             Button(action: addNewWord) {
                 HStack(spacing: 6) {
                     Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 16, weight: .bold))
+                        .scaledFont(size: 16, weight: .bold)
                     Text("Добавить в \(addTargetName)")
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .scaledFont(size: 16, weight: .bold, design: .rounded)
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
@@ -489,17 +489,17 @@ struct DictionaryView: View {
     private var existingMatchesCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Уже есть")
-                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .scaledFont(size: 14, weight: .bold, design: .rounded)
                 .foregroundColor(.orange)
 
             ForEach(existingMatches.prefix(3)) { word in
                 HStack(alignment: .center, spacing: 8) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("\(word.english)\(word.partOfSpeech.isEmpty ? "" : " (\(word.partOfSpeech))") — \(word.russian)")
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .scaledFont(size: 15, weight: .semibold, design: .rounded)
                             .foregroundColor(.brandDark)
                         Text(matchDetails(word))
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .scaledFont(size: 12, weight: .medium, design: .rounded)
                             .foregroundColor(.gray)
                     }
                     Spacer()
@@ -509,7 +509,7 @@ struct DictionaryView: View {
 
             // Нужного значения нет (bank — «берег», а в базе только «банк») — своё слово, но только явно
             Button("Другое значение — добавить своё", action: addNewWord)
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .scaledFont(size: 13, weight: .semibold, design: .rounded)
                 .foregroundColor(.gray)
                 .disabled(newRussian.trimmingCharacters(in: .whitespaces).isEmpty)
         }
@@ -529,16 +529,16 @@ struct DictionaryView: View {
         if case .list(let list) = filter {
             if word.lists.contains(where: { $0.id == list.id }) {
                 Text("уже в словаре")
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .scaledFont(size: 12, weight: .medium, design: .rounded)
                     .foregroundColor(.gray)
             } else {
                 Button("Добавить") { add(word, to: list) }
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .scaledFont(size: 14, weight: .bold, design: .rounded)
                     .foregroundColor(.orange)
             }
         } else {
             Button("Открыть") { wordToEdit = word }
-                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .scaledFont(size: 14, weight: .bold, design: .rounded)
                 .foregroundColor(.orange)
         }
     }
@@ -552,7 +552,7 @@ struct DictionaryView: View {
 
     private func customTextField(placeholder: String, text: Binding<String>) -> some View {
         TextField(placeholder, text: text)
-            .font(.system(size: 16, weight: .medium, design: .rounded))
+            .scaledFont(size: 16, weight: .medium, design: .rounded)
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .background(Color(.systemGray5))

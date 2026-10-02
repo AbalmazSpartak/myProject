@@ -35,7 +35,7 @@ struct WordImageView: View {
         if word.isImageHidden {
             Button(action: { word.isImageHidden = false }) {
                 Label("Показать картинку", systemImage: "photo")
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .scaledFont(size: 12, weight: .semibold, design: .rounded)
                     .foregroundColor(.gray)
             }
         } else if let data = word.imageData, let image = UIImage(data: data) {
@@ -75,7 +75,7 @@ struct WordImageView: View {
     private func imageControl(icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 13, weight: .bold))
+                .scaledFont(size: 13, weight: .bold)
                 .foregroundColor(.white)
                 .frame(width: 30, height: 30)
                 .background(Circle().fill(Color.black.opacity(0.45)))

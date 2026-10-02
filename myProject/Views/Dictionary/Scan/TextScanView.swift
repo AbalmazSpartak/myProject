@@ -88,7 +88,7 @@ struct TextScanView: View {
                     path.append(.review)
                 } label: {
                     Label(liveText.isEmpty ? "Наведите камеру на текст" : "Снять текст", systemImage: "text.viewfinder")
-                        .font(.system(size: 17, weight: .bold))
+                        .scaledFont(size: 17, weight: .bold)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                 }

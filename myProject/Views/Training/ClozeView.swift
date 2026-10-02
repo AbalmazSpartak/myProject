@@ -69,9 +69,9 @@ struct ClozeView: View {
             Button(action: { dismiss() }) {
                 HStack(spacing: 4) {
                     Image(systemName: "chevron.left")
-                        .font(.system(size: 16, weight: .semibold))
+                        .scaledFont(size: 16, weight: .semibold)
                     Text("В меню")
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .scaledFont(size: 17, weight: .semibold, design: .rounded)
                 }
                 .foregroundColor(.pink)
             }
@@ -82,7 +82,7 @@ struct ClozeView: View {
                 .padding(.trailing, 8)
 
             Text("Верно: \(correctCount)/\(totalAnswered)")
-                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .scaledFont(size: 13, weight: .bold, design: .rounded)
                 .foregroundColor(.gray)
         }
         .padding(.horizontal, 20)
@@ -110,11 +110,11 @@ struct ClozeView: View {
 
             VStack(spacing: 4) {
                 Text(word.russian)
-                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                    .scaledFont(size: 18, weight: .semibold, design: .rounded)
                     .foregroundColor(.brandDark)
                 if !word.partOfSpeech.isEmpty {
                     Text(word.partOfSpeech)
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .scaledFont(size: 13, weight: .medium, design: .rounded)
                         .italic()
                         .foregroundColor(.gray)
                 }
@@ -141,7 +141,7 @@ struct ClozeView: View {
     private func answerField(answer: String, word: Word) -> some View {
         HStack(spacing: 10) {
             TextField("Впишите слово...", text: $userInput)
-                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                .scaledFont(size: 18, weight: .semibold, design: .rounded)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
                 .background(Color(.systemGray5))
@@ -159,7 +159,7 @@ struct ClozeView: View {
             if result == nil {
                 Button(action: { withAnimation { showHint = true } }) {
                     Image(systemName: "lightbulb.fill")
-                        .font(.system(size: 20))
+                        .scaledFont(size: 20)
                         .foregroundColor(showHint ? .gray.opacity(0.4) : .orange)
                 }
                 .disabled(showHint)
@@ -173,7 +173,7 @@ struct ClozeView: View {
         let isEmpty = userInput.trimmingCharacters(in: .whitespaces).isEmpty
         return Button(action: { result == nil ? check(answer: answer, word: word) : next() }) {
             Text(result == nil ? "Проверить" : "Дальше")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .scaledFont(size: 16, weight: .bold, design: .rounded)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(result == nil && isEmpty ? Color.pink.opacity(0.4) : Color.pink)
@@ -273,7 +273,7 @@ private struct ClozeSentence: View {
 
     var body: some View {
         (Text(parts.before) + middle + Text(parts.after))
-            .font(.system(size: 22, weight: .medium, design: .rounded))
+            .scaledFont(size: 22, weight: .medium, design: .rounded)
             .foregroundColor(.primary)
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
@@ -302,15 +302,15 @@ private struct ClozeResultBanner: View {
         VStack(spacing: 6) {
             HStack(spacing: 8) {
                 Image(systemName: result == .wrong ? "xmark.circle.fill" : "checkmark.circle.fill")
-                    .font(.system(size: 22))
+                    .scaledFont(size: 22)
                 Text(title)
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .scaledFont(size: 18, weight: .bold, design: .rounded)
             }
             .foregroundColor(result == .wrong ? .red : .green)
 
             if result != .exact {
                 Text(result == .wrong ? "Правильно: \(answer)" : "В этом предложении нужна форма: \(answer)")
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .scaledFont(size: 14, weight: .medium, design: .rounded)
                     .foregroundColor(.gray)
             }
         }

@@ -124,7 +124,7 @@ struct StudyDictionariesView: View {
         Button(action: toggle) {
             HStack(spacing: 12) {
                 Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 20))
+                    .scaledFont(size: 20)
                     .foregroundStyle(isOn ? Color.teal : Color.gray.opacity(0.5))
                 Text(group.title)
                     .foregroundStyle(.primary)

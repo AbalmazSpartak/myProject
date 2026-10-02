@@ -29,6 +29,8 @@ struct MyApp: App {
             ContentView()
                 .modelContext(container.mainContext)
                 .appThemedColorScheme()
+                // Текст растёт по «Размеру текста» iPhone, но не до самых огромных размеров, где ломаются шапки и карточки
+                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         }
     }
 }

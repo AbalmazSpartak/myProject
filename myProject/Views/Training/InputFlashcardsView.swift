@@ -56,9 +56,9 @@ struct InputFlashcardsView: View {
                 Button(action: { dismiss() }) {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold))
+                            .scaledFont(size: 16, weight: .semibold)
                         Text("В меню")
-                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                            .scaledFont(size: 17, weight: .semibold, design: .rounded)
                     }
                     .foregroundColor(.teal)
                 }
@@ -79,7 +79,7 @@ struct InputFlashcardsView: View {
                     )
                     
                     Text("Ввод: \(correctCount)/\(totalAnswered)")
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .scaledFont(size: 13, weight: .bold, design: .rounded)
                         .foregroundColor(.gray)
                         .padding(.trailing, 2)
                 }
@@ -113,20 +113,20 @@ struct InputFlashcardsView: View {
                     VStack(spacing: 8) {
                         HStack(spacing: 10) {
                             Text(currentQuestion)
-                                .font(.system(size: 34, weight: .bold, design: .rounded))
+                                .scaledFont(size: 34, weight: .bold, design: .rounded)
                                 .foregroundColor(.brandDark)
                                 .multilineTextAlignment(.center)
                             
                             Button(action: { TextToSpeechManager.shared.speak(word.english) }) {
                                 Image(systemName: "speaker.wave.2.bubble.fill")
-                                    .font(.system(size: 22))
+                                    .scaledFont(size: 22)
                                     .foregroundColor(.teal)
                             }
                         }
                         
                         if translationMode == "en_ru" && !word.displayTranscription.isEmpty {
                             Text(word.displayTranscription)
-                                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                .scaledFont(size: 16, weight: .semibold, design: .rounded)
                                 .foregroundColor(.orange)
                         }
                     }
@@ -137,11 +137,11 @@ struct InputFlashcardsView: View {
                     
                     VStack(alignment: .leading, spacing: 8) {
                         Text(translationMode == "en_ru" ? "Введите перевод на русский:" : "Введите перевод на английский:")
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .scaledFont(size: 13, weight: .medium, design: .rounded)
                             .foregroundColor(.gray)
                         
                         TextField("Ваш перевод...", text: $userInput)
-                            .font(.system(size: 18, weight: .semibold, design: .rounded))
+                            .scaledFont(size: 18, weight: .semibold, design: .rounded)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 14)
                             .background(Color(.systemGray5))
@@ -168,28 +168,28 @@ struct InputFlashcardsView: View {
                         VStack(spacing: 10) {
                             HStack(spacing: 8) {
                                 Image(systemName: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                    .font(.system(size: 22))
+                                    .scaledFont(size: 22)
                                 
                                 Text(isCorrect ? "Правильно!" : "Неверно")
-                                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                                    .scaledFont(size: 18, weight: .bold, design: .rounded)
                             }
                             .foregroundColor(isCorrect ? .green : .red)
                             
                             if !isCorrect {
                                 VStack(spacing: 4) {
                                     Text("Правильный ответ:")
-                                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                                        .scaledFont(size: 12, weight: .medium, design: .rounded)
                                         .foregroundColor(.gray)
                                     
                                     Text(currentCorrectAnswerString)
-                                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                                        .scaledFont(size: 20, weight: .bold, design: .rounded)
                                         .foregroundColor(.brandDark)
                                 }
                             }
                             
                             if !word.example.isEmpty {
                                 (Text("Пример: ") + Text(word.attributedExample))
-                                    .font(.system(size: 13, weight: .regular, design: .rounded))
+                                    .scaledFont(size: 13, weight: .regular, design: .rounded)
                                     .italic()
                                     .foregroundColor(.gray)
                                     .multilineTextAlignment(.center)
@@ -204,7 +204,7 @@ struct InputFlashcardsView: View {
                         if !showResult {
                             Button(action: checkAnswer) {
                                 Text("Проверить")
-                                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                                    .scaledFont(size: 16, weight: .bold, design: .rounded)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
                                     .background(userInput.trimmingCharacters(in: .whitespaces).isEmpty ? Color.teal.opacity(0.4) : Color.teal)
@@ -215,7 +215,7 @@ struct InputFlashcardsView: View {
                         } else {
                             Button(action: nextWord) {
                                 Text("Следующее слово")
-                                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                                    .scaledFont(size: 16, weight: .bold, design: .rounded)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
                                     .background(Color.teal)

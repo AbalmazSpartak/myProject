@@ -41,7 +41,7 @@ struct ContentView: View {
                                 .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
                             
                             Text("WordLearner")
-                                .font(.system(size: 34, weight: .heavy, design: .default))
+                                .scaledFont(size: 34, weight: .heavy, design: .default)
                                 .foregroundColor(.primary)
                         }
                         .padding(.top, 80)
@@ -102,13 +102,13 @@ struct ContentView: View {
                 HStack(spacing: 8) {
                     Image(systemName: group.icon)
                         .foregroundColor(group.color)
-                        .font(.system(size: 18))
+                        .scaledFont(size: 18)
                     Text(group.name)
-                        .font(.system(size: 20, weight: .bold, design: .default))
+                        .scaledFont(size: 20, weight: .bold, design: .default)
                         .foregroundColor(.primary)
                     Spacer()
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 14, weight: .semibold))
+                        .scaledFont(size: 14, weight: .semibold)
                         .foregroundColor(.gray)
                 }
                 .padding(.horizontal, 8)

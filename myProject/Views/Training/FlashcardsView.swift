@@ -56,7 +56,7 @@ struct FlashcardsView: View {
                         Image(systemName: "chevron.left")
                         Text("В меню")
                     }
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .scaledFont(size: 16, weight: .semibold, design: .rounded)
                     .foregroundColor(.blue)
                 }
                 
@@ -82,7 +82,7 @@ struct FlashcardsView: View {
             HStack {
                 Spacer()
                 Text("Повторено: \(reviewedCount)")
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .scaledFont(size: 13, weight: .bold, design: .rounded)
                     .foregroundColor(.gray)
             }
             .padding(.horizontal, 24)
@@ -104,7 +104,7 @@ struct FlashcardsView: View {
                         .foregroundColor(.green)
                     
                     Text(currentFilter == .due ? "Отлично! Все запланированные слова повторены!" : "В выбранном разделе нет слов.")
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .scaledFont(size: 18, weight: .bold, design: .rounded)
                         .foregroundColor(.brandDark)
                         .multilineTextAlignment(.center)
                 }
@@ -114,7 +114,7 @@ struct FlashcardsView: View {
                     VStack(spacing: 10) {
                         HStack(spacing: 12) {
                             Text(currentQuestion)
-                                .font(.system(size: 34, weight: .bold, design: .rounded))
+                                .scaledFont(size: 34, weight: .bold, design: .rounded)
                                 .foregroundColor(.brandDark)
                                 .multilineTextAlignment(.center)
                             
@@ -127,7 +127,7 @@ struct FlashcardsView: View {
                         
                         if translationMode == "en_ru" && !word.displayTranscription.isEmpty {
                             Text(word.displayTranscription)
-                                .font(.system(size: 16, weight: .medium, design: .rounded))
+                                .scaledFont(size: 16, weight: .medium, design: .rounded)
                                 .foregroundColor(.orange)
                         }
                     }
@@ -143,13 +143,13 @@ struct FlashcardsView: View {
                             }
 
                             Text(currentAnswer)
-                                .font(.system(size: 28, weight: .semibold, design: .rounded))
+                                .scaledFont(size: 28, weight: .semibold, design: .rounded)
                                 .foregroundColor(.blue)
                                 .multilineTextAlignment(.center)
                             
                             VStack(spacing: 8) {
                                 Text("Как сложно было вспомнить?")
-                                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                                    .scaledFont(size: 12, weight: .medium, design: .rounded)
                                     .foregroundColor(.gray)
                                 
                                 HStack(spacing: 8) {
@@ -176,7 +176,7 @@ struct FlashcardsView: View {
                             }
                         }) {
                             Text("Показать ответ")
-                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .scaledFont(size: 16, weight: .bold, design: .rounded)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
                                 .background(Color.blue)
@@ -288,7 +288,7 @@ struct FSRSActionButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .scaledFont(size: 13, weight: .bold, design: .rounded)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background(color.opacity(0.15))
