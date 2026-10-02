@@ -273,6 +273,8 @@ struct TetrisView: View {
                 .shadow(radius: 10)
             }
         }
+        // Палец ведёт фигуру — свайп от края не должен выкидывать из игры
+        .swipeBackDisabled()
         .onAppear {
             loadWords()
             restartGame()

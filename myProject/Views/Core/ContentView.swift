@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-enum ActiveScreen: Identifiable {
+enum ActiveScreen: Hashable, Identifiable {
     case profile
     case flashcardsFSRS
     case quiz
@@ -204,28 +204,35 @@ struct ContentView: View {
                 }
             }
             .navigationBarHidden(true)
-            .fullScreenCover(item: $activeScreen) { screen in
-                switch screen {
-                case .profile:
-                    ProfileView()
-                case .flashcardsFSRS:
-                    FlashcardsView()
-                case .quiz:
-                    QuizView()
-                case .cloze:
-                    ClozeView()
-                case .inputCards:
-                    InputFlashcardsView()
-                case .dictionary:
-                    DictionaryView()
-                case .tetris:
-                    TetrisView()
-                case .race:
-                    RaceLobbyView()
-                case .help:
-                    HelpView()
-                }
+            // Разделы открываются переходом: свайп от левого края возвращает в меню
+            .navigationDestination(item: $activeScreen) { screen in
+                destination(for: screen)
+                    .toolbar(.hidden, for: .navigationBar)
             }
+        }
+    }
+
+    @ViewBuilder
+    private func destination(for screen: ActiveScreen) -> some View {
+        switch screen {
+        case .profile:
+            ProfileView()
+        case .flashcardsFSRS:
+            FlashcardsView()
+        case .quiz:
+            QuizView()
+        case .cloze:
+            ClozeView()
+        case .inputCards:
+            InputFlashcardsView()
+        case .dictionary:
+            DictionaryView()
+        case .tetris:
+            TetrisView()
+        case .race:
+            RaceLobbyView()
+        case .help:
+            HelpView()
         }
     }
 }

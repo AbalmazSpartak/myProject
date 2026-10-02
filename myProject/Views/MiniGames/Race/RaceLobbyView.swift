@@ -21,41 +21,46 @@ struct RaceLobbyView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 20) {
-                switch mode {
-                case .choosing:
-                    chooserView
-                case .hosting:
-                    hostView
-                case .browsing:
-                    browserView
+        VStack(spacing: 20) {
+            switch mode {
+            case .choosing:
+                chooserView
+            case .hosting:
+                hostView
+            case .browsing:
+                browserView
+            }
+        }
+        .padding()
+        .onAppear {
+            loadWords()
+            manager.setPlayerName(profiles.first?.name ?? "Игрок")
+        }
+        // Ушли из лобби свайпом «назад» — закрываем соединение, как кнопкой «Закрыть»
+        .onDisappear {
+            if !manager.raceStarted { manager.stop() }
+        }
+        .navigationTitle("Гонка слов")
+        .navigationBarTitleDisplayMode(.inline)
+        // Открывается переходом из меню: полоса навигации нужна для заголовка и кнопок
+        .toolbar(.visible, for: .navigationBar)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                HelpButton(topic: .race)
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Закрыть") {
+                    manager.stop()
+                    dismiss()
                 }
             }
-            .padding()
-            .onAppear {
-                loadWords()
-                manager.setPlayerName(profiles.first?.name ?? "Игрок")
-            }
-            .navigationTitle("Гонка слов")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    HelpButton(topic: .race)
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Закрыть") {
-                        manager.stop()
-                        dismiss()
-                    }
-                }
-            }
-            .fullScreenCover(isPresented: $manager.raceStarted, onDismiss: {
-                manager.stop()
-                mode = .choosing
-            }) {
-                RaceGameView(manager: manager, isHost: manager.isHost)
-            }
+        }
+        .fullScreenCover(isPresented: $manager.raceStarted, onDismiss: {
+            manager.stop()
+            mode = .choosing
+        }) {
+            RaceGameView(manager: manager, isHost: manager.isHost)
         }
     }
     

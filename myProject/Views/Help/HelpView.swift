@@ -102,32 +102,34 @@ struct HelpView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 14) {
-                    ForEach(HelpTopic.allCases) { topic in
-                        NavigationLink {
-                            topic.destination
-                        } label: {
-                            HelpTopicRow(topic: topic)
-                        }
-                        .buttonStyle(.plain)
+        // Открывается переходом из меню: навигация общая, своя не нужна
+        ScrollView {
+            VStack(spacing: 14) {
+                ForEach(HelpTopic.allCases) { topic in
+                    NavigationLink {
+                        topic.destination
+                    } label: {
+                        HelpTopicRow(topic: topic)
                     }
+                    .buttonStyle(.plain)
                 }
-                .padding(20)
             }
-            .background(Color.brandBackground.ignoresSafeArea())
-            .navigationTitle("Справка")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button(action: { dismiss() }) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "chevron.left")
-                            Text("Меню")
-                        }
-                        .font(.system(size: 17, weight: .semibold))
+            .padding(20)
+        }
+        .background(Color.brandBackground.ignoresSafeArea())
+        .navigationTitle("Справка")
+        .navigationBarTitleDisplayMode(.inline)
+        // Меню прячет полосу навигации, а справке нужны заголовок и своя кнопка «Меню»
+        .toolbar(.visible, for: .navigationBar)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(action: { dismiss() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                        Text("Меню")
                     }
+                    .font(.system(size: 17, weight: .semibold))
                 }
             }
         }
