@@ -227,10 +227,6 @@ struct DictionaryView: View {
                 .foregroundColor(.orange)
             }
             Spacer()
-            Text("Мой словарь")
-                .scaledFont(size: 20, weight: .bold)
-                .foregroundColor(.brandDark)
-            Spacer()
             HStack(spacing: 18) {
                 HelpButton(topic: .dictionary)
                 Button(action: { isShowingSearch = true }) {
