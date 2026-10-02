@@ -21,7 +21,7 @@ struct ContentView: View {
     
     @State private var activeScreen: ActiveScreen?
     @AppStorage(MainMenuLayout.storageKey) private var menuLayout = MainMenuLayout.standard
-    @State private var expandedGroups: Set<MenuGroup> = []
+    @State private var expandedGroups: Set<String> = []
 
     var body: some View {
         NavigationStack {
@@ -62,8 +62,10 @@ struct ContentView: View {
                                 switch item {
                                 case .section(let section):
                                     sectionButton(section)
-                                case .group(let group):
-                                    groupCard(group)
+                                case .group(let id):
+                                    if let group = menuLayout.groups[id] {
+                                        groupCard(group)
+                                    }
                                 }
                             }
                         }
@@ -90,18 +92,18 @@ struct ContentView: View {
 
     /// Раскрывающаяся группа разделов
     private func groupCard(_ group: MenuGroup) -> some View {
-        let isExpanded = expandedGroups.contains(group)
+        let isExpanded = expandedGroups.contains(group.id)
         return VStack(alignment: .leading, spacing: 14) {
             Button(action: {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    if isExpanded { expandedGroups.remove(group) } else { expandedGroups.insert(group) }
+                    if isExpanded { expandedGroups.remove(group.id) } else { expandedGroups.insert(group.id) }
                 }
             }) {
                 HStack(spacing: 8) {
                     Image(systemName: group.icon)
                         .foregroundColor(group.color)
                         .font(.system(size: 18))
-                    Text(group.title)
+                    Text(group.name)
                         .font(.system(size: 20, weight: .bold, design: .default))
                         .foregroundColor(.primary)
                     Spacer()
@@ -117,7 +119,7 @@ struct ContentView: View {
 
             if isExpanded {
                 VStack(spacing: 14) {
-                    ForEach(menuLayout.visibleSections(in: group), id: \.self) { section in
+                    ForEach(menuLayout.visibleSections(in: group.id), id: \.self) { section in
                         sectionButton(section)
                     }
                 }

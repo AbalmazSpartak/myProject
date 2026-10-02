@@ -1,39 +1,52 @@
 import SwiftUI
 
-/// Настройки → Главное меню: порядок разделов (перетаскиванием) и что показывать
+/// Настройки → Главное меню: порядок (перетаскиванием), видимость, свои группы
 struct MainMenuSettingsView: View {
     @AppStorage(MainMenuLayout.storageKey) private var layout = MainMenuLayout.standard
+
+    @State private var isCreatingGroup = false
+    @State private var editingGroup: MenuGroup?
+    @State private var isConfirmingReset = false
 
     var body: some View {
         List {
             Section {
                 ForEach(layout.items, id: \.self) { item in
-                    row(for: item)
+                    topLevelRow(item)
                 }
                 .onMove { layout.items.move(fromOffsets: $0, toOffset: $1) }
             } header: {
                 Text("Порядок в меню")
             } footer: {
-                Text("«Мой профиль» всегда сверху — через него открываются настройки. Скрытая группа скрывается целиком.")
+                Text("«Мой профиль» всегда сверху — через него открываются настройки. Нажмите на группу, чтобы изменить её. Скрытая группа скрывается целиком.")
             }
 
-            ForEach(MenuGroup.allCases, id: \.self) { group in
+            ForEach(layout.orderedGroups) { group in
                 Section {
-                    ForEach(layout.sections(in: group), id: \.self) { section in
-                        row(for: .section(section))
+                    if group.sections.isEmpty {
+                        Text("Пусто — перенесите сюда разделы кнопкой ⋯")
+                            .foregroundStyle(.secondary)
                     }
-                    .onMove { layout.groupOrder[group, default: group.sections].move(fromOffsets: $0, toOffset: $1) }
+                    ForEach(group.sections, id: \.self) { section in
+                        sectionRow(section)
+                    }
+                    .onMove { layout.groups[group.id]?.sections.move(fromOffsets: $0, toOffset: $1) }
                 } header: {
-                    Text("В группе «\(group.title)»")
+                    Text("В группе «\(group.name)»")
                 } footer: {
-                    if layout.visibleSections(in: group).isEmpty {
+                    if !group.sections.isEmpty, layout.visibleSections(in: group.id).isEmpty {
                         Text("Все разделы скрыты — группа не показывается в меню.")
                     }
                 }
             }
 
             Section {
-                Button("Как было") { layout = .standard }
+                Button {
+                    isCreatingGroup = true
+                } label: {
+                    Label("Новая группа", systemImage: "folder.badge.plus")
+                }
+                Button("По умолчанию") { isConfirmingReset = true }
                     .disabled(layout == .standard)
             }
         }
@@ -41,28 +54,105 @@ struct MainMenuSettingsView: View {
         .environment(\.editMode, .constant(.active))
         .navigationTitle("Главное меню")
         .navigationBarTitleDisplayMode(.inline)
-    }
-
-    private func row(for item: MenuItem) -> some View {
-        let (title, icon, color) = description(of: item)
-        return HStack(spacing: 12) {
-            Image(systemName: icon)
-                .foregroundColor(color)
-                .frame(width: 24)
-            Text(title)
-            Spacer()
-            Toggle(title, isOn: Binding(
-                get: { !layout.isHidden(item) },
-                set: { layout.setHidden(!$0, for: item) }
-            ))
-            .labelsHidden()
+        .sheet(isPresented: $isCreatingGroup) {
+            MenuGroupEditorView(group: nil) { name, icon, colorName in
+                layout.addGroup(name: name, icon: icon, colorName: colorName)
+            }
+        }
+        .sheet(item: $editingGroup) { group in
+            MenuGroupEditorView(group: group) { name, icon, colorName in
+                layout.groups[group.id]?.name = name
+                layout.groups[group.id]?.icon = icon
+                layout.groups[group.id]?.colorName = colorName
+            } onDelete: {
+                layout.deleteGroup(group.id)
+            }
+        }
+        .alert("Вернуть меню по умолчанию?", isPresented: $isConfirmingReset) {
+            Button("Отмена", role: .cancel) {}
+            Button("Вернуть", role: .destructive) { layout = .standard }
+        } message: {
+            Text("Ваши группы удалятся, порядок и скрытые разделы сбросятся. Сами разделы останутся.")
         }
     }
 
-    private func description(of item: MenuItem) -> (String, String, Color) {
+    // MARK: - Строки
+
+    @ViewBuilder
+    private func topLevelRow(_ item: MenuItem) -> some View {
         switch item {
-        case .group(let group): return ("Группа «\(group.title)»", group.icon, group.color)
-        case .section(let section): return (section.title, section.icon, section.color)
+        case .group(let id):
+            if let group = layout.groups[id] {
+                HStack(spacing: 12) {
+                    Button { editingGroup = group } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: group.icon)
+                                .foregroundColor(group.color)
+                                .frame(width: 24)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Группа «\(group.name)»")
+                                    .foregroundColor(.primary)
+                                Text(group.sections.isEmpty ? "пустая" : "разделов: \(group.sections.count)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    .buttonStyle(.borderless)
+                    Spacer()
+                    visibilityToggle(for: item, title: group.name)
+                }
+            }
+        case .section(let section):
+            sectionRow(section)
         }
+    }
+
+    private func sectionRow(_ section: MenuSection) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: section.icon)
+                .foregroundColor(section.color)
+                .frame(width: 24)
+            Text(section.title)
+            Spacer()
+            moveMenu(for: section)
+            visibilityToggle(for: .section(section), title: section.title)
+        }
+    }
+
+    /// «Переместить в…»: в любую группу или в общий список
+    private func moveMenu(for section: MenuSection) -> some View {
+        let current = layout.groupID(of: section)
+        return Menu {
+            Section("Переместить в…") {
+                ForEach(layout.orderedGroups) { group in
+                    Button {
+                        withAnimation { layout.move(section, toGroup: group.id) }
+                    } label: {
+                        Label("«\(group.name)»", systemImage: group.icon)
+                    }
+                    .disabled(current == group.id)
+                }
+                Button {
+                    withAnimation { layout.move(section, toGroup: nil) }
+                } label: {
+                    Label("Без группы", systemImage: "list.bullet")
+                }
+                .disabled(current == nil)
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+                .foregroundColor(.secondary)
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel("Переместить «\(section.title)»")
+    }
+
+    private func visibilityToggle(for item: MenuItem, title: String) -> some View {
+        Toggle(title, isOn: Binding(
+            get: { !layout.isHidden(item) },
+            set: { layout.setHidden(!$0, for: item) }
+        ))
+        .labelsHidden()
     }
 }

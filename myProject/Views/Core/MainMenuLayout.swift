@@ -62,55 +62,55 @@ enum MenuSection: String, CaseIterable {
     }
 }
 
-/// Раскрывающаяся группа разделов в меню. Состав групп постоянный, меняются порядок и видимость
-enum MenuGroup: String, CaseIterable {
-    case cards, miniGames
+/// Готовые иконки и цвета для своих групп меню
+enum MenuPalette {
+    static let icons = [
+        "folder.fill", "star.fill", "book.fill", "gamecontroller.fill", "brain.head.profile", "bolt.fill",
+        "square.stack.3d.up.fill", "heart.fill", "flag.fill", "graduationcap.fill", "puzzlepiece.fill", "lightbulb.fill"
+    ]
 
-    var title: String {
-        switch self {
-        case .cards: return "Карточки"
-        case .miniGames: return "Мини-игры"
-        }
-    }
+    static let colors: [(name: String, color: Color)] = [
+        ("blue", .blue), ("purple", .purple), ("pink", .pink), ("red", .red),
+        ("orange", .orange), ("green", .green), ("teal", .teal), ("indigo", .indigo)
+    ]
 
-    var icon: String {
-        switch self {
-        case .cards: return "square.stack.3d.up.fill"
-        case .miniGames: return "gamecontroller.fill"
-        }
-    }
-
-    var color: Color {
-        switch self {
-        case .cards: return .blue
-        case .miniGames: return .indigo
-        }
-    }
-
-    var sections: [MenuSection] {
-        switch self {
-        case .cards: return [.flashcards, .quiz, .cloze]
-        case .miniGames: return [.tetris, .race]
-        }
+    static func color(named name: String) -> Color {
+        colors.first { $0.name == name }?.color ?? .blue
     }
 }
 
-/// Строка верхнего уровня меню: группа или раздел вне групп
+/// Раскрывающаяся группа разделов в меню: стандартная или созданная пользователем
+struct MenuGroup: Identifiable, Hashable {
+    /// Стандартные группы — "cards" и "miniGames", свои — UUID
+    let id: String
+    var name: String
+    var icon: String
+    var colorName: String
+    var sections: [MenuSection]
+
+    var color: Color { MenuPalette.color(named: colorName) }
+
+    static let cards = MenuGroup(id: "cards", name: "Карточки", icon: "square.stack.3d.up.fill",
+                                 colorName: "blue", sections: [.flashcards, .quiz, .cloze])
+    static let miniGames = MenuGroup(id: "miniGames", name: "Мини-игры", icon: "gamecontroller.fill",
+                                     colorName: "indigo", sections: [.tetris, .race])
+}
+
+/// Строка верхнего уровня меню: группа (по id) или раздел вне групп
 enum MenuItem: Hashable {
-    case group(MenuGroup)
+    case group(String)
     case section(MenuSection)
 
     var key: String {
         switch self {
-        case .group(let group): return "group." + group.rawValue
+        case .group(let id): return "group." + id
         case .section(let section): return section.rawValue
         }
     }
 
     init?(key: String) {
         if key.hasPrefix("group.") {
-            guard let group = MenuGroup(rawValue: String(key.dropFirst("group.".count))) else { return nil }
-            self = .group(group)
+            self = .group(String(key.dropFirst("group.".count)))
         } else {
             guard let section = MenuSection(rawValue: key) else { return nil }
             self = .section(section)
@@ -118,24 +118,29 @@ enum MenuItem: Hashable {
     }
 }
 
-/// Порядок и видимость разделов главного меню (Настройки → Главное меню)
+/// Порядок, группы и видимость разделов главного меню (Настройки → Главное меню).
+/// Каждый раздел стоит ровно в одном месте: в группе или в общем списке
 struct MainMenuLayout: Equatable {
     static let storageKey = "main_menu_layout"
 
     var items: [MenuItem]
-    var groupOrder: [MenuGroup: [MenuSection]]
+    var groups: [String: MenuGroup]
     /// Скрытые группы и разделы — по MenuItem.key
     var hidden: Set<String>
 
-    /// Как меню выглядело до настройки
+    /// Меню по умолчанию
     static let standard = MainMenuLayout(
-        items: [.group(.cards), .group(.miniGames), .section(.inputCards), .section(.dictionary), .section(.help)],
-        groupOrder: Dictionary(uniqueKeysWithValues: MenuGroup.allCases.map { ($0, $0.sections) }),
+        items: [.group(MenuGroup.cards.id), .group(MenuGroup.miniGames.id), .section(.inputCards), .section(.dictionary), .section(.help)],
+        groups: [MenuGroup.cards.id: .cards, MenuGroup.miniGames.id: .miniGames],
         hidden: []
     )
 
-    func sections(in group: MenuGroup) -> [MenuSection] {
-        groupOrder[group] ?? group.sections
+    /// Группы в порядке меню
+    var orderedGroups: [MenuGroup] {
+        items.compactMap { item in
+            if case .group(let id) = item { return groups[id] }
+            return nil
+        }
     }
 
     func isHidden(_ item: MenuItem) -> Bool {
@@ -150,53 +155,126 @@ struct MainMenuLayout: Equatable {
     var visibleItems: [MenuItem] {
         items.filter { item in
             guard !isHidden(item) else { return false }
-            if case .group(let group) = item { return !visibleSections(in: group).isEmpty }
+            if case .group(let id) = item { return !visibleSections(in: id).isEmpty }
             return true
         }
     }
 
-    func visibleSections(in group: MenuGroup) -> [MenuSection] {
-        sections(in: group).filter { !isHidden(.section($0)) }
+    func visibleSections(in groupID: String) -> [MenuSection] {
+        (groups[groupID]?.sections ?? []).filter { !isHidden(.section($0)) }
+    }
+
+    /// Группа, в которой стоит раздел; nil — раздел в общем списке
+    func groupID(of section: MenuSection) -> String? {
+        groups.values.first { $0.sections.contains(section) }?.id
+    }
+
+    // MARK: - Свои группы
+
+    /// Новая группа — в конец меню, пока пустая (в меню не видна, пока в неё не перенесут разделы)
+    mutating func addGroup(name: String, icon: String, colorName: String) {
+        let group = MenuGroup(id: UUID().uuidString, name: name, icon: icon, colorName: colorName, sections: [])
+        groups[group.id] = group
+        items.append(.group(group.id))
+    }
+
+    /// Разделы удалённой группы встают в общий список на её место
+    mutating func deleteGroup(_ id: String) {
+        guard let group = groups[id], let index = items.firstIndex(of: .group(id)) else { return }
+        items.replaceSubrange(index...index, with: group.sections.map { .section($0) })
+        groups[id] = nil
+        hidden.remove(MenuItem.group(id).key)
+    }
+
+    /// Переносит раздел в группу (в её конец) или в общий список (в его конец); видимость сохраняется
+    mutating func move(_ section: MenuSection, toGroup targetID: String?) {
+        // Уже там: nil == nil — раздел и так в общем списке
+        guard groupID(of: section) != targetID else { return }
+        items.removeAll { $0 == .section(section) }
+        for id in groups.keys {
+            groups[id]?.sections.removeAll { $0 == section }
+        }
+        if let targetID {
+            groups[targetID]?.sections.append(section)
+        } else {
+            items.append(.section(section))
+        }
     }
 }
 
 // Хранение в @AppStorage одной JSON-строкой
 extension MainMenuLayout: RawRepresentable {
+    private struct StoredGroup: Codable {
+        var id: String
+        var name: String
+        var icon: String
+        var color: String
+        var sections: [String]
+    }
+
     private struct Stored: Codable {
         var items: [String]
-        var groups: [String: [String]]
+        var menuGroups: [StoredGroup]?
+        /// Прошлая версия: только порядок разделов в стандартных группах
+        var groups: [String: [String]]?
         var hidden: [String]
     }
 
-    /// Сохранённое приводим к текущему набору разделов: новые из обновлений появятся в конце и будут видны
+    /// Сохранённое приводим в порядок: каждый раздел ровно в одном месте,
+    /// новые разделы из обновлений — в конце общего списка и видимы
     init?(rawValue: String) {
         guard let data = rawValue.data(using: .utf8),
               let stored = try? JSONDecoder().decode(Stored.self, from: data) else {
             return nil
         }
-        let standard = MainMenuLayout.standard
-        var items: [MenuItem] = []
-        for item in stored.items.compactMap(MenuItem.init(key:)) where !items.contains(item) {
-            items.append(item)
-        }
-        items += standard.items.filter { !items.contains($0) }
 
-        var groupOrder: [MenuGroup: [MenuSection]] = [:]
-        for group in MenuGroup.allCases {
-            var order: [MenuSection] = []
-            for section in (stored.groups[group.rawValue] ?? []).compactMap(MenuSection.init(rawValue:))
-            where group.sections.contains(section) && !order.contains(section) {
-                order.append(section)
+        var groups: [String: MenuGroup] = [:]
+        if let storedGroups = stored.menuGroups {
+            for group in storedGroups {
+                groups[group.id] = MenuGroup(id: group.id, name: group.name, icon: group.icon, colorName: group.color,
+                                             sections: group.sections.compactMap(MenuSection.init(rawValue:)))
             }
-            groupOrder[group] = order + group.sections.filter { !order.contains($0) }
+        } else {
+            // Настройка из прошлой версии: стандартные группы с сохранённым порядком разделов
+            for standard in [MenuGroup.cards, MenuGroup.miniGames] {
+                var group = standard
+                let order = (stored.groups?[standard.id] ?? []).compactMap(MenuSection.init(rawValue:))
+                    .filter(standard.sections.contains)
+                group.sections = order + standard.sections.filter { !order.contains($0) }
+                groups[group.id] = group
+            }
         }
-        self.init(items: items, groupOrder: groupOrder, hidden: Set(stored.hidden))
+
+        var items: [MenuItem] = []
+        var placed: Set<MenuSection> = []
+        for item in stored.items.compactMap(MenuItem.init(key:)) where !items.contains(item) {
+            switch item {
+            case .group(let id):
+                guard var group = groups[id] else { continue }
+                group.sections = group.sections.filter { placed.insert($0).inserted }
+                groups[id] = group
+                items.append(item)
+            case .section(let section):
+                if placed.insert(section).inserted { items.append(item) }
+            }
+        }
+        // Группы, которых нет в порядке, — в конец
+        for id in groups.keys.sorted() where !items.contains(.group(id)) {
+            groups[id]?.sections.removeAll { !placed.insert($0).inserted }
+            items.append(.group(id))
+        }
+        items += MenuSection.allCases.filter { !placed.contains($0) }.map { .section($0) }
+
+        self.init(items: items, groups: groups, hidden: Set(stored.hidden))
     }
 
     var rawValue: String {
         let stored = Stored(
             items: items.map(\.key),
-            groups: Dictionary(uniqueKeysWithValues: groupOrder.map { ($0.key.rawValue, $0.value.map(\.rawValue)) }),
+            menuGroups: orderedGroups.map {
+                StoredGroup(id: $0.id, name: $0.name, icon: $0.icon, color: $0.colorName, sections: $0.sections.map(\.rawValue))
+            },
+            groups: nil,
             hidden: hidden.sorted()
         )
         guard let data = try? JSONEncoder().encode(stored) else { return "" }
