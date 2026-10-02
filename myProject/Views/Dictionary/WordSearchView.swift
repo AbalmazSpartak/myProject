@@ -80,6 +80,8 @@ struct WordSearchView: View {
             }
             .onChange(of: query) { updateResults() }
             .task { rebuildIndex() }
+            // Слово могли удалить в правке — перестраиваем список, чтобы не показать удалённое
+            .onReceive(NotificationCenter.default.publisher(for: ModelContext.didSave)) { _ in rebuildIndex() }
             .sheet(item: $editingWord, onDismiss: rebuildIndex) { word in
                 EditWordView(word: word)
             }
@@ -92,7 +94,7 @@ struct WordSearchView: View {
             Text("Показаны первые \(resultLimit). Уточните запрос.")
         } else {
             #if DEBUG
-            Text("Правка меняет слово только на этом устройстве. Чтобы она не потерялась при перезагрузке словаря, скопируйте CSV-строку (свайп влево) в мастер-базу.")
+            Text("Правка меняет слово только на этом устройстве. Чтобы она не потерялась при обновлении words.csv, скопируйте CSV-строку (свайп влево) в мастер-базу.")
             #endif
         }
     }

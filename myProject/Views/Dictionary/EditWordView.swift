@@ -3,8 +3,12 @@ import SwiftData
 
 struct EditWordView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     @Bindable var word: Word
     @Query(sort: \Category.name) private var categories: [Category]
+    @State private var isConfirmingDelete = false
+    /// Удаляем после закрытия окна, чтобы форма не обращалась к уже удалённому слову
+    @State private var deleteOnClose = false
 
     var body: some View {
         NavigationStack {
@@ -34,6 +38,25 @@ struct EditWordView: View {
                     }
                     .pickerStyle(.segmented)
                 }
+                // Удалить можно только своё слово: слово из базы вернулось бы при обновлении words.csv
+                if word.isCustom {
+                    Section {
+                        Button("Удалить слово", role: .destructive) { isConfirmingDelete = true }
+                    } footer: {
+                        Text(word.lists.isEmpty ? "Слово удалится с устройства вместе с прогрессом." : "Слово удалится с устройства и из всех ваших словарей (\(word.lists.count)).")
+                    }
+                }
+            }
+            .confirmationDialog("Удалить «\(word.english)»?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
+                Button("Удалить", role: .destructive) {
+                    deleteOnClose = true
+                    dismiss()
+                }
+            }
+            .onDisappear {
+                guard deleteOnClose else { return }
+                modelContext.delete(word)
+                try? modelContext.save()
             }
             .navigationTitle("Редактирование")
             .navigationBarTitleDisplayMode(.inline)
