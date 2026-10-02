@@ -28,6 +28,11 @@ struct QuizView: View {
     @State private var isCorrect = false
     @State private var correctCount = 0
     @State private var totalAnswered = 0
+    @AppStorage(SessionLength.key) private var sessionLength = SessionLength.defaultValue
+    /// Подход окончен — показываем итог вместо следующего слова
+    @State private var isApproachFinished = false
+    @State private var approachAnswered = 0
+    @State private var approachCorrect = 0
     
     private var currentWord: Word? {
         guard !sessionWords.isEmpty, currentIndex < sessionWords.count else { return nil }
@@ -84,7 +89,14 @@ struct QuizView: View {
             
             Spacer()
             
-            if sessionWords.isEmpty {
+            if isApproachFinished {
+                ApproachDoneCard(
+                    summary: "Верно \(approachCorrect) из \(approachAnswered)",
+                    tint: .purple,
+                    onContinue: { withAnimation { generateSession() } },
+                    onExit: { dismiss() }
+                )
+            } else if sessionWords.isEmpty {
                 VStack(spacing: 12) {
                     Image(systemName: currentFilter == .mistakes ? "checkmark.circle.fill" : "doc.text.magnifyingglass")
                         .font(.system(size: 48))
@@ -187,10 +199,21 @@ struct QuizView: View {
     }
 
     private func generateSession() {
-        sessionWords = currentFilter.sessionWords(from: studyWords)
-        
+        sessionWords = SessionLength.limited(currentFilter.sessionWords(from: studyWords), to: sessionLength)
         currentIndex = 0
+        isApproachFinished = false
+        approachAnswered = 0
+        approachCorrect = 0
         setupQuestion()
+    }
+
+    /// Слова подхода закончились: с лимитом — итог, без лимита («все») — сразу следующий круг
+    private func finishApproach() {
+        if sessionLength > 0 {
+            withAnimation { isApproachFinished = true }
+        } else {
+            generateSession()
+        }
     }
     
     private func setupQuestion() {
@@ -219,6 +242,8 @@ struct QuizView: View {
             word.isMistake = true
         }
         totalAnswered += 1
+        approachAnswered += 1
+        if isCorrect { approachCorrect += 1 }
         counts = WordCounts(studyWords)
         
         profiles.first?.recordAnswer(.quiz, translationMode: translationMode, isCorrect: isCorrect)
@@ -278,7 +303,7 @@ struct QuizView: View {
     private func nextWord() {
         if !sessionWords.isEmpty {
             if currentIndex + 1 >= sessionWords.count {
-                generateSession()
+                finishApproach()
             } else {
                 currentIndex += 1
                 setupQuestion()

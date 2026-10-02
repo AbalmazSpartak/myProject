@@ -6,18 +6,24 @@ struct WordCounts {
     private var byCategory: [UUID: Int] = [:]
     private var byLevel: [String: Int] = [:]
     private(set) var mistakes = 0
-    /// Новые слова и слова, которым пора на повторение по FSRS
+    /// Слова, которым пора на повторение по FSRS, и новые — не больше дневного остатка
     private(set) var due = 0
 
     init() {}
 
-    init(_ words: [Word], now: Date = Date()) {
+    init(_ words: [Word], newWordsAllowance: Int? = nil, now: Date = Date()) {
+        var newWords = 0
         for word in words {
             if let id = word.category?.id { byCategory[id, default: 0] += 1 }
             byLevel[word.cefrLevel, default: 0] += 1
             if word.isMistake { mistakes += 1 }
-            if word.state == .new || word.dueDate <= now { due += 1 }
+            if word.state == .new {
+                newWords += 1
+            } else if word.dueDate <= now {
+                due += 1
+            }
         }
+        due += newWordsAllowance.map { min($0, newWords) } ?? newWords
     }
 
     func count(for category: Category) -> Int {

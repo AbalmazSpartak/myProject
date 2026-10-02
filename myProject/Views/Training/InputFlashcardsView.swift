@@ -27,6 +27,11 @@ struct InputFlashcardsView: View {
     @State private var isCorrect = false
     @State private var correctCount = 0
     @State private var totalAnswered = 0
+    @AppStorage(SessionLength.key) private var sessionLength = SessionLength.defaultValue
+    /// Подход окончен — показываем итог вместо следующего слова
+    @State private var isApproachFinished = false
+    @State private var approachAnswered = 0
+    @State private var approachCorrect = 0
     
     @FocusState private var isInputFocused: Bool
     
@@ -84,7 +89,14 @@ struct InputFlashcardsView: View {
             
             Spacer()
             
-            if sessionWords.isEmpty {
+            if isApproachFinished {
+                ApproachDoneCard(
+                    summary: "Верно \(approachCorrect) из \(approachAnswered)",
+                    tint: .teal,
+                    onContinue: { withAnimation { generateSession() } },
+                    onExit: { dismiss() }
+                )
+            } else if sessionWords.isEmpty {
                 VStack(spacing: 12) {
                     Image(systemName: currentFilter == .mistakes ? "checkmark.circle.fill" : "keyboard")
                         .font(.system(size: 48))
@@ -254,10 +266,21 @@ struct InputFlashcardsView: View {
     }
 
     private func generateSession() {
-        sessionWords = currentFilter.sessionWords(from: studyWords)
-        
+        sessionWords = SessionLength.limited(currentFilter.sessionWords(from: studyWords), to: sessionLength)
         currentIndex = 0
+        isApproachFinished = false
+        approachAnswered = 0
+        approachCorrect = 0
         resetQuestion()
+    }
+
+    /// Слова подхода закончились: с лимитом — итог, без лимита («все») — сразу следующий круг
+    private func finishApproach() {
+        if sessionLength > 0 {
+            withAnimation { isApproachFinished = true }
+        } else {
+            generateSession()
+        }
     }
     
     private func resetQuestion() {
@@ -287,6 +310,8 @@ struct InputFlashcardsView: View {
         }
         
         totalAnswered += 1
+        approachAnswered += 1
+        if isCorrect { approachCorrect += 1 }
         counts = WordCounts(studyWords)
         
         TextToSpeechManager.shared.speak(word.english)
@@ -330,7 +355,7 @@ struct InputFlashcardsView: View {
     private func nextWord() {
         if !sessionWords.isEmpty {
             if currentIndex + 1 >= sessionWords.count {
-                generateSession()
+                finishApproach()
             } else {
                 currentIndex += 1
                 resetQuestion()

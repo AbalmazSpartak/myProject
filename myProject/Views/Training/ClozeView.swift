@@ -17,6 +17,11 @@ struct ClozeView: View {
     @State private var showHint = false
     @State private var correctCount = 0
     @State private var totalAnswered = 0
+    @AppStorage(SessionLength.key) private var sessionLength = SessionLength.defaultValue
+    /// Подход окончен — показываем итог вместо следующего слова
+    @State private var isApproachFinished = false
+    @State private var approachAnswered = 0
+    @State private var approachCorrect = 0
 
     @FocusState private var isInputFocused: Bool
 
@@ -35,7 +40,14 @@ struct ClozeView: View {
 
             Spacer()
 
-            if let word = currentWord, let parts = word.clozeParts {
+            if isApproachFinished {
+                ApproachDoneCard(
+                    summary: "Верно \(approachCorrect) из \(approachAnswered)",
+                    tint: .pink,
+                    onContinue: { withAnimation { startSession() } },
+                    onExit: { dismiss() }
+                )
+            } else if let word = currentWord, let parts = word.clozeParts {
                 card(for: word, parts: parts)
             } else {
                 emptyState
@@ -184,8 +196,11 @@ struct ClozeView: View {
     // MARK: - Логика
 
     private func startSession() {
-        sessionWords = clozeWords.shuffled()
+        sessionWords = SessionLength.limited(clozeWords.shuffled(), to: sessionLength)
         currentIndex = 0
+        isApproachFinished = false
+        approachAnswered = 0
+        approachCorrect = 0
         resetQuestion()
     }
 
@@ -205,7 +220,11 @@ struct ClozeView: View {
 
         word.isMistake = outcome == .wrong
         totalAnswered += 1
-        if outcome != .wrong { correctCount += 1 }
+        approachAnswered += 1
+        if outcome != .wrong {
+            correctCount += 1
+            approachCorrect += 1
+        }
         UINotificationFeedbackGenerator().notificationOccurred(outcome == .wrong ? .error : .success)
         TextToSpeechManager.shared.speak(word.plainExample)
 
@@ -214,7 +233,12 @@ struct ClozeView: View {
 
     private func next() {
         if currentIndex + 1 >= sessionWords.count {
-            startSession()
+            // С лимитом подхода — итог, без лимита («все») — сразу следующий круг
+            if sessionLength > 0 {
+                withAnimation { isApproachFinished = true }
+            } else {
+                startSession()
+            }
         } else {
             currentIndex += 1
             resetQuestion()

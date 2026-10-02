@@ -25,6 +25,12 @@ struct FlashcardsView: View {
     @State private var isAnswerRevealed = false
     
     @State private var reviewedCount = 0
+    @AppStorage(SessionLength.key) private var sessionLength = SessionLength.defaultValue
+    /// Подход окончен — показываем итог вместо следующего слова
+    @State private var isApproachFinished = false
+    @State private var approachAnswered = 0
+    @State private var approachCorrect = 0
+    @AppStorage(DailyNewWords.limitKey) private var newWordsPerDay = DailyNewWords.defaultLimit
     private let fsrs = FSRSCalculator()
     
     private var currentWord: Word? {
@@ -84,7 +90,14 @@ struct FlashcardsView: View {
             
             Spacer()
             
-            if sessionWords.isEmpty {
+            if isApproachFinished {
+                ApproachDoneCard(
+                    summary: "Вспомнили \(approachCorrect) из \(approachAnswered)",
+                    tint: .blue,
+                    onContinue: { withAnimation { generateSession() } },
+                    onExit: { dismiss() }
+                )
+            } else if sessionWords.isEmpty {
                 VStack(spacing: 16) {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 60))
@@ -203,17 +216,36 @@ struct FlashcardsView: View {
     private func loadWords() {
         allWords = modelContext.fetchAllWords()
         studyWords = allWords.filter { studyScope.includes($0) }
-        counts = WordCounts(studyWords)
+        counts = WordCounts(studyWords, newWordsAllowance: newWordsAllowance)
+    }
+
+    /// Сколько новых слов ещё можно начать сегодня; nil — без лимита
+    private var newWordsAllowance: Int? {
+        DailyNewWords.allowance(limit: newWordsPerDay)
     }
 
     private func generateSession() {
-        sessionWords = currentFilter.sessionWords(from: studyWords)
+        let words = currentFilter.sessionWords(from: studyWords, newWordsAllowance: newWordsAllowance)
+        sessionWords = SessionLength.limited(words, to: sessionLength)
         currentIndex = 0
+        isApproachFinished = false
+        approachAnswered = 0
+        approachCorrect = 0
     }
     
+    /// Слова подхода закончились: с лимитом — итог, без лимита («все») — сразу следующий круг
+    private func finishApproach() {
+        if sessionLength > 0 {
+            withAnimation { isApproachFinished = true }
+        } else {
+            generateSession()
+        }
+    }
+
     private func processRating(_ rating: FSRSRating) {
         guard let word = currentWord else { return }
         
+        if word.state == .new { DailyNewWords.recordIntroduced() }
         fsrs.calculateNextReview(word: word, rating: rating)
         
         if rating == .again {
@@ -223,12 +255,14 @@ struct FlashcardsView: View {
         }
         
         reviewedCount += 1
-        counts = WordCounts(studyWords)
+        approachAnswered += 1
+        if rating != .again { approachCorrect += 1 }
+        counts = WordCounts(studyWords, newWordsAllowance: newWordsAllowance)
         profiles.first?.recordAnswer(.flashcards, translationMode: translationMode, isCorrect: rating != .again)
         
         isAnswerRevealed = false
         if currentIndex + 1 >= sessionWords.count {
-            generateSession()
+            finishApproach()
         } else {
             currentIndex += 1
         }

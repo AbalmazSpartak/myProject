@@ -18,11 +18,14 @@ enum TrainingFilter: Equatable {
         }
     }
 
-    /// Слова сессии: на повторение — по сроку, остальные — вперемешку
-    func sessionWords(from words: [Word], now: Date = Date()) -> [Word] {
+    /// Слова сессии: на повторение — сначала слова по сроку, затем новые (не больше дневного остатка),
+    /// остальные режимы — вперемешку
+    func sessionWords(from words: [Word], newWordsAllowance: Int? = nil, now: Date = Date()) -> [Word] {
         switch self {
         case .due:
-            return words.filter { $0.state == .new || $0.dueDate <= now }.sorted { $0.dueDate < $1.dueDate }
+            let reviews = words.filter { $0.state != .new && $0.dueDate <= now }.sorted { $0.dueDate < $1.dueDate }
+            let fresh = Self.byLevel(words.filter { $0.state == .new })
+            return reviews + (newWordsAllowance.map { Array(fresh.prefix($0)) } ?? fresh)
         case .all:
             return words.shuffled()
         case .category(let category):
@@ -33,6 +36,14 @@ enum TrainingFilter: Equatable {
         case .level(let level):
             return words.filter { $0.cefrLevel == level.rawValue }.shuffled()
         }
+    }
+
+    /// Новые слова от простых к сложным (A1 → C2), внутри уровня вперемешку
+    private static func byLevel(_ words: [Word]) -> [Word] {
+        let groups = Dictionary(grouping: words, by: \.cefrLevel)
+        let known = CEFRLevel.allCases.map(\.rawValue)
+        let levels = known + groups.keys.filter { !known.contains($0) }.sorted()
+        return levels.flatMap { (groups[$0] ?? []).shuffled() }
     }
 }
 
