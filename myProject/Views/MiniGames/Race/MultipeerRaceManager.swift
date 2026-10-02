@@ -77,10 +77,10 @@ final class MultipeerRaceManager: NSObject, ObservableObject {
         sendOnce(message)
         // Повторная отправка — защита от случаев, когда канал ещё не готов
         // сразу после подключения пира и первая посылка молча теряется
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(0.3))
             self?.sendOnce(message)
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+            try? await Task.sleep(for: .seconds(0.5))
             self?.sendOnce(message)
         }
     }

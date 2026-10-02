@@ -188,7 +188,8 @@ struct RaceGameView: View {
                 manager.send(RaceMessage(type: "progress", playerName: manager.myName, correctCount: players[idx].correctCount))
             }
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            Task {
+                try? await Task.sleep(for: .seconds(0.4))
                 selectedAnswer = nil
                 if currentIndex + 1 >= words.count {
                     finishRace()
@@ -200,7 +201,8 @@ struct RaceGameView: View {
             wrongOption = answer
             isLocked = true
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            Task {
+                try? await Task.sleep(for: .seconds(1))
                 wrongOption = nil
                 isLocked = false
             }

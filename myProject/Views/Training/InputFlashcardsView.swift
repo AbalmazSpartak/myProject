@@ -262,7 +262,8 @@ struct InputFlashcardsView: View {
         showResult = false
         isCorrect = false
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+        Task {
+            try? await Task.sleep(for: .seconds(0.1))
             isInputFocused = true
         }
     }

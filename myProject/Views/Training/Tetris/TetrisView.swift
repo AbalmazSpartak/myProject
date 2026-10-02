@@ -495,7 +495,8 @@ struct TetrisView: View {
             UINotificationFeedbackGenerator().notificationOccurred(.error)
         }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+        Task {
+            try? await Task.sleep(for: .seconds(0.8))
             // Если слово уже сменилось (например, из-за очистки линии), выбор не сбрасываем повторно
             if currentWord?.id == word.id {
                 withAnimation {
