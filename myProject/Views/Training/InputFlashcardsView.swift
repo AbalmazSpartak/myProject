@@ -1,13 +1,6 @@
 import SwiftUI
 import SwiftData
 
-enum InputFlashcardsFilter: Equatable {
-    case all
-    case category(Category)
-    case mistakes
-    case level(CEFRLevel)   // новая строка
-}
-
 struct InputFlashcardsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -25,7 +18,7 @@ struct InputFlashcardsView: View {
     @State private var counts = WordCounts()
     @Query private var profiles: [UserProfile]
     
-    @State private var currentFilter: InputFlashcardsFilter = .all
+    @State private var currentFilter: TrainingFilter = .all
     @State private var sessionWords: [Word] = []
     @State private var currentIndex = 0
     
@@ -52,15 +45,6 @@ struct InputFlashcardsView: View {
         return translationMode == "en_ru" ? word.russian : word.english
     }
     
-    private var filterTitle: String {
-        switch currentFilter {
-        case .all: return "Все слова"
-        case .category(let cat): return cat.name
-        case .mistakes: return "⚠️ Ошибки (\(counts.mistakes))"
-        case .level(let level): return "Уровень \(level.rawValue)"
-        }
-    }
-    
     var body: some View {
         VStack(spacing: 0) {
             HStack(alignment: .top) {
@@ -77,45 +61,14 @@ struct InputFlashcardsView: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 6) {
-                    Menu {
-                        Button("Все слова") { changeFilter(to: .all) }
-                        
-                        Button("⚠️ Работа над ошибками (\(counts.mistakes))") {
-                            changeFilter(to: .mistakes)
-                        }
-                        .disabled(counts.mistakes == 0)
-                        
-                        Divider()
-                        
-                        ForEach(categories) { category in
-                            Button("\(category.name) (\(counts.count(for: category)))") { changeFilter(to: .category(category)) }
-                        }
-                        // ↓ новый блок
-                        Divider()
-                        
-                        ForEach(CEFRLevel.allCases, id: \.rawValue) { level in
-                            Button("Уровень \(level.rawValue) (\(counts.count(level: level)))") {
-                                changeFilter(to: .level(level))
-                            }
-                            .disabled(counts.count(level: level) == 0)
-                        }
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: currentFilter == .mistakes ? "exclamationmark.triangle.fill" : "folder.fill")
-                            Text(filterTitle)
-                                .lineLimit(1)
-                            Image(systemName: "chevron.down")
-                                .font(.system(size: 11, weight: .bold))
-                        }
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
-                        .foregroundColor(currentFilter == .mistakes ? .orange : .teal)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
-                        .background(
-                            (currentFilter == .mistakes ? Color.orange : Color.teal).opacity(0.12)
-                        )
-                        .cornerRadius(10)
-                    }
+                    TrainingFilterMenu(
+                        current: currentFilter,
+                        counts: counts,
+                        categories: categories,
+                        icon: "folder.fill",
+                        tint: .teal,
+                        onSelect: changeFilter
+                    )
                     
                     Text("Ввод: \(correctCount)/\(totalAnswered)")
                         .font(.system(size: 13, weight: .bold, design: .rounded))
@@ -282,7 +235,7 @@ struct InputFlashcardsView: View {
         return isCorrect ? Color.green : Color.red
     }
     
-    private func changeFilter(to filter: InputFlashcardsFilter) {
+    private func changeFilter(to filter: TrainingFilter) {
         currentFilter = filter
         correctCount = 0
         totalAnswered = 0
@@ -298,17 +251,7 @@ struct InputFlashcardsView: View {
     }
 
     private func generateSession() {
-        switch currentFilter {
-        case .all:
-            sessionWords = studyWords.shuffled()
-        case .category(let cat):
-            let catID = cat.id
-            sessionWords = studyWords.filter { $0.category?.id == catID }.shuffled()
-        case .mistakes:
-            sessionWords = studyWords.filter { $0.isMistake }.shuffled()
-        case .level(let level):
-            sessionWords = studyWords.filter { $0.cefrLevel == level.rawValue }.shuffled()
-        }
+        sessionWords = currentFilter.sessionWords(from: studyWords)
         
         currentIndex = 0
         resetQuestion()
@@ -344,15 +287,7 @@ struct InputFlashcardsView: View {
         
         TextToSpeechManager.shared.speak(word.english)
         
-        if let userProfile = profiles.first {
-            if translationMode == "en_ru" {
-                userProfile.flashcardsEnRuTotal += 1
-                if isCorrect { userProfile.flashcardsEnRuCorrect += 1 }
-            } else {
-                userProfile.flashcardsRuEnTotal += 1
-                if isCorrect { userProfile.flashcardsRuEnCorrect += 1 }
-            }
-        }
+        profiles.first?.recordAnswer(.flashcards, translationMode: translationMode, isCorrect: isCorrect)
         
         withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
             showResult = true

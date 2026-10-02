@@ -55,3 +55,31 @@ final class UserProfile {
         self.avatarData = avatarData
     }
 }
+
+// MARK: - Статистика ответов
+
+extension UserProfile {
+    enum TrainingStat {
+        case flashcards   // карточки для запоминания и карточки ввода
+        case quiz
+    }
+
+    /// Засчитывает ответ в статистику нужного режима и направления перевода
+    func recordAnswer(_ stat: TrainingStat, translationMode: String, isCorrect: Bool) {
+        let correct = isCorrect ? 1 : 0
+        switch (stat, translationMode == "en_ru") {
+        case (.flashcards, true):
+            flashcardsEnRuTotal += 1
+            flashcardsEnRuCorrect += correct
+        case (.flashcards, false):
+            flashcardsRuEnTotal += 1
+            flashcardsRuEnCorrect += correct
+        case (.quiz, true):
+            quizEnRuTotal += 1
+            quizEnRuCorrect += correct
+        case (.quiz, false):
+            quizRuEnTotal += 1
+            quizRuEnCorrect += correct
+        }
+    }
+}

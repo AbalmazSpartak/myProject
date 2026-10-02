@@ -1,14 +1,6 @@
 import SwiftUI
 import SwiftData
 
-enum FlashcardsFilter: Equatable {
-    case due           // Только слова, готовые к повторению по FSRS
-    case all           // Все слова подряд
-    case category(Category)
-    case mistakes      // Ошибки
-    case level(CEFRLevel)   // новая строка
-}
-
 struct FlashcardsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -27,7 +19,7 @@ struct FlashcardsView: View {
     @State private var counts = WordCounts()
     @Query private var profiles: [UserProfile]
     
-    @State private var currentFilter: FlashcardsFilter = .due
+    @State private var currentFilter: TrainingFilter = .due
     @State private var sessionWords: [Word] = []
     @State private var currentIndex = 0
     @State private var isAnswerRevealed = false
@@ -51,17 +43,6 @@ struct FlashcardsView: View {
         return translationMode == "en_ru" ? word.russian : word.english
     }
     
-    private var filterTitle: String {
-        switch currentFilter {
-        case .due: return "⏰ На повторение (\(counts.due))"
-        case .all: return "Все слова"
-        case .category(let cat): return cat.name
-        case .mistakes: return "⚠️ Ошибки (\(counts.mistakes))"
-        case .level(let level): return "Уровень \(level.rawValue)"
-        
-        }
-    }
-    
     var body: some View {
         VStack(spacing: 0) {
             HStack {
@@ -83,44 +64,16 @@ struct FlashcardsView: View {
                 }
                 .padding(.trailing, 8)
 
-                Menu {
-                    Button("⏰ На повторение (FSRS)") { changeFilter(to: .due) }
-                    
-                    Button("Все слова") { changeFilter(to: .all) }
-                    
-                    Button("⚠️ Работа над ошибками (\(counts.mistakes))") {
-                        changeFilter(to: .mistakes)
-                    }
-                    .disabled(counts.mistakes == 0)
-                    
-                    Divider()
-                    
-                    ForEach(categories) { category in
-                        Button("\(category.name) (\(counts.count(for: category)))") { changeFilter(to: .category(category)) }
-                    }
-                    // ↓ новый блок
-                    Divider()
-                    
-                    ForEach(CEFRLevel.allCases, id: \.rawValue) { level in
-                        Button("Уровень \(level.rawValue) (\(counts.count(level: level)))") {
-                            changeFilter(to: .level(level))
-                        }
-                        .disabled(counts.count(level: level) == 0)
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: currentFilter == .mistakes ? "exclamationmark.triangle.fill" : "clock.badge.checkmark.fill")
-                        Text(filterTitle)
-                            .lineLimit(1)
-                        Image(systemName: "chevron.down").font(.caption2)
-                    }
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundColor(currentFilter == .mistakes ? .orange : .blue)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background((currentFilter == .mistakes ? Color.orange : Color.blue).opacity(0.1))
-                    .cornerRadius(8)
-                }
+                TrainingFilterMenu(
+                    current: currentFilter,
+                    counts: counts,
+                    categories: categories,
+                    includesDue: true,
+                    icon: "clock.badge.checkmark.fill",
+                    tint: .blue,
+                    backgroundOpacity: 0.1,
+                    onSelect: changeFilter
+                )
             }
             .padding(.horizontal, 24)
             .padding(.top, 10)
@@ -257,7 +210,7 @@ struct FlashcardsView: View {
         }
     }
     
-    private func changeFilter(to filter: FlashcardsFilter) {
+    private func changeFilter(to filter: TrainingFilter) {
         currentFilter = filter
         isAnswerRevealed = false
         generateSession()
@@ -270,21 +223,7 @@ struct FlashcardsView: View {
     }
 
     private func generateSession() {
-        let now = Date()
-        switch currentFilter {
-        case .due:
-            sessionWords = studyWords.filter { $0.state == .new || $0.dueDate <= now }
-                .sorted { $0.dueDate < $1.dueDate }
-        case .all:
-            sessionWords = studyWords.shuffled()
-        case .category(let cat):
-            let catID = cat.id
-            sessionWords = studyWords.filter { $0.category?.id == catID }.shuffled()
-        case .mistakes:
-            sessionWords = studyWords.filter { $0.isMistake }.shuffled()
-        case .level(let level):
-            sessionWords = studyWords.filter { $0.cefrLevel == level.rawValue }.shuffled()
-        }
+        sessionWords = currentFilter.sessionWords(from: studyWords)
         currentIndex = 0
     }
     
@@ -301,15 +240,7 @@ struct FlashcardsView: View {
         
         reviewedCount += 1
         counts = WordCounts(studyWords)
-        if let userProfile = profiles.first {
-            if translationMode == "en_ru" {
-                userProfile.flashcardsEnRuTotal += 1
-                if rating != .again { userProfile.flashcardsEnRuCorrect += 1 }
-            } else {
-                userProfile.flashcardsRuEnTotal += 1
-                if rating != .again { userProfile.flashcardsRuEnCorrect += 1 }
-            }
-        }
+        profiles.first?.recordAnswer(.flashcards, translationMode: translationMode, isCorrect: rating != .again)
         
         isAnswerRevealed = false
         if currentIndex + 1 >= sessionWords.count {
