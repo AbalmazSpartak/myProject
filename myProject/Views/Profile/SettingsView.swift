@@ -17,6 +17,10 @@ struct SettingsView: View {
     @AppStorage(SpeechSettings.accentKey) private var speechAccent = SpeechSettings.defaultAccent
     @AppStorage(SpeechSettings.rateKey) private var speechRate = SpeechSettings.defaultRate
     @AppStorage(SpeechSettings.autoSpeakKey) private var autoSpeak = false
+    @AppStorage(DailyReminder.enabledKey) private var reminderEnabled = false
+    @AppStorage(DailyReminder.timeKey) private var reminderTime = DailyReminder.defaultTime
+    /// Пользователь запретил уведомления — подсказываем, где их включить
+    @State private var notificationsDenied = false
 
     @State private var showingResetAlert = false
     @State private var selectedPhotoItem: PhotosPickerItem?
@@ -134,6 +138,20 @@ struct SettingsView: View {
                     }
                 }
 
+                // Напоминание
+                Section {
+                    Toggle("Напоминать заниматься", isOn: Binding(get: { reminderEnabled }, set: setReminder))
+                    if reminderEnabled {
+                        DatePicker("Время", selection: reminderDate, displayedComponents: .hourAndMinute)
+                    }
+                } header: {
+                    Text("Напоминание")
+                } footer: {
+                    Text(notificationsDenied
+                         ? "Уведомления запрещены — включите их в Настройках iPhone → WordLearner → Уведомления."
+                         : "Раз в день, без спешки и счётчиков — просто повод уделить словам пару минут.")
+                }
+
                 // Оформление
                 Section(header: Text("Оформление")) {
                     Picker("Тема оформления", selection: $selectedTheme) {
@@ -209,5 +227,37 @@ struct SettingsView: View {
                 Text("Вы уверены, что хотите сбросить всю детализированную статистику? Это действие нельзя отменить.")
             }
         }
+    }
+
+    // MARK: - Напоминание
+
+    private func setReminder(_ isOn: Bool) {
+        guard isOn else {
+            reminderEnabled = false
+            DailyReminder.cancel()
+            return
+        }
+        Task {
+            if await DailyReminder.requestAuthorization() {
+                notificationsDenied = false
+                reminderEnabled = true
+                DailyReminder.schedule(at: reminderTime)
+            } else {
+                notificationsDenied = true
+                reminderEnabled = false
+            }
+        }
+    }
+
+    /// Время напоминания для DatePicker; при смене — переставляем уведомления
+    private var reminderDate: Binding<Date> {
+        Binding(
+            get: { Calendar.current.startOfDay(for: Date()).addingTimeInterval(TimeInterval(reminderTime)) },
+            set: { date in
+                let parts = Calendar.current.dateComponents([.hour, .minute], from: date)
+                reminderTime = (parts.hour ?? 19) * 3600 + (parts.minute ?? 0) * 60
+                DailyReminder.schedule(at: reminderTime)
+            }
+        )
     }
 }
