@@ -29,6 +29,7 @@ struct ScanResultsView: View {
     var onSave: (WordList) -> Void
 
     @Environment(\.modelContext) private var modelContext
+    @Query private var lists: [WordList]
 
     @State private var listName = "Скан " + Date.now.formatted(.dateTime.day().month(.wide))
     @State private var selected: Set<String>
@@ -69,8 +70,14 @@ struct ScanResultsView: View {
 
     var body: some View {
         List {
-            Section("Новый словарь") {
+            Section {
                 TextField("Название", text: $listName)
+            } header: {
+                Text("Новый словарь")
+            } footer: {
+                if let existing = existingList {
+                    Text("Словарь «\(existing.name)» уже есть — слова добавятся в него (\(existing.words.count) сейчас).")
+                }
             }
             if !newWords.isEmpty {
                 Section {
@@ -249,12 +256,26 @@ struct ScanResultsView: View {
         CEFRLevel.allCases.firstIndex { $0.rawValue == candidate.existing?.cefrLevel } ?? 0
     }
 
+    /// Словарь с таким же названием (без учёта регистра) — новые слова добавляются в него, а не во второй такой же
+    private var existingList: WordList? {
+        let name = listName.trimmingCharacters(in: .whitespaces)
+        return lists.first { $0.name.trimmingCharacters(in: .whitespaces).caseInsensitiveCompare(name) == .orderedSame }
+    }
+
     private func save() {
-        let list = WordList(name: listName.trimmingCharacters(in: .whitespaces))
-        modelContext.insert(list)
+        let list: WordList
+        if let existing = existingList {
+            list = existing
+        } else {
+            list = WordList(name: listName.trimmingCharacters(in: .whitespaces))
+            modelContext.insert(list)
+        }
         for candidate in candidates where selected.contains(candidate.id) {
             if let word = candidate.existing {
-                word.lists.append(list)
+                // Слово уже в этом словаре — второй раз не добавляем
+                if !word.lists.contains(where: { $0.id == list.id }) {
+                    word.lists.append(list)
+                }
             } else {
                 let item = candidate.extracted
                 let word = Word(
