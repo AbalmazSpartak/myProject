@@ -3,9 +3,6 @@ import SwiftData
 
 @main
 struct MyApp: App {
-    // Считываем выбранную пользователем тему для мгновенного обновления интерфейса
-    @AppStorage("app_theme") private var appTheme: String = "system"
-    
     // Создаем ModelContainer один раз и храним его в свойстве
     private var container: ModelContainer
     
@@ -32,15 +29,6 @@ struct MyApp: App {
             ContentView()
                 .modelContext(container.mainContext)
                 .appThemedColorScheme()
-        }
-    }
-    
-    // Преобразует строковое значение из настроек в системный тип ColorScheme
-    private func colorSchemeForTheme(_ theme: String) -> ColorScheme? {
-        switch theme {
-        case "light": return .light
-        case "dark": return .dark
-        default: return nil // nil переводит приложение в автоматический режим (по системе)
         }
     }
 }

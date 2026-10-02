@@ -8,12 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		C88898E3305E6FBF0018B20D /* full_code.txt in Resources */ = {isa = PBXBuildFile; fileRef = C88898D5305E6FBF0018B20D /* full_code.txt */; };
-		C8889929306070560018B20D /* sample_words.json in Resources */ = {isa = PBXBuildFile; fileRef = C8889928306070560018B20D /* sample_words.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		C88898D5305E6FBF0018B20D /* full_code.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = full_code.txt; sourceTree = "<group>"; };
-		C8889928306070560018B20D /* sample_words.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sample_words.json; sourceTree = "<group>"; };
 		C8CC0B5B306B4BEE00E8C3A6 /* myProject.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = myProject.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -50,7 +48,6 @@
 		000000000000000000000001 = {
 			isa = PBXGroup;
 			children = (
-				C8889928306070560018B20D /* sample_words.json */,
 				C88898D5305E6FBF0018B20D /* full_code.txt */,
 				000000000000000000000010 /* myProject */,
 				C8CC0B5B306B4BEE00E8C3A6 /* myProject.app */,
@@ -117,7 +114,6 @@
 			isa = PBXResourcesBuildPhase;
 			files = (
 				C88898E3305E6FBF0018B20D /* full_code.txt in Resources */,
-				C8889929306070560018B20D /* sample_words.json in Resources */,
 			);
 		};
 /* End PBXResourcesBuildPhase section */
