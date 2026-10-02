@@ -6,8 +6,10 @@
 - Target: iOS 18+ / macOS (iOS 18 needed for Translation in text scan)
 
 ## Build and Test Commands
-- Build: xcodebuild -project myProject.xcodeproj -scheme myProject -destination "platform=iOS Simulator,name=iPhone 16e,OS=18.6" build
-- Test: xcodebuild -project myProject.xcodeproj -scheme myProject -destination "platform=iOS Simulator,name=iPhone 16e,OS=18.6" test
+- Build: xcodebuild -project myProject.xcodeproj -target myProject -sdk iphonesimulator -configuration Debug build
+  - Builds the target directly; the app lands in `build/Debug-iphonesimulator/myProject.app` (gitignored) — install it with `xcrun simctl install <device> <path>` to check screens.
+  - Avoid `-scheme myProject -destination "platform=iOS Simulator,…"`: the scheme is auto-generated (no shared .xcscheme), xcodebuild always warns "Supported platforms for the buildables in the current scheme is empty", and on 2026-10-02 after a device build from Xcode it reported BUILD SUCCEEDED without compiling anything. A build with `-destination "generic/platform=iOS Simulator"` unstuck it. If a scheme build ever shows no `SwiftCompile` steps after source changes, don't trust it.
+- Test: there are no test targets yet.
 
 ## Word List (master database)
 - `myProject/Resources/words.csv` is the single source of truth for built-in words. Edit it, never regenerate it from an external spreadsheet export without merging.
