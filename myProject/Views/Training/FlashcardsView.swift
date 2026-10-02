@@ -54,7 +54,7 @@ struct FlashcardsView: View {
                 Button(action: { dismiss() }) {
                     HStack(spacing: 5) {
                         Image(systemName: "chevron.left")
-                        Text("В меню")
+                        Text("Обзор")
                     }
                     .scaledFont(size: 16, weight: .semibold, design: .rounded)
                     .foregroundColor(.blue)

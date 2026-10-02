@@ -127,7 +127,7 @@ struct HelpView: View {
                 Button(action: { dismiss() }) {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
-                        Text("Меню")
+                        Text("Обзор")
                     }
                     .scaledFont(size: 17, weight: .semibold)
                 }

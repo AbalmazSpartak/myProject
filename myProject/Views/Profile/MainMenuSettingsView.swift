@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Настройки → Главное меню: порядок (перетаскиванием), видимость, свои группы
+/// Настройки → Ленты «Обзора»: порядок (перетаскиванием), видимость, свои группы — каждая группа становится лентой
 struct MainMenuSettingsView: View {
     @AppStorage(MainMenuLayout.storageKey) private var layout = MainMenuLayout.standard
 
@@ -11,14 +11,14 @@ struct MainMenuSettingsView: View {
     var body: some View {
         List {
             Section {
-                ForEach(layout.items, id: \.self) { item in
+                ForEach(layout.items.filter { !Self.isTab($0) }, id: \.self) { item in
                     topLevelRow(item)
                 }
-                .onMove { layout.items.move(fromOffsets: $0, toOffset: $1) }
+                .onMove(perform: moveTopLevel)
             } header: {
-                Text("Порядок в меню")
+                Text("Порядок лент")
             } footer: {
-                Text("«Мой профиль» всегда сверху — через него открываются настройки. Нажмите на группу, чтобы изменить её. Скрытая группа скрывается целиком.")
+                Text("Каждая группа — отдельная лента на «Обзоре», разделы вне групп — лента «Разделы». Профиль и Словарь — во вкладках внизу. Нажмите на группу, чтобы изменить её. Скрытая группа скрывается целиком.")
             }
 
             ForEach(layout.orderedGroups) { group in
@@ -27,10 +27,10 @@ struct MainMenuSettingsView: View {
                         Text("Пусто — перенесите сюда разделы кнопкой ⋯")
                             .foregroundStyle(.secondary)
                     }
-                    ForEach(group.sections, id: \.self) { section in
+                    ForEach(group.sections.filter { !$0.isTab }, id: \.self) { section in
                         sectionRow(section)
                     }
-                    .onMove { layout.groups[group.id]?.sections.move(fromOffsets: $0, toOffset: $1) }
+                    .onMove { moveInGroup(group.id, from: $0, to: $1) }
                 } header: {
                     Text("В группе «\(group.name)»")
                 } footer: {
@@ -53,7 +53,7 @@ struct MainMenuSettingsView: View {
         // Ручки для перетаскивания видны сразу, без кнопки «Изменить»
         .environment(\.editMode, .constant(.active))
         .brandListBackground()
-        .navigationTitle("Главное меню")
+        .navigationTitle("Ленты «Обзора»")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $isCreatingGroup) {
             MenuGroupEditorView(group: nil) { name, icon, colorName in
@@ -75,6 +75,27 @@ struct MainMenuSettingsView: View {
         } message: {
             Text("Ваши группы удалятся, порядок и скрытые разделы сбросятся. Сами разделы останутся.")
         }
+    }
+
+    /// Вкладки (Словарь) в настройке не показываются — их строки пропускаем
+    private static func isTab(_ item: MenuItem) -> Bool {
+        if case .section(let section) = item { return section.isTab }
+        return false
+    }
+
+    /// Перенос в отфильтрованном списке → перенос в полном списке разделов меню
+    private func moveTopLevel(from source: IndexSet, to destination: Int) {
+        var shown = layout.items.filter { !Self.isTab($0) }
+        shown.move(fromOffsets: source, toOffset: destination)
+        let hidden = layout.items.filter(Self.isTab)
+        layout.items = shown + hidden
+    }
+
+    private func moveInGroup(_ groupID: String, from source: IndexSet, to destination: Int) {
+        guard let sections = layout.groups[groupID]?.sections else { return }
+        var shown = sections.filter { !$0.isTab }
+        shown.move(fromOffsets: source, toOffset: destination)
+        layout.groups[groupID]?.sections = shown + sections.filter(\.isTab)
     }
 
     // MARK: - Строки

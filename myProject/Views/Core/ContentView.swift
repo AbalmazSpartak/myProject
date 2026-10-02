@@ -26,15 +26,29 @@ struct ContentView: View {
     @State private var activeScreen: ActiveScreen?
 
     var body: some View {
-        NavigationStack {
-            OverviewView { activeScreen = $0 }
-                .navigationBarHidden(true)
-                // Разделы открываются переходом: свайп от левого края возвращает на «Обзор»
-                .navigationDestination(item: $activeScreen) { screen in
-                    destination(for: screen)
-                        .toolbar(.hidden, for: .navigationBar)
-                }
+        TabView {
+            NavigationStack {
+                OverviewView { activeScreen = $0 }
+                    .navigationBarHidden(true)
+                    // Разделы открываются переходом: свайп от левого края возвращает на «Обзор»
+                    .navigationDestination(item: $activeScreen) { screen in
+                        destination(for: screen)
+                            .toolbar(.hidden, for: .navigationBar)
+                            // Внутри раздела — на весь экран, без вкладок
+                            .toolbar(.hidden, for: .tabBar)
+                    }
+            }
+            .tabItem { Label("Обзор", systemImage: "safari.fill") }
+
+            ProfileView()
+                .tabItem { Label("Профиль", systemImage: "person.fill") }
+
+            DictionaryView(showsBackButton: false)
+                .tabItem { Label("Словарь", systemImage: "book.closed.fill") }
         }
+        .tint(.brandDark)
+        .toolbarBackground(Color.brandFill, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
     }
 
     @ViewBuilder

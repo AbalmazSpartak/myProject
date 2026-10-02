@@ -23,7 +23,7 @@ struct OverviewView: View {
 
                 collectionsRibbon
 
-                // Ленты разделов — по настройке «Главное меню»: каждая группа — своя лента
+                // Ленты разделов — по настройке «Ленты «Обзора»»: каждая группа — своя лента
                 ForEach(ribbons, id: \.title) { ribbon in
                     sectionRibbon(ribbon)
                 }
@@ -44,19 +44,10 @@ struct OverviewView: View {
     // MARK: - Шапка
 
     private var header: some View {
-        HStack {
-            Text("WORDLEARNER")
-                .scaledFont(size: 26, weight: .heavy)
-                .foregroundColor(.brandDark)
-            Spacer()
-            Button { open(.profile) } label: {
-                Image(systemName: "person.crop.circle")
-                    .scaledFont(size: 26)
-                    .foregroundColor(.brandDark)
-            }
-            .accessibilityLabel("Мой профиль")
-        }
-        .padding(.horizontal, 20)
+        Text("WORDLEARNER")
+            .scaledFont(size: 26, weight: .heavy)
+            .foregroundColor(.brandDark)
+            .padding(.horizontal, 20)
     }
 
     // MARK: - Подборки

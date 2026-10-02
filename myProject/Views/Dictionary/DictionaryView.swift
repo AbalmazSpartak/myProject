@@ -27,8 +27,12 @@ struct DictionaryView: View {
     @State private var filter: DictionaryFilter
 
     /// `initialFilter` — открыть сразу нужную подборку (например, из «Ваших подборок» на «Обзоре»)
-    init(initialFilter: DictionaryFilter = .general) {
+    /// Во вкладке «Словарь» возвращаться некуда; из подборки на «Обзоре» — кнопка «Обзор»
+    private let showsBackButton: Bool
+
+    init(initialFilter: DictionaryFilter = .general, showsBackButton: Bool = true) {
         _filter = State(initialValue: initialFilter)
+        self.showsBackButton = showsBackButton
     }
     @State private var isDropdownExpanded = false
     @State private var isShowingManageCategories = false
@@ -226,10 +230,12 @@ struct DictionaryView: View {
     
     private var customHeader: some View {
         HStack {
-            Button(action: { dismiss() }) {
-                HStack(spacing: 4) { Image(systemName: "chevron.left"); Text("Меню") }
-                .scaledFont(size: 17, weight: .semibold)
-                .foregroundColor(.orange)
+            if showsBackButton {
+                Button(action: { dismiss() }) {
+                    HStack(spacing: 4) { Image(systemName: "chevron.left"); Text("Обзор") }
+                    .scaledFont(size: 17, weight: .semibold)
+                    .foregroundColor(.orange)
+                }
             }
             Spacer()
             HStack(spacing: 18) {

@@ -158,7 +158,7 @@ struct SettingsView: View {
                     NavigationLink {
                         MainMenuSettingsView()
                     } label: {
-                        LabeledContent("Главное меню", value: menuLayout == .standard ? "Стандартное" : "Настроено")
+                        LabeledContent("Ленты «Обзора»", value: menuLayout == .standard ? "Стандартное" : "Настроено")
                     }
                 }
                 #if DEBUG

@@ -57,7 +57,7 @@ struct InputFlashcardsView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
                             .scaledFont(size: 16, weight: .semibold)
-                        Text("В меню")
+                        Text("Обзор")
                             .scaledFont(size: 17, weight: .semibold, design: .rounded)
                     }
                     .foregroundColor(.teal)

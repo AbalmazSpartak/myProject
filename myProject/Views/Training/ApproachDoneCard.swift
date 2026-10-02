@@ -34,7 +34,7 @@ struct ApproachDoneCard: View {
                         .cornerRadius(16)
                 }
                 Button(action: onExit) {
-                    Text("В меню")
+                    Text("Закончить")
                         .scaledFont(size: 16, weight: .semibold, design: .rounded)
                         .foregroundColor(tint)
                         .frame(maxWidth: .infinity)

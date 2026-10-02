@@ -2,7 +2,6 @@ import SwiftUI
 import SwiftData
 
 struct ProfileView: View {
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     
     @Query private var profiles: [UserProfile]
@@ -29,11 +28,8 @@ struct ProfileView: View {
             VStack(spacing: 20) {
                 // Шапка
                 HStack {
-                    Button(action: { dismiss() }) {
-                        HStack(spacing: 4) { Image(systemName: "chevron.left"); Text("Меню") }
-                            .scaledFont(size: 17, weight: .semibold)
-                            .foregroundColor(.teal)
-                    }
+                    // Профиль — вкладка внизу, «назад» не нужен; пустое место держит заголовок по центру
+                    Color.clear.frame(width: 70, height: 1)
                     
                     Spacer()
                     

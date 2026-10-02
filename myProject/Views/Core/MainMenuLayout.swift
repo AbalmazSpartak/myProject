@@ -48,6 +48,11 @@ enum MenuSection: String, CaseIterable {
         }
     }
 
+    /// Открывается вкладкой внизу — в лентах «Обзора» и настройке меню не показывается
+    var isTab: Bool {
+        self == .dictionary
+    }
+
     var screen: ActiveScreen {
         switch self {
         case .flashcards: return .flashcardsFSRS
@@ -118,7 +123,7 @@ enum MenuItem: Hashable {
     }
 }
 
-/// Порядок, группы и видимость разделов главного меню (Настройки → Главное меню).
+/// Порядок, группы и видимость разделов на «Обзоре» (Настройки → Ленты «Обзора»): каждая группа — лента.
 /// Каждый раздел стоит ровно в одном месте: в группе или в общем списке
 struct MainMenuLayout: Equatable {
     static let storageKey = "main_menu_layout"
@@ -155,13 +160,14 @@ struct MainMenuLayout: Equatable {
     var visibleItems: [MenuItem] {
         items.filter { item in
             guard !isHidden(item) else { return false }
+            if case .section(let section) = item, section.isTab { return false }
             if case .group(let id) = item { return !visibleSections(in: id).isEmpty }
             return true
         }
     }
 
     func visibleSections(in groupID: String) -> [MenuSection] {
-        (groups[groupID]?.sections ?? []).filter { !isHidden(.section($0)) }
+        (groups[groupID]?.sections ?? []).filter { !isHidden(.section($0)) && !$0.isTab }
     }
 
     /// Группа, в которой стоит раздел; nil — раздел в общем списке
