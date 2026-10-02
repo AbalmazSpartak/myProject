@@ -69,6 +69,8 @@ struct TetrisView: View {
                             .font(.system(size: 18))
                             .foregroundColor(.indigo)
                     }
+
+                    HelpButton(topic: .tetris) { isPaused = true }
                     
                     Spacer()
                     

@@ -59,6 +59,9 @@ struct InputFlashcardsView: View {
                 }
                 
                 Spacer()
+
+                HelpButton(topic: .inputCards)
+                    .padding(.trailing, 8)
                 
                 VStack(alignment: .trailing, spacing: 6) {
                     TrainingFilterMenu(

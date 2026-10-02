@@ -232,6 +232,7 @@ struct DictionaryView: View {
                 .foregroundColor(.brandDark)
             Spacer()
             HStack(spacing: 18) {
+                HelpButton(topic: .dictionary)
                 Button(action: { isShowingSearch = true }) {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 20))

@@ -1,33 +1,99 @@
 import SwiftUI
 
-// Разделы справки. Новый раздел — новый case и его экран в destination
+// Разделы справки. Новый раздел — новый case, его экран в destination и HelpButton(topic:) в шапке раздела
 enum HelpTopic: String, CaseIterable, Identifiable {
+    case profile
     case flashcards
+    case quiz
+    case cloze
+    case inputCards
+    case dictionary
+    case tetris
+    case race
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
+        case .profile: return "Мой профиль"
         case .flashcards: return "Карточки для запоминания"
+        case .quiz: return "Викторина"
+        case .cloze: return "Слово в контексте"
+        case .inputCards: return "Карточки ввода"
+        case .dictionary: return "Словарь"
+        case .tetris: return "Тетрис слов"
+        case .race: return "Гонка слов"
         }
     }
 
     var icon: String {
         switch self {
+        case .profile: return "person.fill"
         case .flashcards: return "brain.head.profile"
+        case .quiz: return "checkmark.seal.fill"
+        case .cloze: return "text.insert"
+        case .inputCards: return "keyboard.fill"
+        case .dictionary: return "book.fill"
+        case .tetris: return "gamecontroller.fill"
+        case .race: return "car.fill"
         }
     }
 
     var color: Color {
         switch self {
+        case .profile: return .teal
         case .flashcards: return .blue
+        case .quiz: return .purple
+        case .cloze: return .pink
+        case .inputCards: return .teal
+        case .dictionary: return .orange
+        case .tetris: return .indigo
+        case .race: return .green
         }
     }
 
     @ViewBuilder
     var destination: some View {
         switch self {
+        case .profile: ProfileHelpView()
         case .flashcards: FlashcardsHelpView()
+        case .quiz: QuizHelpView()
+        case .cloze: ClozeHelpView()
+        case .inputCards: InputCardsHelpView()
+        case .dictionary: DictionaryHelpView()
+        case .tetris: TetrisHelpView()
+        case .race: RaceHelpView()
+        }
+    }
+}
+
+/// Кнопка «?» в шапке раздела — открывает справку этого раздела
+struct HelpButton: View {
+    let topic: HelpTopic
+    /// Например, поставить игру на паузу, пока открыта справка
+    var onOpen: (() -> Void)? = nil
+    @State private var isShowing = false
+
+    var body: some View {
+        Button {
+            onOpen?()
+            isShowing = true
+        } label: {
+            Image(systemName: "questionmark.circle")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(topic.color)
+        }
+        .accessibilityLabel("Справка")
+        .sheet(isPresented: $isShowing) {
+            NavigationStack {
+                topic.destination
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button("Готово") { isShowing = false }
+                                .fontWeight(.bold)
+                        }
+                    }
+            }
         }
     }
 }

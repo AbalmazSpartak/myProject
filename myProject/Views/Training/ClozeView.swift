@@ -66,6 +66,9 @@ struct ClozeView: View {
 
             Spacer()
 
+            HelpButton(topic: .cloze)
+                .padding(.trailing, 8)
+
             Text("Верно: \(correctCount)/\(totalAnswered)")
                 .font(.system(size: 13, weight: .bold, design: .rounded))
                 .foregroundColor(.gray)

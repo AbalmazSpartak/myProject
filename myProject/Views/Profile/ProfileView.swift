@@ -43,10 +43,13 @@ struct ProfileView: View {
                     
                     Spacer()
                     
-                    Button(action: { showSettings = true }) {
-                        Image(systemName: "gearshape.fill")
-                            .font(.system(size: 22))
-                            .foregroundColor(.gray)
+                    HStack(spacing: 14) {
+                        HelpButton(topic: .profile)
+                        Button(action: { showSettings = true }) {
+                            Image(systemName: "gearshape.fill")
+                                .font(.system(size: 22))
+                                .foregroundColor(.gray)
+                        }
                     }
                     .frame(width: 70, alignment: .trailing)
                 }

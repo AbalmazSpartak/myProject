@@ -40,6 +40,9 @@ struct RaceLobbyView: View {
             .navigationTitle("Гонка слов")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    HelpButton(topic: .race)
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Закрыть") {
                         manager.stop()

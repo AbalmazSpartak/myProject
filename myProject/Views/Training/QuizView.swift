@@ -58,6 +58,9 @@ struct QuizView: View {
                 }
                 
                 Spacer()
+
+                HelpButton(topic: .quiz)
+                    .padding(.trailing, 8)
                 
                 VStack(alignment: .trailing, spacing: 6) {
                     TrainingFilterMenu(

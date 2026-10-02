@@ -25,7 +25,6 @@ struct FlashcardsView: View {
     @State private var isAnswerRevealed = false
     
     @State private var reviewedCount = 0
-    @State private var showHelp = false
     private let fsrs = FSRSCalculator()
     
     private var currentWord: Word? {
@@ -57,12 +56,8 @@ struct FlashcardsView: View {
                 
                 Spacer()
 
-                Button(action: { showHelp = true }) {
-                    Image(systemName: "questionmark.circle")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(.blue)
-                }
-                .padding(.trailing, 8)
+                HelpButton(topic: .flashcards)
+                    .padding(.trailing, 8)
 
                 TrainingFilterMenu(
                     current: currentFilter,
@@ -196,17 +191,6 @@ struct FlashcardsView: View {
         .task(id: currentWord?.persistentModelID) {
             guard showWordImages, let word = currentWord else { return }
             await WordImageLoader.loadIfNeeded(word)
-        }
-        .sheet(isPresented: $showHelp) {
-            NavigationStack {
-                FlashcardsHelpView()
-                    .toolbar {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button("Готово") { showHelp = false }
-                                .fontWeight(.bold)
-                        }
-                    }
-            }
         }
     }
     
