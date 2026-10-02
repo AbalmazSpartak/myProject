@@ -20,8 +20,8 @@ struct ContentView: View {
     @Query private var profiles: [UserProfile]
     
     @State private var activeScreen: ActiveScreen?
-    @State private var isCardsExpanded: Bool = false
-    @State private var isMiniGamesExpanded: Bool = false
+    @AppStorage(MainMenuLayout.storageKey) private var menuLayout = MainMenuLayout.standard
+    @State private var expandedGroups: Set<MenuGroup> = []
 
     var body: some View {
         NavigationStack {
@@ -57,145 +57,15 @@ struct ContentView: View {
                                 activeScreen = .profile
                             }
                             
-                            VStack(alignment: .leading, spacing: 14) {
-                                Button(action: {
-                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                        isCardsExpanded.toggle()
-                                    }
-                                }) {
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "square.stack.3d.up.fill")
-                                            .foregroundColor(.blue)
-                                            .font(.system(size: 18))
-                                        Text("Карточки")
-                                            .font(.system(size: 20, weight: .bold, design: .default))
-                                            .foregroundColor(.primary)
-                                        Spacer()
-                                        Image(systemName: isCardsExpanded ? "chevron.up" : "chevron.down")
-                                            .font(.system(size: 14, weight: .semibold))
-                                            .foregroundColor(.gray)
-                                    }
-                                    .padding(.horizontal, 8)
-                                    .padding(.top, 4)
-                                    .contentShape(Rectangle())
-                                }
-                                .buttonStyle(.plain)
-                                
-                                if isCardsExpanded {
-                                    VStack(spacing: 14) {
-                                        MenuCardButton(
-                                            title: "Карточки для\nзапоминания",
-                                            icon: "brain.head.profile",
-                                            themeColor: .blue
-                                        ) {
-                                            activeScreen = .flashcardsFSRS
-                                        }
-                                        
-                                        MenuCardButton(
-                                            title: "Викторина",
-                                            icon: "checkmark.seal.fill",
-                                            themeColor: .purple
-                                        ) {
-                                            activeScreen = .quiz
-                                        }
-                                        
-                                        MenuCardButton(
-                                            title: "Слово в контексте",
-                                            icon: "text.insert",
-                                            themeColor: .pink
-                                        ) {
-                                            activeScreen = .cloze
-                                        }
-                                    }
-                                    .transition(.asymmetric(
-                                        insertion: .opacity.combined(with: .scale(scale: 0.95, anchor: .top)),
-                                        removal: .opacity
-                                    ))
+                            // Порядок и видимость — в настройках профиля: ⚙️ → «Главное меню»
+                            ForEach(menuLayout.visibleItems, id: \.self) { item in
+                                switch item {
+                                case .section(let section):
+                                    sectionButton(section)
+                                case .group(let group):
+                                    groupCard(group)
                                 }
                             }
-                            .padding(14)
-                            .background(Color(.systemGray6))
-                            .cornerRadius(24)
-                            
-                            VStack(alignment: .leading, spacing: 14) {
-                                Button(action: {
-                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                        isMiniGamesExpanded.toggle()
-                                    }
-                                }) {
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "gamecontroller.fill")
-                                            .foregroundColor(.indigo)
-                                            .font(.system(size: 18))
-                                        Text("Мини-игры")
-                                            .font(.system(size: 20, weight: .bold, design: .default))
-                                            .foregroundColor(.primary)
-                                        Spacer()
-                                        Image(systemName: isMiniGamesExpanded ? "chevron.up" : "chevron.down")
-                                            .font(.system(size: 14, weight: .semibold))
-                                            .foregroundColor(.gray)
-                                    }
-                                    .padding(.horizontal, 8)
-                                    .padding(.top, 4)
-                                    .contentShape(Rectangle())
-                                }
-                                
-                                .buttonStyle(.plain)
-                                
-                                if isMiniGamesExpanded {
-                                    VStack(spacing: 14) {
-                                        MenuCardButton(
-                                            title: "Тетрис слов",
-                                            icon: "gamecontroller.fill",
-                                            themeColor: .indigo
-                                        ) {
-                                            activeScreen = .tetris
-                                        }
-                                        
-                                        MenuCardButton(
-                                            title: "Гонка слов",
-                                            icon: "car.fill",
-                                            themeColor: .green
-                                        ) {
-                                            activeScreen = .race
-                                        }
-                                        
-                                        // Следующую мини-игру добавлять сюда же, новым MenuCardButton
-                                    }
-                                    .transition(.asymmetric(
-                                        insertion: .opacity.combined(with: .scale(scale: 0.95, anchor: .top)),
-                                        removal: .opacity
-                                    ))
-                                }
-                            }
-                            .padding(14)
-                            .background(Color(.systemGray6))
-                            .cornerRadius(24)
-                            
-                            MenuCardButton(
-                                title: "Карточки ввода",
-                                icon: "keyboard.fill",
-                                themeColor: .teal
-                            ) {
-                                activeScreen = .inputCards
-                            }
-                            
-                            MenuCardButton(
-                                title: "Словарь",
-                                icon: "book.fill",
-                                themeColor: .orange
-                            ) {
-                                activeScreen = .dictionary
-                            }
-
-                            MenuCardButton(
-                                title: "Справка",
-                                icon: "questionmark.circle.fill",
-                                themeColor: .gray
-                            ) {
-                                activeScreen = .help
-                            }
-
                         }
                         .padding(.horizontal, 20)
                         
@@ -210,6 +80,56 @@ struct ContentView: View {
                     .toolbar(.hidden, for: .navigationBar)
             }
         }
+    }
+
+    private func sectionButton(_ section: MenuSection) -> some View {
+        MenuCardButton(title: section.menuTitle, icon: section.icon, themeColor: section.color) {
+            activeScreen = section.screen
+        }
+    }
+
+    /// Раскрывающаяся группа разделов
+    private func groupCard(_ group: MenuGroup) -> some View {
+        let isExpanded = expandedGroups.contains(group)
+        return VStack(alignment: .leading, spacing: 14) {
+            Button(action: {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    if isExpanded { expandedGroups.remove(group) } else { expandedGroups.insert(group) }
+                }
+            }) {
+                HStack(spacing: 8) {
+                    Image(systemName: group.icon)
+                        .foregroundColor(group.color)
+                        .font(.system(size: 18))
+                    Text(group.title)
+                        .font(.system(size: 20, weight: .bold, design: .default))
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.gray)
+                }
+                .padding(.horizontal, 8)
+                .padding(.top, 4)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if isExpanded {
+                VStack(spacing: 14) {
+                    ForEach(menuLayout.visibleSections(in: group), id: \.self) { section in
+                        sectionButton(section)
+                    }
+                }
+                .transition(.asymmetric(
+                    insertion: .opacity.combined(with: .scale(scale: 0.95, anchor: .top)),
+                    removal: .opacity
+                ))
+            }
+        }
+        .padding(14)
+        .background(Color(.systemGray6))
+        .cornerRadius(24)
     }
 
     @ViewBuilder

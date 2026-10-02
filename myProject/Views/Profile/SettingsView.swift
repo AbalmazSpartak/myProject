@@ -11,6 +11,7 @@ struct SettingsView: View {
     @AppStorage("translation_mode") private var translationMode: String = "en_ru"
     @AppStorage("show_word_images") private var showWordImages: Bool = true
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
+    @AppStorage(MainMenuLayout.storageKey) private var menuLayout = MainMenuLayout.standard
 
     @State private var showingResetAlert = false
     @State private var selectedPhotoItem: PhotosPickerItem?
@@ -95,6 +96,12 @@ struct SettingsView: View {
                         Text("Темная").tag("dark")
                     }
                     .pickerStyle(.segmented)
+
+                    NavigationLink {
+                        MainMenuSettingsView()
+                    } label: {
+                        LabeledContent("Главное меню", value: menuLayout == .standard ? "Стандартное" : "Настроено")
+                    }
                 }
                 #if DEBUG
                 Section {
