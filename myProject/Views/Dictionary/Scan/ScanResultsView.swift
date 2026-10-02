@@ -36,6 +36,9 @@ struct ScanResultsView: View {
     @State private var translations: [String: String] = [:]
     @State private var translationConfig: TranslationSession.Configuration?
     @State private var translationState = TranslationState.idle
+    /// «Отмечать слова, которые уже учу» — запоминается для следующих сканов
+    @AppStorage(Self.selectLearningKey) private var selectLearning = false
+    private static let selectLearningKey = "scan_select_learning"
 
     private enum TranslationState {
         case idle, translating, done, failed
@@ -47,8 +50,15 @@ struct ScanResultsView: View {
     init(candidates: [ScanCandidate], onSave: @escaping (WordList) -> Void) {
         self.candidates = candidates
         self.onSave = onSave
-        // По умолчанию отмечены новые слова и слова из базы, которые ещё не начали учить
-        _selected = State(initialValue: Set(candidates.filter { $0.existing.map { $0.state == .new } ?? true }.map(\.id)))
+        // По умолчанию отмечены новые слова и слова из базы, которые ещё не начали учить,
+        // а с «Отмечать слова, которые уже учу» — все найденные
+        let selectLearning = UserDefaults.standard.bool(forKey: Self.selectLearningKey)
+        _selected = State(initialValue: Set(candidates.filter { selectLearning || !Self.isLearning($0) }.map(\.id)))
+    }
+
+    /// Слово из базы, которое уже начали учить (хотя бы раз оценили в карточках)
+    private static func isLearning(_ candidate: ScanCandidate) -> Bool {
+        candidate.existing.map { $0.state != .new } ?? false
     }
 
     private var newWords: [ScanCandidate] {
@@ -79,6 +89,18 @@ struct ScanResultsView: View {
                     Text("Словарь «\(existing.name)» уже есть — слова добавятся в него (\(existing.words.count) сейчас).")
                 }
             }
+            if candidates.contains(where: Self.isLearning) {
+                Section {
+                    Toggle("Отмечать слова, которые уже учу", isOn: $selectLearning)
+                        .onChange(of: selectLearning) { _, isOn in
+                            // Меняем галочки только у уже изучаемых слов — отметки остальных не трогаем
+                            let ids = Set(candidates.filter(Self.isLearning).map(\.id))
+                            if isOn { selected.formUnion(ids) } else { selected.subtract(ids) }
+                        }
+                } footer: {
+                    Text("Тогда в словарь из текста сразу попадут все его слова. Настройка запоминается для следующих сканов.")
+                }
+            }
             if !newWords.isEmpty {
                 Section {
                     ForEach(newWords) { newWordRow($0) }
@@ -94,7 +116,9 @@ struct ScanResultsView: View {
                 } header: {
                     sectionHeader("Уже есть в базе", items: knownWords)
                 } footer: {
-                    Text("Слова, которые вы уже учите, не отмечены. Из базы слово попадёт в словарь, оставаясь в своей теме.")
+                    Text(selectLearning
+                         ? "Из базы слово попадёт в словарь, оставаясь в своей теме и со своим прогрессом."
+                         : "Слова, которые вы уже учите, не отмечены. Из базы слово попадёт в словарь, оставаясь в своей теме.")
                 }
             }
         }
