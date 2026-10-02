@@ -18,9 +18,9 @@ struct MyApp: App {
             // Извлекаем контекст в локальную переменную, чтобы безопасно передать его в Task
             let mainContext = sharedContainer.mainContext
             
-            // Вызываем предзагрузку демонстрационных слов из sample_words.json
+            // Загружаем words.csv при первом запуске и сливаем его обновления
             Task { @MainActor in
-                DataPreloader.preloadSampleWords(context: mainContext)
+                DataPreloader.syncBundledWords(context: mainContext)
             }
         } catch {
             fatalError("Не удалось запустить хранилище SwiftData: \(error)")
