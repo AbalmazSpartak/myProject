@@ -8,6 +8,7 @@ struct FSRSCalculator {
     ]
     
     private let targetRetention = 0.9 // Целевой процент запоминания (90%)
+    private let maximumIntervalDays = 365 // Слово повторяется хотя бы раз в год
 
     func calculateNextReview(word: Word, rating: FSRSRating) {
         let now = Date()
@@ -23,7 +24,8 @@ struct FSRSCalculator {
             newStability = initStability(rating: rating)
             newState = (rating == .again) ? .learning : .review
         } else {
-            let retrievability = exp(log(0.9) * daysElapsed / word.stability)
+            // Кривая забывания FSRS v4 (под её веса): при t = S вероятность ровно 90%
+            let retrievability = pow(1 + daysElapsed / (9 * word.stability), -1)
             newDifficulty = nextDifficulty(d: word.difficulty, rating: rating)
             
             if rating == .again {
@@ -46,8 +48,15 @@ struct FSRSCalculator {
         
         if rating == .again {
             word.dueDate = now.addingTimeInterval(5 * 60)
-        } else {
+        } else if interval < 1 {
+            // Короткие интервалы (например, «Трудно» на новом слове) — как есть, в часах
             word.dueDate = now.addingTimeInterval(interval * 86400)
+        } else {
+            // От дня и больше — целые дни, не больше года; слово появляется с начала нужного дня
+            let days = min(Int(interval.rounded()), maximumIntervalDays)
+            let calendar = Calendar.current
+            let dueDay = calendar.date(byAdding: .day, value: days, to: now) ?? now
+            word.dueDate = calendar.startOfDay(for: dueDay)
         }
     }
     
