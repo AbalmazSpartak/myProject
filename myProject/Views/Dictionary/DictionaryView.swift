@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-enum DictionaryFilter: Equatable {
+enum DictionaryFilter: Hashable {
     case general
     case category(Category)
     case list(WordList)
@@ -24,7 +24,12 @@ struct DictionaryView: View {
     @State private var wordsByEnglish: [String: [Word]] = [:]
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
     
-    @State private var filter: DictionaryFilter = .general
+    @State private var filter: DictionaryFilter
+
+    /// `initialFilter` — открыть сразу нужную подборку (например, из «Ваших подборок» на «Обзоре»)
+    init(initialFilter: DictionaryFilter = .general) {
+        _filter = State(initialValue: initialFilter)
+    }
     @State private var isDropdownExpanded = false
     @State private var isShowingManageCategories = false
     @State private var isShowingAddCategoryAlert = false
