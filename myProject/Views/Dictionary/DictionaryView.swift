@@ -33,6 +33,13 @@ struct DictionaryView: View {
     @State private var listToRename: WordList?
     @State private var listToDelete: WordList?
     @State private var listName = ""
+    @State private var listMerge: ListMerge?
+
+    /// Переименование своего словаря в название другого своего словаря
+    private struct ListMerge {
+        let source: WordList
+        let target: WordList
+    }
     
     @State private var newEnglish = ""
     @State private var newTranscription = ""
@@ -164,8 +171,24 @@ struct DictionaryView: View {
             Button("Отмена", role: .cancel) {}
             Button("Сохранить") {
                 let trimmed = listName.trimmingCharacters(in: .whitespaces)
-                if !trimmed.isEmpty { listToRename?.name = trimmed }
+                guard !trimmed.isEmpty, let list = listToRename else { return }
+                // Такое название уже у другого своего словаря — предлагаем объединить, а не заводить второй
+                if let existing = lists.first(where: {
+                    $0.id != list.id && $0.name.trimmingCharacters(in: .whitespaces).caseInsensitiveCompare(trimmed) == .orderedSame
+                }) {
+                    listMerge = ListMerge(source: list, target: existing)
+                } else {
+                    list.name = trimmed
+                }
             }
+        }
+        .alert("Словарь «\(listMerge?.target.name ?? "")» уже есть", isPresented: Binding(get: { listMerge != nil }, set: { if !$0 { listMerge = nil } })) {
+            Button("Отмена", role: .cancel) {}
+            Button("Объединить") {
+                if let merge = listMerge { self.merge(merge.source, into: merge.target) }
+            }
+        } message: {
+            Text("Слова из «\(listMerge?.source.name ?? "")» перейдут в него, без повторов, а «\(listMerge?.source.name ?? "")» удалится.")
         }
         .alert("Удалить словарь «\(listToDelete?.name ?? "")»?", isPresented: Binding(get: { listToDelete != nil }, set: { if !$0 { listToDelete = nil } })) {
             Button("Отмена", role: .cancel) {}
@@ -383,6 +406,20 @@ struct DictionaryView: View {
         studyScope.enabledLists.remove(list.id)
         if filter == .list(list) { filter = .general }
         modelContext.delete(list)
+        try? modelContext.save()
+    }
+
+    /// Переносит слова в другой свой словарь (без повторов) и удаляет исходный; сами слова не удаляются
+    private func merge(_ source: WordList, into target: WordList) {
+        for word in Array(source.words) where !word.lists.contains(where: { $0.id == target.id }) {
+            word.lists.append(target)
+        }
+        // Был включён в изучение — включаем словарь, в который перешли слова
+        if studyScope.enabledLists.remove(source.id) != nil {
+            studyScope.enabledLists.insert(target.id)
+        }
+        if filter == .list(source) { filter = .list(target) }
+        modelContext.delete(source)
         try? modelContext.save()
     }
 
