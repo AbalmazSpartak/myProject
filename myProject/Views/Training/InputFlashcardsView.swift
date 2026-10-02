@@ -237,6 +237,11 @@ struct InputFlashcardsView: View {
             Spacer()
         }
         .background(Color.brandBackground.ignoresSafeArea())
+        // «Озвучивать слово сразу» (⚙️ → «Озвучка»): англ ➔ рус — как только слово показано
+        .onChange(of: currentWord?.persistentModelID, initial: true) {
+            guard translationMode == "en_ru", !isApproachFinished, let word = currentWord else { return }
+            TextToSpeechManager.shared.speakAutomatically(word.english)
+        }
         .onAppear {
             loadWords()
             generateSession()

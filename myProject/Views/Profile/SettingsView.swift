@@ -14,6 +14,9 @@ struct SettingsView: View {
     @AppStorage(MainMenuLayout.storageKey) private var menuLayout = MainMenuLayout.standard
     @AppStorage(DailyNewWords.limitKey) private var newWordsPerDay = DailyNewWords.defaultLimit
     @AppStorage(SessionLength.key) private var sessionLength = SessionLength.defaultValue
+    @AppStorage(SpeechSettings.accentKey) private var speechAccent = SpeechSettings.defaultAccent
+    @AppStorage(SpeechSettings.rateKey) private var speechRate = SpeechSettings.defaultRate
+    @AppStorage(SpeechSettings.autoSpeakKey) private var autoSpeak = false
 
     @State private var showingResetAlert = false
     @State private var selectedPhotoItem: PhotosPickerItem?
@@ -102,6 +105,35 @@ struct SettingsView: View {
                     }
                 }
                 
+                // Озвучка
+                Section(header: Text("Озвучка"), footer: Text("При переводе с русского на английский слово звучит после ответа, чтобы не подсказывать.")) {
+                    Picker("Акцент", selection: $speechAccent) {
+                        Text("Американский").tag("en-US")
+                        Text("Британский").tag("en-GB")
+                    }
+                    .pickerStyle(.segmented)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Скорость речи")
+                        Slider(value: $speechRate, in: SpeechSettings.rateRange) {
+                            Text("Скорость речи")
+                        } minimumValueLabel: {
+                            Image(systemName: "tortoise.fill").foregroundColor(.gray)
+                        } maximumValueLabel: {
+                            Image(systemName: "hare.fill").foregroundColor(.gray)
+                        }
+                    }
+                    .padding(.vertical, 4)
+
+                    Toggle("Озвучивать слово сразу", isOn: $autoSpeak)
+
+                    Button {
+                        TextToSpeechManager.shared.speak("Hello! This is how English words will sound.")
+                    } label: {
+                        Label("Прослушать", systemImage: "speaker.wave.2.fill")
+                    }
+                }
+
                 // Оформление
                 Section(header: Text("Оформление")) {
                     Picker("Тема оформления", selection: $selectedTheme) {

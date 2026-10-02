@@ -177,6 +177,11 @@ struct QuizView: View {
             Spacer()
         }
         .background(Color.brandBackground.ignoresSafeArea())
+        // «Озвучивать слово сразу» (⚙️ → «Озвучка»): англ ➔ рус — как только слово показано
+        .onChange(of: currentWord?.persistentModelID, initial: true) {
+            guard translationMode == "en_ru", !isApproachFinished, let word = currentWord else { return }
+            TextToSpeechManager.shared.speakAutomatically(word.english)
+        }
         .onAppear {
             loadWords()
             generateSession()
@@ -248,6 +253,10 @@ struct QuizView: View {
         
         profiles.first?.recordAnswer(.quiz, translationMode: translationMode, isCorrect: isCorrect)
         
+        // Рус ➔ англ — английское слово звучит после ответа, чтобы не подсказывать
+        if translationMode != "en_ru" {
+            TextToSpeechManager.shared.speakAutomatically(word.english)
+        }
         withAnimation { showResult = true }
     }
     

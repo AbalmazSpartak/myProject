@@ -196,11 +196,21 @@ struct FlashcardsView: View {
             Spacer()
         }
         .background(Color.brandBackground.ignoresSafeArea())
+        // «Озвучивать слово сразу» (⚙️ → «Озвучка»): англ ➔ рус — как только слово показано
+        .onChange(of: currentWord?.persistentModelID, initial: true) {
+            guard translationMode == "en_ru", !isApproachFinished, let word = currentWord else { return }
+            TextToSpeechManager.shared.speakAutomatically(word.english)
+        }
         .onAppear {
             loadWords()
             generateSession()
         }
         // Картинка грузится заранее, пока пользователь вспоминает перевод
+        // Рус ➔ англ — английское слово звучит вместе с ответом, чтобы не подсказывать
+        .onChange(of: isAnswerRevealed) { _, isRevealed in
+            guard isRevealed, translationMode != "en_ru", let word = currentWord else { return }
+            TextToSpeechManager.shared.speakAutomatically(word.english)
+        }
         .task(id: currentWord?.persistentModelID) {
             guard showWordImages, let word = currentWord else { return }
             await WordImageLoader.loadIfNeeded(word)
