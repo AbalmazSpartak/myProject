@@ -476,19 +476,8 @@ struct TetrisView: View {
     }
     private func generateOptions(for word: Word) {
         let correctAnswer = word.russian
-        var otherAnswers = allWords
-            .map { $0.russian }
-            .filter { $0.lowercased() != correctAnswer.lowercased() }
-            .shuffled()
-        
-        var generated = [correctAnswer]
-        while generated.count < 3 && !otherAnswers.isEmpty {
-            let next = otherAnswers.removeFirst()
-            if !generated.contains(next) {
-                generated.append(next)
-            }
-        }
-        currentOptions = generated.shuffled()
+        let wrongAnswers = allWords.randomWrongAnswers(2, excluding: correctAnswer) { $0.russian }
+        currentOptions = ([correctAnswer] + wrongAnswers).shuffled()
     }
 
     private func selectAnswer(_ answer: String) {

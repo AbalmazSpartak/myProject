@@ -13,8 +13,13 @@ struct DictionaryView: View {
     @Environment(\.modelContext) private var modelContext
     
     @Query(sort: \Category.name) private var categories: [Category]
-    @Query(sort: \Word.english) private var allWords: [Word]
     @Query(sort: \WordList.createdAt, order: .reverse) private var lists: [WordList]
+    /// Слова читаем при открытии и после сохранения базы, а не через @Query:
+    /// тот перечитывает все слова при каждой перерисовке, то есть на каждую букву в форме добавления
+    @State private var allWords: [Word] = []
+    @State private var filteredWords: [Word] = []
+    @State private var categoryCounts: [UUID: Int] = [:]
+    @State private var mistakeCount = 0
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
     
     @State private var filter: DictionaryFilter = .general
@@ -35,24 +40,31 @@ struct DictionaryView: View {
     @State private var newExample = ""
     @State private var newLevel: String = "A1"
     
-    private var mistakeWords: [Word] {
-        allWords.filter { $0.isMistake }
+    private func reloadWords() {
+        allWords = modelContext.fetchAllWords(sortBy: [SortDescriptor(\Word.english)])
+        var counts: [UUID: Int] = [:]
+        for word in allWords {
+            if let id = word.category?.id { counts[id, default: 0] += 1 }
+        }
+        categoryCounts = counts
+        mistakeCount = allWords.count(where: \.isMistake)
+        refilter()
     }
-    
-    var filteredWords: [Word] {
+
+    private func refilter() {
         switch filter {
         case .general:
-            return allWords.filter { $0.category == nil }
+            filteredWords = allWords.filter { $0.category == nil }
         case .category(let category):
             let catID = category.id
-            return allWords.filter { $0.category?.id == catID }
+            filteredWords = allWords.filter { $0.category?.id == catID }
         case .list(let list):
-            return list.words.sorted { $0.english.localizedCaseInsensitiveCompare($1.english) == .orderedAscending }
+            filteredWords = list.words.sorted { $0.english.localizedCaseInsensitiveCompare($1.english) == .orderedAscending }
         case .mistakes:
-            return mistakeWords
+            filteredWords = allWords.filter { $0.isMistake }
         }
     }
-    
+
     private var addTargetName: String {
         if case .list(let list) = filter { return list.name }
         return currentCategoryForNewWord?.name ?? "Общий"
@@ -74,13 +86,8 @@ struct DictionaryView: View {
         case .list(let list):
             return list.name
         case .mistakes:
-            return "⚠️ Слова с ошибками (\(mistakeWords.count))"
+            return "⚠️ Слова с ошибками (\(mistakeCount))"
         }
-    }
-    
-    private func countWords(for category: Category) -> Int {
-        let catID = category.id
-        return allWords.filter { $0.category?.id == catID }.count
     }
     
     var body: some View {
@@ -135,6 +142,10 @@ struct DictionaryView: View {
                 }
             }
         }
+        .onAppear(perform: reloadWords)
+        .onChange(of: filter) { _, _ in refilter() }
+        // Любое сохранение (правка, скан, удаление темы со словами) — перечитываем, чтобы не показать удалённые слова
+        .onReceive(NotificationCenter.default.publisher(for: ModelContext.didSave)) { _ in reloadWords() }
         .alert("Новая категория", isPresented: $isShowingAddCategoryAlert) {
             TextField("Название категории", text: $newCategoryName)
             Button("Отмена", role: .cancel) { newCategoryName = "" }
@@ -167,10 +178,11 @@ struct DictionaryView: View {
         .sheet(isPresented: $isShowingManageCategories) {
             ManageCategoriesView()
         }
-        .sheet(item: $wordToEdit) { word in
+        // Правка могла сменить тему или написание — сохраняем, список перечитается
+        .sheet(item: $wordToEdit, onDismiss: { try? modelContext.save() }) { word in
             EditWordView(word: word)
         }
-        .sheet(isPresented: $isShowingSearch) {
+        .sheet(isPresented: $isShowingSearch, onDismiss: { try? modelContext.save() }) {
             WordSearchView()
         }
         .fullScreenCover(isPresented: $isShowingScan) {
@@ -257,7 +269,7 @@ struct DictionaryView: View {
                                 let isSelected = filter == .category(category)
                                 Button(action: { selectFilterAndClose(.category(category)) }) {
                                     HStack {
-                                        Text("\(category.name) (\(countWords(for: category)))")
+                                        Text("\(category.name) (\(categoryCounts[category.id, default: 0]))")
                                             .font(.system(size: 16, weight: isSelected ? .bold : .semibold))
                                             .foregroundColor(isSelected ? .orange : .brandDark)
                                         Spacer()
@@ -277,7 +289,7 @@ struct DictionaryView: View {
                                     Image(systemName: "exclamationmark.triangle.fill")
                                         .foregroundColor(.orange)
                                         .font(.system(size: 15))
-                                    Text("Слова с ошибками (\(mistakeWords.count))")
+                                    Text("Слова с ошибками (\(mistakeCount))")
                                         .font(.system(size: 16, weight: .bold))
                                         .foregroundColor(.orange)
                                     Spacer()
@@ -449,6 +461,7 @@ struct DictionaryView: View {
         if case .list(let list) = filter {
             word.lists.append(list)
         }
+        try? modelContext.save()
         newEnglish = ""
         newTranscription = ""
         newRussian = ""

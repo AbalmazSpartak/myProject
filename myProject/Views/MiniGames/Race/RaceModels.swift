@@ -34,15 +34,7 @@ enum RaceWordGenerator {
         
         for word in pool.prefix(wordCount) {
             let correctAnswer = word.russian
-            var otherAnswers = pool
-                .map { $0.russian }
-                .filter { $0.lowercased() != correctAnswer.lowercased() }
-                .shuffled()
-            var options = [correctAnswer]
-            while options.count < 3 && !otherAnswers.isEmpty {
-                let next = otherAnswers.removeFirst()
-                if !options.contains(next) { options.append(next) }
-            }
+            let options = [correctAnswer] + pool.randomWrongAnswers(2, excluding: correctAnswer) { $0.russian }
             generated.append(RaceWordPayload(english: word.english, options: options.shuffled(), correctAnswer: correctAnswer))
         }
         return generated

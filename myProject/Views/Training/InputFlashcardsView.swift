@@ -21,6 +21,8 @@ struct InputFlashcardsView: View {
 
     /// Слова из словарей, выбранных в настройках
     @State private var studyWords: [Word] = []
+    /// Счётчики для меню фильтров — пересчитываются после загрузки и ответа
+    @State private var counts = WordCounts()
     @Query private var profiles: [UserProfile]
     
     @State private var currentFilter: InputFlashcardsFilter = .all
@@ -34,15 +36,6 @@ struct InputFlashcardsView: View {
     @State private var totalAnswered = 0
     
     @FocusState private var isInputFocused: Bool
-    
-    private func countWords(for category: Category) -> Int {
-        let catID = category.id
-        return studyWords.filter { $0.category?.id == catID }.count
-    }
-    
-    private var mistakeWordsCount: Int {
-        studyWords.filter { $0.isMistake }.count
-    }
     
     private var currentWord: Word? {
         guard !sessionWords.isEmpty, currentIndex < sessionWords.count else { return nil }
@@ -63,7 +56,7 @@ struct InputFlashcardsView: View {
         switch currentFilter {
         case .all: return "Все слова"
         case .category(let cat): return cat.name
-        case .mistakes: return "⚠️ Ошибки (\(mistakeWordsCount))"
+        case .mistakes: return "⚠️ Ошибки (\(counts.mistakes))"
         case .level(let level): return "Уровень \(level.rawValue)"
         }
     }
@@ -87,24 +80,24 @@ struct InputFlashcardsView: View {
                     Menu {
                         Button("Все слова") { changeFilter(to: .all) }
                         
-                        Button("⚠️ Работа над ошибками (\(mistakeWordsCount))") {
+                        Button("⚠️ Работа над ошибками (\(counts.mistakes))") {
                             changeFilter(to: .mistakes)
                         }
-                        .disabled(mistakeWordsCount == 0)
+                        .disabled(counts.mistakes == 0)
                         
                         Divider()
                         
                         ForEach(categories) { category in
-                            Button("\(category.name) (\(countWords(for: category)))") { changeFilter(to: .category(category)) }
+                            Button("\(category.name) (\(counts.count(for: category)))") { changeFilter(to: .category(category)) }
                         }
                         // ↓ новый блок
                         Divider()
                         
                         ForEach(CEFRLevel.allCases, id: \.rawValue) { level in
-                            Button("Уровень \(level.rawValue) (\(countWords(level: level)))") {
+                            Button("Уровень \(level.rawValue) (\(counts.count(level: level)))") {
                                 changeFilter(to: .level(level))
                             }
-                            .disabled(countWords(level: level) == 0)
+                            .disabled(counts.count(level: level) == 0)
                         }
                     } label: {
                         HStack(spacing: 6) {
@@ -289,10 +282,6 @@ struct InputFlashcardsView: View {
         return isCorrect ? Color.green : Color.red
     }
     
-    private func countWords(level: CEFRLevel) -> Int {
-        studyWords.filter { $0.cefrLevel == level.rawValue }.count
-    }
-    
     private func changeFilter(to filter: InputFlashcardsFilter) {
         currentFilter = filter
         correctCount = 0
@@ -305,6 +294,7 @@ struct InputFlashcardsView: View {
     private func loadWords() {
         allWords = modelContext.fetchAllWords()
         studyWords = allWords.filter { studyScope.includes($0) }
+        counts = WordCounts(studyWords)
     }
 
     private func generateSession() {
@@ -350,6 +340,7 @@ struct InputFlashcardsView: View {
         }
         
         totalAnswered += 1
+        counts = WordCounts(studyWords)
         
         TextToSpeechManager.shared.speak(word.english)
         

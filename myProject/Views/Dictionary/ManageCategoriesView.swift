@@ -28,5 +28,7 @@ struct ManageCategoriesView: View {
         for index in offsets {
             modelContext.delete(categories[index])
         }
+        // Сразу сохраняем: слова темы удаляются каскадом, и словарь под листом должен их перечитать
+        try? modelContext.save()
     }
 }

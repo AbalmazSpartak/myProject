@@ -21,6 +21,8 @@ struct QuizView: View {
 
     /// Слова из словарей, выбранных в настройках
     @State private var studyWords: [Word] = []
+    /// Счётчики для меню фильтров — пересчитываются после загрузки и ответа
+    @State private var counts = WordCounts()
     @Query private var profiles: [UserProfile]
     
     @State private var currentFilter: QuizFilter = .all
@@ -33,15 +35,6 @@ struct QuizView: View {
     @State private var isCorrect = false
     @State private var correctCount = 0
     @State private var totalAnswered = 0
-    
-    private func countWords(for category: Category) -> Int {
-        let catID = category.id
-        return studyWords.filter { $0.category?.id == catID }.count
-    }
-    
-    private var mistakeWordsCount: Int {
-        studyWords.filter { $0.isMistake }.count
-    }
     
     private var currentWord: Word? {
         guard !sessionWords.isEmpty, currentIndex < sessionWords.count else { return nil }
@@ -62,7 +55,7 @@ struct QuizView: View {
         switch currentFilter {
         case .all: return "Все слова"
         case .category(let cat): return cat.name
-        case .mistakes: return "⚠️ Ошибки (\(mistakeWordsCount))"
+        case .mistakes: return "⚠️ Ошибки (\(counts.mistakes))"
         case .level(let level): return "Уровень \(level.rawValue)"
         }
     }
@@ -86,24 +79,24 @@ struct QuizView: View {
                     Menu {
                         Button("Все слова") { changeFilter(to: .all) }
                         
-                        Button("⚠️ Работа над ошибками (\(mistakeWordsCount))") {
+                        Button("⚠️ Работа над ошибками (\(counts.mistakes))") {
                             changeFilter(to: .mistakes)
                         }
-                        .disabled(mistakeWordsCount == 0)
+                        .disabled(counts.mistakes == 0)
                         
                         Divider()
                         
                         ForEach(categories) { category in
-                            Button("\(category.name) (\(countWords(for: category)))") { changeFilter(to: .category(category)) }
+                            Button("\(category.name) (\(counts.count(for: category)))") { changeFilter(to: .category(category)) }
                         }
                         // ↓ новый блок
                         Divider()
                         
                         ForEach(CEFRLevel.allCases, id: \.rawValue) { level in
-                            Button("Уровень \(level.rawValue) (\(countWords(level: level)))") {
+                            Button("Уровень \(level.rawValue) (\(counts.count(level: level)))") {
                                 changeFilter(to: .level(level))
                             }
-                            .disabled(countWords(level: level) == 0)
+                            .disabled(counts.count(level: level) == 0)
                         }
                     } label: {
                         HStack(spacing: 6) {
@@ -221,10 +214,6 @@ struct QuizView: View {
         }
     }
     
-    private func countWords(level: CEFRLevel) -> Int {
-        studyWords.filter { $0.cefrLevel == level.rawValue }.count
-    }
-    
     private func changeFilter(to filter: QuizFilter) {
         currentFilter = filter
         correctCount = 0
@@ -237,6 +226,7 @@ struct QuizView: View {
     private func loadWords() {
         allWords = modelContext.fetchAllWords()
         studyWords = allWords.filter { studyScope.includes($0) }
+        counts = WordCounts(studyWords)
     }
 
     private func generateSession() {
@@ -263,20 +253,10 @@ struct QuizView: View {
         
         let correctAnswer = translationMode == "en_ru" ? word.russian : word.english
         
-        var otherAnswers = allWords
-            .map { translationMode == "en_ru" ? $0.russian : $0.english }
-            .filter { $0.lowercased() != correctAnswer.lowercased() }
-            .shuffled()
-        
-        var generatedOptions = [correctAnswer]
-        while generatedOptions.count < 4 && !otherAnswers.isEmpty {
-            let nextOption = otherAnswers.removeFirst()
-            if !generatedOptions.contains(nextOption) {
-                generatedOptions.append(nextOption)
-            }
+        let wrongAnswers = allWords.randomWrongAnswers(3, excluding: correctAnswer) {
+            translationMode == "en_ru" ? $0.russian : $0.english
         }
-        
-        options = generatedOptions.shuffled()
+        options = ([correctAnswer] + wrongAnswers).shuffled()
     }
     
     private func selectOption(_ option: String) {
@@ -292,6 +272,7 @@ struct QuizView: View {
             word.isMistake = true
         }
         totalAnswered += 1
+        counts = WordCounts(studyWords)
         
         if let userProfile = profiles.first {
             if translationMode == "en_ru" {
