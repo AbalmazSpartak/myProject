@@ -1,6 +1,6 @@
 import Foundation
 import Combine
-import MultipeerConnectivity
+@preconcurrency import MultipeerConnectivity
 
 @MainActor
 final class MultipeerRaceManager: NSObject, ObservableObject {
@@ -131,8 +131,10 @@ extension MultipeerRaceManager: MCSessionDelegate {
 
 extension MultipeerRaceManager: MCNearbyServiceAdvertiserDelegate {
     nonisolated func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
+        // MultipeerConnectivity разрешает вызвать обработчик из любого потока, но не помечает его Sendable
+        nonisolated(unsafe) let accept = invitationHandler
         Task { @MainActor in
-            invitationHandler(true, self.session)
+            accept(true, self.session)
         }
     }
 }

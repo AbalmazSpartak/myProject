@@ -1,6 +1,6 @@
 import SwiftUI
 import SwiftData
-import Translation
+@preconcurrency import Translation
 
 /// Слово из текста и, если есть, такое же слово из базы
 struct ScanCandidate: Identifiable {
@@ -221,13 +221,11 @@ struct ScanResultsView: View {
     private func translate(with session: TranslationSession) async {
         translationState = .translating
         // Глагол переводим с «to», иначе переводчик часто выдаёт существительное (run → «бег»)
-        let requests = newWords.map { candidate in
+        let sources = newWords.map { candidate in
             let word = candidate.extracted
-            return TranslationSession.Request(
-                sourceText: word.partOfSpeech == "v." ? "to \(word.lemma)" : word.lemma,
-                clientIdentifier: candidate.id
-            )
+            return (id: candidate.id, text: word.partOfSpeech == "v." ? "to \(word.lemma)" : word.lemma)
         }
+        let requests = Self.translationRequests(sources)
         do {
             let responses = try await session.translations(from: requests)
             for response in responses {
@@ -238,6 +236,11 @@ struct ScanResultsView: View {
         } catch {
             translationState = .failed
         }
+    }
+
+    /// Запросы собираем вне главного потока: так Swift 6 разрешает передать их в переводчик
+    nonisolated private static func translationRequests(_ sources: [(id: String, text: String)]) -> [TranslationSession.Request] {
+        sources.map { TranslationSession.Request(sourceText: $0.text, clientIdentifier: $0.id) }
     }
 
     /// «Маяк.» → «маяк», «чтобы бежать» → «бежать»

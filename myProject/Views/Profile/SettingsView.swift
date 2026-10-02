@@ -40,8 +40,10 @@ struct SettingsView: View {
                         }
                         
                         VStack(alignment: .leading, spacing: 6) {
+                            // Подпись PhotosPicker — Sendable-замыкание: профиль читаем заранее
+                            let photoButtonTitle = profile.avatarData == nil ? "Загрузить фото" : "Изменить фото"
                             PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                                Text(profile.avatarData == nil ? "Загрузить фото" : "Изменить фото")
+                                Text(photoButtonTitle)
                                     .font(.system(size: 15, weight: .semibold))
                                     .foregroundColor(.teal)
                             }

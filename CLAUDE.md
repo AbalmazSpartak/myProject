@@ -1,9 +1,9 @@
 # Swift & SwiftUI Project Rules
 
 ## Tech Stack
-- Language: Swift 6
+- Language: Swift 6 (language mode 6, strict concurrency; default actor isolation — MainActor)
 - Framework: SwiftUI / Composable Architecture (укажите ваше)
-- Target: iOS 17+ / macOS
+- Target: iOS 18+ / macOS (iOS 18 needed for Translation in text scan)
 
 ## Build and Test Commands
 - Build: xcodebuild -project myProject.xcodeproj -scheme myProject -destination "platform=iOS Simulator,name=iPhone 16e,OS=18.6" build
