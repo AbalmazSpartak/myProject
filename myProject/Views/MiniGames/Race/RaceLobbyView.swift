@@ -91,7 +91,7 @@ struct RaceLobbyView: View {
                     .scaledFont(size: 17, weight: .bold)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color(.systemGray5))
+                    .background(Color.brandFill)
                     .foregroundColor(.brandDark)
                     .cornerRadius(14)
             }
@@ -143,7 +143,7 @@ struct RaceLobbyView: View {
                         Image(systemName: "arrow.right.circle.fill")
                     }
                     .padding()
-                    .background(Color(.systemGray6))
+                    .background(Color.brandFill)
                     .cornerRadius(12)
                 }
             }

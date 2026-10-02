@@ -122,6 +122,7 @@ struct ScanResultsView: View {
                 }
             }
         }
+        .brandListBackground()
         .navigationTitle("Найдено слов: \(candidates.count)")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

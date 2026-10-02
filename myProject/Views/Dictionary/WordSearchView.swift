@@ -71,6 +71,7 @@ struct WordSearchView: View {
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Поиск слова")
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
+            .brandListBackground()
             .navigationTitle("Поиск слов")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

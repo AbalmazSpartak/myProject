@@ -113,7 +113,7 @@ struct InputFlashcardsView: View {
                     VStack(spacing: 8) {
                         HStack(spacing: 10) {
                             Text(currentQuestion)
-                                .scaledFont(size: 34, weight: .bold, design: .rounded)
+                                .scaledFont(size: 34, weight: .semibold, design: .serif)
                                 .foregroundColor(.brandDark)
                                 .multilineTextAlignment(.center)
                             
@@ -144,7 +144,7 @@ struct InputFlashcardsView: View {
                             .scaledFont(size: 18, weight: .semibold, design: .rounded)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 14)
-                            .background(Color(.systemGray5))
+                            .background(Color.brandFill)
                             .cornerRadius(14)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 14)

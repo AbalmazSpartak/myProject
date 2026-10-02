@@ -144,7 +144,7 @@ struct ClozeView: View {
                 .scaledFont(size: 18, weight: .semibold, design: .rounded)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
-                .background(Color(.systemGray5))
+                .background(Color.brandFill)
                 .cornerRadius(14)
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
@@ -273,7 +273,7 @@ private struct ClozeSentence: View {
 
     var body: some View {
         (Text(parts.before) + middle + Text(parts.after))
-            .scaledFont(size: 22, weight: .medium, design: .rounded)
+            .scaledFont(size: 22, weight: .regular, design: .serif)
             .foregroundColor(.primary)
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)

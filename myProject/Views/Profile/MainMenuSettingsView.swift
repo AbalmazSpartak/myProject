@@ -52,6 +52,7 @@ struct MainMenuSettingsView: View {
         }
         // Ручки для перетаскивания видны сразу, без кнопки «Изменить»
         .environment(\.editMode, .constant(.active))
+        .brandListBackground()
         .navigationTitle("Главное меню")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $isCreatingGroup) {

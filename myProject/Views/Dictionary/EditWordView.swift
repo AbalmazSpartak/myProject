@@ -58,6 +58,7 @@ struct EditWordView: View {
                 modelContext.delete(word)
                 try? modelContext.save()
             }
+            .brandListBackground()
             .navigationTitle("Редактирование")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

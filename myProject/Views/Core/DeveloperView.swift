@@ -75,6 +75,7 @@ struct DeveloperView: View {
                     }
                 }
             }
+            .brandListBackground()
             .navigationTitle("Раздел разработчика")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

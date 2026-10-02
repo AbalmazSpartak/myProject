@@ -61,6 +61,7 @@ struct StudyDictionariesView: View {
             }
             .disabled(!scope.enabledLists.isEmpty)
         }
+        .brandListBackground()
         .navigationTitle("Словари")
         .onAppear { allWords = modelContext.fetchAllWords() }
         .navigationBarTitleDisplayMode(.inline)

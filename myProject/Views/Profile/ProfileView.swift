@@ -77,7 +77,7 @@ struct ProfileView: View {
                     }
                     
                     Text(profile.name)
-                        .scaledFont(size: 24, weight: .bold, design: .rounded)
+                        .scaledFont(size: 24, weight: .semibold, design: .serif)
                         .foregroundColor(.brandDark)
                 }
                 

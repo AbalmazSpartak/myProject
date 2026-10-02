@@ -154,13 +154,7 @@ struct SettingsView: View {
 
                 // Оформление
                 Section(header: Text("Оформление")) {
-                    Picker("Тема оформления", selection: $selectedTheme) {
-                        Text("Системная").tag("system")
-                        Text("Светлая").tag("light")
-                        Text("Темная").tag("dark")
-                    }
-                    .pickerStyle(.segmented)
-
+                    // Выбор темы вернётся вместе с тёмной палитрой «журнала»; пока приложение всегда светлое
                     NavigationLink {
                         MainMenuSettingsView()
                     } label: {
@@ -187,6 +181,7 @@ struct SettingsView: View {
                     }
                 }
             }
+            .brandListBackground()
             .navigationTitle("Настройки")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

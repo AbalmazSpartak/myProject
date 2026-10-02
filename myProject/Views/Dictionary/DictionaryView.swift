@@ -551,7 +551,7 @@ struct DictionaryView: View {
             .scaledFont(size: 16, weight: .medium, design: .rounded)
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .background(Color(.systemGray5))
+            .background(Color.brandFill)
             .cornerRadius(12)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)

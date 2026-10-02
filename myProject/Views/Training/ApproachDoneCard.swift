@@ -16,7 +16,7 @@ struct ApproachDoneCard: View {
 
             VStack(spacing: 6) {
                 Text("Подход завершён")
-                    .scaledFont(size: 24, weight: .bold, design: .rounded)
+                    .scaledFont(size: 24, weight: .semibold, design: .serif)
                     .foregroundColor(.brandDark)
                 Text(summary)
                     .scaledFont(size: 16, weight: .medium, design: .rounded)

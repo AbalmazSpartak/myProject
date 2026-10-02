@@ -112,7 +112,7 @@ struct QuizView: View {
                 VStack(spacing: 16) {
                     HStack(spacing: 10) {
                         Text(currentQuestion)
-                            .scaledFont(size: 38, weight: .bold, design: .rounded)
+                            .scaledFont(size: 38, weight: .semibold, design: .serif)
                             .foregroundColor(.primary)
                         
                         Button(action: { TextToSpeechManager.shared.speak(word.english) }) {

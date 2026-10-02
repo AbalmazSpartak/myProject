@@ -9,7 +9,7 @@ struct WordRowCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     Text(word.english)
-                        .scaledFont(size: 17, weight: .bold, design: .rounded)
+                        .scaledFont(size: 18, weight: .semibold, design: .serif)
                         .foregroundColor(.brandDark)
 
                     if !word.partOfSpeech.isEmpty {

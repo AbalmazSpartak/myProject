@@ -26,7 +26,7 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(.systemBackground).ignoresSafeArea()
+                Color.brandBackground.ignoresSafeArea()
                 
                 ScrollView {
                     VStack(spacing: 16) {
@@ -41,7 +41,7 @@ struct ContentView: View {
                                 .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
                             
                             Text("WordLearner")
-                                .scaledFont(size: 34, weight: .heavy, design: .default)
+                                .scaledFont(size: 34, weight: .bold, design: .serif)
                                 .foregroundColor(.primary)
                         }
                         .padding(.top, 80)
@@ -130,7 +130,7 @@ struct ContentView: View {
             }
         }
         .padding(14)
-        .background(Color(.systemGray6))
+        .background(Color.brandFill)
         .cornerRadius(24)
     }
 

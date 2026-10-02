@@ -46,7 +46,7 @@ struct MenuGroupEditorView: View {
                                     .scaledFont(size: 20)
                                     .foregroundColor(symbol == icon ? .white : MenuPalette.color(named: colorName))
                                     .frame(width: 40, height: 40)
-                                    .background(symbol == icon ? MenuPalette.color(named: colorName) : Color(.systemGray5))
+                                    .background(symbol == icon ? MenuPalette.color(named: colorName) : Color.brandFill)
                                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                             }
                             .buttonStyle(.plain)
@@ -79,6 +79,7 @@ struct MenuGroupEditorView: View {
                     }
                 }
             }
+            .brandListBackground()
             .navigationTitle(group == nil ? "Новая группа" : "Группа")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -118,7 +119,7 @@ struct MenuGroupEditorView: View {
                 .foregroundColor(.gray)
         }
         .padding(14)
-        .background(Color(.systemGray6))
+        .background(Color.brandFill)
         .cornerRadius(18)
         .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
     }

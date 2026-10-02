@@ -14,6 +14,7 @@ struct ManageCategoriesView: View {
                 }
                 .onDelete(perform: deleteCategories)
             }
+            .brandListBackground()
             .navigationTitle("Управление папками")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

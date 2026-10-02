@@ -40,7 +40,7 @@ struct RaceGameView: View {
             if let word = currentWord, !raceEnded {
                 VStack(spacing: 16) {
                     Text(word.english)
-                        .scaledFont(size: 32, weight: .bold, design: .rounded)
+                        .scaledFont(size: 32, weight: .semibold, design: .serif)
                     
                     VStack(spacing: 10) {
                         ForEach(word.options, id: \.self) { option in
@@ -76,7 +76,7 @@ struct RaceGameView: View {
         GeometryReader { geo in
             let progress = words.isEmpty ? 0 : CGFloat(player.correctCount) / CGFloat(words.count)
             ZStack(alignment: .leading) {
-                Capsule().fill(Color(.systemGray5)).frame(height: 24)
+                Capsule().fill(Color.brandFill).frame(height: 24)
                 Image(systemName: "car.fill")
                     .foregroundColor(player.isMe ? .indigo : .gray)
                     .offset(x: progress * (geo.size.width - 24))
@@ -113,7 +113,7 @@ struct RaceGameView: View {
                         .scaledFont(size: 16, weight: .bold)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color(.systemGray5))
+                        .background(Color.brandFill)
                         .foregroundColor(.brandDark)
                         .cornerRadius(14)
                 }
@@ -212,7 +212,7 @@ struct RaceGameView: View {
     private func optionBackground(_ option: String) -> Color {
         if option == wrongOption { return Color.red.opacity(0.2) }
         if option == selectedAnswer { return Color.green.opacity(0.25) }
-        return Color(.systemGray5)
+        return Color.brandFill
     }
 
     private func optionTextColor(_ option: String) -> Color {

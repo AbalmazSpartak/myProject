@@ -114,7 +114,7 @@ struct FlashcardsView: View {
                     VStack(spacing: 10) {
                         HStack(spacing: 12) {
                             Text(currentQuestion)
-                                .scaledFont(size: 34, weight: .bold, design: .rounded)
+                                .scaledFont(size: 34, weight: .semibold, design: .serif)
                                 .foregroundColor(.brandDark)
                                 .multilineTextAlignment(.center)
                             
@@ -143,7 +143,7 @@ struct FlashcardsView: View {
                             }
 
                             Text(currentAnswer)
-                                .scaledFont(size: 28, weight: .semibold, design: .rounded)
+                                .scaledFont(size: 28, weight: .regular, design: .serif)
                                 .foregroundColor(.blue)
                                 .multilineTextAlignment(.center)
                             

@@ -11,7 +11,7 @@ struct MenuCardButton: View {
             HStack(spacing: 16) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color(.systemGray5))
+                        .fill(Color.brandFill)
                         .frame(width: 52, height: 52)
                     
                     Image(systemName: icon)
@@ -31,7 +31,7 @@ struct MenuCardButton: View {
             .padding(.horizontal, 16)
             .background(
                 ZStack(alignment: .leading) {
-                    Color(.secondarySystemBackground)
+                    Color.cardBackground
                     themeColor.frame(width: 6)
                 }
             )

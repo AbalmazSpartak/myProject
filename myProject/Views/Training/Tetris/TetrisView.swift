@@ -197,7 +197,7 @@ struct TetrisView: View {
                         .foregroundColor(.yellow)
                     
                     Text("Игра окончена")
-                        .scaledFont(size: 24, weight: .bold, design: .rounded)
+                        .scaledFont(size: 24, weight: .semibold, design: .serif)
                         .foregroundColor(.brandDark)
                     
                     VStack(spacing: 8) {
@@ -512,7 +512,7 @@ struct TetrisView: View {
 
     private func optionBackground(_ option: String, word: Word) -> Color {
         guard let selected = selectedAnswer else {
-            return Color(.systemGray5)
+            return Color.brandFill
         }
         if option.lowercased() == word.russian.lowercased() {
             return Color.green.opacity(0.25)
@@ -520,7 +520,7 @@ struct TetrisView: View {
         if option == selected {
             return Color.red.opacity(0.25)
         }
-        return Color(.systemGray5)
+        return Color.brandFill
     }
 
     private func optionForeground(_ option: String, word: Word) -> Color {
