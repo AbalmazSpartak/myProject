@@ -8,7 +8,7 @@
 ## Build and Test Commands
 - Build: xcodebuild -project myProject.xcodeproj -target myProject -sdk iphonesimulator -configuration Debug build
   - Builds the target directly; the app lands in `build/Debug-iphonesimulator/myProject.app` (gitignored) — install it with `xcrun simctl install <device> <path>` to check screens.
-  - Avoid `-scheme myProject -destination "platform=iOS Simulator,…"`: the scheme is auto-generated (no shared .xcscheme), xcodebuild always warns "Supported platforms for the buildables in the current scheme is empty", and on 2026-10-02 after a device build from Xcode it reported BUILD SUCCEEDED without compiling anything. A build with `-destination "generic/platform=iOS Simulator"` unstuck it. If a scheme build ever shows no `SwiftCompile` steps after source changes, don't trust it.
+  - The scheme is shared (`myProject.xcodeproj/xcshareddata/xcschemes/myProject.xcscheme`) since 2026-10-03; before that the auto-generated scheme once reported BUILD SUCCEEDED without compiling. If any build shows no `SwiftCompile` steps after source changes, don't trust it.
 - Test: there are no test targets yet.
 
 ## Word List (master database)
