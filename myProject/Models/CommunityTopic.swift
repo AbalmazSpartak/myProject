@@ -8,22 +8,45 @@ struct TopicWord: Codable, Hashable, Identifiable {
     var russian: String
 }
 
-/// Тема сообщества: раздел («Английский по кино», «Грамматика» …), заголовок, текст и слова.
+/// Тема сообщества: раздел («Английский по кино», «Грамматика» …), заголовок, блоки (текст, таблицы, аудио) и слова.
 /// Пока хранится только на этом телефоне; общие для всех темы появятся с CloudKit
 @Model
 final class CommunityTopic {
     var id: UUID = UUID()
     var section: String
     var title: String
+    /// Начало текста — для карточки в ленте. У тем первой версии (без блоков) — весь текст
     var text: String
     var words: [TopicWord] = []
     var createdAt: Date = Date()
+    /// Блоки — JSON массива TopicBlock: так порядок и вложенные таблицы хранятся как есть
+    var blocksData = Data()
+    @Relationship(deleteRule: .cascade, inverse: \TopicAudioClip.topic)
+    var audioClips: [TopicAudioClip] = []
 
-    init(section: String, title: String, text: String, words: [TopicWord]) {
+    init(section: String, title: String, blocks: [TopicBlock], words: [TopicWord]) {
         self.section = section
         self.title = title
-        self.text = text
+        self.text = Self.preview(of: blocks)
         self.words = words
+        self.blocks = blocks
+    }
+
+    var blocks: [TopicBlock] {
+        get { (try? JSONDecoder().decode([TopicBlock].self, from: blocksData)) ?? [] }
+        set { blocksData = (try? JSONEncoder().encode(newValue)) ?? Data() }
+    }
+
+    func audioClip(for block: TopicBlock) -> TopicAudioClip? {
+        guard let id = block.audioClipID else { return nil }
+        return audioClips.first { $0.id == id }
+    }
+
+    /// Первый текст темы, иначе первый подзаголовок
+    private static func preview(of blocks: [TopicBlock]) -> String {
+        let text = blocks.first { $0.kind == .text && !$0.text.isEmpty }
+            ?? blocks.first { $0.kind == .heading && !$0.text.isEmpty }
+        return text?.text ?? ""
     }
 }
 

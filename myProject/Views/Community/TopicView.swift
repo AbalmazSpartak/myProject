@@ -28,11 +28,16 @@ struct TopicView: View {
                     Text(topic.title)
                         .scaledFont(size: 30, weight: .semibold, design: .serif)
                         .foregroundColor(.brandDark)
-                    if !topic.text.isEmpty {
+                    let blocks = topic.blocks
+                    if blocks.isEmpty, !topic.text.isEmpty {
+                        // Тема первой версии — только текст
                         Text(topic.text)
                             .scaledFont(size: 17, design: .serif)
                             .foregroundColor(.brandDark)
                             .textSelection(.enabled)
+                    }
+                    ForEach(blocks) { block in
+                        TopicBlockView(block: block, clip: topic.audioClip(for: block))
                     }
                     if !topic.words.isEmpty {
                         wordsCard

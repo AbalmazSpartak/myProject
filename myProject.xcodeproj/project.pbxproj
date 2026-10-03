@@ -274,6 +274,7 @@
 				INFOPLIST_FILE = myProject/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Камера нужна, чтобы распознать английский текст и добавить из него слова в словарь.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Приложению нужен доступ к локальной сети, чтобы находить других игроков для гонки слов.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Микрофон нужен, чтобы записать голос в тему сообщества.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -318,6 +319,7 @@
 				INFOPLIST_FILE = myProject/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Камера нужна, чтобы распознать английский текст и добавить из него слова в словарь.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Приложению нужен доступ к локальной сети, чтобы находить других игроков для гонки слов.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Микрофон нужен, чтобы записать голос в тему сообщества.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
