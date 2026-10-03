@@ -20,12 +20,15 @@ extension View {
 
 /// Сетка с объединёнными ячейками: стандартный Grid умеет объединять только по горизонтали.
 /// Ширина столбца — по самой широкой одиночной ячейке (не больше maxColumnWidth, дальше текст переносится),
-/// высота строки — по самой высокой; объединённой ячейке не хватило места — добираем поровну в её столбцы и строки
+/// высота строки — по самой высокой; объединённой ячейке не хватило места — добираем поровну в её столбцы и строки.
+/// Таблица уже fillWidth — столбцы растягиваются до неё пропорционально своей ширине
 struct SpanGridLayout: Layout {
     let rows: Int
     let columns: Int
     var minColumnWidth: CGFloat = 36
     var maxColumnWidth: CGFloat = 240
+    /// Ширина, до которой растянуть узкую таблицу; 0 — не растягивать
+    var fillWidth: CGFloat = 0
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let (widths, heights) = measure(subviews)
@@ -57,6 +60,12 @@ struct SpanGridLayout: Layout {
         }
         for (index, cell) in cells.enumerated() where cell.columnSpan > 1 {
             grow(&widths, range: cell.column..<cell.column + cell.columnSpan, toFit: ideals[index])
+        }
+        // Растягиваем до ширины экрана до расчёта высот: в широкой ячейке текст переносится реже
+        let total = widths.reduce(0, +)
+        if fillWidth > total, total > 0 {
+            let scale = fillWidth / total
+            widths = widths.map { $0 * scale }
         }
 
         func height(_ index: Int) -> CGFloat {

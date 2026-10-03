@@ -61,13 +61,16 @@ enum TopicText {
 
 // MARK: - Таблица
 
-/// Таблица с тонкими линиями и объединёнными ячейками; шире экрана — листается вбок
+/// Таблица с тонкими линиями и объединёнными ячейками: уже экрана — растягивается по ширине, шире — листается вбок
 struct TopicTableView: View {
     let table: TopicTable
 
+    /// Ширина места под таблицу — узкая таблица растягивается до неё
+    @State private var availableWidth: CGFloat = 0
+
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            SpanGridLayout(rows: table.rows, columns: table.columns) {
+            SpanGridLayout(rows: table.rows, columns: table.columns, fillWidth: availableWidth) {
                 ForEach(table.visibleCells) { cell in
                     cellView(cell)
                         .gridCellPlacement(GridCellPlacement(row: cell.row, column: cell.column,
@@ -78,6 +81,7 @@ struct TopicTableView: View {
             .overlay(Rectangle().stroke(Color.brandDark.opacity(0.25), lineWidth: 1))
         }
         .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { availableWidth = $0 }
     }
 
     private func cellView(_ cell: TopicTable.Cell) -> some View {
