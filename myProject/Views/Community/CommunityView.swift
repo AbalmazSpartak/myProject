@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 /// «Сообщество»: темы по разделам («Английский по кино», «Подборки слов», свои — «Грамматика» …)
-/// и для примера — ленты «Ваши подборки» и «Английский по кино», как на «Обзоре»
+/// и для примера — ленты «Подборки сообщества» и «Английский по кино»
 struct CommunityView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \CommunityTopic.createdAt, order: .reverse) private var topics: [CommunityTopic]
@@ -140,7 +140,7 @@ struct CommunityView: View {
     }
 
     private var collectionsRibbon: some View {
-        Ribbon(title: "Ваши подборки") {
+        Ribbon(title: "Подборки сообщества") {
             ForEach(lists) { list in
                 CollectionCard(name: list.name, words: list.words) { route = .collection(.list(list)) }
             }
@@ -172,7 +172,7 @@ struct CommunityView: View {
 }
 
 /// Карточка темы в ленте раздела
-private struct TopicCard: View {
+struct TopicCard: View {
     let topic: CommunityTopic
     let action: () -> Void
 

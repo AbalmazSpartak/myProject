@@ -8,6 +8,7 @@ struct TopicView: View {
     @Query private var lists: [WordList]
 
     let topic: CommunityTopic
+    var backTitle = "Сообщество"
 
     @State private var isConfirmingDelete = false
     @State private var addedMessage: String?
@@ -28,6 +29,7 @@ struct TopicView: View {
                     Text(topic.title)
                         .scaledFont(size: 30, weight: .semibold, design: .serif)
                         .foregroundColor(.brandDark)
+                    saveButton
                     let blocks = topic.blocks
                     if blocks.isEmpty, !topic.text.isEmpty {
                         // Тема первой версии — только текст
@@ -70,7 +72,7 @@ struct TopicView: View {
             Button(action: { dismiss() }) {
                 HStack(spacing: 4) {
                     Image(systemName: "chevron.left")
-                    Text("Сообщество")
+                    Text(backTitle)
                 }
                 .scaledFont(size: 17, weight: .semibold)
                 .foregroundColor(.brandDark)
@@ -89,6 +91,28 @@ struct TopicView: View {
         }
         .padding(.horizontal, 16)
         .padding(.top, 8)
+    }
+
+    // MARK: - Подборки
+
+    /// Тема в «Ваших подборках» на «Обзоре» — оттуда её можно открыть и изучать
+    private var saveButton: some View {
+        let isSaved = topic.savedAt != nil
+        return Button {
+            topic.savedAt = isSaved ? nil : Date()
+            try? modelContext.save()
+        } label: {
+            Label(isSaved ? "В ваших подборках" : "В мои подборки",
+                  systemImage: isSaved ? "bookmark.fill" : "bookmark")
+                .scaledFont(size: 15, weight: .semibold)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(isSaved ? Color.cyan.opacity(0.18) : Color.cardBackground)
+                .foregroundColor(.brandDark)
+                .cornerRadius(20)
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint(isSaved ? "Убрать из подборок на «Обзоре»" : "Добавить в подборки на «Обзоре»")
     }
 
     // MARK: - Слова

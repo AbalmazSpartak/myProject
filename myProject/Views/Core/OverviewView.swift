@@ -4,8 +4,9 @@ import SwiftData
 /// «Обзор» — главный экран в стиле журнала: слово дня, подборки, ленты тренировок и игр
 struct OverviewView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \WordList.createdAt, order: .reverse) private var lists: [WordList]
-    @Query(sort: \Category.name) private var categories: [Category]
+    /// Темы сообщества, добавленные в «Ваши подборки»
+    @Query(filter: #Predicate<CommunityTopic> { $0.savedAt != nil }, sort: \CommunityTopic.savedAt, order: .reverse)
+    private var savedTopics: [CommunityTopic]
     @AppStorage(MainMenuLayout.storageKey) private var menuLayout = MainMenuLayout.standard
 
     @State private var wordsOfDay: [Word] = []
@@ -58,12 +59,10 @@ struct OverviewView: View {
     // MARK: - Подборки
 
     private var collectionsRibbon: some View {
-        Ribbon(title: "Ваши подборки", onTitleTap: { open(.dictionary) }) {
-            ForEach(lists) { list in
-                CollectionCard(name: list.name, words: list.words) { open(.collection(.list(list))) }
-            }
-            ForEach(categories) { category in
-                CollectionCard(name: category.name, words: category.words) { open(.collection(.category(category))) }
+        Ribbon(title: "Ваши подборки", onTitleTap: { open(.community) }) {
+            AddTopicCard { open(.community) }
+            ForEach(savedTopics) { topic in
+                TopicCard(topic: topic) { open(.topic(topic)) }
             }
         }
     }
@@ -243,6 +242,34 @@ struct CollectionCard: View {
     /// Один и тот же цвет для подборки при каждом запуске (hashValue меняется между запусками)
     private static func stableIndex(of name: String, count: Int) -> Int {
         Int(name.unicodeScalars.reduce(UInt32(0)) { $0 &* 31 &+ $1.value } % UInt32(count))
+    }
+}
+
+/// Первая карточка «Ваших подборок»: открывает «Сообщество», где тему можно добавить себе
+private struct AddTopicCard: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 10) {
+                Image(systemName: "plus.circle.fill")
+                    .scaledFont(size: 30)
+                    .foregroundColor(.cyan)
+                Text("Добавить тему из сообщества")
+                    .scaledFont(size: 15, weight: .semibold)
+                    .foregroundColor(.brandDark)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(14)
+            .frame(width: 200, height: 150)
+            .background(Color.cardBackground)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(Color.cyan.opacity(0.5), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
+            )
+            .cornerRadius(16)
+        }
+        .buttonStyle(.plain)
     }
 }
 

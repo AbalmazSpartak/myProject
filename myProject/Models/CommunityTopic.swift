@@ -21,6 +21,8 @@ final class CommunityTopic {
     var createdAt: Date = Date()
     /// Блоки — JSON массива TopicBlock: так порядок и вложенные таблицы хранятся как есть
     var blocksData = Data()
+    /// Когда тему добавили в «Ваши подборки» на «Обзоре»; nil — не добавлена
+    var savedAt: Date?
     @Relationship(deleteRule: .cascade, inverse: \TopicAudioClip.topic)
     var audioClips: [TopicAudioClip] = []
 

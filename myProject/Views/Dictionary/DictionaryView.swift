@@ -26,7 +26,7 @@ struct DictionaryView: View {
     
     @State private var filter: DictionaryFilter
 
-    /// `initialFilter` — открыть сразу нужную подборку (например, из «Ваших подборок» на «Обзоре»)
+    /// `initialFilter` — открыть сразу нужную подборку (например, из «Подборок сообщества»)
     /// Во вкладке «Словарь» возвращаться некуда; из подборки на «Обзоре» — кнопка «Обзор»
     private let showsBackButton: Bool
 

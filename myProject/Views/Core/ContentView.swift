@@ -12,8 +12,8 @@ enum ActiveScreen: Hashable, Identifiable {
     case race
     case help
     case community
-    /// Словарь сразу на нужной подборке
-    case collection(DictionaryFilter)
+    /// Тема сообщества из «Ваших подборок»
+    case topic(CommunityTopic)
     /// Раздел, который ещё не сделан
     case stub(title: String, message: String)
 
@@ -75,8 +75,8 @@ struct ContentView: View {
             HelpView()
         case .community:
             CommunityView()
-        case .collection(let filter):
-            DictionaryView(initialFilter: filter)
+        case .topic(let topic):
+            TopicView(topic: topic, backTitle: "Обзор")
         case .stub(let title, let message):
             StubView(title: title, message: message)
         }
