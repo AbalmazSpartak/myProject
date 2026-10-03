@@ -96,7 +96,7 @@ struct MenuGroup: Identifiable, Hashable {
     var color: Color { MenuPalette.color(named: colorName) }
 
     static let cards = MenuGroup(id: "cards", name: "Карточки", icon: "square.stack.3d.up.fill",
-                                 colorName: "blue", sections: [.flashcards, .quiz, .cloze])
+                                 colorName: "blue", sections: [.flashcards, .quiz])
     static let miniGames = MenuGroup(id: "miniGames", name: "Мини-игры", icon: "gamecontroller.fill",
                                      colorName: "indigo", sections: [.tetris, .race])
 }
@@ -135,7 +135,8 @@ struct MainMenuLayout: Equatable {
 
     /// Меню по умолчанию
     static let standard = MainMenuLayout(
-        items: [.group(MenuGroup.cards.id), .group(MenuGroup.miniGames.id), .section(.inputCards), .section(.dictionary), .section(.help)],
+        items: [.group(MenuGroup.cards.id), .section(.inputCards), .section(.cloze), .section(.dictionary), .section(.help),
+                .group(MenuGroup.miniGames.id)],
         groups: [MenuGroup.cards.id: .cards, MenuGroup.miniGames.id: .miniGames],
         hidden: []
     )
