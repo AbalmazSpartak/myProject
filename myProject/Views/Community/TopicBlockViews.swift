@@ -81,7 +81,15 @@ struct TopicTableView: View {
             .overlay(Rectangle().stroke(Color.brandDark.opacity(0.25), lineWidth: 1))
         }
         .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { availableWidth = $0 }
+        // Не onGeometryChange: его замыкание iOS может вызвать из фонового потока отрисовки, а Swift 6 на этом
+        // останавливает приложение (как было с AsyncImage). onAppear/onChange — всегда на главном потоке
+        .background {
+            GeometryReader { proxy in
+                Color.clear
+                    .onAppear { availableWidth = proxy.size.width }
+                    .onChange(of: proxy.size.width) { _, width in availableWidth = width }
+            }
+        }
     }
 
     private func cellView(_ cell: TopicTable.Cell) -> some View {

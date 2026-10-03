@@ -69,12 +69,8 @@ struct GutenbergCatalogView: View {
     private func row(_ entry: GutenbergCatalog.Entry) -> some View {
         let isInLibrary = books.contains { $0.gutenbergID == entry.id }
         return HStack(spacing: 12) {
-            AsyncImage(url: entry.coverURL) { image in
-                image.resizable().scaledToFill()
-            } placeholder: {
-                Color.brown.opacity(0.25)
-            }
-            .frame(width: 46, height: 68)
+            RemoteCover(url: entry.coverURL)
+                .frame(width: 46, height: 68)
             .clipShape(RoundedRectangle(cornerRadius: 4))
 
             VStack(alignment: .leading, spacing: 3) {
@@ -121,5 +117,40 @@ struct GutenbergCatalogView: View {
         } catch {
             errorMessage = "Не удалось скачать «\(entry.title)». Проверьте интернет и попробуйте ещё раз."
         }
+    }
+}
+
+/// Обложка из каталога. Не AsyncImage: в iOS 18 он вызывает своё замыкание из фонового потока отрисовки,
+/// а в Swift 6 замыкание считается «главнопоточным» — приложение падало (_dispatch_assert_queue_fail).
+/// Здесь сеть — в фоне, картинка ставится на главном потоке; скачанные хранятся в памяти на время работы
+private struct RemoteCover: View {
+    let url: URL?
+
+    @State private var image: UIImage?
+
+    private static let cache = NSCache<NSURL, UIImage>()
+
+    var body: some View {
+        ZStack {
+            Color.brown.opacity(0.25)
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            }
+        }
+        .task(id: url) { await load() }
+    }
+
+    private func load() async {
+        guard let url else { return }
+        if let cached = Self.cache.object(forKey: url as NSURL) {
+            image = cached
+            return
+        }
+        guard let (data, _) = try? await URLSession.shared.data(from: url),
+              let loaded = UIImage(data: data) else { return }
+        Self.cache.setObject(loaded, forKey: url as NSURL)
+        image = loaded
     }
 }
