@@ -269,6 +269,7 @@ struct FlashcardsView: View {
         if rating != .again { approachCorrect += 1 }
         counts = WordCounts(studyWords, newWordsAllowance: newWordsAllowance)
         profiles.first?.recordAnswer(.flashcards, translationMode: translationMode, isCorrect: rating != .again)
+        if rating != .again { DailyStudy.recordCorrect(word) }
         
         isAnswerRevealed = false
         if currentIndex + 1 >= sessionWords.count {

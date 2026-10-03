@@ -322,6 +322,7 @@ struct InputFlashcardsView: View {
         TextToSpeechManager.shared.speak(word.english)
         
         profiles.first?.recordAnswer(.flashcards, translationMode: translationMode, isCorrect: isCorrect)
+        if isCorrect { DailyStudy.recordCorrect(word) }
         
         withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
             showResult = true

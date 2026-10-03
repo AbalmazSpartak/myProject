@@ -252,6 +252,7 @@ struct QuizView: View {
         counts = WordCounts(studyWords)
         
         profiles.first?.recordAnswer(.quiz, translationMode: translationMode, isCorrect: isCorrect)
+        if isCorrect { DailyStudy.recordCorrect(word) }
         
         // Рус ➔ англ — английское слово звучит после ответа, чтобы не подсказывать
         if translationMode != "en_ru" {

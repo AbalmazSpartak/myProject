@@ -8,6 +8,7 @@ struct ProfileView: View {
     
     @State private var showSettings = false
     @State private var levelProgress: [LevelProgress] = []
+    @State private var studyDays: [DailyStudy.Day] = []
     
     private var profile: UserProfile {
         if let existing = profiles.first {
@@ -76,6 +77,9 @@ struct ProfileView: View {
                 LevelProgressCard(progress: levelProgress)
                     .padding(.horizontal, 20)
                 
+                DailyStudyCard(days: studyDays)
+                    .padding(.horizontal, 20)
+                
                 // Рекорд Тетриса
                 tetrisSectionCard(
                     title: "Тетрис слов",
@@ -132,5 +136,6 @@ struct ProfileView: View {
     
     private func reloadProgress() {
         levelProgress = LevelProgress.all(from: modelContext.fetchAllWords())
+        studyDays = DailyStudy.recent()
     }
 }
