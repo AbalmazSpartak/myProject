@@ -30,9 +30,12 @@ struct DictionaryView: View {
     /// Во вкладке «Словарь» возвращаться некуда; из подборки на «Обзоре» — кнопка «Обзор»
     private let showsBackButton: Bool
 
-    init(initialFilter: DictionaryFilter = .general, showsBackButton: Bool = true) {
+    private let backTitle: String
+
+    init(initialFilter: DictionaryFilter = .general, showsBackButton: Bool = true, backTitle: String = "Обзор") {
         _filter = State(initialValue: initialFilter)
         self.showsBackButton = showsBackButton
+        self.backTitle = backTitle
     }
     @State private var isDropdownExpanded = false
     @State private var isShowingManageCategories = false
@@ -232,7 +235,7 @@ struct DictionaryView: View {
         HStack {
             if showsBackButton {
                 Button(action: { dismiss() }) {
-                    HStack(spacing: 4) { Image(systemName: "chevron.left"); Text("Обзор") }
+                    HStack(spacing: 4) { Image(systemName: "chevron.left"); Text(backTitle) }
                     .scaledFont(size: 17, weight: .semibold)
                     .foregroundColor(.orange)
                 }

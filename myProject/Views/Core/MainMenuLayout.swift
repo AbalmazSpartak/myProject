@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Раздел главного меню. «Мой профиль» сюда не входит: он всегда сверху, через него открываются настройки
 enum MenuSection: String, CaseIterable {
-    case flashcards, quiz, cloze, inputCards, dictionary, tetris, race, help
+    case flashcards, quiz, cloze, inputCards, dictionary, tetris, race, help, community
 
     var title: String {
         switch self {
@@ -14,6 +14,7 @@ enum MenuSection: String, CaseIterable {
         case .tetris: return "Тетрис слов"
         case .race: return "Гонка слов"
         case .help: return "Справка"
+        case .community: return "Сообщество"
         }
     }
 
@@ -32,6 +33,7 @@ enum MenuSection: String, CaseIterable {
         case .tetris: return "gamecontroller.fill"
         case .race: return "car.fill"
         case .help: return "questionmark.circle.fill"
+        case .community: return "person.3.fill"
         }
     }
 
@@ -45,6 +47,7 @@ enum MenuSection: String, CaseIterable {
         case .tetris: return .indigo
         case .race: return .green
         case .help: return .gray
+        case .community: return .cyan
         }
     }
 
@@ -63,6 +66,7 @@ enum MenuSection: String, CaseIterable {
         case .tetris: return .tetris
         case .race: return .race
         case .help: return .help
+        case .community: return .community
         }
     }
 }
@@ -163,7 +167,7 @@ struct MainMenuLayout: Equatable {
     /// Меню по умолчанию
     static let standard = MainMenuLayout(
         items: [.group(MenuGroup.cards.id), .group(MenuGroup.inputCards.id), .group(MenuGroup.miniGames.id),
-                .section(.dictionary), .section(.help)],
+                .section(.dictionary), .section(.help), .section(.community)],
         groups: [MenuGroup.cards.id: .cards, MenuGroup.inputCards.id: .inputCards, MenuGroup.miniGames.id: .miniGames],
         hidden: []
     )

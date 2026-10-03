@@ -107,7 +107,7 @@ struct OverviewView: View {
 
     // MARK: - Кино (заглушка)
 
-    private static let movieGenres: [(name: String, icon: String, color: Color)] = [
+    static let movieGenres: [(name: String, icon: String, color: Color)] = [
         ("Фэнтези", "sparkles", .purple),
         ("Фантастика", "globe.americas.fill", .indigo),
         ("Комедии", "face.smiling.inverse", .orange),
@@ -115,8 +115,10 @@ struct OverviewView: View {
         ("Мультфильмы", "film.fill", .teal)
     ]
 
+    static let moviesStubMessage = "Здесь будет раздел с подборками слов по фильмам"
+
     private var moviesRibbon: some View {
-        let stub = ActiveScreen.stub(title: "Английский по кино", message: "Здесь будет раздел с подборками слов по фильмам")
+        let stub = ActiveScreen.stub(title: "Английский по кино", message: Self.moviesStubMessage)
         return Ribbon(title: "Английский по кино", onTitleTap: { open(stub) }) {
             ForEach(Self.movieGenres, id: \.name) { genre in
                 TileCard(title: genre.name, icon: genre.icon, color: genre.color) { open(stub) }
@@ -128,7 +130,7 @@ struct OverviewView: View {
 // MARK: - Лента
 
 /// Заголовок прописными и горизонтальная лента карточек
-private struct Ribbon<Content: View>: View {
+struct Ribbon<Content: View>: View {
     let title: String
     var onTitleTap: (() -> Void)? = nil
     @ViewBuilder let content: Content
@@ -168,7 +170,7 @@ private struct Ribbon<Content: View>: View {
 }
 
 /// Карточка раздела или жанра: цветная плашка с иконкой и подпись
-private struct TileCard: View {
+struct TileCard: View {
     let title: String
     let icon: String
     let color: Color
@@ -198,7 +200,7 @@ private struct TileCard: View {
 }
 
 /// Подборка: обложка — картинка одного из её слов, если уже загружена; иначе градиент
-private struct CollectionCard: View {
+struct CollectionCard: View {
     let name: String
     let words: [Word]
     let action: () -> Void
@@ -251,6 +253,7 @@ struct StubView: View {
     @Environment(\.dismiss) private var dismiss
     let title: String
     let message: String
+    var backTitle = "Обзор"
 
     var body: some View {
         VStack(spacing: 0) {
@@ -258,7 +261,7 @@ struct StubView: View {
                 Button(action: { dismiss() }) {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
-                        Text("Обзор")
+                        Text(backTitle)
                     }
                     .scaledFont(size: 17, weight: .semibold)
                     .foregroundColor(.brandDark)
