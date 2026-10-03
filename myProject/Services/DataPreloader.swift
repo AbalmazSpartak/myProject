@@ -189,6 +189,34 @@ final class DataPreloader {
         }
     }
 }
+
+// MARK: - Сброс картинок
+
+extension DataPreloader {
+    /// Версия источников картинок (WordImageService). Поменялись источники — увеличить:
+    /// при запуске скачанные картинки сотрутся и загрузятся заново. 2 — без Flickr
+    private static let imageSourcesVersion = 2
+    private static let imageSourcesVersionKey = "image_sources_version"
+
+    /// Стирает скачанные картинки и отметки «не найдено»; скрытые пользователем картинки остаются скрытыми
+    static func resetImagesIfSourcesChanged(context: ModelContext) {
+        guard UserDefaults.standard.integer(forKey: imageSourcesVersionKey) < imageSourcesVersion else { return }
+        let descriptor = FetchDescriptor<Word>(predicate: #Predicate { word in
+            word.imageData != nil || word.imageNotFound || word.imageVariant != 0
+        })
+        for word in (try? context.fetch(descriptor)) ?? [] {
+            word.imageData = nil
+            word.imageNotFound = false
+            word.imageVariant = 0
+        }
+        do {
+            try context.save()
+            UserDefaults.standard.set(imageSourcesVersion, forKey: imageSourcesVersionKey)
+        } catch {
+            print("Ошибка сброса картинок: \(error)")
+        }
+    }
+}
 #if DEBUG
 extension DataPreloader {
     /// Удаляет встроенные слова и пустые категории и заново грузит words.csv.

@@ -80,7 +80,9 @@ enum WordImageService {
             URLQueryItem(name: "q", value: query),
             URLQueryItem(name: "page_size", value: "10"),
             URLQueryItem(name: "license_type", value: "commercial"),
-            URLQueryItem(name: "mature", value: "false")
+            URLQueryItem(name: "mature", value: "false"),
+            // Flickr почти не модерируется и не всегда помечает откровенные фото — берём Wikimedia, NASA и музеи
+            URLQueryItem(name: "excluded_source", value: "flickr")
         ]
         guard let url = components?.url else { return [] }
         let response: OpenverseResponse = try await fetchJSON(from: url)

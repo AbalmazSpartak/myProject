@@ -18,6 +18,7 @@ struct MyApp: App {
             // Загружаем words.csv при первом запуске и сливаем его обновления
             Task { @MainActor in
                 DataPreloader.syncBundledWords(context: mainContext)
+                DataPreloader.resetImagesIfSourcesChanged(context: mainContext)
             }
         } catch {
             fatalError("Не удалось запустить хранилище SwiftData: \(error)")
