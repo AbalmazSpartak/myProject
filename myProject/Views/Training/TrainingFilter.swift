@@ -73,15 +73,16 @@ struct TrainingFilterMenu: View {
 
             Divider()
 
-            ForEach(categories) { category in
-                Button("\(category.name) (\(counts.count(for: category)))") { onSelect(.category(category)) }
+            // Уровни — основа базы, поэтому выше тем
+            ForEach(CEFRLevel.allCases, id: \.rawValue) { level in
+                Button("Уровень \(level.rawValue) (\(counts.count(level: level)))") { onSelect(.level(level)) }
+                    .disabled(counts.count(level: level) == 0)
             }
 
             Divider()
 
-            ForEach(CEFRLevel.allCases, id: \.rawValue) { level in
-                Button("Уровень \(level.rawValue) (\(counts.count(level: level)))") { onSelect(.level(level)) }
-                    .disabled(counts.count(level: level) == 0)
+            ForEach(categories) { category in
+                Button("\(category.name) (\(counts.count(for: category)))") { onSelect(.category(category)) }
             }
         } label: {
             let isMistakes = current == .mistakes
