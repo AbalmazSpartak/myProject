@@ -11,6 +11,27 @@ struct MainMenuSettingsView: View {
     var body: some View {
         List {
             Section {
+                ForEach(FixedRibbon.allCases, id: \.self) { ribbon in
+                    HStack(spacing: 12) {
+                        Image(systemName: ribbon.icon)
+                            .foregroundColor(.secondary)
+                            .frame(width: 24)
+                        Text(ribbon.title)
+                        Spacer()
+                        Toggle(ribbon.title, isOn: Binding(
+                            get: { !layout.isHidden(ribbon) },
+                            set: { layout.setHidden(!$0, for: ribbon) }
+                        ))
+                        .labelsHidden()
+                    }
+                }
+            } header: {
+                Text("Постоянные ленты")
+            } footer: {
+                Text("Стоят на своих местах: «Слово дня» и «Ваши подборки» — вверху, «Английский по кино» — внизу. Их можно только скрыть.")
+            }
+
+            Section {
                 ForEach(layout.items.filter { !Self.isTab($0) }, id: \.self) { item in
                     topLevelRow(item)
                 }
@@ -73,7 +94,7 @@ struct MainMenuSettingsView: View {
             Button("Отмена", role: .cancel) {}
             Button("Вернуть", role: .destructive) { layout = .standard }
         } message: {
-            Text("Ваши группы удалятся, порядок и скрытые разделы сбросятся. Сами разделы останутся.")
+            Text("Ваши группы удалятся, порядок и скрытые разделы сбросятся, скрытые ленты снова появятся. Сами разделы останутся.")
         }
     }
 

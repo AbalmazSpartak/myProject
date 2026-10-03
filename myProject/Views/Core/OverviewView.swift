@@ -17,25 +17,30 @@ struct OverviewView: View {
             VStack(alignment: .leading, spacing: 28) {
                 header
 
-                if !wordsOfDay.isEmpty {
+                if !menuLayout.isHidden(.wordOfDay), !wordsOfDay.isEmpty {
                     WordOfDayCarousel(words: wordsOfDay)
                 }
 
-                collectionsRibbon
+                if !menuLayout.isHidden(.collections) {
+                    collectionsRibbon
+                }
 
                 // Ленты разделов — по настройке «Ленты «Обзора»»: каждая группа — своя лента
                 ForEach(ribbons, id: \.title) { ribbon in
                     sectionRibbon(ribbon)
                 }
 
-                moviesRibbon
+                if !menuLayout.isHidden(.movies) {
+                    moviesRibbon
+                }
             }
             .padding(.vertical, 12)
             .padding(.bottom, 30)
         }
         .background(Color.brandBackground.ignoresSafeArea())
         .onAppear {
-            if wordsOfDay.isEmpty {
+            // Скрытое «Слово дня» — слова не загружаем; включат в настройках — загрузим при возврате на «Обзор»
+            if wordsOfDay.isEmpty, !menuLayout.isHidden(.wordOfDay) {
                 wordsOfDay = WordOfDay.recent(days: 7, from: modelContext.fetchAllWords())
             }
         }

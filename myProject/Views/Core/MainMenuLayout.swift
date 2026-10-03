@@ -101,6 +101,30 @@ struct MenuGroup: Identifiable, Hashable {
                                      colorName: "indigo", sections: [.tetris, .race])
 }
 
+/// Постоянные ленты «Обзора»: место у них своё, в настройке их можно только скрыть
+enum FixedRibbon: String, CaseIterable {
+    case wordOfDay, collections, movies
+
+    var title: String {
+        switch self {
+        case .wordOfDay: return "Слово дня"
+        case .collections: return "Ваши подборки"
+        case .movies: return "Английский по кино"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .wordOfDay: return "bolt.fill"
+        case .collections: return "text.book.closed.fill"
+        case .movies: return "film.fill"
+        }
+    }
+
+    /// Ключ в MainMenuLayout.hidden — рядом с ключами групп и разделов
+    var hiddenKey: String { "fixed." + rawValue }
+}
+
 /// Строка верхнего уровня меню: группа (по id) или раздел вне групп
 enum MenuItem: Hashable {
     case group(String)
@@ -123,14 +147,15 @@ enum MenuItem: Hashable {
     }
 }
 
-/// Порядок, группы и видимость разделов на «Обзоре» (Настройки → Ленты «Обзора»): каждая группа — лента.
+/// Порядок, группы и видимость разделов на «Обзоре» (Настройки → Ленты «Обзора»): каждая группа — лента;
+/// там же — скрытые постоянные ленты (FixedRibbon).
 /// Каждый раздел стоит ровно в одном месте: в группе или в общем списке
 struct MainMenuLayout: Equatable {
     static let storageKey = "main_menu_layout"
 
     var items: [MenuItem]
     var groups: [String: MenuGroup]
-    /// Скрытые группы и разделы — по MenuItem.key
+    /// Скрытые группы и разделы — по MenuItem.key, постоянные ленты — по FixedRibbon.hiddenKey
     var hidden: Set<String>
 
     /// Меню по умолчанию
@@ -155,6 +180,14 @@ struct MainMenuLayout: Equatable {
 
     mutating func setHidden(_ isHidden: Bool, for item: MenuItem) {
         if isHidden { hidden.insert(item.key) } else { hidden.remove(item.key) }
+    }
+
+    func isHidden(_ ribbon: FixedRibbon) -> Bool {
+        hidden.contains(ribbon.hiddenKey)
+    }
+
+    mutating func setHidden(_ isHidden: Bool, for ribbon: FixedRibbon) {
+        if isHidden { hidden.insert(ribbon.hiddenKey) } else { hidden.remove(ribbon.hiddenKey) }
     }
 
     /// Что показывать в меню: скрытая группа или группа без видимых разделов не показывается
