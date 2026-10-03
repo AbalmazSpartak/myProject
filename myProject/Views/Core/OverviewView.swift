@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-/// «Обзор» — главный экран в стиле журнала: слово дня, подборки, ленты тренировок и игр
+/// «Обзор» — главный экран в стиле журнала: слово дня, ваши подборки, ленты тренировок и игр
 struct OverviewView: View {
     @Environment(\.modelContext) private var modelContext
     /// Темы сообщества, добавленные в «Ваши подборки»
@@ -29,10 +29,6 @@ struct OverviewView: View {
                 // Ленты разделов — по настройке «Ленты «Обзора»»: каждая группа — своя лента
                 ForEach(ribbons, id: \.title) { ribbon in
                     sectionRibbon(ribbon)
-                }
-
-                if !menuLayout.isHidden(.movies) {
-                    moviesRibbon
                 }
             }
             .padding(.vertical, 12)
@@ -100,27 +96,6 @@ struct OverviewView: View {
         Ribbon(title: ribbon.title) {
             ForEach(ribbon.sections, id: \.self) { section in
                 TileCard(title: section.title, icon: section.icon, color: section.color) { open(section.screen) }
-            }
-        }
-    }
-
-    // MARK: - Кино (заглушка)
-
-    static let movieGenres: [(name: String, icon: String, color: Color)] = [
-        ("Фэнтези", "sparkles", .purple),
-        ("Фантастика", "globe.americas.fill", .indigo),
-        ("Комедии", "face.smiling.inverse", .orange),
-        ("Драмы", "theatermasks.fill", .red),
-        ("Мультфильмы", "film.fill", .teal)
-    ]
-
-    static let moviesStubMessage = "Здесь будет раздел с подборками слов по фильмам"
-
-    private var moviesRibbon: some View {
-        let stub = ActiveScreen.stub(title: "Английский по кино", message: Self.moviesStubMessage)
-        return Ribbon(title: "Английский по кино", onTitleTap: { open(stub) }) {
-            ForEach(Self.movieGenres, id: \.name) { genre in
-                TileCard(title: genre.name, icon: genre.icon, color: genre.color) { open(stub) }
             }
         }
     }

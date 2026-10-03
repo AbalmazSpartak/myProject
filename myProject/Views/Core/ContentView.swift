@@ -14,8 +14,6 @@ enum ActiveScreen: Hashable, Identifiable {
     case community
     /// Тема сообщества из «Ваших подборок»
     case topic(CommunityTopic)
-    /// Раздел, который ещё не сделан
-    case stub(title: String, message: String)
 
     var id: String { "\(self)" }
 }
@@ -77,8 +75,6 @@ struct ContentView: View {
             CommunityView()
         case .topic(let topic):
             TopicView(topic: topic, backTitle: "Обзор")
-        case .stub(let title, let message):
-            StubView(title: title, message: message)
         }
     }
 }

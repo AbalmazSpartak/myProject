@@ -150,9 +150,18 @@ struct CommunityView: View {
         }
     }
 
+    // Заглушка: жанровые карточки без постеров
+    private static let movieGenres: [(name: String, icon: String, color: Color)] = [
+        ("Фэнтези", "sparkles", .purple),
+        ("Фантастика", "globe.americas.fill", .indigo),
+        ("Комедии", "face.smiling.inverse", .orange),
+        ("Драмы", "theatermasks.fill", .red),
+        ("Мультфильмы", "film.fill", .teal)
+    ]
+
     private var moviesRibbon: some View {
         Ribbon(title: "Английский по кино", onTitleTap: { route = .movies }) {
-            ForEach(OverviewView.movieGenres, id: \.name) { genre in
+            ForEach(Self.movieGenres, id: \.name) { genre in
                 TileCard(title: genre.name, icon: genre.icon, color: genre.color) { route = .movies }
             }
         }
@@ -166,7 +175,7 @@ struct CommunityView: View {
         case .collection(let filter):
             DictionaryView(initialFilter: filter, backTitle: "Сообщество")
         case .movies:
-            StubView(title: "Английский по кино", message: OverviewView.moviesStubMessage, backTitle: "Сообщество")
+            StubView(title: "Английский по кино", message: "Здесь будет раздел с подборками слов по фильмам", backTitle: "Сообщество")
         }
     }
 }

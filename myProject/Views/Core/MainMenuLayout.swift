@@ -109,13 +109,12 @@ struct MenuGroup: Identifiable, Hashable {
 
 /// Постоянные ленты «Обзора»: место у них своё, в настройке их можно только скрыть
 enum FixedRibbon: String, CaseIterable {
-    case wordOfDay, collections, movies
+    case wordOfDay, collections
 
     var title: String {
         switch self {
         case .wordOfDay: return "Слово дня"
         case .collections: return "Ваши подборки"
-        case .movies: return "Английский по кино"
         }
     }
 
@@ -123,7 +122,6 @@ enum FixedRibbon: String, CaseIterable {
         switch self {
         case .wordOfDay: return "bolt.fill"
         case .collections: return "text.book.closed.fill"
-        case .movies: return "film.fill"
         }
     }
 
