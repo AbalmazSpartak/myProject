@@ -86,7 +86,7 @@ enum MenuPalette {
 
 /// Раскрывающаяся группа разделов в меню: стандартная или созданная пользователем
 struct MenuGroup: Identifiable, Hashable {
-    /// Стандартные группы — "cards" и "miniGames", свои — UUID
+    /// Стандартные группы — "cards", "inputCards" и "miniGames", свои — UUID
     let id: String
     var name: String
     var icon: String
@@ -97,6 +97,8 @@ struct MenuGroup: Identifiable, Hashable {
 
     static let cards = MenuGroup(id: "cards", name: "Карточки", icon: "square.stack.3d.up.fill",
                                  colorName: "blue", sections: [.flashcards, .quiz])
+    static let inputCards = MenuGroup(id: "inputCards", name: "Карточки ввода", icon: "keyboard.fill",
+                                      colorName: "teal", sections: [.inputCards, .cloze])
     static let miniGames = MenuGroup(id: "miniGames", name: "Мини-игры", icon: "gamecontroller.fill",
                                      colorName: "indigo", sections: [.tetris, .race])
 }
@@ -160,9 +162,9 @@ struct MainMenuLayout: Equatable {
 
     /// Меню по умолчанию
     static let standard = MainMenuLayout(
-        items: [.group(MenuGroup.cards.id), .section(.inputCards), .section(.cloze), .section(.dictionary), .section(.help),
-                .group(MenuGroup.miniGames.id)],
-        groups: [MenuGroup.cards.id: .cards, MenuGroup.miniGames.id: .miniGames],
+        items: [.group(MenuGroup.cards.id), .group(MenuGroup.inputCards.id), .group(MenuGroup.miniGames.id),
+                .section(.dictionary), .section(.help)],
+        groups: [MenuGroup.cards.id: .cards, MenuGroup.inputCards.id: .inputCards, MenuGroup.miniGames.id: .miniGames],
         hidden: []
     )
 
@@ -276,7 +278,7 @@ extension MainMenuLayout: RawRepresentable {
             }
         } else {
             // Настройка из прошлой версии: стандартные группы с сохранённым порядком разделов
-            for standard in [MenuGroup.cards, MenuGroup.miniGames] {
+            for standard in [MenuGroup.cards, MenuGroup.inputCards, MenuGroup.miniGames] {
                 var group = standard
                 let order = (stored.groups?[standard.id] ?? []).compactMap(MenuSection.init(rawValue:))
                     .filter(standard.sections.contains)
