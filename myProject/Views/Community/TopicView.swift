@@ -6,11 +6,13 @@ struct TopicView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Query private var lists: [WordList]
+    @Query private var topics: [CommunityTopic]
 
     let topic: CommunityTopic
     var backTitle = "Сообщество"
 
     @State private var isConfirmingDelete = false
+    @State private var isEditing = false
     @State private var addedMessage: String?
 
     private var notAddedWords: [TopicWord] {
@@ -50,6 +52,10 @@ struct TopicView: View {
             }
         }
         .background(Color.brandBackground.ignoresSafeArea())
+        .sheet(isPresented: $isEditing) {
+            TopicEditorView(sections: CommunitySections.all(from: topics), editing: topic)
+                .appThemedColorScheme()
+        }
         .alert("Удалить тему?", isPresented: $isConfirmingDelete) {
             Button("Отмена", role: .cancel) {}
             Button("Удалить", role: .destructive) {
@@ -78,16 +84,22 @@ struct TopicView: View {
                 .foregroundColor(.brandDark)
             }
             Spacer()
-            Menu {
-                Button(role: .destructive) { isConfirmingDelete = true } label: {
-                    Label("Удалить тему", systemImage: "trash")
+            // Править и удалять тему может только её автор
+            if topic.isMine {
+                Menu {
+                    Button { isEditing = true } label: {
+                        Label("Редактировать", systemImage: "pencil")
+                    }
+                    Button(role: .destructive) { isConfirmingDelete = true } label: {
+                        Label("Удалить тему", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .scaledFont(size: 22)
+                        .foregroundColor(.brandDark)
                 }
-            } label: {
-                Image(systemName: "ellipsis.circle")
-                    .scaledFont(size: 22)
-                    .foregroundColor(.brandDark)
+                .accessibilityLabel("Ещё")
             }
-            .accessibilityLabel("Ещё")
         }
         .padding(.horizontal, 16)
         .padding(.top, 8)

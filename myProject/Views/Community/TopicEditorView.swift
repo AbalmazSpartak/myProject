@@ -1,13 +1,15 @@
 import SwiftUI
 import SwiftData
 
-/// Новая тема: раздел (готовый или новый), заголовок, блоки (подзаголовки, текст, таблицы, аудио) и слова
+/// Новая тема или правка своей: раздел (готовый или новый), заголовок, блоки (подзаголовки, текст, таблицы, аудио) и слова
 struct TopicEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
 
     /// Разделы на выбор: встроенные и те, где уже есть темы
     let sections: [String]
+    /// nil — новая тема
+    private let topic: CommunityTopic?
 
     @State private var section: String
     @State private var newSection = ""
@@ -20,9 +22,33 @@ struct TopicEditorView: View {
     /// Значение пикера для «Новый раздел…»
     private static let newSectionTag = "\u{0}new"
 
-    init(sections: [String]) {
+    init(sections: [String], editing topic: CommunityTopic? = nil) {
         self.sections = sections
-        _section = State(initialValue: sections.first ?? Self.newSectionTag)
+        self.topic = topic
+        guard let topic else {
+            _section = State(initialValue: sections.first ?? Self.newSectionTag)
+            return
+        }
+        // Правка: всё как сохранено, звук — в черновик, пока не нажали «Сохранить»
+        if sections.contains(topic.section) {
+            _section = State(initialValue: topic.section)
+        } else {
+            _section = State(initialValue: Self.newSectionTag)
+            _newSection = State(initialValue: topic.section)
+        }
+        _title = State(initialValue: topic.title)
+        var blocks = topic.blocks
+        if blocks.isEmpty, !topic.text.isEmpty {
+            // Тема первой версии — только текст
+            var text = TopicBlock(kind: .text)
+            text.text = topic.text
+            blocks = [text]
+        }
+        _blocks = State(initialValue: blocks)
+        _pendingAudio = State(initialValue: Dictionary(uniqueKeysWithValues: topic.audioClips.map {
+            ($0.id, PendingAudio(data: $0.data, fileExtension: $0.fileExtension))
+        }))
+        _words = State(initialValue: topic.words.isEmpty ? [TopicWord(english: "", russian: "")] : topic.words)
     }
 
     private var resolvedSection: String {
@@ -104,14 +130,14 @@ struct TopicEditorView: View {
             }
             .brandListBackground()
             .onDisappear { AudioClipPlayer.shared.stop() }
-            .navigationTitle("Новая тема")
+            .navigationTitle(topic == nil ? "Новая тема" : "Правка темы")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Отмена") { dismiss() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Создать") { save() }
+                    Button(topic == nil ? "Создать" : "Сохранить") { save() }
                         .fontWeight(.bold)
                         .disabled(!canSave)
                 }
@@ -203,13 +229,28 @@ struct TopicEditorView: View {
     private func save() {
         // Раздел с тем же названием, но другим регистром — тот же раздел
         let name = sections.first { $0.caseInsensitiveCompare(resolvedSection) == .orderedSame } ?? resolvedSection
-        let topic = CommunityTopic(section: name,
+        let topic: CommunityTopic
+        if let existing = self.topic {
+            topic = existing
+            topic.section = name
+            topic.title = title.trimmingCharacters(in: .whitespaces)
+            topic.setBlocks(filledBlocks)
+            topic.words = filledWords
+        } else {
+            topic = CommunityTopic(section: name,
                                    title: title.trimmingCharacters(in: .whitespaces),
                                    blocks: filledBlocks,
                                    words: filledWords)
-        modelContext.insert(topic)
-        for block in topic.blocks {
-            guard let id = block.audioClipID, let audio = pendingAudio[id] else { continue }
+            modelContext.insert(topic)
+        }
+        // Звук: убранный из темы удаляем, новый добавляем, оставшийся не трогаем
+        let usedIDs = Set(topic.blocks.compactMap(\.audioClipID))
+        for clip in topic.audioClips where !usedIDs.contains(clip.id) {
+            modelContext.delete(clip)
+        }
+        let existingIDs = Set(topic.audioClips.map(\.id))
+        for id in usedIDs.subtracting(existingIDs) {
+            guard let audio = pendingAudio[id] else { continue }
             let clip = TopicAudioClip(id: id, data: audio.data, fileExtension: audio.fileExtension)
             modelContext.insert(clip)
             clip.topic = topic

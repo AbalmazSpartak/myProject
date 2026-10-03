@@ -23,6 +23,9 @@ final class CommunityTopic {
     var blocksData = Data()
     /// Когда тему добавили в «Ваши подборки» на «Обзоре»; nil — не добавлена
     var savedAt: Date?
+    /// Тему создал этот пользователь — ему можно её править и удалять.
+    /// Пока темы хранятся только на телефоне, все они свои; с общими темами (CloudKit) чужие будут false
+    var isMine = true
     @Relationship(deleteRule: .cascade, inverse: \TopicAudioClip.topic)
     var audioClips: [TopicAudioClip] = []
 
@@ -32,6 +35,12 @@ final class CommunityTopic {
         self.text = Self.preview(of: blocks)
         self.words = words
         self.blocks = blocks
+    }
+
+    /// Блоки после правки — вместе с началом текста для карточки
+    func setBlocks(_ blocks: [TopicBlock]) {
+        self.blocks = blocks
+        text = Self.preview(of: blocks)
     }
 
     var blocks: [TopicBlock] {
