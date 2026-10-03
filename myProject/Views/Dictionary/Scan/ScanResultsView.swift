@@ -26,6 +26,10 @@ enum ScanMatcher {
 /// Шаг 3: выбрать слова для нового словаря. Новым словам перевод подставляет встроенный переводчик iOS
 struct ScanResultsView: View {
     let candidates: [ScanCandidate]
+    /// Слова из файла: словарь называется по файлу и запоминает частоту — новые слова учатся первыми, от частых
+    let fileName: String?
+    /// Пояснение к файлу: обрезан, взяты самые частые слова
+    let note: String?
     var onSave: (WordList) -> Void
 
     @Environment(\.modelContext) private var modelContext
@@ -36,6 +40,8 @@ struct ScanResultsView: View {
     @State private var translations: [String: String] = [:]
     @State private var translationConfig: TranslationSession.Configuration?
     @State private var translationState = TranslationState.idle
+    /// Сколько новых слов уже переведено — для больших файлов переводим частями
+    @State private var translatedCount = 0
     /// «Отмечать слова, которые уже учу» — запоминается для следующих сканов
     @AppStorage(Self.selectLearningKey) private var selectLearning = false
     private static let selectLearningKey = "scan_select_learning"
@@ -47,9 +53,12 @@ struct ScanResultsView: View {
     /// Новых слов нет в базе (A1–B2), поэтому скорее всего они сложнее; уровень можно поправить в правке слова
     private let newWordLevel = CEFRLevel.c1.rawValue
 
-    init(candidates: [ScanCandidate], onSave: @escaping (WordList) -> Void) {
+    init(candidates: [ScanCandidate], fileName: String? = nil, note: String? = nil, onSave: @escaping (WordList) -> Void) {
         self.candidates = candidates
+        self.fileName = fileName
+        self.note = note
         self.onSave = onSave
+        if let fileName { _listName = State(initialValue: fileName) }
         // По умолчанию отмечены новые слова и слова из базы, которые ещё не начали учить,
         // а с «Отмечать слова, которые уже учу» — все найденные
         let selectLearning = UserDefaults.standard.bool(forKey: Self.selectLearningKey)
@@ -65,17 +74,20 @@ struct ScanResultsView: View {
         candidates.filter { $0.existing == nil }
     }
 
-    /// Сложные слова сверху
+    /// Сложные слова сверху; из файла — самые частые
     private var knownWords: [ScanCandidate] {
-        candidates.filter { $0.existing != nil }.sorted { levelRank($0) > levelRank($1) }
+        let known = candidates.filter { $0.existing != nil }
+        return fileName == nil ? known.sorted { levelRank($0) > levelRank($1) } : known
     }
 
     private var missingTranslations: Int {
         newWords.filter { selected.contains($0.id) && translation(for: $0).isEmpty }.count
     }
 
+    /// Из файла слов тысячи — без перевода они просто не сохраняются, а не держат кнопку
     private var canSave: Bool {
-        !selected.isEmpty && missingTranslations == 0 && !listName.trimmingCharacters(in: .whitespaces).isEmpty
+        !selected.isEmpty && (missingTranslations == 0 || fileName != nil) && translationState != .translating
+            && !listName.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     var body: some View {
@@ -85,8 +97,14 @@ struct ScanResultsView: View {
             } header: {
                 Text("Новый словарь")
             } footer: {
-                if let existing = existingList {
-                    Text("Словарь «\(existing.name)» уже есть — слова добавятся в него (\(existing.words.count) сейчас).")
+                VStack(alignment: .leading, spacing: 4) {
+                    if let existing = existingList {
+                        Text("Словарь «\(existing.name)» уже есть — слова добавятся в него (\(existing.words.count) сейчас).")
+                    }
+                    if fileName != nil {
+                        Text("Слова отсортированы по частоте в файле. Новые слова этого словаря пойдут на изучение первыми — от самых частых.")
+                    }
+                    if let note { Text(note) }
                 }
             }
             if candidates.contains(where: Self.isLearning) {
@@ -164,13 +182,21 @@ struct ScanResultsView: View {
     private var newWordsFooter: String {
         switch translationState {
         case .translating:
-            return "Перевожу встроенным переводчиком iOS…"
+            let total = newWords.count
+            return total > Self.translationChunk
+                ? "Перевожу встроенным переводчиком iOS… \(translatedCount) из \(total)"
+                : "Перевожу встроенным переводчиком iOS…"
         case .failed:
-            return "Переводчик недоступен — введите перевод вручную или снимите галочку."
+            return fileName == nil
+                ? "Переводчик недоступен — введите перевод вручную или снимите галочку."
+                : "Переводчик недоступен — введите перевод вручную. Слова без перевода не сохранятся."
         case .idle, .done:
-            return missingTranslations > 0
-                ? "Введите перевод для отмеченных слов или снимите галочку."
-                : "Перевод автоматический, без учёта контекста — проверьте его. Пример взят из вашего текста."
+            if missingTranslations > 0 {
+                return fileName == nil
+                    ? "Введите перевод для отмеченных слов или снимите галочку."
+                    : "Без перевода: \(missingTranslations) — такие слова не сохранятся, впишите перевод, если нужны."
+            }
+            return "Перевод автоматический, без учёта контекста — проверьте его. Пример взят из вашего текста."
         }
     }
 
@@ -250,18 +276,25 @@ struct ScanResultsView: View {
             let word = candidate.extracted
             return (id: candidate.id, text: word.partOfSpeech == "v." ? "to \(word.lemma)" : word.lemma)
         }
-        let requests = Self.translationRequests(sources)
+        translatedCount = 0
         do {
-            let responses = try await session.translations(from: requests)
-            for response in responses {
-                guard let id = response.clientIdentifier, (translations[id] ?? "").isEmpty else { continue }
-                translations[id] = Self.cleanedTranslation(response.targetText)
+            // Частями: тысячи слов из файла — с прогрессом, и экран не ждёт всё разом
+            for start in stride(from: 0, to: sources.count, by: Self.translationChunk) {
+                let chunk = Array(sources[start..<min(start + Self.translationChunk, sources.count)])
+                let responses = try await session.translations(from: Self.translationRequests(chunk))
+                for response in responses {
+                    guard let id = response.clientIdentifier, (translations[id] ?? "").isEmpty else { continue }
+                    translations[id] = Self.cleanedTranslation(response.targetText)
+                }
+                translatedCount = start + chunk.count
             }
             translationState = .done
         } catch {
             translationState = .failed
         }
     }
+
+    private static let translationChunk = 200
 
     /// Запросы собираем вне главного потока: так Swift 6 разрешает передать их в переводчик
     nonisolated private static func translationRequests(_ sources: [(id: String, text: String)]) -> [TranslationSession.Request] {
@@ -299,12 +332,21 @@ struct ScanResultsView: View {
             modelContext.insert(list)
         }
         for candidate in candidates where selected.contains(candidate.id) {
+            // Из файла — запоминаем частоту: новые слова словаря учатся первыми, от частых
+            if fileName != nil {
+                let key = candidate.existing.map(WordList.frequencyKey) ?? candidate.extracted.lemma.lowercased()
+                if candidate.existing != nil || !translation(for: candidate).isEmpty {
+                    list.frequencies[key] = max(list.frequencies[key] ?? 0, candidate.extracted.count)
+                }
+            }
             if let word = candidate.existing {
                 // Слово уже в этом словаре — второй раз не добавляем
                 if !word.lists.contains(where: { $0.id == list.id }) {
                     word.lists.append(list)
                 }
             } else {
+                // Из файла слово без перевода не сохраняем — пустую карточку не выучить
+                guard !translation(for: candidate).isEmpty else { continue }
                 let item = candidate.extracted
                 let word = Word(
                     english: item.lemma,

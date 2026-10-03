@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 import PhotosUI
 
-/// Словарь → скан текста: камера, фото или вставленный текст → новые слова в свой словарь
+/// Словарь → скан текста: камера, фото, вставленный текст или файл → новые слова в свой словарь
 struct TextScanView: View {
     /// Вызывается с созданным словарём, когда слова сохранены
     var onSaved: (WordList) -> Void
@@ -20,7 +20,15 @@ struct TextScanView: View {
     @State private var candidates: [ScanCandidate] = []
     @State private var photoItem: PhotosPickerItem?
     @State private var isRecognizing = false
+    @State private var progressMessage = "Распознаю текст…"
     @State private var errorMessage: String?
+    @State private var isImportingFile = false
+    /// Слова из файла: самые частые сверху, сразу отмечены, словарь запоминает частоту — учатся первыми
+    @State private var fileName: String?
+    @State private var fileNote: String?
+
+    /// Сколько самых частых слов файла попадает в словарь
+    static let maxFileWords = 5000
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -37,7 +45,7 @@ struct TextScanView: View {
                     case .review:
                         review
                     case .results:
-                        ScanResultsView(candidates: candidates) { list in
+                        ScanResultsView(candidates: candidates, fileName: fileName, note: fileNote) { list in
                             onSaved(list)
                             dismiss()
                         }
@@ -71,7 +79,7 @@ struct TextScanView: View {
                     )
                 }
                 if isRecognizing {
-                    ProgressView("Распознаю текст…")
+                    ProgressView(progressMessage)
                         .padding(20)
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
                 }
@@ -104,9 +112,17 @@ struct TextScanView: View {
                 }
                 Button {
                     text = UIPasteboard.general.hasStrings ? (UIPasteboard.general.string ?? "") : ""
+                    fileName = nil
                     path.append(.review)
                 } label: {
-                    Label("Вставить текст", systemImage: "doc.on.clipboard")
+                    Label("Вставить", systemImage: "doc.on.clipboard")
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                }
+                Button {
+                    isImportingFile = true
+                } label: {
+                    Label("Файл", systemImage: "doc.text")
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                 }
@@ -117,9 +133,49 @@ struct TextScanView: View {
         }
         .padding(16)
         .background(Color.brandBackground)
+        .fileImporter(isPresented: $isImportingFile, allowedContentTypes: FileTextReader.allowedTypes) { result in
+            if case .success(let url) = result {
+                Task { await importFile(url) }
+            }
+        }
+    }
+
+    // MARK: - Файл
+
+    /// Книга, статья, субтитры: читаем и разбираем в фоне, проверку текста пропускаем — сразу к словам
+    private func importFile(_ url: URL) async {
+        progressMessage = "Читаю файл…"
+        isRecognizing = true
+        defer { isRecognizing = false }
+
+        let limit = Self.maxFileWords
+        let parsed = await Task.detached(priority: .userInitiated) { () -> (FileTextReader.Result, [ExtractedWord])? in
+            guard let file = try? FileTextReader.read(url) else { return nil }
+            let found = TextWordExtractor.extract(from: file.text)
+                .sorted { $0.count > $1.count }
+            return (file, Array(found.prefix(limit)))
+        }.value
+
+        guard let (file, found) = parsed else {
+            errorMessage = "Не получилось прочитать файл. Подходят .txt, субтитры .srt и .vtt, .pdf, .rtf, .html и книги .epub без защиты."
+            return
+        }
+        guard !found.isEmpty else {
+            errorMessage = "В файле не нашлось английских слов для изучения."
+            return
+        }
+        var notes: [String] = []
+        if file.isTruncated { notes.append("Файл очень большой — взято его начало.") }
+        if found.count == Self.maxFileWords { notes.append("В словарь берутся \(Self.maxFileWords) самых частых слов файла.") }
+        fileNote = notes.isEmpty ? nil : notes.joined(separator: " ")
+        fileName = url.deletingPathExtension().lastPathComponent
+        candidates = ScanMatcher.match(found, in: modelContext.fetchAllWords())
+        path.append(.results)
     }
 
     private func recognize(_ item: PhotosPickerItem) async {
+        progressMessage = "Распознаю текст…"
+        fileName = nil
         isRecognizing = true
         defer {
             isRecognizing = false
@@ -172,6 +228,8 @@ struct TextScanView: View {
             errorMessage = "Не нашлось слов для изучения. Сканер берёт существительные, глаголы, прилагательные и наречия, а служебные слова (the, is, this…) пропускает."
             return
         }
+        fileName = nil
+        fileNote = nil
         candidates = ScanMatcher.match(found, in: modelContext.fetchAllWords())
         path.append(.results)
     }

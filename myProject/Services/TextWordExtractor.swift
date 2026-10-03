@@ -2,7 +2,7 @@ import Foundation
 import NaturalLanguage
 
 /// Слово, найденное в тексте (скан камерой, фото или вставленный текст)
-struct ExtractedWord: Identifiable, Hashable, Sendable {
+nonisolated struct ExtractedWord: Identifiable, Hashable, Sendable {
     /// Словарная форма: running → run, children → child
     let lemma: String
     /// Как слово встретилось в тексте впервые
@@ -17,8 +17,8 @@ struct ExtractedWord: Identifiable, Hashable, Sendable {
 }
 
 /// Выделяет из текста знаменательные слова (существительные, глаголы, прилагательные, наречия).
-/// Имена, названия, числа и служебные слова отбрасываются.
-enum TextWordExtractor {
+/// Имена, названия, числа и служебные слова отбрасываются. Работает и вне главного потока — для больших файлов
+nonisolated enum TextWordExtractor {
     private static let partsOfSpeech: [NLTag: String] = [
         .noun: "n.", .verb: "v.", .adjective: "adj.", .adverb: "adv."
     ]
@@ -50,6 +50,8 @@ enum TextWordExtractor {
 
         var order: [String] = []
         var found: [String: ExtractedWord] = [:]
+        // Слова идут по порядку — предложение ищем, сдвигаясь вперёд, а не перебором всего текста на каждое слово
+        var sentenceIndex = 0
         let options: NLTagger.Options = [.omitPunctuation, .omitWhitespace, .omitOther, .joinNames]
 
         tagger.enumerateTags(in: text.startIndex..<text.endIndex, unit: .word, scheme: .nameTypeOrLexicalClass, options: options) { tag, range in
@@ -64,7 +66,11 @@ enum TextWordExtractor {
             if found[lemma] != nil {
                 found[lemma]?.count += 1
             } else {
-                let sentence = sentences.first { $0.contains(range.lowerBound) } ?? range
+                while sentenceIndex < sentences.count, sentences[sentenceIndex].upperBound <= range.lowerBound {
+                    sentenceIndex += 1
+                }
+                let sentence = sentenceIndex < sentences.count && sentences[sentenceIndex].contains(range.lowerBound)
+                    ? sentences[sentenceIndex] : range
                 found[lemma] = ExtractedWord(lemma: lemma, surface: surface, partOfSpeech: pos,
                                              example: example(in: text, sentence: sentence, word: range), count: 1)
                 order.append(lemma)

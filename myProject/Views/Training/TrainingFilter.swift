@@ -38,8 +38,16 @@ enum TrainingFilter: Equatable {
         }
     }
 
-    /// Новые слова от простых к сложным (A1 → C2), внутри уровня вперемешку
+    /// Новые слова: сначала из словарей, созданных из файла, — от самых частых в файле;
+    /// остальные — от простых к сложным (A1 → C2), внутри уровня вперемешку
     private static func byLevel(_ words: [Word]) -> [Word] {
+        let frequencies = words.map { ($0, WordList.frequency(of: $0)) }
+        let fromFiles = frequencies.filter { $0.1 > 0 }.sorted { $0.1 > $1.1 }.map(\.0)
+        let rest = frequencies.filter { $0.1 == 0 }.map(\.0)
+        return fromFiles + byLevelOnly(rest)
+    }
+
+    private static func byLevelOnly(_ words: [Word]) -> [Word] {
         let groups = Dictionary(grouping: words, by: \.cefrLevel)
         let known = CEFRLevel.allCases.map(\.rawValue)
         let levels = known + groups.keys.filter { !known.contains($0) }.sorted()
