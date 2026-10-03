@@ -137,6 +137,8 @@ struct BooksView: View {
             Button { isShowingCatalog = true } label: {
                 Label("Каталог бесплатных книг", systemImage: "books.vertical")
                     .scaledFont(size: 17, weight: .semibold)
+                    // Кнопка цвета текста: в тёмной теме она светлая, надпись — цвета фона
+                    .foregroundStyle(Color.brandBackground)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
             }

@@ -268,7 +268,7 @@ struct QuizView: View {
     private func optionBackgroundColor(_ option: String) -> Color {
         guard showResult else {
             return colorScheme == .dark
-                ? Color(white: 0.16)
+                ? Color.brandInputBg
                 : Color(red: 0.94, green: 0.95, blue: 0.98)
         }
         if isOptionCorrect(option) {
@@ -277,13 +277,13 @@ struct QuizView: View {
         if selectedOption == option {
             return Color.red.opacity(colorScheme == .dark ? 0.25 : 0.18)
         }
-        return colorScheme == .dark ? Color(white: 0.12) : Color(red: 0.95, green: 0.95, blue: 0.97)
+        return colorScheme == .dark ? Color.cardBackground : Color(red: 0.95, green: 0.95, blue: 0.97)
     }
     
     private func optionForegroundColor(_ option: String) -> Color {
         guard showResult else {
             return colorScheme == .dark
-                ? .white
+                ? .brandDark
                 : Color(red: 0.2, green: 0.25, blue: 0.45)
         }
         if isOptionCorrect(option) {

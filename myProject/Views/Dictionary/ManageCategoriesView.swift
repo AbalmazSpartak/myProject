@@ -9,10 +9,14 @@ struct ManageCategoriesView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(categories) { category in
-                    Text(category.name)
+                Group {
+                    ForEach(categories) { category in
+                        Text(category.name)
+                    }
+                    .onDelete(perform: deleteCategories)
                 }
-                .onDelete(perform: deleteCategories)
+                // Строки — тёплого цвета карточек, а не системного серого
+                .listRowBackground(Color.cardBackground)
             }
             .brandListBackground()
             .navigationTitle("Управление папками")

@@ -26,6 +26,7 @@ struct GutenbergCatalogView: View {
                 }
                 ForEach(entries) { entry in
                     row(entry)
+                        .listRowBackground(Color.cardBackground)
                 }
                 if !isLoading && entries.isEmpty {
                     Text(query.isEmpty ? "Каталог недоступен — проверьте интернет." : "Ничего не нашлось. Попробуйте название или автора на английском.")

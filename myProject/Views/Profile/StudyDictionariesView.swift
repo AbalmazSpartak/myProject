@@ -19,47 +19,51 @@ struct StudyDictionariesView: View {
 
     var body: some View {
         Form {
-            Section {
-                LabeledContent("Слов для изучения", value: "\(allWords.filter { scope.includes($0) }.count)")
-                if !scope.isEverythingEnabled {
-                    Button("Включить все словари") { scope = StudyScope() }
-                }
-            } footer: {
-                Text("Слово попадает в тренировки, если отмечены его уровень, часть речи и тема. Например, уровень A1 и только «Глаголы» — это глаголы A1.")
-            }
-
-            if !lists.isEmpty {
-                Section {
-                    ForEach(lists) { list in
-                        checkRow(ScopeGroup(key: list.id.uuidString, title: list.name, count: list.words.count),
-                                 isOn: scope.enabledLists.contains(list.id)) {
-                            scope.enabledLists.formSymmetricDifference([list.id])
-                        }
-                    }
-                } header: {
-                    Text("Мои словари")
-                } footer: {
-                    Text("Если отмечен хотя бы один свой словарь, тренировки идут только по его словам — фильтры ниже не действуют.")
-                }
-            }
-
             Group {
-                Section("Уровни") {
-                    ForEach(levelGroups) { group in
-                        checkRow(group, isOn: !scope.disabledLevels.contains(group.key)) {
-                            scope.disabledLevels.formSymmetricDifference([group.key])
-                        }
+                Section {
+                    LabeledContent("Слов для изучения", value: "\(allWords.filter { scope.includes($0) }.count)")
+                    if !scope.isEverythingEnabled {
+                        Button("Включить все словари") { scope = StudyScope() }
                     }
-                    checkRow(ScopeGroup(key: "custom", title: "Мои слова", count: allWords.filter(\.isCustom).count),
-                             isOn: scope.includeCustomWords) {
-                        scope.includeCustomWords.toggle()
+                } footer: {
+                    Text("Слово попадает в тренировки, если отмечены его уровень, часть речи и тема. Например, уровень A1 и только «Глаголы» — это глаголы A1.")
+                }
+
+                if !lists.isEmpty {
+                    Section {
+                        ForEach(lists) { list in
+                            checkRow(ScopeGroup(key: list.id.uuidString, title: list.name, count: list.words.count),
+                                     isOn: scope.enabledLists.contains(list.id)) {
+                                scope.enabledLists.formSymmetricDifference([list.id])
+                            }
+                        }
+                    } header: {
+                        Text("Мои словари")
+                    } footer: {
+                        Text("Если отмечен хотя бы один свой словарь, тренировки идут только по его словам — фильтры ниже не действуют.")
                     }
                 }
 
-                groupSection("Части речи", groups: partOfSpeechGroups, disabled: \.disabledPartsOfSpeech)
-                groupSection("Темы", groups: topicGroups, disabled: \.disabledTopics)
+                Group {
+                    Section("Уровни") {
+                        ForEach(levelGroups) { group in
+                            checkRow(group, isOn: !scope.disabledLevels.contains(group.key)) {
+                                scope.disabledLevels.formSymmetricDifference([group.key])
+                            }
+                        }
+                        checkRow(ScopeGroup(key: "custom", title: "Мои слова", count: allWords.filter(\.isCustom).count),
+                                 isOn: scope.includeCustomWords) {
+                            scope.includeCustomWords.toggle()
+                        }
+                    }
+
+                    groupSection("Части речи", groups: partOfSpeechGroups, disabled: \.disabledPartsOfSpeech)
+                    groupSection("Темы", groups: topicGroups, disabled: \.disabledTopics)
+                }
+                .disabled(!scope.enabledLists.isEmpty)
             }
-            .disabled(!scope.enabledLists.isEmpty)
+            // Строки — тёплого цвета карточек, а не системного серого
+            .listRowBackground(Color.cardBackground)
         }
         .brandListBackground()
         .navigationTitle("Словари")

@@ -54,19 +54,23 @@ struct WordSearchView: View {
     var body: some View {
         NavigationStack {
             List {
-                if query.trimmingCharacters(in: .whitespaces).isEmpty {
-                    Text("Введите слово на английском или русском. Всего слов: \(index.count)")
-                        .foregroundStyle(.secondary)
-                } else if results.isEmpty {
-                    Text("Ничего не найдено")
-                        .foregroundStyle(.secondary)
-                } else {
-                    Section(footer: footer) {
-                        ForEach(results) { word in
-                            row(for: word)
+                Group {
+                    if query.trimmingCharacters(in: .whitespaces).isEmpty {
+                        Text("Введите слово на английском или русском. Всего слов: \(index.count)")
+                            .foregroundStyle(.secondary)
+                    } else if results.isEmpty {
+                        Text("Ничего не найдено")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Section(footer: footer) {
+                            ForEach(results) { word in
+                                row(for: word)
+                            }
                         }
                     }
                 }
+                // Строки — тёплого цвета карточек, а не системного серого
+                .listRowBackground(Color.cardBackground)
             }
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Поиск слова")
             .autocorrectionDisabled()

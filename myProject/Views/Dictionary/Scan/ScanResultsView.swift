@@ -92,53 +92,57 @@ struct ScanResultsView: View {
 
     var body: some View {
         List {
-            Section {
-                TextField("Название", text: $listName)
-            } header: {
-                Text("Новый словарь")
-            } footer: {
-                VStack(alignment: .leading, spacing: 4) {
-                    if let existing = existingList {
-                        Text("Словарь «\(existing.name)» уже есть — слова добавятся в него (\(existing.words.count) сейчас).")
-                    }
-                    if fileName != nil {
-                        Text("Слова отсортированы по частоте в файле. Новые слова этого словаря пойдут на изучение первыми — от самых частых.")
-                    }
-                    if let note { Text(note) }
-                }
-            }
-            if candidates.contains(where: Self.isLearning) {
+            Group {
                 Section {
-                    Toggle("Отмечать слова, которые уже учу", isOn: $selectLearning)
-                        .onChange(of: selectLearning) { _, isOn in
-                            // Меняем галочки только у уже изучаемых слов — отметки остальных не трогаем
-                            let ids = Set(candidates.filter(Self.isLearning).map(\.id))
-                            if isOn { selected.formUnion(ids) } else { selected.subtract(ids) }
+                    TextField("Название", text: $listName)
+                } header: {
+                    Text("Новый словарь")
+                } footer: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        if let existing = existingList {
+                            Text("Словарь «\(existing.name)» уже есть — слова добавятся в него (\(existing.words.count) сейчас).")
                         }
-                } footer: {
-                    Text("Тогда в словарь из текста сразу попадут все его слова. Настройка запоминается для следующих сканов.")
+                        if fileName != nil {
+                            Text("Слова отсортированы по частоте в файле. Новые слова этого словаря пойдут на изучение первыми — от самых частых.")
+                        }
+                        if let note { Text(note) }
+                    }
+                }
+                if candidates.contains(where: Self.isLearning) {
+                    Section {
+                        Toggle("Отмечать слова, которые уже учу", isOn: $selectLearning)
+                            .onChange(of: selectLearning) { _, isOn in
+                                // Меняем галочки только у уже изучаемых слов — отметки остальных не трогаем
+                                let ids = Set(candidates.filter(Self.isLearning).map(\.id))
+                                if isOn { selected.formUnion(ids) } else { selected.subtract(ids) }
+                            }
+                    } footer: {
+                        Text("Тогда в словарь из текста сразу попадут все его слова. Настройка запоминается для следующих сканов.")
+                    }
+                }
+                if !newWords.isEmpty {
+                    Section {
+                        ForEach(newWords) { newWordRow($0) }
+                    } header: {
+                        sectionHeader("Новые слова", items: newWords)
+                    } footer: {
+                        Text(newWordsFooter)
+                    }
+                }
+                if !knownWords.isEmpty {
+                    Section {
+                        ForEach(knownWords) { knownWordRow($0) }
+                    } header: {
+                        sectionHeader("Уже есть в базе", items: knownWords)
+                    } footer: {
+                        Text(selectLearning
+                             ? "Из базы слово попадёт в словарь, оставаясь в своей теме и со своим прогрессом."
+                             : "Слова, которые вы уже учите, не отмечены. Из базы слово попадёт в словарь, оставаясь в своей теме.")
+                    }
                 }
             }
-            if !newWords.isEmpty {
-                Section {
-                    ForEach(newWords) { newWordRow($0) }
-                } header: {
-                    sectionHeader("Новые слова", items: newWords)
-                } footer: {
-                    Text(newWordsFooter)
-                }
-            }
-            if !knownWords.isEmpty {
-                Section {
-                    ForEach(knownWords) { knownWordRow($0) }
-                } header: {
-                    sectionHeader("Уже есть в базе", items: knownWords)
-                } footer: {
-                    Text(selectLearning
-                         ? "Из базы слово попадёт в словарь, оставаясь в своей теме и со своим прогрессом."
-                         : "Слова, которые вы уже учите, не отмечены. Из базы слово попадёт в словарь, оставаясь в своей теме.")
-                }
-            }
+            // Строки — тёплого цвета карточек, а не системного серого
+            .listRowBackground(Color.cardBackground)
         }
         .brandListBackground()
         .navigationTitle("Найдено слов: \(candidates.count)")

@@ -10,66 +10,70 @@ struct MainMenuSettingsView: View {
 
     var body: some View {
         List {
-            Section {
-                ForEach(FixedRibbon.allCases, id: \.self) { ribbon in
-                    HStack(spacing: 12) {
-                        Image(systemName: ribbon.icon)
-                            .foregroundColor(.secondary)
-                            .frame(width: 24)
-                        Text(ribbon.title)
-                        Spacer()
-                        Toggle(ribbon.title, isOn: Binding(
-                            get: { !layout.isHidden(ribbon) },
-                            set: { layout.setHidden(!$0, for: ribbon) }
-                        ))
-                        .labelsHidden()
-                    }
-                }
-            } header: {
-                Text("Постоянные ленты")
-            } footer: {
-                Text("«Слово дня» и «Ваши подборки» всегда вверху «Обзора». Их можно только скрыть.")
-            }
-
-            Section {
-                ForEach(layout.items.filter { !Self.isTab($0) }, id: \.self) { item in
-                    topLevelRow(item)
-                }
-                .onMove(perform: moveTopLevel)
-            } header: {
-                Text("Порядок лент")
-            } footer: {
-                Text("Каждая группа — отдельная лента на «Обзоре», разделы вне групп — лента «Разделы». Профиль и Словарь — во вкладках внизу. Нажмите на группу, чтобы изменить её. Скрытая группа скрывается целиком.")
-            }
-
-            ForEach(layout.orderedGroups) { group in
+            Group {
                 Section {
-                    if group.sections.isEmpty {
-                        Text("Пусто — перенесите сюда разделы кнопкой ⋯")
-                            .foregroundStyle(.secondary)
+                    ForEach(FixedRibbon.allCases, id: \.self) { ribbon in
+                        HStack(spacing: 12) {
+                            Image(systemName: ribbon.icon)
+                                .foregroundColor(.secondary)
+                                .frame(width: 24)
+                            Text(ribbon.title)
+                            Spacer()
+                            Toggle(ribbon.title, isOn: Binding(
+                                get: { !layout.isHidden(ribbon) },
+                                set: { layout.setHidden(!$0, for: ribbon) }
+                            ))
+                            .labelsHidden()
+                        }
                     }
-                    ForEach(group.sections.filter { !$0.isTab }, id: \.self) { section in
-                        sectionRow(section)
-                    }
-                    .onMove { moveInGroup(group.id, from: $0, to: $1) }
                 } header: {
-                    Text("В группе «\(group.name)»")
+                    Text("Постоянные ленты")
                 } footer: {
-                    if !group.sections.isEmpty, layout.visibleSections(in: group.id).isEmpty {
-                        Text("Все разделы скрыты — группа не показывается в меню.")
+                    Text("«Слово дня» и «Ваши подборки» всегда вверху «Обзора». Их можно только скрыть.")
+                }
+
+                Section {
+                    ForEach(layout.items.filter { !Self.isTab($0) }, id: \.self) { item in
+                        topLevelRow(item)
+                    }
+                    .onMove(perform: moveTopLevel)
+                } header: {
+                    Text("Порядок лент")
+                } footer: {
+                    Text("Каждая группа — отдельная лента на «Обзоре», разделы вне групп — лента «Разделы». Профиль и Словарь — во вкладках внизу. Нажмите на группу, чтобы изменить её. Скрытая группа скрывается целиком.")
+                }
+
+                ForEach(layout.orderedGroups) { group in
+                    Section {
+                        if group.sections.isEmpty {
+                            Text("Пусто — перенесите сюда разделы кнопкой ⋯")
+                                .foregroundStyle(.secondary)
+                        }
+                        ForEach(group.sections.filter { !$0.isTab }, id: \.self) { section in
+                            sectionRow(section)
+                        }
+                        .onMove { moveInGroup(group.id, from: $0, to: $1) }
+                    } header: {
+                        Text("В группе «\(group.name)»")
+                    } footer: {
+                        if !group.sections.isEmpty, layout.visibleSections(in: group.id).isEmpty {
+                            Text("Все разделы скрыты — группа не показывается в меню.")
+                        }
                     }
                 }
-            }
 
-            Section {
-                Button {
-                    isCreatingGroup = true
-                } label: {
-                    Label("Новая группа", systemImage: "folder.badge.plus")
+                Section {
+                    Button {
+                        isCreatingGroup = true
+                    } label: {
+                        Label("Новая группа", systemImage: "folder.badge.plus")
+                    }
+                    Button("По умолчанию") { isConfirmingReset = true }
+                        .disabled(layout == .standard)
                 }
-                Button("По умолчанию") { isConfirmingReset = true }
-                    .disabled(layout == .standard)
             }
+            // Строки — тёплого цвета карточек, а не системного серого
+            .listRowBackground(Color.cardBackground)
         }
         // Ручки для перетаскивания видны сразу, без кнопки «Изменить»
         .environment(\.editMode, .constant(.active))

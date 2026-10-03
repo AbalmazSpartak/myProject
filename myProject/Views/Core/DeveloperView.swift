@@ -19,61 +19,65 @@ struct DeveloperView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Статус базы") {
-                    LabeledContent("Слов всего", value: "\(allWords.count)")
-                    LabeledContent("Категорий", value: "\(categories.count)")
-                    LabeledContent("Профилей", value: "\(profiles.count)")
-                    LabeledContent("Слов на повторении (due)", value: "\(dueWordsCount)")
-                    LabeledContent("Слов с ошибками", value: "\(allWords.filter { $0.isMistake }.count)")
-                }
-                
-                Section("Уровни CEFR") {
-                    ForEach(CEFRLevel.allCases, id: \.rawValue) { level in
-                        LabeledContent(level.rawValue, value: "\(allWords.filter { $0.cefrLevel == level.rawValue }.count)")
+                Group {
+                    Section("Статус базы") {
+                        LabeledContent("Слов всего", value: "\(allWords.count)")
+                        LabeledContent("Категорий", value: "\(categories.count)")
+                        LabeledContent("Профилей", value: "\(profiles.count)")
+                        LabeledContent("Слов на повторении (due)", value: "\(dueWordsCount)")
+                        LabeledContent("Слов с ошибками", value: "\(allWords.filter { $0.isMistake }.count)")
                     }
-                }
                 
-                Section(footer: Text("Удаляет встроенные слова и заново грузит words.csv. Свои слова пользователя, профиль и статистику не трогает.")) {
-                    Button("Перезагрузить встроенный словарь") {
-                        showConfirmReseed = true
+                    Section("Уровни CEFR") {
+                        ForEach(CEFRLevel.allCases, id: \.rawValue) { level in
+                            LabeledContent(level.rawValue, value: "\(allWords.filter { $0.cefrLevel == level.rawValue }.count)")
+                        }
                     }
-                }
                 
-                Section("Эмуляция времени (FSRS)") {
-                    Stepper("Сдвинуть dueDate на \(daysToShift) дн. назад", value: $daysToShift, in: 1...60)
+                    Section(footer: Text("Удаляет встроенные слова и заново грузит words.csv. Свои слова пользователя, профиль и статистику не трогает.")) {
+                        Button("Перезагрузить встроенный словарь") {
+                            showConfirmReseed = true
+                        }
+                    }
+                
+                    Section("Эмуляция времени (FSRS)") {
+                        Stepper("Сдвинуть dueDate на \(daysToShift) дн. назад", value: $daysToShift, in: 1...60)
                     
-                    Button("Применить сдвиг") {
-                        shiftDueDates(by: daysToShift)
-                    }
+                        Button("Применить сдвиг") {
+                            shiftDueDates(by: daysToShift)
+                        }
                     
-                    Button("Сбросить FSRS-прогресс всех слов", role: .destructive) {
-                        showConfirmFSRSReset = true
+                        Button("Сбросить FSRS-прогресс всех слов", role: .destructive) {
+                            showConfirmFSRSReset = true
+                        }
                     }
-                }
                 
-                Section(footer: Text("Удаляет ВСЕ слова, категории и профиль без возможности восстановления.")) {
-                    Button("Полный сброс базы", role: .destructive) {
-                        showConfirmReset = true
+                    Section(footer: Text("Удаляет ВСЕ слова, категории и профиль без возможности восстановления.")) {
+                        Button("Полный сброс базы", role: .destructive) {
+                            showConfirmReset = true
+                        }
                     }
-                }
                 
-                Section(footer: Text("Добавляет слова-заглушки для проверки прокрутки и фильтров на большом объёме данных. Помечены отдельной категорией «Тестовые данные» — легко удалить одной кнопкой.")) {
-                    Button("Добавить 200 тестовых слов") {
-                        generateTestWords(count: 200)
-                    }
+                    Section(footer: Text("Добавляет слова-заглушки для проверки прокрутки и фильтров на большом объёме данных. Помечены отдельной категорией «Тестовые данные» — легко удалить одной кнопкой.")) {
+                        Button("Добавить 200 тестовых слов") {
+                            generateTestWords(count: 200)
+                        }
                     
-                    Button("Удалить все тестовые слова", role: .destructive) {
-                        deleteTestWords()
+                        Button("Удалить все тестовые слова", role: .destructive) {
+                            deleteTestWords()
+                        }
                     }
-                }
                 
-                if let message = lastActionMessage {
-                    Section {
-                        Text(message)
-                            .font(.footnote)
-                            .foregroundColor(.gray)
+                    if let message = lastActionMessage {
+                        Section {
+                            Text(message)
+                                .font(.footnote)
+                                .foregroundColor(.gray)
+                        }
                     }
                 }
+                // Строки — тёплого цвета карточек, а не системного серого
+                .listRowBackground(Color.cardBackground)
             }
             .brandListBackground()
             .navigationTitle("Раздел разработчика")

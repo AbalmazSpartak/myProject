@@ -175,6 +175,7 @@ struct BookReaderView: View {
                         }
                     }
                 }
+                .listRowBackground(Color.cardBackground)
             }
             .brandListBackground()
             .navigationTitle("Оглавление")

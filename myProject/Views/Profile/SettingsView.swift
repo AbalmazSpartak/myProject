@@ -27,146 +27,156 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                // Личные данные
-                Section(header: Text("Личные данные")) {
-                    HStack(spacing: 16) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.teal.opacity(0.15))
-                                .frame(width: 60, height: 60)
-                            
-                            if let data = profile.avatarData, let uiImage = UIImage(data: data) {
-                                Image(uiImage: uiImage)
-                                    .resizable()
-                                    .scaledToFill()
+                Group {
+                    // Личные данные
+                    Section(header: Text("Личные данные")) {
+                        HStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.teal.opacity(0.15))
                                     .frame(width: 60, height: 60)
-                                    .clipShape(Circle())
-                            } else {
-                                Image(systemName: "person.fill")
-                                    .scaledFont(size: 30)
-                                    .foregroundColor(.teal)
+                            
+                                if let data = profile.avatarData, let uiImage = UIImage(data: data) {
+                                    Image(uiImage: uiImage)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 60, height: 60)
+                                        .clipShape(Circle())
+                                } else {
+                                    Image(systemName: "person.fill")
+                                        .scaledFont(size: 30)
+                                        .foregroundColor(.teal)
+                                }
+                            }
+                        
+                            VStack(alignment: .leading, spacing: 6) {
+                                // Подпись PhotosPicker — Sendable-замыкание: профиль читаем заранее
+                                let photoButtonTitle = profile.avatarData == nil ? "Загрузить фото" : "Изменить фото"
+                                PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                                    Text(photoButtonTitle)
+                                        .scaledFont(size: 15, weight: .semibold)
+                                        .foregroundColor(.teal)
+                                }
+                            
+                                if profile.avatarData != nil {
+                                    Button("Удалить фото", role: .destructive) {
+                                        profile.avatarData = nil
+                                        selectedPhotoItem = nil
+                                    }
+                                    .scaledFont(size: 13)
+                                }
                             }
                         }
+                        .padding(.vertical, 4)
+                    
+                        TextField("Ваше имя", text: $profile.name)
+                            .autocorrectionDisabled()
+                    }
+                
+                    // Обучение
+                    Section(header: Text("Обучение"), footer: Text("Новые слова в «На повторение» идут от простых к сложным, счётчик обнуляется в полночь. После подхода можно продолжить или вернуться в меню.")) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Направление перевода")
+                                .scaledFont(size: 14)
+                                .foregroundColor(.gray)
                         
-                        VStack(alignment: .leading, spacing: 6) {
-                            // Подпись PhotosPicker — Sendable-замыкание: профиль читаем заранее
-                            let photoButtonTitle = profile.avatarData == nil ? "Загрузить фото" : "Изменить фото"
-                            PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                                Text(photoButtonTitle)
-                                    .scaledFont(size: 15, weight: .semibold)
-                                    .foregroundColor(.teal)
+                            Picker("Направление перевода", selection: $translationMode) {
+                                Text("Англ ➔ Рус").tag("en_ru")
+                                Text("Рус ➔ Англ").tag("ru_en")
                             }
-                            
-                            if profile.avatarData != nil {
-                                Button("Удалить фото", role: .destructive) {
-                                    profile.avatarData = nil
-                                    selectedPhotoItem = nil
-                                }
-                                .scaledFont(size: 13)
+                            .pickerStyle(.segmented)
+                        }
+                        .padding(.vertical, 4)
+
+                        Toggle("Картинки к словам", isOn: $showWordImages)
+
+                        Picker("Новых слов в день", selection: $newWordsPerDay) {
+                            ForEach(DailyNewWords.limitOptions, id: \.self) { limit in
+                                Text(limit == 0 ? "Без лимита" : "\(limit)").tag(limit)
                             }
+                        }
+
+                        Picker("Слов за подход", selection: $sessionLength) {
+                            ForEach(SessionLength.options, id: \.self) { length in
+                                Text(length == 0 ? "Все" : "\(length)").tag(length)
+                            }
+                        }
+
+                        NavigationLink {
+                            StudyDictionariesView()
+                        } label: {
+                            LabeledContent("Словари", value: studyScope.isEverythingEnabled ? "Все" : "Выбранные")
                         }
                     }
-                    .padding(.vertical, 4)
-                    
-                    TextField("Ваше имя", text: $profile.name)
-                        .autocorrectionDisabled()
-                }
                 
-                // Обучение
-                Section(header: Text("Обучение"), footer: Text("Новые слова в «На повторение» идут от простых к сложным, счётчик обнуляется в полночь. После подхода можно продолжить или вернуться в меню.")) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Направление перевода")
-                            .scaledFont(size: 14)
-                            .foregroundColor(.gray)
-                        
-                        Picker("Направление перевода", selection: $translationMode) {
-                            Text("Англ ➔ Рус").tag("en_ru")
-                            Text("Рус ➔ Англ").tag("ru_en")
+                    // Озвучка
+                    Section(header: Text("Озвучка"), footer: Text("При переводе с русского на английский слово звучит после ответа, чтобы не подсказывать.")) {
+                        Picker("Акцент", selection: $speechAccent) {
+                            Text("Американский").tag("en-US")
+                            Text("Британский").tag("en-GB")
                         }
                         .pickerStyle(.segmented)
-                    }
-                    .padding(.vertical, 4)
 
-                    Toggle("Картинки к словам", isOn: $showWordImages)
-
-                    Picker("Новых слов в день", selection: $newWordsPerDay) {
-                        ForEach(DailyNewWords.limitOptions, id: \.self) { limit in
-                            Text(limit == 0 ? "Без лимита" : "\(limit)").tag(limit)
-                        }
-                    }
-
-                    Picker("Слов за подход", selection: $sessionLength) {
-                        ForEach(SessionLength.options, id: \.self) { length in
-                            Text(length == 0 ? "Все" : "\(length)").tag(length)
-                        }
-                    }
-
-                    NavigationLink {
-                        StudyDictionariesView()
-                    } label: {
-                        LabeledContent("Словари", value: studyScope.isEverythingEnabled ? "Все" : "Выбранные")
-                    }
-                }
-                
-                // Озвучка
-                Section(header: Text("Озвучка"), footer: Text("При переводе с русского на английский слово звучит после ответа, чтобы не подсказывать.")) {
-                    Picker("Акцент", selection: $speechAccent) {
-                        Text("Американский").tag("en-US")
-                        Text("Британский").tag("en-GB")
-                    }
-                    .pickerStyle(.segmented)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Скорость речи")
-                        Slider(value: $speechRate, in: SpeechSettings.rateRange) {
+                        VStack(alignment: .leading, spacing: 4) {
                             Text("Скорость речи")
-                        } minimumValueLabel: {
-                            Image(systemName: "tortoise.fill").foregroundColor(.gray)
-                        } maximumValueLabel: {
-                            Image(systemName: "hare.fill").foregroundColor(.gray)
+                            Slider(value: $speechRate, in: SpeechSettings.rateRange) {
+                                Text("Скорость речи")
+                            } minimumValueLabel: {
+                                Image(systemName: "tortoise.fill").foregroundColor(.gray)
+                            } maximumValueLabel: {
+                                Image(systemName: "hare.fill").foregroundColor(.gray)
+                            }
+                        }
+                        .padding(.vertical, 4)
+
+                        Toggle("Озвучивать слово сразу", isOn: $autoSpeak)
+
+                        Button {
+                            TextToSpeechManager.shared.speak("Hello! This is how English words will sound.")
+                        } label: {
+                            Label("Прослушать", systemImage: "speaker.wave.2.fill")
                         }
                     }
-                    .padding(.vertical, 4)
 
-                    Toggle("Озвучивать слово сразу", isOn: $autoSpeak)
+                    // Напоминание
+                    Section {
+                        Toggle("Напоминать заниматься", isOn: Binding(get: { reminderEnabled }, set: setReminder))
+                        if reminderEnabled {
+                            DatePicker("Время", selection: reminderDate, displayedComponents: .hourAndMinute)
+                        }
+                    } header: {
+                        Text("Напоминание")
+                    } footer: {
+                        Text(notificationsDenied
+                             ? "Уведомления запрещены — включите их в Настройках iPhone → WordLearner → Уведомления."
+                             : "Раз в день, без спешки и счётчиков — просто повод уделить словам пару минут.")
+                    }
 
-                    Button {
-                        TextToSpeechManager.shared.speak("Hello! This is how English words will sound.")
-                    } label: {
-                        Label("Прослушать", systemImage: "speaker.wave.2.fill")
-                    }
-                }
+                    // Оформление
+                    Section(header: Text("Оформление")) {
+                        Picker("Тема оформления", selection: $selectedTheme) {
+                            Text("Системная").tag("system")
+                            Text("Светлая").tag("light")
+                            Text("Тёмная").tag("dark")
+                        }
+                        .pickerStyle(.segmented)
 
-                // Напоминание
-                Section {
-                    Toggle("Напоминать заниматься", isOn: Binding(get: { reminderEnabled }, set: setReminder))
-                    if reminderEnabled {
-                        DatePicker("Время", selection: reminderDate, displayedComponents: .hourAndMinute)
+                        NavigationLink {
+                            MainMenuSettingsView()
+                        } label: {
+                            LabeledContent("Ленты «Обзора»", value: menuLayout == .standard ? "Стандартное" : "Настроено")
+                        }
                     }
-                } header: {
-                    Text("Напоминание")
-                } footer: {
-                    Text(notificationsDenied
-                         ? "Уведомления запрещены — включите их в Настройках iPhone → WordLearner → Уведомления."
-                         : "Раз в день, без спешки и счётчиков — просто повод уделить словам пару минут.")
-                }
-
-                // Оформление
-                Section(header: Text("Оформление")) {
-                    // Выбор темы вернётся вместе с тёмной палитрой «журнала»; пока приложение всегда светлое
-                    NavigationLink {
-                        MainMenuSettingsView()
-                    } label: {
-                        LabeledContent("Ленты «Обзора»", value: menuLayout == .standard ? "Стандартное" : "Настроено")
+                    #if DEBUG
+                    Section {
+                        NavigationLink("🛠️ Раздел разработчика") {
+                            DeveloperView()
+                        }
                     }
+                    #endif
                 }
-                #if DEBUG
-                Section {
-                    NavigationLink("🛠️ Раздел разработчика") {
-                        DeveloperView()
-                    }
-                }
-                #endif
+                // Строки — тёплого цвета карточек, а не системного серого
+                .listRowBackground(Color.cardBackground)
             }
             .brandListBackground()
             .navigationTitle("Настройки")

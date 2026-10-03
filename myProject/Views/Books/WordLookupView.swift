@@ -140,6 +140,7 @@ struct WordLookupView: View {
             Label(isAdded ? "В словаре «\(bookTitle)»" : "В словарь «\(bookTitle)»",
                   systemImage: isAdded ? "checkmark.circle.fill" : "plus.circle.fill")
                 .scaledFont(size: 16, weight: .semibold)
+                .foregroundStyle(isAdded ? Color.white : Color.brandBackground)
                 .lineLimit(2)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)

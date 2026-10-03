@@ -68,65 +68,69 @@ struct TopicEditorView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Раздел") {
-                    Picker("Раздел", selection: $section) {
-                        ForEach(sections, id: \.self) { Text($0).tag($0) }
-                        Text("Новый раздел…").tag(Self.newSectionTag)
+                Group {
+                    Section("Раздел") {
+                        Picker("Раздел", selection: $section) {
+                            ForEach(sections, id: \.self) { Text($0).tag($0) }
+                            Text("Новый раздел…").tag(Self.newSectionTag)
+                        }
+                        if section == Self.newSectionTag {
+                            TextField("Название, например «Грамматика»", text: $newSection)
+                        }
                     }
-                    if section == Self.newSectionTag {
-                        TextField("Название, например «Грамматика»", text: $newSection)
+
+                    Section("Тема") {
+                        TextField("Заголовок", text: $title)
                     }
-                }
 
-                Section("Тема") {
-                    TextField("Заголовок", text: $title)
-                }
+                    ForEach($blocks) { $block in
+                        Section {
+                            blockEditor($block)
+                        } header: {
+                            blockHeader(block)
+                        }
+                    }
 
-                ForEach($blocks) { $block in
                     Section {
-                        blockEditor($block)
-                    } header: {
-                        blockHeader(block)
+                        Menu {
+                            ForEach(TopicBlock.Kind.allCases, id: \.self) { kind in
+                                Button {
+                                    blocks.append(TopicBlock(kind: kind))
+                                } label: {
+                                    Label(kind.title, systemImage: kind.icon)
+                                }
+                            }
+                        } label: {
+                            Label("Добавить блок", systemImage: "plus.square.on.square")
+                        }
+                    } footer: {
+                        Text("Подзаголовок, текст, таблица или аудио — в любом порядке. В тексте и таблицах: **жирный**, *курсив*, ==красный==.")
                     }
-                }
 
-                Section {
-                    Menu {
-                        ForEach(TopicBlock.Kind.allCases, id: \.self) { kind in
-                            Button {
-                                blocks.append(TopicBlock(kind: kind))
-                            } label: {
-                                Label(kind.title, systemImage: kind.icon)
+                    Section {
+                        ForEach($words) { $word in
+                            HStack {
+                                TextField("English", text: $word.english)
+                                    .textInputAutocapitalization(.never)
+                                    .autocorrectionDisabled()
+                                Divider()
+                                TextField("Перевод", text: $word.russian)
                             }
                         }
-                    } label: {
-                        Label("Добавить блок", systemImage: "plus.square.on.square")
-                    }
-                } footer: {
-                    Text("Подзаголовок, текст, таблица или аудио — в любом порядке. В тексте и таблицах: **жирный**, *курсив*, ==красный==.")
-                }
-
-                Section {
-                    ForEach($words) { $word in
-                        HStack {
-                            TextField("English", text: $word.english)
-                                .textInputAutocapitalization(.never)
-                                .autocorrectionDisabled()
-                            Divider()
-                            TextField("Перевод", text: $word.russian)
+                        .onDelete { words.remove(atOffsets: $0) }
+                        Button {
+                            words.append(TopicWord(english: "", russian: ""))
+                        } label: {
+                            Label("Добавить слово", systemImage: "plus")
                         }
+                    } header: {
+                        Text("Слова")
+                    } footer: {
+                        Text("Необязательно. Читатели темы смогут добавить эти слова себе в словарь. Пустые строки не сохраняются.")
                     }
-                    .onDelete { words.remove(atOffsets: $0) }
-                    Button {
-                        words.append(TopicWord(english: "", russian: ""))
-                    } label: {
-                        Label("Добавить слово", systemImage: "plus")
-                    }
-                } header: {
-                    Text("Слова")
-                } footer: {
-                    Text("Необязательно. Читатели темы смогут добавить эти слова себе в словарь. Пустые строки не сохраняются.")
                 }
+                // Строки — тёплого цвета карточек, а не системного серого
+                .listRowBackground(Color.cardBackground)
             }
             .brandListBackground()
             .onDisappear { AudioClipPlayer.shared.stop() }

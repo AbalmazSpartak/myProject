@@ -46,7 +46,7 @@ struct ContentView: View {
             DictionaryView(showsBackButton: false)
                 .tabItem { Label("Словарь", systemImage: "book.closed.fill") }
         }
-        .tint(.brandDark)
+        .tint(.brandTint)
         .toolbarBackground(Color.brandFill, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
     }

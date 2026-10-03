@@ -30,54 +30,58 @@ struct MenuGroupEditorView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section {
-                    preview
-                }
-
-                Section("Название") {
-                    TextField("Например, «Каждый день»", text: $name)
-                }
-
-                Section("Иконка") {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 6), spacing: 14) {
-                        ForEach(MenuPalette.icons, id: \.self) { symbol in
-                            Button { icon = symbol } label: {
-                                Image(systemName: symbol)
-                                    .scaledFont(size: 20)
-                                    .foregroundColor(symbol == icon ? .white : MenuPalette.color(named: colorName))
-                                    .frame(width: 40, height: 40)
-                                    .background(symbol == icon ? MenuPalette.color(named: colorName) : Color.brandFill)
-                                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.vertical, 6)
-                }
-
-                Section("Цвет") {
-                    HStack {
-                        ForEach(MenuPalette.colors, id: \.name) { item in
-                            Button { colorName = item.name } label: {
-                                Circle()
-                                    .fill(item.color)
-                                    .frame(width: 30, height: 30)
-                                    .overlay(Circle().stroke(Color.primary, lineWidth: item.name == colorName ? 3 : 0).padding(-4))
-                            }
-                            .buttonStyle(.plain)
-                            .frame(maxWidth: .infinity)
-                        }
-                    }
-                    .padding(.vertical, 6)
-                }
-
-                if group != nil, onDelete != nil {
+                Group {
                     Section {
-                        Button("Удалить группу", role: .destructive) { isConfirmingDelete = true }
-                    } footer: {
-                        Text("Разделы группы не удалятся — они встанут в меню на её место.")
+                        preview
+                    }
+
+                    Section("Название") {
+                        TextField("Например, «Каждый день»", text: $name)
+                    }
+
+                    Section("Иконка") {
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 6), spacing: 14) {
+                            ForEach(MenuPalette.icons, id: \.self) { symbol in
+                                Button { icon = symbol } label: {
+                                    Image(systemName: symbol)
+                                        .scaledFont(size: 20)
+                                        .foregroundColor(symbol == icon ? .white : MenuPalette.color(named: colorName))
+                                        .frame(width: 40, height: 40)
+                                        .background(symbol == icon ? MenuPalette.color(named: colorName) : Color.brandFill)
+                                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.vertical, 6)
+                    }
+
+                    Section("Цвет") {
+                        HStack {
+                            ForEach(MenuPalette.colors, id: \.name) { item in
+                                Button { colorName = item.name } label: {
+                                    Circle()
+                                        .fill(item.color)
+                                        .frame(width: 30, height: 30)
+                                        .overlay(Circle().stroke(Color.primary, lineWidth: item.name == colorName ? 3 : 0).padding(-4))
+                                }
+                                .buttonStyle(.plain)
+                                .frame(maxWidth: .infinity)
+                            }
+                        }
+                        .padding(.vertical, 6)
+                    }
+
+                    if group != nil, onDelete != nil {
+                        Section {
+                            Button("Удалить группу", role: .destructive) { isConfirmingDelete = true }
+                        } footer: {
+                            Text("Разделы группы не удалятся — они встанут в меню на её место.")
+                        }
                     }
                 }
+                // Строки — тёплого цвета карточек, а не системного серого
+                .listRowBackground(Color.cardBackground)
             }
             .brandListBackground()
             .navigationTitle(group == nil ? "Новая группа" : "Группа")
