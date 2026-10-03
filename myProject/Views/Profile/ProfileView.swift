@@ -7,6 +7,7 @@ struct ProfileView: View {
     @Query private var profiles: [UserProfile]
     
     @State private var showSettings = false
+    @State private var levelProgress: [LevelProgress] = []
     
     private var profile: UserProfile {
         if let existing = profiles.first {
@@ -16,11 +17,6 @@ struct ProfileView: View {
             modelContext.insert(newProfile)
             return newProfile
         }
-    }
-    
-    private var winRate: Int {
-        guard profile.totalAnswers > 0 else { return 0 }
-        return Int((Double(profile.correctAnswers) / Double(profile.totalAnswers)) * 100)
     }
     
     var body: some View {
@@ -77,39 +73,10 @@ struct ProfileView: View {
                         .foregroundColor(.brandDark)
                 }
                 
-                // Общая сводка
-                HStack(spacing: 12) {
-                    summaryCard(title: "Слов в словаре", value: "\((try? modelContext.fetchCount(FetchDescriptor<Word>())) ?? 0)", icon: "book.closed.fill", color: .orange)
-                    summaryCard(title: "Общая точность", value: "\(winRate)%", icon: "target", color: .green)
-                    summaryCard(title: "Всего ответов", value: "\(profile.totalAnswers)", icon: "checkmark.seal.fill", color: .purple)
-                }
-                .padding(.horizontal, 20)
+                LevelProgressCard(progress: levelProgress)
+                    .padding(.horizontal, 20)
                 
-                // Секция 1: Карточки для запоминания
-                sectionCard(
-                    title: "Карточки для запоминания",
-                    icon: "keyboard.fill",
-                    color: .blue,
-                    enRuCorrect: profile.flashcardsEnRuCorrect,
-                    enRuTotal: profile.flashcardsEnRuTotal,
-                    ruEnCorrect: profile.flashcardsRuEnCorrect,
-                    ruEnTotal: profile.flashcardsRuEnTotal
-                )
-                .padding(.horizontal, 20)
-                
-                // Секция 2: Викторина
-                sectionCard(
-                    title: "Викторина",
-                    icon: "checkmark.seal.fill",
-                    color: .purple,
-                    enRuCorrect: profile.quizEnRuCorrect,
-                    enRuTotal: profile.quizEnRuTotal,
-                    ruEnCorrect: profile.quizRuEnCorrect,
-                    ruEnTotal: profile.quizRuEnTotal
-                )
-                .padding(.horizontal, 20)
-                
-                // Секция 3: Тетрис слов (Рекорд)
+                // Рекорд Тетриса
                 tetrisSectionCard(
                     title: "Тетрис слов",
                     icon: "gamecontroller.fill",
@@ -122,67 +89,12 @@ struct ProfileView: View {
             }
         }
         .background(Color.brandBackground.ignoresSafeArea())
+        // Тренировки идут на другой вкладке — при переходе сюда прогресс пересчитывается
+        .onAppear(perform: reloadProgress)
         .sheet(isPresented: $showSettings) {
             SettingsView(profile: profile)
                 .appThemedColorScheme()
         }
-    }
-    
-    // Карточка общей краткой статистики
-    private func summaryCard(title: String, value: String, icon: String, color: Color) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .foregroundColor(color)
-                .font(.title3)
-            Text(value)
-                .scaledFont(size: 20, weight: .bold, design: .rounded)
-                .foregroundColor(.brandDark)
-            Text(title)
-                .scaledFont(size: 11, weight: .medium)
-                .foregroundColor(.gray)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .background(Color.cardBackground)
-        .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 3)
-    }
-    
-    // Блок детализированной статистики раздела
-    private func sectionCard(
-        title: String,
-        icon: String,
-        color: Color,
-        enRuCorrect: Int,
-        enRuTotal: Int,
-        ruEnCorrect: Int,
-        ruEnTotal: Int
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(color.opacity(0.12))
-                        .frame(width: 36, height: 36)
-                    Image(systemName: icon)
-                        .foregroundColor(color)
-                        .scaledFont(size: 18)
-                }
-                Text(title)
-                    .scaledFont(size: 18, weight: .bold, design: .rounded)
-                    .foregroundColor(.brandDark)
-            }
-            
-            Divider()
-            
-            detailRow(label: "Английский ➔ Русский", correct: enRuCorrect, total: enRuTotal)
-            detailRow(label: "Русский ➔ Английский", correct: ruEnCorrect, total: ruEnTotal)
-        }
-        .padding(16)
-        .background(Color.cardBackground)
-        .cornerRadius(20)
-        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
     }
     
     // Блок рекорда Тетриса
@@ -218,32 +130,7 @@ struct ProfileView: View {
         .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
     }
     
-    // Строка отдельного языкового направления
-    private func detailRow(label: String, correct: Int, total: Int) -> some View {
-        let percent = total > 0 ? Int((Double(correct) / Double(total)) * 100) : 0
-        
-        return HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(label)
-                    .scaledFont(size: 14, weight: .semibold, design: .rounded)
-                    .foregroundColor(.brandDark)
-                Text("\(correct) из \(total) ответов")
-                    .scaledFont(size: 12)
-                    .foregroundColor(.gray)
-            }
-            
-            Spacer()
-            
-            Text("\(percent)%")
-                .scaledFont(size: 16, weight: .bold, design: .rounded)
-                .foregroundColor(total > 0 ? (percent >= 70 ? .green : .orange) : .gray)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-                .background(
-                    (total > 0 ? (percent >= 70 ? Color.green : Color.orange) : Color.gray)
-                        .opacity(0.12)
-                )
-                .cornerRadius(8)
-        }
+    private func reloadProgress() {
+        levelProgress = LevelProgress.all(from: modelContext.fetchAllWords())
     }
 }

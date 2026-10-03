@@ -22,7 +22,6 @@ struct SettingsView: View {
     /// Пользователь запретил уведомления — подсказываем, где их включить
     @State private var notificationsDenied = false
 
-    @State private var showingResetAlert = false
     @State private var selectedPhotoItem: PhotosPickerItem?
     
     var body: some View {
@@ -168,18 +167,6 @@ struct SettingsView: View {
                     }
                 }
                 #endif
-                // Управление данными
-                Section(header: Text("Управление данными"), footer: Text("Сброс статистики удалит информацию о пройденных тестах и проценте правильных ответов. Ваши слова в словаре останутся нетронутыми.")) {
-                    Button(role: .destructive, action: {
-                        showingResetAlert = true
-                    }) {
-                        HStack {
-                            Text("Сбросить статистику")
-                            Spacer()
-                            Image(systemName: "trash")
-                        }
-                    }
-                }
             }
             .brandListBackground()
             .navigationTitle("Настройки")
@@ -205,21 +192,6 @@ struct SettingsView: View {
                         }
                     }
                 }
-            }
-            .alert("Сброс статистики", isPresented: $showingResetAlert) {
-                Button("Отмена", role: .cancel) { }
-                Button("Сбросить", role: .destructive) {
-                    profile.flashcardsEnRuCorrect = 0
-                    profile.flashcardsEnRuTotal = 0
-                    profile.flashcardsRuEnCorrect = 0
-                    profile.flashcardsRuEnTotal = 0
-                    profile.quizEnRuCorrect = 0
-                    profile.quizEnRuTotal = 0
-                    profile.quizRuEnCorrect = 0
-                    profile.quizRuEnTotal = 0
-                }
-            } message: {
-                Text("Вы уверены, что хотите сбросить всю детализированную статистику? Это действие нельзя отменить.")
             }
         }
     }
