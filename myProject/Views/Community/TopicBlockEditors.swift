@@ -22,36 +22,109 @@ struct TopicTableEditor: View {
             set: { table.resize(rows: table.rows, columns: $0) }
         ), in: TopicTable.columnRange)
         Toggle("Первая строка — шапка", isOn: $table.hasHeaderRow)
-        Toggle("Первый столбец — подписи", isOn: $table.hasHeaderColumn)
+        Toggle("Столбец подписей", isOn: $table.hasHeaderColumn)
+        if table.hasHeaderColumn {
+            Picker("Подписи", selection: $table.labelsOnRight) {
+                Text("Слева").tag(false)
+                Text("Справа").tag(true)
+            }
+            .pickerStyle(.segmented)
+        }
 
         ScrollView(.horizontal, showsIndicators: false) {
-            Grid(horizontalSpacing: 6, verticalSpacing: 6) {
-                ForEach(0..<table.rows, id: \.self) { row in
-                    GridRow {
-                        ForEach(0..<table.columns, id: \.self) { column in
-                            cellField(row: row, column: column)
-                        }
-                    }
+            SpanGridLayout(rows: table.rows, columns: table.columns, minColumnWidth: 110, maxColumnWidth: 160) {
+                ForEach(table.visibleCells) { cell in
+                    cellField(cell)
+                        .gridCellPlacement(GridCellPlacement(row: cell.row, column: cell.column,
+                                                             rowSpan: cell.style.rowSpan, columnSpan: cell.style.columnSpan))
                 }
             }
             .padding(.vertical, 4)
         }
+
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Как будет выглядеть")
+                .font(.footnote)
+                .foregroundColor(.secondary)
+            TopicTableView(table: table)
+        }
     }
 
-    private func cellField(row: Int, column: Int) -> some View {
-        let isHeader = (table.hasHeaderRow && row == 0) || (table.hasHeaderColumn && column == 0)
-        // В ячейке может быть несколько строк: «I / you / we / they» — каждое с новой строки
-        return TextField("", text: Binding(
-            get: { row < table.rows && column < table.columns ? table.cells[row][column] : "" },
-            set: { if row < table.rows && column < table.columns { table.cells[row][column] = $0 } }
-        ), axis: .vertical)
-        .textInputAutocapitalization(.never)
-        .autocorrectionDisabled()
-        .font(isHeader ? .body.weight(.semibold) : .body)
+    private func cellField(_ cell: TopicTable.Cell) -> some View {
+        let (row, column, style) = (cell.row, cell.column, cell.style)
+        let isHeader = table.isHeader(row: row, column: column)
+        return VStack(alignment: .leading, spacing: 2) {
+            // В ячейке может быть несколько строк: «I / you / we / they» — каждое с новой строки
+            TextField("", text: Binding(
+                get: { row < table.rows && column < table.columns ? table.cells[row][column] : "" },
+                set: { if row < table.rows && column < table.columns { table.cells[row][column] = $0 } }
+            ), axis: .vertical)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .font(isHeader ? .body.weight(.semibold) : .body)
+            .italic(style.italic)
+            .foregroundColor(TableCellAppearance.color(style.tone))
+            .multilineTextAlignment(TableCellAppearance.textAlignment(style.alignment))
+
+            Spacer(minLength: 0)
+            HStack(spacing: 4) {
+                if style.vertical {
+                    Image(systemName: "arrow.down")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                Spacer(minLength: 0)
+                cellMenu(row: row, column: column, style: style)
+            }
+        }
         .padding(6)
-        .frame(width: 120, alignment: .topLeading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(isHeader ? Color.brandAccent.opacity(0.6) : Color.brandInputBg)
         .cornerRadius(6)
+        .padding(3)
+    }
+
+    /// ⋯ у ячейки: объединение и оформление
+    private func cellMenu(row: Int, column: Int, style: TableCellStyle) -> some View {
+        func update(_ change: (inout TableCellStyle) -> Void) {
+            var style = table.style(row: row, column: column)
+            change(&style)
+            table.setStyle(style, row: row, column: column)
+        }
+        return Menu {
+            Section {
+                Button { table.mergeRight(row: row, column: column) } label: {
+                    Label("Объединить вправо", systemImage: "arrow.right.to.line")
+                }
+                .disabled(!table.canMergeRight(row: row, column: column))
+                Button { table.mergeDown(row: row, column: column) } label: {
+                    Label("Объединить вниз", systemImage: "arrow.down.to.line")
+                }
+                .disabled(!table.canMergeDown(row: row, column: column))
+                if style.rowSpan > 1 || style.columnSpan > 1 {
+                    Button { table.split(row: row, column: column) } label: {
+                        Label("Разделить", systemImage: "square.split.2x2")
+                    }
+                }
+            }
+            Section {
+                Picker("Цвет", selection: Binding(get: { style.tone }, set: { tone in update { $0.tone = tone } })) {
+                    ForEach(TableCellStyle.Tone.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.menu)
+                Picker("Выравнивание", selection: Binding(get: { style.alignment }, set: { alignment in update { $0.alignment = alignment } })) {
+                    ForEach(TableCellStyle.Alignment.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.menu)
+                Toggle("Курсив", isOn: Binding(get: { style.italic }, set: { italic in update { $0.italic = italic } }))
+                Toggle("Вертикально", isOn: Binding(get: { style.vertical }, set: { vertical in update { $0.vertical = vertical } }))
+            }
+        } label: {
+            Image(systemName: style == TableCellStyle() ? "ellipsis.circle" : "ellipsis.circle.fill")
+                .font(.callout)
+                .foregroundColor(.secondary)
+        }
+        .accessibilityLabel("Ячейка: объединение и оформление")
     }
 }
 

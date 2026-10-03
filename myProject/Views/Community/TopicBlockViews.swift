@@ -29,9 +29,31 @@ struct TopicBlockView: View {
     }
 }
 
-/// **жирный** и *курсив* в тексте и ячейках таблиц
+/// Разметка текста и ячеек: **жирный**, *курсив*, ==красный==
 enum TopicText {
+    static let highlight = Color(red: 0.80, green: 0.18, blue: 0.16)
+
     static func attributed(_ text: String) -> AttributedString {
+        var parts = text.components(separatedBy: "==")
+        // Непарное «==» оставляем как есть
+        if parts.count.isMultiple(of: 2), let last = parts.popLast() {
+            parts[parts.count - 1] += "==" + last
+        }
+        var result = AttributedString()
+        for (index, part) in parts.enumerated() where !part.isEmpty {
+            var piece = markdown(part)
+            if !index.isMultiple(of: 2) { piece.foregroundColor = highlight }
+            result += piece
+        }
+        return result
+    }
+
+    /// Без разметки — для вертикальной подписи, где каждая буква на своей строке
+    static func plain(_ text: String) -> String {
+        String(attributed(text).characters)
+    }
+
+    private static func markdown(_ text: String) -> AttributedString {
         let options = AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)
         return (try? AttributedString(markdown: text, options: options)) ?? AttributedString(text)
     }
@@ -39,19 +61,17 @@ enum TopicText {
 
 // MARK: - Таблица
 
-/// Таблица с тонкими линиями; шире экрана — листается вбок
+/// Таблица с тонкими линиями и объединёнными ячейками; шире экрана — листается вбок
 struct TopicTableView: View {
     let table: TopicTable
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            Grid(horizontalSpacing: 0, verticalSpacing: 0) {
-                ForEach(0..<table.rows, id: \.self) { row in
-                    GridRow {
-                        ForEach(0..<table.columns, id: \.self) { column in
-                            cell(row: row, column: column)
-                        }
-                    }
+            SpanGridLayout(rows: table.rows, columns: table.columns) {
+                ForEach(table.visibleCells) { cell in
+                    cellView(cell)
+                        .gridCellPlacement(GridCellPlacement(row: cell.row, column: cell.column,
+                                                             rowSpan: cell.style.rowSpan, columnSpan: cell.style.columnSpan))
                 }
             }
             .background(Color.cardBackground)
@@ -60,17 +80,51 @@ struct TopicTableView: View {
         .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
     }
 
-    private func cell(row: Int, column: Int) -> some View {
-        let isHeader = (table.hasHeaderRow && row == 0) || (table.hasHeaderColumn && column == 0)
-        return Text(TopicText.attributed(table.cells[row][column]))
+    private func cellView(_ cell: TopicTable.Cell) -> some View {
+        let style = cell.style
+        let isHeader = table.isHeader(row: cell.row, column: cell.column)
+        let raw = table.cells[cell.row][cell.column]
+        let text = style.vertical
+            ? AttributedString(TopicText.plain(raw).map(String.init).joined(separator: "\n"))
+            : TopicText.attributed(raw)
+        return Text(text)
             .scaledFont(size: 16, weight: isHeader ? .semibold : .regular, design: .serif)
-            .foregroundColor(.brandDark)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 10)
+            .italic(style.italic)
+            .foregroundColor(TableCellAppearance.color(style.tone))
+            .multilineTextAlignment(style.vertical ? .center : TableCellAppearance.textAlignment(style.alignment))
+            .padding(.horizontal, style.vertical ? 6 : 10)
             .padding(.vertical, 8)
-            .frame(minWidth: 64, maxWidth: .infinity, maxHeight: .infinity)
+            .frame(maxWidth: .infinity, maxHeight: .infinity,
+                   alignment: style.vertical ? .center : TableCellAppearance.frameAlignment(style.alignment))
             .background(isHeader ? Color.brandFill : Color.clear)
             .overlay(Rectangle().stroke(Color.brandDark.opacity(0.18), lineWidth: 0.5))
+    }
+}
+
+/// Цвет и выравнивание ячейки — общие для таблицы и её редактора
+enum TableCellAppearance {
+    static func color(_ tone: TableCellStyle.Tone) -> Color {
+        switch tone {
+        case .normal: return .brandDark
+        case .red: return TopicText.highlight
+        case .gray: return .gray
+        }
+    }
+
+    static func textAlignment(_ alignment: TableCellStyle.Alignment) -> TextAlignment {
+        switch alignment {
+        case .leading: return .leading
+        case .center: return .center
+        case .trailing: return .trailing
+        }
+    }
+
+    static func frameAlignment(_ alignment: TableCellStyle.Alignment) -> Alignment {
+        switch alignment {
+        case .leading: return .leading
+        case .center: return .center
+        case .trailing: return .trailing
+        }
     }
 }
 
