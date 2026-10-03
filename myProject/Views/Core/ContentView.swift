@@ -12,6 +12,7 @@ enum ActiveScreen: Hashable, Identifiable {
     case race
     case help
     case community
+    case books
     /// Тема сообщества из «Ваших подборок»
     case topic(CommunityTopic)
 
@@ -73,6 +74,8 @@ struct ContentView: View {
             HelpView()
         case .community:
             CommunityView()
+        case .books:
+            BooksView()
         case .topic(let topic):
             TopicView(topic: topic, backTitle: "Обзор")
         }

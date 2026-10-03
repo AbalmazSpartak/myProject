@@ -80,6 +80,17 @@ nonisolated enum TextWordExtractor {
         return order.compactMap { found[$0] }
     }
 
+    /// Словарная форма и часть речи слова, на которое нажали в тексте: «ran» в предложении → «run», «v.»
+    static func lemma(of word: String, at range: Range<String.Index>, in sentence: String) -> (lemma: String, partOfSpeech: String) {
+        let tagger = NLTagger(tagSchemes: [.lexicalClass, .lemma])
+        tagger.string = sentence
+        tagger.setLanguage(.english, range: sentence.startIndex..<sentence.endIndex)
+        let lemma = tagger.tag(at: range.lowerBound, unit: .word, scheme: .lemma).0?.rawValue.lowercased()
+        let lexical = tagger.tag(at: range.lowerBound, unit: .word, scheme: .lexicalClass).0
+        let partOfSpeech = lexical.flatMap { partsOfSpeech[$0] } ?? ""
+        return (lemma.flatMap { isWordLike($0) ? $0 : nil } ?? word.lowercased(), partOfSpeech)
+    }
+
     /// Только латинские буквы (и дефис внутри), минимум 2 буквы, не аббревиатура вроде USA.
     /// Апостроф отсекает обрывки сокращений: n't, 're, 's
     private static func isWordLike(_ token: String) -> Bool {

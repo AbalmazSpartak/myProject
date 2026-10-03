@@ -32,3 +32,17 @@ final class WordList {
         self.createdAt = Date()
     }
 }
+
+extension WordList {
+    /// Свой словарь с таким названием (без учёта регистра и пробелов по краям) или новый
+    static func named(_ name: String, context: ModelContext) -> WordList {
+        let name = name.trimmingCharacters(in: .whitespaces)
+        let lists = (try? context.fetch(FetchDescriptor<WordList>())) ?? []
+        if let existing = lists.first(where: { $0.name.trimmingCharacters(in: .whitespaces).caseInsensitiveCompare(name) == .orderedSame }) {
+            return existing
+        }
+        let list = WordList(name: name)
+        context.insert(list)
+        return list
+    }
+}

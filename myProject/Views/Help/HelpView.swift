@@ -11,6 +11,7 @@ enum HelpTopic: String, CaseIterable, Identifiable {
     case tetris
     case race
     case community
+    case books
 
     var id: String { rawValue }
 
@@ -25,6 +26,7 @@ enum HelpTopic: String, CaseIterable, Identifiable {
         case .tetris: return "Тетрис слов"
         case .race: return "Гонка слов"
         case .community: return "Сообщество"
+        case .books: return "Книги"
         }
     }
 
@@ -39,6 +41,7 @@ enum HelpTopic: String, CaseIterable, Identifiable {
         case .tetris: return "gamecontroller.fill"
         case .race: return "car.fill"
         case .community: return "person.3.fill"
+        case .books: return "books.vertical.fill"
         }
     }
 
@@ -53,6 +56,7 @@ enum HelpTopic: String, CaseIterable, Identifiable {
         case .tetris: return .indigo
         case .race: return .green
         case .community: return .cyan
+        case .books: return .brown
         }
     }
 
@@ -68,6 +72,7 @@ enum HelpTopic: String, CaseIterable, Identifiable {
         case .tetris: TetrisHelpView()
         case .race: RaceHelpView()
         case .community: CommunityHelpView()
+        case .books: BooksHelpView()
         }
     }
 }

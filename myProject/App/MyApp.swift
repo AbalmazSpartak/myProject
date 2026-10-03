@@ -9,7 +9,7 @@ struct MyApp: App {
     init() {
         do {
             // Инициализируем контейнер для всех используемых моделей данных
-            let sharedContainer = try ModelContainer(for: Word.self, Category.self, UserProfile.self, WordList.self, CommunityTopic.self, TopicAudioClip.self)
+            let sharedContainer = try ModelContainer(for: Word.self, Category.self, UserProfile.self, WordList.self, CommunityTopic.self, TopicAudioClip.self, Book.self)
             self.container = sharedContainer
             
             // Извлекаем контекст в локальную переменную, чтобы безопасно передать его в Task
