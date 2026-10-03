@@ -87,7 +87,29 @@ struct TopicTableView: View {
     private func cellView(_ cell: TopicTable.Cell) -> some View {
         let style = cell.style
         let isHeader = table.isHeader(row: cell.row, column: cell.column)
-        let raw = table.cells[cell.row][cell.column]
+        let parts = table.parts(row: cell.row, column: cell.column)
+        return Group {
+            if parts.isEmpty {
+                singleText(table.cells[cell.row][cell.column], style: style, isHeader: isHeader)
+            } else {
+                // Столбцы внутри ячейки — каждый своей ширины, без линий, по центру по высоте;
+                // лишнее место ячейки — поровну между столбцами
+                HStack(alignment: .center, spacing: 0) {
+                    ForEach(Array(parts.enumerated()), id: \.offset) { index, part in
+                        if index > 0 { Spacer(minLength: 10) }
+                        partText(part, cellStyle: style, isHeader: isHeader)
+                    }
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .background(isHeader ? Color.brandFill : Color.clear)
+        .overlay(Rectangle().stroke(Color.brandDark.opacity(0.18), lineWidth: 0.5))
+    }
+
+    private func singleText(_ raw: String, style: TableCellStyle, isHeader: Bool) -> some View {
         let text = style.vertical
             ? AttributedString(TopicText.plain(raw).map(String.init).joined(separator: "\n"))
             : TopicText.attributed(raw)
@@ -100,8 +122,16 @@ struct TopicTableView: View {
             .padding(.vertical, 8)
             .frame(maxWidth: .infinity, maxHeight: .infinity,
                    alignment: style.vertical ? .center : TableCellAppearance.frameAlignment(style.alignment))
-            .background(isHeader ? Color.brandFill : Color.clear)
-            .overlay(Rectangle().stroke(Color.brandDark.opacity(0.18), lineWidth: 0.5))
+    }
+
+    private func partText(_ part: TableCellPart, cellStyle: TableCellStyle, isHeader: Bool) -> some View {
+        Text(TopicText.attributed(part.text))
+            .scaledFont(size: 16, weight: isHeader ? .semibold : .regular, design: .serif)
+            .italic(part.italic || cellStyle.italic)
+            .foregroundColor(TableCellAppearance.color(part.tone == .normal ? cellStyle.tone : part.tone))
+            .multilineTextAlignment(TableCellAppearance.textAlignment(part.alignment))
+            // Строки части не переносятся — «love?» и «Does» не рвутся; новые строки автор ставит сам
+            .fixedSize(horizontal: true, vertical: false)
     }
 }
 

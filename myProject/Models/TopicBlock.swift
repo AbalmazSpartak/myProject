@@ -66,6 +66,8 @@ struct TopicTable: Codable, Hashable {
     var labelsOnRight = false
     /// Стили и объединения — только у ячеек, где они отличаются от обычных; ключ — «строка:столбец»
     var styles: [String: TableCellStyle] = [:]
+    /// Ячейки, разделённые на столбцы внутри («Will | I…she | love?»); у них текст — в частях, а не в cells
+    var parts: [String: [TableCellPart]] = [:]
 
     static let rowRange = 1...15
     static let columnRange = 1...12
@@ -88,6 +90,52 @@ struct TopicTable: Codable, Hashable {
     func isHeader(row: Int, column: Int) -> Bool {
         (hasHeaderRow && row == 0)
             || (hasHeaderColumn && column == (labelsOnRight ? columns - 1 : 0))
+    }
+
+    // MARK: - Столбцы внутри ячейки
+
+    static let partRange = 2...4
+
+    /// Пусто — ячейка не разделена
+    func parts(row: Int, column: Int) -> [TableCellPart] {
+        parts[Self.key(row, column)] ?? []
+    }
+
+    mutating func setPart(_ part: TableCellPart, at index: Int, row: Int, column: Int) {
+        let key = Self.key(row, column)
+        guard var cellParts = parts[key], cellParts.indices.contains(index) else { return }
+        cellParts[index] = part
+        parts[key] = cellParts
+    }
+
+    /// Делит ячейку на count столбцов: текст ячейки уходит в первый. Лишние столбцы при уменьшении
+    /// не теряют текст — он дописывается в последний оставшийся
+    mutating func splitIntoParts(_ count: Int, row: Int, column: Int) {
+        let key = Self.key(row, column)
+        var cellParts = parts[key] ?? [TableCellPart(text: cells[row][column])]
+        if cellParts.count > count {
+            let dropped = cellParts[count...].map(\.text).filter { !$0.isEmpty }
+            cellParts.removeLast(cellParts.count - count)
+            if !dropped.isEmpty {
+                cellParts[count - 1].text = ([cellParts[count - 1].text] + dropped).filter { !$0.isEmpty }.joined(separator: "\n")
+            }
+        }
+        while cellParts.count < count { cellParts.append(TableCellPart()) }
+        parts[key] = cellParts
+    }
+
+    /// Обратно в одну ячейку: тексты частей — друг под другом
+    mutating func removeParts(row: Int, column: Int) {
+        let key = Self.key(row, column)
+        guard let cellParts = parts[key] else { return }
+        cells[row][column] = cellParts.map(\.text).filter { !$0.isEmpty }.joined(separator: "\n")
+        parts[key] = nil
+    }
+
+    /// Все ячейки и части пустые
+    var isEmpty: Bool {
+        cells.joined().allSatisfy { $0.trimmingCharacters(in: .whitespaces).isEmpty }
+            && parts.values.joined().allSatisfy { $0.text.trimmingCharacters(in: .whitespaces).isEmpty }
     }
 
     // MARK: - Объединение
@@ -182,6 +230,10 @@ struct TopicTable: Codable, Hashable {
             kept[key] = style
         }
         styles = kept
+        parts = parts.filter { key, _ in
+            guard let (row, column) = Self.position(key) else { return false }
+            return row < rows && column < columns
+        }
     }
 
     static func key(_ row: Int, _ column: Int) -> String { "\(row):\(column)" }
@@ -193,7 +245,7 @@ struct TopicTable: Codable, Hashable {
 
     // Таблицы первой версии — без labelsOnRight и styles
     private enum CodingKeys: String, CodingKey {
-        case cells, hasHeaderRow, hasHeaderColumn, labelsOnRight, styles
+        case cells, hasHeaderRow, hasHeaderColumn, labelsOnRight, styles, parts
     }
 
     init(from decoder: Decoder) throws {
@@ -203,7 +255,16 @@ struct TopicTable: Codable, Hashable {
         hasHeaderColumn = try container.decode(Bool.self, forKey: .hasHeaderColumn)
         labelsOnRight = try container.decodeIfPresent(Bool.self, forKey: .labelsOnRight) ?? false
         styles = try container.decodeIfPresent([String: TableCellStyle].self, forKey: .styles) ?? [:]
+        parts = try container.decodeIfPresent([String: [TableCellPart]].self, forKey: .parts) ?? [:]
     }
+}
+
+/// Столбец внутри ячейки: свой текст и оформление. Обычный цвет и выключенный курсив — как у самой ячейки
+struct TableCellPart: Codable, Hashable {
+    var text = ""
+    var tone = TableCellStyle.Tone.normal
+    var italic = false
+    var alignment = TableCellStyle.Alignment.center
 }
 
 /// Оформление ячейки таблицы и её объединение с соседними

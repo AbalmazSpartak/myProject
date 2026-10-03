@@ -214,7 +214,7 @@ struct TopicEditorView: View {
             case .heading, .text:
                 return block.text.isEmpty ? nil : block
             case .table:
-                return block.table.cells.joined().allSatisfy { $0.trimmingCharacters(in: .whitespaces).isEmpty } ? nil : block
+                return block.table.isEmpty ? nil : block
             case .audio:
                 if block.audioSource == .speech {
                     block.audioClipID = nil

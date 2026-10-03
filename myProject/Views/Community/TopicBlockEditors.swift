@@ -32,7 +32,7 @@ struct TopicTableEditor: View {
         }
 
         ScrollView(.horizontal, showsIndicators: false) {
-            SpanGridLayout(rows: table.rows, columns: table.columns, minColumnWidth: 110, maxColumnWidth: 160) {
+            SpanGridLayout(rows: table.rows, columns: table.columns, minColumnWidth: 110, maxColumnWidth: 360) {
                 ForEach(table.visibleCells) { cell in
                     cellField(cell)
                         .gridCellPlacement(GridCellPlacement(row: cell.row, column: cell.column,
@@ -53,18 +53,27 @@ struct TopicTableEditor: View {
     private func cellField(_ cell: TopicTable.Cell) -> some View {
         let (row, column, style) = (cell.row, cell.column, cell.style)
         let isHeader = table.isHeader(row: row, column: column)
+        let parts = table.parts(row: row, column: column)
         return VStack(alignment: .leading, spacing: 2) {
-            // В ячейке может быть несколько строк: «I / you / we / they» — каждое с новой строки
-            TextField("", text: Binding(
-                get: { row < table.rows && column < table.columns ? table.cells[row][column] : "" },
-                set: { if row < table.rows && column < table.columns { table.cells[row][column] = $0 } }
-            ), axis: .vertical)
-            .textInputAutocapitalization(.never)
-            .autocorrectionDisabled()
-            .font(isHeader ? .body.weight(.semibold) : .body)
-            .italic(style.italic)
-            .foregroundColor(TableCellAppearance.color(style.tone))
-            .multilineTextAlignment(TableCellAppearance.textAlignment(style.alignment))
+            if parts.isEmpty {
+                // В ячейке может быть несколько строк: «I / you / we / they» — каждое с новой строки
+                TextField("", text: Binding(
+                    get: { row < table.rows && column < table.columns ? table.cells[row][column] : "" },
+                    set: { if row < table.rows && column < table.columns { table.cells[row][column] = $0 } }
+                ), axis: .vertical)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .font(isHeader ? .body.weight(.semibold) : .body)
+                .italic(style.italic)
+                .foregroundColor(TableCellAppearance.color(style.tone))
+                .multilineTextAlignment(TableCellAppearance.textAlignment(style.alignment))
+            } else {
+                HStack(alignment: .top, spacing: 4) {
+                    ForEach(parts.indices, id: \.self) { index in
+                        partField(index, part: parts[index], row: row, column: column, cellStyle: style, isHeader: isHeader)
+                    }
+                }
+            }
 
             Spacer(minLength: 0)
             HStack(spacing: 4) {
@@ -103,7 +112,23 @@ struct TopicTableEditor: View {
                 .disabled(!table.canMergeDown(row: row, column: column))
                 if style.rowSpan > 1 || style.columnSpan > 1 {
                     Button { table.split(row: row, column: column) } label: {
-                        Label("Разделить", systemImage: "square.split.2x2")
+                        Label("Отменить объединение", systemImage: "square.split.2x2")
+                    }
+                }
+            }
+            Section {
+                // «Will | I…she | love?» в одной ячейке — без пробелов для выравнивания
+                Menu {
+                    ForEach(TopicTable.partRange, id: \.self) { count in
+                        Button("\(count) столбца") { table.splitIntoParts(count, row: row, column: column) }
+                            .disabled(table.parts(row: row, column: column).count == count)
+                    }
+                } label: {
+                    Label("Разделить на столбцы", systemImage: "rectangle.split.3x1")
+                }
+                if !table.parts(row: row, column: column).isEmpty {
+                    Button { table.removeParts(row: row, column: column) } label: {
+                        Label("Убрать столбцы", systemImage: "rectangle")
                     }
                 }
             }
@@ -125,6 +150,55 @@ struct TopicTableEditor: View {
                 .foregroundColor(.secondary)
         }
         .accessibilityLabel("Ячейка: объединение и оформление")
+    }
+
+    /// Столбец внутри ячейки: поле и своё оформление
+    private func partField(_ index: Int, part: TableCellPart, row: Int, column: Int,
+                           cellStyle: TableCellStyle, isHeader: Bool) -> some View {
+        func update(_ change: (inout TableCellPart) -> Void) {
+            let current = table.parts(row: row, column: column)
+            guard current.indices.contains(index) else { return }
+            var part = current[index]
+            change(&part)
+            table.setPart(part, at: index, row: row, column: column)
+        }
+        return VStack(alignment: .leading, spacing: 2) {
+            TextField("", text: Binding(
+                get: { table.parts(row: row, column: column).indices.contains(index) ? table.parts(row: row, column: column)[index].text : "" },
+                set: { text in update { $0.text = text } }
+            ), axis: .vertical)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .font(isHeader ? .body.weight(.semibold) : .body)
+            .italic(part.italic || cellStyle.italic)
+            .foregroundColor(TableCellAppearance.color(part.tone == .normal ? cellStyle.tone : part.tone))
+            .multilineTextAlignment(TableCellAppearance.textAlignment(part.alignment))
+            .padding(4)
+            .frame(minWidth: 70, idealWidth: 80, maxWidth: .infinity, alignment: .topLeading)
+            .background(Color.cardBackground.opacity(0.7))
+            .cornerRadius(4)
+
+            HStack {
+                Spacer(minLength: 0)
+                Menu {
+                    Picker("Цвет", selection: Binding(get: { part.tone }, set: { tone in update { $0.tone = tone } })) {
+                        ForEach(TableCellStyle.Tone.allCases, id: \.self) { Text($0.title).tag($0) }
+                    }
+                    .pickerStyle(.menu)
+                    Picker("Выравнивание", selection: Binding(get: { part.alignment }, set: { alignment in update { $0.alignment = alignment } })) {
+                        ForEach(TableCellStyle.Alignment.allCases, id: \.self) { Text($0.title).tag($0) }
+                    }
+                    .pickerStyle(.menu)
+                    Toggle("Курсив", isOn: Binding(get: { part.italic }, set: { italic in update { $0.italic = italic } }))
+                } label: {
+                    Image(systemName: "paintbrush")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityLabel("Оформление столбца \(index + 1)")
+                Spacer(minLength: 0)
+            }
+        }
     }
 }
 
