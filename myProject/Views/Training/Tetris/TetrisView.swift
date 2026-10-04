@@ -39,6 +39,9 @@ struct TetrisView: View {
     @State private var dropInterval: Double = 0.6
     @State private var lastTickTime = Date()
     
+    /// Сторона клетки поля: на iPhone 22, на iPad — сколько помещается на экране
+    @State private var cellSize: CGFloat = 22
+
     @State private var isSoftDropping: Bool = false
     @State private var lastHorizontalStep: Int = 0
     
@@ -129,7 +132,7 @@ struct TetrisView: View {
                             ForEach(0..<cols, id: \.self) { c in
                                 Rectangle()
                                     .fill(cellColor(r: r, c: c))
-                                    .frame(width: 22, height: 22)
+                                    .frame(width: cellSize, height: cellSize)
                                     .cornerRadius(3)
                             }
                         }
@@ -183,6 +186,7 @@ struct TetrisView: View {
                             // на отпускание пальца больше ничего делать не нужно
                         }
                 )
+                .modifier(PadBoardFit { size in fitCells(to: size) })
                 Spacer()
             }
             .background(Color.brandBackground.ignoresSafeArea())
@@ -293,6 +297,13 @@ struct TetrisView: View {
         }
     }
     
+    /// iPad: поле 10 × 20 занимает свободное место, клетки — от 22 до 48 точек
+    private func fitCells(to size: CGSize) {
+        let byHeight = (size.height - 12 - CGFloat(rows - 1) * 2 - 16) / CGFloat(rows)
+        let byWidth = (size.width - 12 - CGFloat(cols - 1) * 2 - 32) / CGFloat(cols)
+        cellSize = max(22, min(48, floor(min(byHeight, byWidth))))
+    }
+
     private func cellColor(r: Int, c: Int) -> Color {
         if let staticColor = grid[r][c] {
             return staticColor
@@ -550,6 +561,28 @@ struct TetrisView: View {
             if score > profile.tetrisHighScore {
                 profile.tetrisHighScore = score
             }
+        }
+    }
+}
+
+/// На iPad поле занимает всё место до низа экрана и узнаёт его размер; на iPhone ничего не меняет
+private struct PadBoardFit: ViewModifier {
+    let onSize: (CGSize) -> Void
+
+    func body(content: Content) -> some View {
+        if PadLayout.isPad {
+            content
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .background {
+                    // Не onGeometryChange: его замыкание iOS может вызвать не на главном потоке
+                    GeometryReader { proxy in
+                        Color.clear
+                            .onAppear { onSize(proxy.size) }
+                            .onChange(of: proxy.size) { _, size in onSize(size) }
+                    }
+                }
+        } else {
+            content
         }
     }
 }

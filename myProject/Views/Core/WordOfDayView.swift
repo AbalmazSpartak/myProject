@@ -25,11 +25,13 @@ struct WordOfDayCarousel: View {
     let words: [Word]
 
     var body: some View {
+        // Значение — заранее: замыкание размера SwiftUI может вызвать не на главном потоке
+        let maxWidth = PadLayout.wordOfDayMaxWidth
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: 12) {
                 ForEach(Array(words.enumerated()), id: \.offset) { offset, word in
                     WordOfDayCard(word: word, label: Self.label(daysAgo: offset))
-                        .containerRelativeFrame(.horizontal) { width, _ in width - 56 }
+                        .containerRelativeFrame(.horizontal) { width, _ in min(width - 56, maxWidth) }
                 }
             }
             .scrollTargetLayout()

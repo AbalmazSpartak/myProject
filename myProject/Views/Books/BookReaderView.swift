@@ -44,6 +44,7 @@ struct BookReaderView: View {
             }
         }
         .background(Color.brandBackground.ignoresSafeArea())
+        .readableColumn(720)
         .task { open() }
         .onChange(of: visibleParagraph) { _, paragraph in
             guard let paragraph, chapterStarts.indices.contains(chapterIndex) else { return }

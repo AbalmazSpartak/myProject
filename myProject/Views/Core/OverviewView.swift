@@ -155,10 +155,10 @@ struct TileCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(color.opacity(0.18))
-                    .frame(width: 150, height: 96)
+                    .frame(width: PadLayout.tileSize.width, height: PadLayout.tileSize.height)
                     .overlay {
                         Image(systemName: icon)
-                            .scaledFont(size: 30, weight: .semibold)
+                            .scaledFont(size: PadLayout.isPad ? 40 : 30, weight: .semibold)
                             .foregroundColor(color)
                     }
                 Text(title)
@@ -166,7 +166,7 @@ struct TileCard: View {
                     .foregroundColor(.brandDark)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
-                    .frame(width: 150, alignment: .leading)
+                    .frame(width: PadLayout.tileSize.width, alignment: .leading)
             }
         }
         .buttonStyle(.plain)
@@ -183,14 +183,14 @@ struct CollectionCard: View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: 8) {
                 cover
-                    .frame(width: 150, height: 96)
+                    .frame(width: PadLayout.tileSize.width, height: PadLayout.tileSize.height)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 Text(name)
                     .scaledFont(size: 15, weight: .medium)
                     .foregroundColor(.brandDark)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
-                    .frame(width: 150, alignment: .leading)
+                    .frame(width: PadLayout.tileSize.width, alignment: .leading)
             }
         }
         .buttonStyle(.plain)

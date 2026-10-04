@@ -52,6 +52,7 @@ struct TopicView: View {
             }
         }
         .background(Color.brandBackground.ignoresSafeArea())
+        .readableColumn()
         .sheet(isPresented: $isEditing) {
             TopicEditorView(sections: CommunitySections.all(from: topics), editing: topic)
                 .appThemedColorScheme()

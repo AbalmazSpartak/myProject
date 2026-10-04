@@ -41,9 +41,11 @@ struct ContentView: View {
             .tabItem { Label("Обзор", systemImage: "safari.fill") }
 
             ProfileView()
+                .readableColumn()
                 .tabItem { Label("Профиль", systemImage: "person.fill") }
 
             DictionaryView(showsBackButton: false)
+                .readableColumn()
                 .tabItem { Label("Словарь", systemImage: "book.closed.fill") }
         }
         .tint(.brandTint)
@@ -56,22 +58,32 @@ struct ContentView: View {
         switch screen {
         case .profile:
             ProfileView()
+                .readableColumn()
         case .flashcardsFSRS:
             FlashcardsView()
+                .readableColumn()
         case .quiz:
             QuizView()
+                .readableColumn()
         case .cloze:
             ClozeView()
+                .readableColumn()
         case .inputCards:
             InputFlashcardsView()
+                .readableColumn()
         case .dictionary:
             DictionaryView()
+                .readableColumn()
         case .tetris:
             TetrisView()
+                .readableColumn()
         case .race:
             RaceLobbyView()
+                .readableColumn()
         case .help:
             HelpView()
+                .readableColumn()
+        // «Сообщество» и «Книги» — во всю ширину: ленты и сетка обложек на iPad занимают место с пользой
         case .community:
             CommunityView()
         case .books:
