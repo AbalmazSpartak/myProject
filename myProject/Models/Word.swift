@@ -121,7 +121,54 @@ extension Word {
 extension ModelContext {
     /// Все слова одним запросом. Экраны берут слова так при открытии, а не через @Query:
     /// тот перечитывает ~3000 слов при каждой перерисовке — 0,6 с и больше на любое нажатие.
+    /// Сам запрос тоже дорогой (SwiftData собирает каждое слово заново: ~0,5 с в симуляторе, секунды на телефоне),
+    /// поэтому слова один раз загружаются в WordCache, а дальше берутся оттуда
     func fetchAllWords(sortBy: [SortDescriptor<Word>] = []) -> [Word] {
-        (try? fetch(FetchDescriptor<Word>(sortBy: sortBy))) ?? []
+        let words = WordCache.shared.words(in: self)
+        return sortBy.isEmpty ? words : words.sorted(using: sortBy)
+    }
+}
+
+/// Слова основного контекста в памяти. Это те же объекты, что в базе: прогресс, ошибки, картинки меняются в них сразу.
+/// Заново из базы — только когда слова добавили или удалили (сохранение с новыми или удалёнными словами)
+@MainActor
+final class WordCache {
+    static let shared = WordCache()
+
+    private var words: [Word]?
+    /// Контекст, для которого собран кэш; у других контекстов — обычный запрос
+    private weak var context: ModelContext?
+    private var observer: NSObjectProtocol?
+
+    private init() {}
+
+    func words(in context: ModelContext) -> [Word] {
+        // Несохранённые новые или удалённые слова — кэш их не знает, читаем из контекста как есть
+        let hasPendingWordChanges = context.insertedModelsArray.contains { $0 is Word }
+            || context.deletedModelsArray.contains { $0 is Word }
+        // Число слов в базе — страховка, если кто-то спросит слова раньше, чем дойдёт уведомление о сохранении (1 мс)
+        if let words, self.context === context, !hasPendingWordChanges,
+           (try? context.fetchCount(FetchDescriptor<Word>())) == words.count {
+            return words.filter { !$0.isDeleted }
+        }
+        let fetched = (try? context.fetch(FetchDescriptor<Word>())) ?? []
+        if self.context !== context {
+            guard self.context == nil else { return fetched } // второй контекст не кэшируем
+            self.context = context
+            observe(context)
+        }
+        words = hasPendingWordChanges ? nil : fetched
+        return fetched
+    }
+
+    private func observe(_ context: ModelContext) {
+        observer = NotificationCenter.default.addObserver(forName: ModelContext.didSave, object: context, queue: .main) { notification in
+            let changed = [ModelContext.NotificationKey.insertedIdentifiers, .deletedIdentifiers].contains { key in
+                let identifiers = notification.userInfo?[key.rawValue] as? [PersistentIdentifier] ?? []
+                return identifiers.contains { $0.entityName == "Word" }
+            }
+            guard changed else { return }
+            MainActor.assumeIsolated { WordCache.shared.words = nil }
+        }
     }
 }

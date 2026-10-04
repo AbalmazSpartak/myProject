@@ -17,6 +17,8 @@ struct DictionaryView: View {
     /// Слова читаем при открытии и после сохранения базы, а не через @Query:
     /// тот перечитывает все слова при каждой перерисовке, то есть на каждую букву в форме добавления
     @State private var allWords: [Word] = []
+    /// Вкладка «Словарь» живёт и под другими экранами — перечитывать базу на каждое сохранение стоит только на экране
+    @State private var isOnScreen = false
     @State private var filteredWords: [Word] = []
     @State private var categoryCounts: [UUID: Int] = [:]
     @State private var mistakeCount = 0
@@ -62,7 +64,9 @@ struct DictionaryView: View {
     @State private var newLevel: String = "A1"
     
     private func reloadWords() {
-        allWords = modelContext.fetchAllWords(sortBy: [SortDescriptor(\Word.english)])
+        // По алфавиту: слово читаем из модели один раз — сравнение прямо по модели в разы дольше
+        let words = modelContext.fetchAllWords()
+        allWords = zip(words.map { $0.english.lowercased() }, words).sorted { $0.0 < $1.0 }.map(\.1)
         var counts: [UUID: Int] = [:]
         for word in allWords {
             if let id = word.category?.id { counts[id, default: 0] += 1 }
@@ -164,10 +168,18 @@ struct DictionaryView: View {
                 }
             }
         }
-        .onAppear(perform: reloadWords)
+        .onAppear {
+            isOnScreen = true
+            reloadWords()
+        }
+        .onDisappear { isOnScreen = false }
         .onChange(of: filter) { _, _ in refilter() }
-        // Любое сохранение (правка, скан, удаление темы со словами) — перечитываем, чтобы не показать удалённые слова
-        .onReceive(NotificationCenter.default.publisher(for: ModelContext.didSave)) { _ in reloadWords() }
+        // Любое сохранение (правка, скан, удаление темы со словами) — перечитываем, чтобы не показать удалённые слова.
+        // Не на экране — не перечитываем: тренировки сохраняют каждый ответ, а 3000 слов на телефоне — до полсекунды
+        // зависания. Вернутся на «Словарь» — onAppear перечитает
+        .onReceive(NotificationCenter.default.publisher(for: ModelContext.didSave)) { _ in
+            if isOnScreen { reloadWords() }
+        }
         .alert("Новая категория", isPresented: $isShowingAddCategoryAlert) {
             TextField("Название категории", text: $newCategoryName)
             Button("Отмена", role: .cancel) { newCategoryName = "" }
