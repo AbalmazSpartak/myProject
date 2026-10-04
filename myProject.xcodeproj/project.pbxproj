@@ -6,9 +6,6 @@
 	objectVersion = 90;
 	objects = {
 
-/* Begin PBXBuildFile section */
-/* End PBXBuildFile section */
-
 /* Begin PBXFileReference section */
 		C8CC0B5B306B4BEE00E8C3A6 /* myProject.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = myProject.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -268,7 +265,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = myProject/Info.plist;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Камера нужна, чтобы распознать английский текст и добавить из него слова в словарь.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Камера нужна, чтобы распознать английский текст и добавить из него слова в словарь, а также перенести таблицу с фото в тему.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Приложению нужен доступ к локальной сети, чтобы находить других игроков для гонки слов.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Микрофон нужен, чтобы записать голос в тему сообщества.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -313,7 +310,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = myProject/Info.plist;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Камера нужна, чтобы распознать английский текст и добавить из него слова в словарь.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Камера нужна, чтобы распознать английский текст и добавить из него слова в словарь, а также перенести таблицу с фото в тему.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Приложению нужен доступ к локальной сети, чтобы находить других игроков для гонки слов.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Микрофон нужен, чтобы записать голос в тему сообщества.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;

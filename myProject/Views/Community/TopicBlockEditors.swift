@@ -13,6 +13,7 @@ struct TopicTableEditor: View {
     @Binding var table: TopicTable
 
     var body: some View {
+        TablePhotoImportButton(table: $table)
         Stepper("Строк: \(table.rows)", value: Binding(
             get: { table.rows },
             set: { table.resize(rows: $0, columns: table.columns) }
