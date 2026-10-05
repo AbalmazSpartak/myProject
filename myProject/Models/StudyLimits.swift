@@ -1,11 +1,12 @@
 import Foundation
 
-/// Сколько новых слов в день попадает в «На повторение» (Настройки → «Новых слов в день»)
+/// Сколько новых слов в день попадает в «На повторение» (профиль → «Выучено сегодня»)
 enum DailyNewWords {
     /// 0 — без лимита
     static let limitKey = "new_words_per_day"
     static let defaultLimit = 20
-    static let limitOptions = [5, 10, 20, 30, 50, 0]
+    /// Готовые варианты в шторке; любое другое число задаётся карандашом, 0 — ∞
+    static let limitOptions = [5, 7, 10, 15, 20, 30, 40, 60]
 
     private static let dayKey = "new_words_day"
     private static let countKey = "new_words_count"

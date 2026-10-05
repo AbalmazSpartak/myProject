@@ -12,7 +12,6 @@ struct SettingsView: View {
     @AppStorage("show_word_images") private var showWordImages: Bool = true
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
     @AppStorage(MainMenuLayout.storageKey) private var menuLayout = MainMenuLayout.standard
-    @AppStorage(DailyNewWords.limitKey) private var newWordsPerDay = DailyNewWords.defaultLimit
     @AppStorage(SessionLength.key) private var sessionLength = SessionLength.defaultValue
     @AppStorage(SpeechSettings.accentKey) private var speechAccent = SpeechSettings.defaultAccent
     @AppStorage(SpeechSettings.rateKey) private var speechRate = SpeechSettings.defaultRate
@@ -89,12 +88,6 @@ struct SettingsView: View {
                         .padding(.vertical, 4)
 
                         Toggle("Картинки к словам", isOn: $showWordImages)
-
-                        Picker("Новых слов в день", selection: $newWordsPerDay) {
-                            ForEach(DailyNewWords.limitOptions, id: \.self) { limit in
-                                Text(limit == 0 ? "Без лимита" : "\(limit)").tag(limit)
-                            }
-                        }
 
                         Picker("Слов за подход", selection: $sessionLength) {
                             ForEach(SessionLength.options, id: \.self) { length in

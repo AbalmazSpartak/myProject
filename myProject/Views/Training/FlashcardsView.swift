@@ -159,10 +159,10 @@ struct FlashcardsView: View {
                                     FSRSActionButton(title: "Трудно", color: .orange) {
                                         processRating(.hard)
                                     }
-                                    FSRSActionButton(title: "Хорошо", color: .green) {
+                                    FSRSActionButton(title: "Хорошо", color: .blue) {
                                         processRating(.good)
                                     }
-                                    FSRSActionButton(title: "Легко", color: .blue) {
+                                    FSRSActionButton(title: "Легко", color: .green) {
                                         processRating(.easy)
                                     }
                                 }
@@ -269,7 +269,7 @@ struct FlashcardsView: View {
         if rating != .again { approachCorrect += 1 }
         counts = WordCounts(studyWords, newWordsAllowance: newWordsAllowance)
         profiles.first?.recordAnswer(.flashcards, translationMode: translationMode, isCorrect: rating != .again)
-        if rating != .again { DailyStudy.recordCorrect(word) }
+        DailyStudy.record(word, rating: rating)
         
         isAnswerRevealed = false
         if currentIndex + 1 >= sessionWords.count {

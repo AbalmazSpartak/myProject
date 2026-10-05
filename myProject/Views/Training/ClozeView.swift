@@ -224,8 +224,8 @@ struct ClozeView: View {
         if outcome != .wrong {
             correctCount += 1
             approachCorrect += 1
-            DailyStudy.recordCorrect(word)
         }
+        DailyStudy.record(word, rating: outcome == .wrong ? .again : .good)
         UINotificationFeedbackGenerator().notificationOccurred(outcome == .wrong ? .error : .success)
         TextToSpeechManager.shared.speak(word.plainExample)
 

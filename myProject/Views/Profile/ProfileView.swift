@@ -9,6 +9,8 @@ struct ProfileView: View {
     @State private var showSettings = false
     @State private var levelProgress: [LevelProgress] = []
     @State private var studyDays: [DailyStudy.Day] = []
+    @State private var studyTotals: [FSRSRating: Int] = [:]
+    @State private var introducedToday = 0
     
     private var profile: UserProfile {
         if let existing = profiles.first {
@@ -77,7 +79,10 @@ struct ProfileView: View {
                 LevelProgressCard(progress: levelProgress)
                     .padding(.horizontal, 20)
                 
-                DailyStudyCard(days: studyDays)
+                DailyGoalCard(introduced: introducedToday)
+                    .padding(.horizontal, 20)
+                
+                DailyStudyCard(days: studyDays, totals: studyTotals)
                     .padding(.horizontal, 20)
                 
                 // Рекорд Тетриса
@@ -137,5 +142,7 @@ struct ProfileView: View {
     private func reloadProgress() {
         levelProgress = LevelProgress.all(from: modelContext.fetchAllWords())
         studyDays = DailyStudy.recent()
+        studyTotals = DailyStudy.totals()
+        introducedToday = DailyNewWords.introducedToday
     }
 }
