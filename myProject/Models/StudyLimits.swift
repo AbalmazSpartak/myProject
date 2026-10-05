@@ -22,6 +22,7 @@ enum DailyNewWords {
         let count = introducedToday + 1
         UserDefaults.standard.set(Date(), forKey: dayKey)
         UserDefaults.standard.set(count, forKey: countKey)
+        DailyStreak.update()
     }
 
     /// Сколько новых слов ещё можно начать сегодня; nil — без лимита

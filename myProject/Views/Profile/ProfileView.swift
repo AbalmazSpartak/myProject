@@ -11,6 +11,10 @@ struct ProfileView: View {
     @State private var studyDays: [DailyStudy.Day] = []
     @State private var studyTotals: [FSRSRating: Int] = [:]
     @State private var introducedToday = 0
+    @State private var streak = 0
+    @State private var bestStreak = 0
+    @State private var streakWeek: [(date: Date, isDone: Bool)] = []
+    @AppStorage(DailyNewWords.limitKey) private var newWordsPerDay = DailyNewWords.defaultLimit
     
     private var profile: UserProfile {
         if let existing = profiles.first {
@@ -76,13 +80,7 @@ struct ProfileView: View {
                         .foregroundColor(.brandDark)
                 }
                 
-                LevelProgressCard(progress: levelProgress)
-                    .padding(.horizontal, 20)
-                
-                DailyGoalCard(introduced: introducedToday)
-                    .padding(.horizontal, 20)
-                
-                DailyStudyCard(days: studyDays, totals: studyTotals)
+                DailyStreakCard(current: streak, best: bestStreak, week: streakWeek)
                     .padding(.horizontal, 20)
                 
                 // Рекорд Тетриса
@@ -94,12 +92,23 @@ struct ProfileView: View {
                 )
                 .padding(.horizontal, 20)
                 
+                DailyGoalCard(introduced: introducedToday)
+                    .padding(.horizontal, 20)
+                
+                DailyStudyCard(days: studyDays, totals: studyTotals)
+                    .padding(.horizontal, 20)
+                
+                LevelProgressCard(progress: levelProgress)
+                    .padding(.horizontal, 20)
+                
                 Spacer().frame(height: 20)
             }
         }
         .background(Color.brandBackground.ignoresSafeArea())
         // Тренировки идут на другой вкладке — при переходе сюда прогресс пересчитывается
         .onAppear(perform: reloadProgress)
+        // Норму уменьшили ниже пройденного — сегодняшний день сразу идёт в серию
+        .onChange(of: newWordsPerDay) { _, _ in reloadProgress() }
         .sheet(isPresented: $showSettings) {
             SettingsView(profile: profile)
                 .appThemedColorScheme()
@@ -144,5 +153,9 @@ struct ProfileView: View {
         studyDays = DailyStudy.recent()
         studyTotals = DailyStudy.totals()
         introducedToday = DailyNewWords.introducedToday
+        DailyStreak.update()
+        streak = DailyStreak.current()
+        bestStreak = DailyStreak.best
+        streakWeek = DailyStreak.week()
     }
 }

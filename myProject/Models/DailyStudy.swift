@@ -7,14 +7,12 @@ enum DailyStudy {
     static let days = 7
     private static let storageKey = "daily_study_ratings"
     private static let totalsKey = "daily_study_totals"
-    /// До оценок хранились только вспомненные слова — такие дни показываются серым, пока не уйдут за неделю
+    /// До оценок хранились только вспомненные слова, без оценки, — на графике их нет, хранилище удаляется
     private static let legacyKey = "daily_study_words"
 
     struct Day: Identifiable {
         let date: Date
         let counts: [FSRSRating: Int]
-        /// Слова из старой статистики, без оценки
-        let unrated: Int
         var id: Date { date }
 
         func count(_ rating: FSRSRating) -> Int { counts[rating] ?? 0 }
@@ -42,8 +40,8 @@ enum DailyStudy {
 
     /// Последние 7 дней, сегодняшний последним
     static func recent(now: Date = Date()) -> [Day] {
+        UserDefaults.standard.removeObject(forKey: legacyKey)
         let stored = load()
-        let legacy = UserDefaults.standard.dictionary(forKey: legacyKey) as? [String: [String]] ?? [:]
         return recentDates(now: now).reversed().map { date in
             let dayKey = key(for: date)
             let rated = stored[dayKey] ?? [:]
@@ -51,9 +49,7 @@ enum DailyStudy {
             for raw in rated.values {
                 if let rating = FSRSRating(rawValue: raw) { counts[rating, default: 0] += 1 }
             }
-            // Слово, вспомненное и до обновления, и после, — только в цветном, иначе оно посчитается дважды
-            let unrated = (legacy[dayKey] ?? []).filter { rated[$0] == nil }.count
-            return Day(date: date, counts: counts, unrated: unrated)
+            return Day(date: date, counts: counts)
         }
     }
 

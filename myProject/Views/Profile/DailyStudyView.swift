@@ -210,8 +210,6 @@ struct DailyStudyCard: View {
     let days: [DailyStudy.Day]
     let totals: [FSRSRating: Int]
 
-    private static let unratedTitle = "Без оценки"
-
     private struct Segment: Identifiable {
         let date: Date
         let title: String
@@ -221,11 +219,10 @@ struct DailyStudyCard: View {
         var id: String { "\(date.timeIntervalSince1970)-\(title)" }
     }
 
-    /// Снизу вверх: Снова, Трудно, Хорошо, Легко; серым — старые дни без оценок
+    /// Снизу вверх: Снова, Трудно, Хорошо, Легко
     private var segments: [Segment] {
         days.flatMap { day in
             var result = FSRSRating.allCases.map { Segment(date: day.date, title: $0.title, count: day.count($0)) }
-            if day.unrated > 0 { result.insert(Segment(date: day.date, title: Self.unratedTitle, count: day.unrated), at: 0) }
             result = result.filter { $0.count > 0 }
             if !result.isEmpty { result[result.count - 1].isTop = true }
             return result
@@ -233,7 +230,7 @@ struct DailyStudyCard: View {
     }
 
     private var maxDayTotal: Int {
-        days.map { day in day.unrated + FSRSRating.allCases.reduce(0) { $0 + day.count($1) } }.max() ?? 0
+        days.map { day in FSRSRating.allCases.reduce(0) { $0 + day.count($1) } }.max() ?? 0
     }
 
     private var dateRange: ClosedRange<Date> {
@@ -277,12 +274,13 @@ struct DailyStudyCard: View {
                     Text("\(segment.count)")
                         .scaledFont(size: 12, weight: .semibold, design: .rounded)
                         .foregroundColor(.white)
+                        .fixedSize()
                 }
             }
         }
         .chartForegroundStyleScale(
-            domain: [Self.unratedTitle] + FSRSRating.allCases.map(\.title),
-            range: [Color.gray.opacity(0.5)] + FSRSRating.allCases.map(\.color)
+            domain: FSRSRating.allCases.map(\.title),
+            range: FSRSRating.allCases.map(\.color)
         )
         .chartLegend(.hidden)
         .chartXScale(domain: dateRange)
