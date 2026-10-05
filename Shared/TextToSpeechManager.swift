@@ -33,12 +33,35 @@ final class TextToSpeechManager: NSObject {
             synthesizer.stopSpeaking(at: .immediate)
         }
         try? AVAudioSession.sharedInstance().setActive(true)
+        synthesizer.speak(Self.utterance(text))
+    }
 
+    private static func utterance(_ text: String) -> AVSpeechUtterance {
         let defaults = UserDefaults.standard
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = AVSpeechSynthesisVoice(language: defaults.string(forKey: SpeechSettings.accentKey) ?? SpeechSettings.defaultAccent)
         utterance.rate = Float(defaults.object(forKey: SpeechSettings.rateKey) as? Double ?? SpeechSettings.defaultRate)
-        synthesizer.speak(utterance)
+        return utterance
+    }
+
+    /// Синтезатор для кнопки 🔊 виджета: говорит через системную аудиосессию iOS, а не через сессию приложения
+    private lazy var systemSessionSynthesizer: AVSpeechSynthesizer = {
+        let synthesizer = AVSpeechSynthesizer()
+        synthesizer.usesApplicationAudioSession = false
+        return synthesizer
+    }()
+
+    /// Кнопка 🔊 виджета: iOS запускает приложение в фоне, а включить из фона свою сессию не даёт
+    /// (ошибка «нельзя начать воспроизведение», проверено на iPhone). Системная сессия синтезатора работает.
+    /// Ждём конца речи (не дольше 10 с), чтобы система не усыпила приложение посреди слова
+    func speakFromBackground(_ text: String) async {
+        let synthesizer = systemSessionSynthesizer
+        if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
+        synthesizer.speak(Self.utterance(text))
+        for _ in 0..<100 {
+            try? await Task.sleep(for: .milliseconds(100))
+            if !synthesizer.isSpeaking { break }
+        }
     }
 
     /// Озвучивает, только если включено «Озвучивать слово сразу»

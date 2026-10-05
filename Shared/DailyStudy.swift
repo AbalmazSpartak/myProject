@@ -21,6 +21,7 @@ enum DailyStudy {
     /// Ответ в тренировке. Карточки для запоминания передают свою оценку,
     /// остальные режимы: верно — «Хорошо», ошибка — «Снова»
     static func record(_ word: Word, rating: FSRSRating, now: Date = Date()) {
+        moveToAppGroup()
         var stored = load()
         let today = key(for: now)
         var words = stored[today] ?? [:]
@@ -31,16 +32,17 @@ enum DailyStudy {
         // Старше недели — не нужно
         let kept = Set(recentDates(now: now).map(key(for:)))
         stored = stored.filter { kept.contains($0.key) }
-        UserDefaults.standard.set(stored, forKey: storageKey)
+        AppGroup.defaults.set(stored, forKey: storageKey)
 
         var totals = loadTotals()
         totals[String(rating.rawValue), default: 0] += 1
-        UserDefaults.standard.set(totals, forKey: totalsKey)
+        AppGroup.defaults.set(totals, forKey: totalsKey)
     }
 
     /// Последние 7 дней, сегодняшний последним
     static func recent(now: Date = Date()) -> [Day] {
         UserDefaults.standard.removeObject(forKey: legacyKey)
+        moveToAppGroup()
         let stored = load()
         return recentDates(now: now).reversed().map { date in
             let dayKey = key(for: date)
@@ -62,12 +64,23 @@ enum DailyStudy {
         return result
     }
 
+    /// Оценки хранились в настройках приложения; теперь — в общих с виджетом, чтобы его ответы попадали в график
+    private static func moveToAppGroup() {
+        let old = UserDefaults.standard
+        guard AppGroup.defaults != old else { return }
+        for key in [storageKey, totalsKey] {
+            guard let value = old.object(forKey: key) else { continue }
+            if AppGroup.defaults.object(forKey: key) == nil { AppGroup.defaults.set(value, forKey: key) }
+            old.removeObject(forKey: key)
+        }
+    }
+
     private static func load() -> [String: [String: Int]] {
-        UserDefaults.standard.dictionary(forKey: storageKey) as? [String: [String: Int]] ?? [:]
+        AppGroup.defaults.dictionary(forKey: storageKey) as? [String: [String: Int]] ?? [:]
     }
 
     private static func loadTotals() -> [String: Int] {
-        UserDefaults.standard.dictionary(forKey: totalsKey) as? [String: Int] ?? [:]
+        AppGroup.defaults.dictionary(forKey: totalsKey) as? [String: Int] ?? [:]
     }
 
     /// Сегодня и 6 дней до него, от сегодняшнего назад
