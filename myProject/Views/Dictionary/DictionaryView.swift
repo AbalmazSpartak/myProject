@@ -283,6 +283,7 @@ struct DictionaryView: View {
                     Text(dropdownTitle)
                         .scaledFont(size: 17, weight: .bold)
                         .foregroundColor(.brandDark)
+                        .lineLimit(1)
                     Spacer()
                     Image(systemName: isDropdownExpanded ? "chevron.up" : "chevron.down")
                         .scaledFont(size: 14, weight: .semibold)
@@ -299,6 +300,24 @@ struct DictionaryView: View {
                                     Text("Общий").scaledFont(size: 16, weight: .bold).foregroundColor(filter == .general ? .orange : .brandDark)
                                     Spacer()
                                     if filter == .general { Image(systemName: "checkmark").scaledFont(size: 14, weight: .bold).foregroundColor(.orange) }
+                                }
+                                .padding(.horizontal, 16).padding(.vertical, 12)
+                            }
+                            // Слова с ошибками — сразу под «Общим»: к ним возвращаются чаще всего
+                            Button(action: { selectFilterAndClose(.mistakes) }) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .foregroundColor(.orange)
+                                        .scaledFont(size: 15)
+                                    Text("Слова с ошибками (\(mistakeCount))")
+                                        .scaledFont(size: 16, weight: .bold)
+                                        .foregroundColor(.orange)
+                                    Spacer()
+                                    if filter == .mistakes {
+                                        Image(systemName: "checkmark")
+                                            .scaledFont(size: 14, weight: .bold)
+                                            .foregroundColor(.orange)
+                                    }
                                 }
                                 .padding(.horizontal, 16).padding(.vertical, 12)
                             }
@@ -325,25 +344,6 @@ struct DictionaryView: View {
                                     }
                                     .padding(.horizontal, 16).padding(.vertical, 12)
                                 }
-                            }
-                            Divider().padding(.horizontal, 16)
-                            
-                            Button(action: { selectFilterAndClose(.mistakes) }) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "exclamationmark.triangle.fill")
-                                        .foregroundColor(.orange)
-                                        .scaledFont(size: 15)
-                                    Text("Слова с ошибками (\(mistakeCount))")
-                                        .scaledFont(size: 16, weight: .bold)
-                                        .foregroundColor(.orange)
-                                    Spacer()
-                                    if filter == .mistakes {
-                                        Image(systemName: "checkmark")
-                                            .scaledFont(size: 14, weight: .bold)
-                                            .foregroundColor(.orange)
-                                    }
-                                }
-                                .padding(.horizontal, 16).padding(.vertical, 12)
                             }
                         }
                     }
@@ -388,6 +388,13 @@ struct DictionaryView: View {
         }
     }
 
+    /// Длинное название словаря (книги) — первые 20 символов и «...»: «Adventures of Huckle... (4 173)»
+    static func shortName(_ name: String, limit: Int = 20) -> String {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        guard trimmed.count > limit else { return trimmed }
+        return trimmed.prefix(limit).trimmingCharacters(in: .whitespaces) + "..."
+    }
+
     /// Свои словари (например, из скана текста) — над темами; долгое нажатие: переименовать или удалить
     private var myListsRows: some View {
         ForEach(lists) { list in
@@ -397,7 +404,7 @@ struct DictionaryView: View {
                     Image(systemName: "text.book.closed.fill")
                         .scaledFont(size: 14)
                         .foregroundColor(.teal)
-                    Text("\(list.name) (\(list.words.count))")
+                    Text("\(Self.shortName(list.name)) (\(list.words.count.formatted()))")
                         .scaledFont(size: 16, weight: isSelected ? .bold : .semibold)
                         .foregroundColor(isSelected ? .orange : .brandDark)
                     Spacer()
