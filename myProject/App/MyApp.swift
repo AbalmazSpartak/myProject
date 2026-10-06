@@ -23,6 +23,8 @@ struct MyApp: App {
             Task { @MainActor in
                 DataPreloader.syncBundledWords(context: mainContext)
                 DataPreloader.resetImagesIfSourcesChanged(context: mainContext)
+                // Встроенные темы «Сообщества» — после переустановки возвращаются, с новой версией обновляются
+                BuiltInTopics.sync(context: mainContext)
             }
         } catch {
             fatalError("Не удалось запустить хранилище SwiftData: \(error)")
