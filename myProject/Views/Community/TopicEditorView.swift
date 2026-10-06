@@ -104,7 +104,7 @@ struct TopicEditorView: View {
                             Label("Добавить блок", systemImage: "plus.square.on.square")
                         }
                     } footer: {
-                        Text("Подзаголовок, текст, таблица или аудио — в любом порядке. В тексте и таблицах: **жирный**, *курсив*, ==красный==.")
+                        Text("Подзаголовок, текст, таблица, аудио или видео — в любом порядке. В тексте и таблицах: **жирный**, *курсив*, ==красный==.")
                     }
 
                     Section {
@@ -173,6 +173,8 @@ struct TopicEditorView: View {
             TopicTableEditor(table: block.table)
         case .audio:
             TopicAudioEditor(block: block, pendingAudio: $pendingAudio)
+        case .video:
+            TopicVideoEditor(block: block)
         }
     }
 
@@ -226,6 +228,9 @@ struct TopicEditorView: View {
                     return block.speechText.isEmpty ? nil : block
                 }
                 return block.audioClipID.flatMap { pendingAudio[$0] } == nil ? nil : block
+            case .video:
+                block.videoURL = block.videoURL?.trimmingCharacters(in: .whitespacesAndNewlines)
+                return (block.videoURL ?? "").isEmpty ? nil : block
             }
         }
     }

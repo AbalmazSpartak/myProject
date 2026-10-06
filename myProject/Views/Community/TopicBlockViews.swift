@@ -25,6 +25,8 @@ struct TopicBlockView: View {
             TopicTableView(table: block.table)
         case .audio:
             TopicAudioView(block: block, clip: clip)
+        case .video:
+            TopicVideoView(block: block)
         }
     }
 }

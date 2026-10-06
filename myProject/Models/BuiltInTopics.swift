@@ -89,6 +89,14 @@ enum BuiltInTopics {
         return block
     }
 
+    /// Видео по ссылке (YouTube — плеер прямо в теме); подпись — под плеером
+    private static func video(_ url: String, caption: String) -> TopicBlock {
+        var block = TopicBlock(kind: .video)
+        block.videoURL = url
+        block.text = caption
+        return block
+    }
+
     /// Озвучка английской фразы; подпись — что звучит
     private static func speech(_ english: String, caption: String) -> TopicBlock {
         var block = TopicBlock(kind: .audio)
@@ -311,6 +319,7 @@ enum BuiltInTopics {
         section: pronunciationSection,
         title: "Как читаются гласные: четыре типа слога",
         blocks: blocks(7, [
+            video("https://youtu.be/hzF_iJ5g2gY", caption: "Видео-урок: правила чтения гласных и согласных"),
             text("Одна и та же гласная буква в английском читается по-разному. Как именно — подсказывает слог, в котором она стоит. Типов слога четыре, и у каждой гласной в каждом типе — свой звук."),
             heading("1. Открытый слог"),
             text("Слог заканчивается на гласную (me, we, fly) или после одной согласной идёт немая e на конце (name, hope, cute). Гласная читается так, как называется в алфавите: a — [ei], o — [əʊ], u — [ju:], e — [i:], i и y — [ai]."),

@@ -1,10 +1,10 @@
 import Foundation
 import SwiftData
 
-/// Блок темы сообщества. Тема собирается из блоков в любом порядке: подзаголовок, текст, таблица, аудио
+/// Блок темы сообщества. Тема собирается из блоков в любом порядке: подзаголовок, текст, таблица, аудио, видео
 struct TopicBlock: Codable, Identifiable, Hashable {
     enum Kind: String, Codable, CaseIterable {
-        case heading, text, table, audio
+        case heading, text, table, audio, video
 
         var title: String {
             switch self {
@@ -12,6 +12,7 @@ struct TopicBlock: Codable, Identifiable, Hashable {
             case .text: return "Текст"
             case .table: return "Таблица"
             case .audio: return "Аудио"
+            case .video: return "Видео"
             }
         }
 
@@ -21,6 +22,7 @@ struct TopicBlock: Codable, Identifiable, Hashable {
             case .text: return "text.alignleft"
             case .table: return "tablecells"
             case .audio: return "waveform"
+            case .video: return "play.rectangle.fill"
             }
         }
     }
@@ -50,6 +52,9 @@ struct TopicBlock: Codable, Identifiable, Hashable {
     var audioClipID: UUID?
     /// Имя прикреплённого файла — показать автору, что прикреплено
     var audioFileName = ""
+    /// Ссылка на видео (YouTube — плеер прямо в теме, другие — кнопкой в браузер).
+    /// Необязательная: у блоков, сохранённых до видео, этого поля нет, и они должны читаться как раньше
+    var videoURL: String?
 
     init(kind: Kind) {
         self.kind = kind
