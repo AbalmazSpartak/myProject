@@ -5,7 +5,6 @@ import AppIntents
 
 /// Виджет «Повторение»: слово, которому пора на повторение по FSRS, → «Показать перевод» → «Знаю» / «Не знаю».
 /// Ответ сразу пишется в общую базу и в график профиля, следующее слово появляется без открытия приложения
-@main
 struct WordWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: ReviewWidgetState.kind, provider: ReviewProvider()) { entry in

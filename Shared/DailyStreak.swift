@@ -21,8 +21,8 @@ enum DailyStreak {
         guard !days.contains(today) else { return }
         days.insert(today)
         let oldest = key(for: Calendar.current.date(byAdding: .day, value: -keptDays, to: now) ?? now)
-        defaults.set(days.filter { $0 >= oldest }.sorted(), forKey: daysKey)
-        defaults.set(max(best, current(now: now)), forKey: bestKey)
+        storage.set(days.filter { $0 >= oldest }.sorted(), forKey: daysKey)
+        storage.set(max(best, current(now: now)), forKey: bestKey)
     }
 
     /// Дней подряд до сегодня; сегодня ещё не выполнено — серия держится со вчерашнего дня
@@ -42,7 +42,7 @@ enum DailyStreak {
         return count
     }
 
-    static var best: Int { UserDefaults.standard.integer(forKey: bestKey) }
+    static var best: Int { storage.integer(forKey: bestKey) }
 
     /// Последние 7 дней, сегодняшний последним, и выполнена ли в них норма
     static func week(now: Date = Date()) -> [(date: Date, isDone: Bool)] {
@@ -56,7 +56,21 @@ enum DailyStreak {
     }
 
     private static func activeDays() -> Set<String> {
-        Set(UserDefaults.standard.stringArray(forKey: daysKey) ?? [])
+        Set(storage.stringArray(forKey: daysKey) ?? [])
+    }
+
+    /// Серия — в общих с виджетом настройках («Серия дней» на экране «Домой»).
+    /// Раньше хранилась в настройках приложения — при первом обращении переносится
+    private static var storage: UserDefaults {
+        let shared = AppGroup.defaults, old = UserDefaults.standard
+        if shared != old {
+            for key in [daysKey, bestKey] {
+                guard let value = old.object(forKey: key) else { continue }
+                if shared.object(forKey: key) == nil { shared.set(value, forKey: key) }
+                old.removeObject(forKey: key)
+            }
+        }
+        return shared
     }
 
     /// «2026-10-05»: с нулями, чтобы строки сравнивались как даты
