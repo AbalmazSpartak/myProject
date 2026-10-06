@@ -135,7 +135,10 @@ extension ModelContext {
 final class WordCache {
     static let shared = WordCache()
 
-    private var words: [Word]?
+    private var words: [Word]? {
+        // Слова добавили или удалили — готовый список «Словаря» тоже устарел
+        didSet { dictionaryIndex = nil }
+    }
     /// Контекст, для которого собран кэш; у других контекстов — обычный запрос
     private weak var context: ModelContext?
     private var observer: NSObjectProtocol?
@@ -159,6 +162,40 @@ final class WordCache {
         }
         words = hasPendingWordChanges ? nil : fetched
         return fetched
+    }
+
+    // MARK: - Готовые данные «Словаря»
+
+    /// Всё, что «Словарь» считает по всем словам: по алфавиту, сколько слов в каждой теме и слова по написанию.
+    /// На телефоне это ~0,5 с — считаем один раз и держим, пока слова не добавят, не удалят или не поправят
+    struct DictionaryIndex {
+        let sortedWords: [Word]
+        let categoryCounts: [UUID: Int]
+        let wordsByEnglish: [String: [Word]]
+    }
+
+    private var dictionaryIndex: DictionaryIndex?
+
+    func dictionaryIndex(in context: ModelContext) -> DictionaryIndex {
+        let current = words(in: context)
+        if let dictionaryIndex, dictionaryIndex.sortedWords.count == current.count { return dictionaryIndex }
+        // По алфавиту: слово читаем из модели один раз — сравнение прямо по модели в разы дольше
+        let keys = current.map { $0.english.lowercased() }
+        let sortedPairs = zip(keys, current).sorted { $0.0 < $1.0 }
+        var counts: [UUID: Int] = [:]
+        var byEnglish: [String: [Word]] = [:]
+        for (key, word) in sortedPairs {
+            if let id = word.category?.id { counts[id, default: 0] += 1 }
+            byEnglish[key, default: []].append(word)
+        }
+        let index = DictionaryIndex(sortedWords: sortedPairs.map(\.1), categoryCounts: counts, wordsByEnglish: byEnglish)
+        dictionaryIndex = index
+        return index
+    }
+
+    /// Слово поправили (написание или тема) — порядок и счётчики «Словаря» пересчитаются при следующем открытии
+    func invalidateDictionaryIndex() {
+        dictionaryIndex = nil
     }
 
     private func observe(_ context: ModelContext) {

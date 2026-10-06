@@ -58,6 +58,8 @@ struct EditWordView: View {
                 }
             }
             .onDisappear {
+                // Могли поменять написание или тему — порядок и счётчики «Словаря» пересчитаются
+                WordCache.shared.invalidateDictionaryIndex()
                 guard deleteOnClose else { return }
                 modelContext.delete(word)
                 try? modelContext.save()

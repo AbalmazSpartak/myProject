@@ -25,6 +25,8 @@ struct MyApp: App {
                 DataPreloader.resetImagesIfSourcesChanged(context: mainContext)
                 // Встроенные темы «Сообщества» — после переустановки возвращаются, с новой версией обновляются
                 BuiltInTopics.sync(context: mainContext)
+                // Голос для озвучки — заранее, чтобы первое слово не запиналось
+                TextToSpeechManager.shared.prepare()
             }
         } catch {
             fatalError("Не удалось запустить хранилище SwiftData: \(error)")

@@ -27,6 +27,8 @@ final class DataPreloader {
             merge(dtos, context: context)
         }
 
+        // Обновление words.csv могло поменять написание и темы слов
+        WordCache.shared.invalidateDictionaryIndex()
         do {
             try context.save()
             UserDefaults.standard.set(hash, forKey: bundledHashKey)

@@ -19,6 +19,14 @@ final class TextToSpeechManager: NSObject {
 
     private let synthesizer = AVSpeechSynthesizer()
 
+    /// Включение и выключение аудиосессии — блокирующие вызовы: на главном потоке они дёргали начало слова.
+    /// Делаем их по очереди в фоне, в том порядке, в каком попросили
+    private static let sessionQueue = DispatchQueue(label: "speech.audio-session", qos: .userInitiated)
+    /// Номер последней просьбы озвучить: устаревшие (успели нажать на другое слово) не говорят и не выключают сессию
+    private var request = 0
+    /// Голос ищется долго — находим один раз на акцент
+    private var cachedVoice: (accent: String, voice: AVSpeechSynthesisVoice?)?
+
     private override init() {
         super.init()
         synthesizer.delegate = self
@@ -27,21 +35,41 @@ final class TextToSpeechManager: NSObject {
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])
     }
 
+    /// Заранее найти голос — первое слово после запуска не ждёт его
+    func prepare() {
+        _ = voice()
+    }
+
     func speak(_ text: String) {
         // Если синтезатор уже говорит, останавливаем его перед новым словом
         if synthesizer.isSpeaking {
             synthesizer.stopSpeaking(at: .immediate)
         }
-        try? AVAudioSession.sharedInstance().setActive(true)
-        synthesizer.speak(Self.utterance(text))
+        request += 1
+        let current = request
+        // Сессия включается в фоне; говорить начинаем, когда она готова, — звук не дёргается
+        Self.sessionQueue.async {
+            try? AVAudioSession.sharedInstance().setActive(true)
+            Task { @MainActor in
+                guard current == self.request else { return }
+                self.synthesizer.speak(self.utterance(text))
+            }
+        }
     }
 
-    private static func utterance(_ text: String) -> AVSpeechUtterance {
-        let defaults = UserDefaults.standard
+    private func utterance(_ text: String) -> AVSpeechUtterance {
         let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = AVSpeechSynthesisVoice(language: defaults.string(forKey: SpeechSettings.accentKey) ?? SpeechSettings.defaultAccent)
-        utterance.rate = Float(defaults.object(forKey: SpeechSettings.rateKey) as? Double ?? SpeechSettings.defaultRate)
+        utterance.voice = voice()
+        utterance.rate = Float(UserDefaults.standard.object(forKey: SpeechSettings.rateKey) as? Double ?? SpeechSettings.defaultRate)
         return utterance
+    }
+
+    private func voice() -> AVSpeechSynthesisVoice? {
+        let accent = UserDefaults.standard.string(forKey: SpeechSettings.accentKey) ?? SpeechSettings.defaultAccent
+        if let cachedVoice, cachedVoice.accent == accent { return cachedVoice.voice }
+        let voice = AVSpeechSynthesisVoice(language: accent)
+        cachedVoice = (accent, voice)
+        return voice
     }
 
     /// Синтезатор для кнопки 🔊 виджета: говорит через системную аудиосессию iOS, а не через сессию приложения
@@ -57,7 +85,7 @@ final class TextToSpeechManager: NSObject {
     func speakFromBackground(_ text: String) async {
         let synthesizer = systemSessionSynthesizer
         if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
-        synthesizer.speak(Self.utterance(text))
+        synthesizer.speak(utterance(text))
         for _ in 0..<100 {
             try? await Task.sleep(for: .milliseconds(100))
             if !synthesizer.isSpeaking { break }
@@ -70,10 +98,18 @@ final class TextToSpeechManager: NSObject {
         speak(text)
     }
 
-    /// Речь закончилась — выключаем сессию, и музыка возвращается к прежней громкости
+    /// Речь закончилась — через секунду тишины выключаем сессию, и музыка возвращается к прежней громкости.
+    /// Пауза — чтобы между словами подряд музыка не прыгала туда-сюда
     private func deactivateIfIdle() {
-        guard !synthesizer.isSpeaking else { return }
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        let current = request
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            MainActor.assumeIsolated {
+                guard current == self.request, !self.synthesizer.isSpeaking else { return }
+                Self.sessionQueue.async {
+                    try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+                }
+            }
+        }
     }
 }
 

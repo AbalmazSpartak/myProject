@@ -64,16 +64,11 @@ struct DictionaryView: View {
     @State private var newLevel: String = "A1"
     
     private func reloadWords() {
-        // По алфавиту: слово читаем из модели один раз — сравнение прямо по модели в разы дольше
-        let words = modelContext.fetchAllWords()
-        allWords = zip(words.map { $0.english.lowercased() }, words).sorted { $0.0 < $1.0 }.map(\.1)
-        var counts: [UUID: Int] = [:]
-        for word in allWords {
-            if let id = word.category?.id { counts[id, default: 0] += 1 }
-        }
-        categoryCounts = counts
+        let index = WordCache.shared.dictionaryIndex(in: modelContext)
+        allWords = index.sortedWords
+        categoryCounts = index.categoryCounts
+        wordsByEnglish = index.wordsByEnglish
         mistakeCount = allWords.count(where: \.isMistake)
-        wordsByEnglish = Dictionary(grouping: allWords) { $0.english.lowercased() }
         refilter()
     }
 
