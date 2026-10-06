@@ -298,8 +298,8 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
     let onTap: (URL) -> Void
     @ViewBuilder let navigation: () -> Navigation
 
-    /// Верхний видимый абзац
-    @State private var visibleParagraph: Int?
+    /// Видимые абзацы — в обычном объекте, а не в @State: их смена при прокрутке не перерисовывает главу
+    @State private var visible = VisibleParagraphs()
 
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.chapterID == rhs.chapterID && lhs.paragraphs.count == rhs.paragraphs.count
@@ -307,38 +307,49 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
     }
 
     var body: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 14) {
-                ForEach(paragraphs.indices, id: \.self) { index in
-                    Text(paragraphs[index])
-                        .font(font)
-                        .foregroundColor(textColor)
-                        .lineSpacing(lineSpacing)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .id(index)
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 14) {
+                    ForEach(paragraphs.indices, id: \.self) { index in
+                        Text(paragraphs[index])
+                            .font(font)
+                            .foregroundColor(textColor)
+                            .lineSpacing(lineSpacing)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .id(index)
+                    }
+                    navigation()
+                        .padding(.top, 20)
                 }
-                navigation()
-                    .padding(.top, 20)
+                .scrollTargetLayout()
+                .padding(.horizontal, 22)
+                .padding(.vertical, 18)
             }
-            .scrollTargetLayout()
-            .padding(.horizontal, 22)
-            .padding(.vertical, 18)
+            .onScrollTargetVisibilityChange(idType: Int.self, threshold: 0.01) { ids in
+                visible.ids = ids
+            }
+            // Место чтения запоминаем, когда прокрутка остановилась, а не на каждом абзаце
+            .onScrollPhaseChange { _, phase in
+                guard phase == .idle, let top = visible.ids.min() else { return }
+                onVisible(top)
+            }
+            .task {
+                // Прокрутка к месту — после того как глава отрисовалась
+                guard startParagraph > 0 else { return }
+                try? await Task.sleep(for: .milliseconds(80))
+                proxy.scrollTo(startParagraph, anchor: .top)
+            }
         }
-        .scrollPosition(id: $visibleParagraph, anchor: .top)
         // Слова — ссылки: цвет обычного текста, нажатие открывает перевод
         .tint(textColor)
         .environment(\.openURL, OpenURLAction { url in
             onTap(url)
             return .handled
         })
-        .task {
-            // Прокрутка к месту — после того как глава отрисовалась
-            guard startParagraph > 0 else { return }
-            try? await Task.sleep(for: .milliseconds(80))
-            visibleParagraph = startParagraph
-        }
-        .onChange(of: visibleParagraph) { _, paragraph in
-            if let paragraph { onVisible(paragraph) }
-        }
     }
+}
+
+/// Какие абзацы сейчас на экране. Класс без наблюдения: запись не вызывает перерисовку
+private final class VisibleParagraphs {
+    var ids: [Int] = []
 }
