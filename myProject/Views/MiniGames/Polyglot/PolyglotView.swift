@@ -57,6 +57,33 @@ struct PolyglotView: View {
                                    subtitle: "Bigger, the best · in, ago, on, at · месяцы и дни")
                     }
                     .buttonStyle(.plain)
+
+                    NavigationLink {
+                        PolyglotLesson6View()
+                            .toolbar(.hidden, for: .navigationBar)
+                    } label: {
+                        lessonCard(number: 6, title: "Много, мало и слова-параметры",
+                                   subtitle: "Much, many, a lot of · few, little · never, nothing")
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        PolyglotLesson7View()
+                            .toolbar(.hidden, for: .navigationBar)
+                    } label: {
+                        lessonCard(number: 7, title: "Повторение и просьбы",
+                                   subtitle: "Схема глаголов целиком · help me, don't, let's")
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        PolyglotLesson8View()
+                            .toolbar(.hidden, for: .navigationBar)
+                    } label: {
+                        lessonCard(number: 8, title: "Предлоги и фразовые глаголы",
+                                   subtitle: "On, under, over · with, without, about · go back, look for")
+                    }
+                    .buttonStyle(.plain)
                 }
                 .padding(20)
             }

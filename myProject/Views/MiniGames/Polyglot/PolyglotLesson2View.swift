@@ -122,6 +122,8 @@ struct PolyglotGridTable: View {
     let rows: [[String]]
     /// Узкий первый столбец под короткие подписи (in, a, -er); nil — все столбцы поровну
     var firstColumnWidth: CGFloat? = nil
+    /// Меньше — для широких таблиц, чтобы длинные слова (everywhere) не рвались посередине
+    var fontSize: CGFloat = 15
 
     var body: some View {
         VStack(spacing: 0) {
@@ -132,7 +134,7 @@ struct PolyglotGridTable: View {
                             Rectangle().fill(Color.brandDark.opacity(0.3)).frame(width: 1)
                         }
                         Text(cell)
-                            .scaledFont(size: 15, weight: index == 0 ? .semibold : .regular)
+                            .scaledFont(size: fontSize, weight: index == 0 ? .semibold : .regular)
                             .foregroundColor(.brandDark)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 10)
