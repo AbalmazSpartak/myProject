@@ -186,7 +186,10 @@ struct TopicCard: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        Button {
+            Haptics.tap()
+            action()
+        } label: {
             VStack(alignment: .leading, spacing: 8) {
                 Text(topic.title)
                     .scaledFont(size: 19, weight: .semibold, design: .serif)

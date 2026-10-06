@@ -25,9 +25,10 @@ struct ContentView: View {
     @Query private var profiles: [UserProfile]
     
     @State private var activeScreen: ActiveScreen?
+    @State private var selectedTab = 0
 
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             NavigationStack {
                 OverviewView { activeScreen = $0 }
                     .navigationBarHidden(true)
@@ -40,15 +41,19 @@ struct ContentView: View {
                     }
             }
             .tabItem { Label("Обзор", systemImage: "safari.fill") }
+            .tag(0)
 
             ProfileView()
                 .readableColumn()
                 .tabItem { Label("Профиль", systemImage: "person.fill") }
+                .tag(1)
 
             DictionaryView(showsBackButton: false)
                 .readableColumn()
                 .tabItem { Label("Словарь", systemImage: "book.closed.fill") }
+                .tag(2)
         }
+        .onChange(of: selectedTab) { _, _ in Haptics.tap() }
         .tint(.brandTint)
         .toolbarBackground(Color.brandFill, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)

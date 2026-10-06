@@ -10,6 +10,7 @@ struct SettingsView: View {
     @AppStorage("app_theme") private var selectedTheme: String = "system"
     @AppStorage("translation_mode") private var translationMode: String = "en_ru"
     @AppStorage("show_word_images") private var showWordImages: Bool = true
+    @AppStorage(Haptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
     @AppStorage(MainMenuLayout.storageKey) private var menuLayout = MainMenuLayout.standard
     @AppStorage(SessionLength.key) private var sessionLength = SessionLength.defaultValue
@@ -88,6 +89,8 @@ struct SettingsView: View {
                         .padding(.vertical, 4)
 
                         Toggle("Картинки к словам", isOn: $showWordImages)
+
+                        Toggle("Вибрация", isOn: $hapticsEnabled)
 
                         Picker("Слов за подход", selection: $sessionLength) {
                             ForEach(SessionLength.options, id: \.self) { length in

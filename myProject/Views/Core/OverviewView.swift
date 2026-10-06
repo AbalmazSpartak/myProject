@@ -113,7 +113,10 @@ struct Ribbon<Content: View>: View {
         VStack(alignment: .leading, spacing: 12) {
             Group {
                 if let onTitleTap {
-                    Button(action: onTitleTap) {
+                    Button {
+                        Haptics.tap()
+                        onTitleTap()
+                    } label: {
                         HStack(spacing: 4) {
                             titleText
                             Image(systemName: "chevron.right")
@@ -151,7 +154,10 @@ struct TileCard: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        Button {
+            Haptics.tap()
+            action()
+        } label: {
             VStack(alignment: .leading, spacing: 8) {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(color.opacity(0.18))
@@ -180,7 +186,10 @@ struct CollectionCard: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        Button {
+            Haptics.tap()
+            action()
+        } label: {
             VStack(alignment: .leading, spacing: 8) {
                 cover
                     .frame(width: PadLayout.tileSize.width, height: PadLayout.tileSize.height)
