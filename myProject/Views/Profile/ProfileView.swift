@@ -16,14 +16,9 @@ struct ProfileView: View {
     @State private var streakWeek: [(date: Date, isDone: Bool)] = []
     @AppStorage(DailyNewWords.limitKey) private var newWordsPerDay = DailyNewWords.defaultLimit
     
+    /// Профиль создаётся при запуске приложения; если его всё же нет — тот же единственный, а не новый
     private var profile: UserProfile {
-        if let existing = profiles.first {
-            return existing
-        } else {
-            let newProfile = UserProfile()
-            modelContext.insert(newProfile)
-            return newProfile
-        }
+        profiles.first ?? UserProfile.ensureSingle(in: modelContext)
     }
     
     var body: some View {

@@ -83,3 +83,45 @@ extension UserProfile {
         }
     }
 }
+
+// MARK: - Один профиль
+
+extension UserProfile {
+    /// Сколько в профиле данных — чтобы из дубликатов оставить настоящий
+    var dataWeight: Int {
+        totalAnswers + tetrisHighScore + (avatarData == nil ? 0 : 1) + (name == "Студент" ? 0 : 1)
+    }
+
+    /// Профиль приложения — ровно один. Если профилей несколько (раньше экран профиля иногда создавал лишний,
+    /// пока база ещё не подгрузилась), оставляем тот, где больше данных, и переносим в него данные остальных.
+    /// Запрос видит и ещё не сохранённые профили, поэтому повторный вызов дубликат не создаст
+    @MainActor
+    @discardableResult
+    static func ensureSingle(in context: ModelContext) -> UserProfile {
+        let profiles = (try? context.fetch(FetchDescriptor<UserProfile>())) ?? []
+        guard let keeper = profiles.max(by: { $0.dataWeight < $1.dataWeight }) else {
+            let created = UserProfile()
+            context.insert(created)
+            try? context.save()
+            return created
+        }
+        let duplicates = profiles.filter { $0 !== keeper }
+        guard !duplicates.isEmpty else { return keeper }
+        for duplicate in duplicates {
+            keeper.flashcardsEnRuCorrect += duplicate.flashcardsEnRuCorrect
+            keeper.flashcardsEnRuTotal += duplicate.flashcardsEnRuTotal
+            keeper.flashcardsRuEnCorrect += duplicate.flashcardsRuEnCorrect
+            keeper.flashcardsRuEnTotal += duplicate.flashcardsRuEnTotal
+            keeper.quizEnRuCorrect += duplicate.quizEnRuCorrect
+            keeper.quizEnRuTotal += duplicate.quizEnRuTotal
+            keeper.quizRuEnCorrect += duplicate.quizRuEnCorrect
+            keeper.quizRuEnTotal += duplicate.quizRuEnTotal
+            keeper.tetrisHighScore = max(keeper.tetrisHighScore, duplicate.tetrisHighScore)
+            if keeper.avatarData == nil { keeper.avatarData = duplicate.avatarData }
+            if keeper.name == "Студент", duplicate.name != "Студент" { keeper.name = duplicate.name }
+            context.delete(duplicate)
+        }
+        try? context.save()
+        return keeper
+    }
+}
