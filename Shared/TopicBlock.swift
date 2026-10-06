@@ -4,7 +4,7 @@ import SwiftData
 /// Блок темы сообщества. Тема собирается из блоков в любом порядке: подзаголовок, текст, таблица, аудио, видео
 struct TopicBlock: Codable, Identifiable, Hashable {
     enum Kind: String, Codable, CaseIterable {
-        case heading, text, table, audio, video
+        case heading, text, table, audio, video, exercise
 
         var title: String {
             switch self {
@@ -13,6 +13,7 @@ struct TopicBlock: Codable, Identifiable, Hashable {
             case .table: return "Таблица"
             case .audio: return "Аудио"
             case .video: return "Видео"
+            case .exercise: return "Тренировка"
             }
         }
 
@@ -23,8 +24,12 @@ struct TopicBlock: Codable, Identifiable, Hashable {
             case .table: return "tablecells"
             case .audio: return "waveform"
             case .video: return "play.rectangle.fill"
+            case .exercise: return "figure.strengthtraining.traditional"
             }
         }
+
+        /// Какие блоки автор добавляет сам; тренировки — только во встроенных темах
+        static var authorable: [Kind] { allCases.filter { $0 != .exercise } }
     }
 
     /// Запись голосом — для авторов, готовый файл — для аудиоуроков, озвучка — услышать фразу целиком
@@ -55,6 +60,8 @@ struct TopicBlock: Codable, Identifiable, Hashable {
     /// Ссылка на видео (YouTube — плеер прямо в теме, другие — кнопкой в браузер).
     /// Необязательная: у блоков, сохранённых до видео, этого поля нет, и они должны читаться как раньше
     var videoURL: String?
+    /// Какая тренировка открывается из блока (VowelReading.exerciseID…); тоже необязательное, как videoURL
+    var exerciseID: String?
 
     init(kind: Kind) {
         self.kind = kind

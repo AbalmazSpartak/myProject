@@ -97,6 +97,14 @@ enum BuiltInTopics {
         return block
     }
 
+    /// Карточка тренировки: открывает упражнение по его id
+    private static func exercise(_ id: String, title: String) -> TopicBlock {
+        var block = TopicBlock(kind: .exercise)
+        block.exerciseID = id
+        block.text = title
+        return block
+    }
+
     /// Озвучка английской фразы; подпись — что звучит
     private static func speech(_ english: String, caption: String) -> TopicBlock {
         var block = TopicBlock(kind: .audio)
@@ -361,6 +369,7 @@ enum BuiltInTopics {
                 ["", "fly", "typical", "Myrtle", "tyre"],
                 ["", "why", "system", "", ""],
             ], labels: true, highlighted: [1, 5, 9]),
+            exercise(VowelReading.exerciseID, title: "Тренировка: как читается?"),
             heading("Немая e меняет звук"),
             text("Добавьте e на конце — и закрытый слог становится открытым: hat → hate, kit → kite, hop → hope, cub → cube, pet → Pete."),
             speech("hat, hate. kit, kite. hop, hope. cub, cube.", caption: "Закрытый и открытый слог"),

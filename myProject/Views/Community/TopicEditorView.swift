@@ -93,7 +93,7 @@ struct TopicEditorView: View {
 
                     Section {
                         Menu {
-                            ForEach(TopicBlock.Kind.allCases, id: \.self) { kind in
+                            ForEach(TopicBlock.Kind.authorable, id: \.self) { kind in
                                 Button {
                                     blocks.append(TopicBlock(kind: kind))
                                 } label: {
@@ -175,6 +175,9 @@ struct TopicEditorView: View {
             TopicAudioEditor(block: block, pendingAudio: $pendingAudio)
         case .video:
             TopicVideoEditor(block: block)
+        case .exercise:
+            Text("Тренировка встроенной темы — меняется вместе с приложением")
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -231,6 +234,8 @@ struct TopicEditorView: View {
             case .video:
                 block.videoURL = block.videoURL?.trimmingCharacters(in: .whitespacesAndNewlines)
                 return (block.videoURL ?? "").isEmpty ? nil : block
+            case .exercise:
+                return block.exerciseID == nil ? nil : block
             }
         }
     }

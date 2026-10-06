@@ -27,6 +27,8 @@ struct TopicBlockView: View {
             TopicAudioView(block: block, clip: clip)
         case .video:
             TopicVideoView(block: block)
+        case .exercise:
+            TopicExerciseCard(block: block)
         }
     }
 }
