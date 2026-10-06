@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Раздел главного меню. «Мой профиль» сюда не входит: он всегда сверху, через него открываются настройки
 enum MenuSection: String, CaseIterable {
-    case flashcards, quiz, cloze, inputCards, dictionary, tetris, race, help, community, books
+    case flashcards, quiz, cloze, inputCards, dictionary, tetris, race, help, community, books, polyglot
 
     var title: String {
         switch self {
@@ -16,6 +16,7 @@ enum MenuSection: String, CaseIterable {
         case .help: return "Справка"
         case .community: return "Сообщество"
         case .books: return "Книги"
+        case .polyglot: return "Полиглот"
         }
     }
 
@@ -36,6 +37,7 @@ enum MenuSection: String, CaseIterable {
         case .help: return "questionmark.circle.fill"
         case .community: return "person.3.fill"
         case .books: return "books.vertical.fill"
+        case .polyglot: return "character.bubble.fill"
         }
     }
 
@@ -51,6 +53,7 @@ enum MenuSection: String, CaseIterable {
         case .help: return .gray
         case .community: return .cyan
         case .books: return .brown
+        case .polyglot: return .red
         }
     }
 
@@ -71,6 +74,7 @@ enum MenuSection: String, CaseIterable {
         case .help: return .help
         case .community: return .community
         case .books: return .books
+        case .polyglot: return .polyglot
         }
     }
 }
@@ -108,7 +112,7 @@ struct MenuGroup: Identifiable, Hashable {
     static let inputCards = MenuGroup(id: "inputCards", name: "Карточки ввода", icon: "keyboard.fill",
                                       colorName: "teal", sections: [.inputCards, .cloze])
     static let miniGames = MenuGroup(id: "miniGames", name: "Мини-игры", icon: "gamecontroller.fill",
-                                     colorName: "indigo", sections: [.tetris, .race])
+                                     colorName: "indigo", sections: [.tetris, .race, .polyglot])
 }
 
 /// Постоянные ленты «Обзора»: место у них своё, в настройке их можно только скрыть
@@ -310,6 +314,13 @@ extension MainMenuLayout: RawRepresentable {
         for id in groups.keys.sorted() where !items.contains(.group(id)) {
             groups[id]?.sections.removeAll { !placed.insert($0).inserted }
             items.append(.group(id))
+        }
+        // Новый раздел из обновления — в свою стандартную группу, если она есть (например, «Полиглот» — в «Мини-игры»)
+        for section in MenuSection.allCases where !placed.contains(section) {
+            guard let home = [MenuGroup.cards, MenuGroup.inputCards, MenuGroup.miniGames].first(where: { $0.sections.contains(section) }),
+                  groups[home.id] != nil else { continue }
+            groups[home.id]?.sections.append(section)
+            placed.insert(section)
         }
         items += MenuSection.allCases.filter { !placed.contains($0) }.map { .section($0) }
 

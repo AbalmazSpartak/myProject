@@ -13,6 +13,7 @@ enum ActiveScreen: Hashable, Identifiable {
     case help
     case community
     case books
+    case polyglot
     /// Тема сообщества из «Ваших подборок»
     case topic(CommunityTopic)
 
@@ -79,6 +80,9 @@ struct ContentView: View {
                 .readableColumn()
         case .race:
             RaceLobbyView()
+                .readableColumn()
+        case .polyglot:
+            PolyglotView()
                 .readableColumn()
         case .help:
             HelpView()
