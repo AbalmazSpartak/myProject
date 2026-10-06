@@ -19,13 +19,20 @@ struct BookReaderView: View {
     /// С какого абзаца книги начинается каждая глава
     @State private var chapterStarts: [Int] = []
     @State private var chapterIndex = 0
-    /// Верхний видимый абзац главы
-    @State private var visibleParagraph: Int?
+    /// Абзац, с которого открыть главу
+    @State private var startParagraph = 0
+    /// Абзацы главы, где каждое слово — ссылка на перевод. Готовятся один раз при открытии главы:
+    /// разбор на каждой перерисовке давал рывки при прокрутке
+    @State private var linkedParagraphs: [AttributedString]?
     @State private var tappedWord: TappedWord?
     @State private var isShowingContents = false
     @State private var isShowingDictionary = false
+    @State private var isShowingAppearance = false
 
-    private static let wordScheme = "wlword"
+    /// Оформление — снимок настроек: обновляется после шторки «Оформление»
+    @State private var style = ReaderStyle.current()
+
+    nonisolated private static let wordScheme = "wlword"
 
     private var chapter: BookChapter? {
         chapters.indices.contains(chapterIndex) ? chapters[chapterIndex] : nil
@@ -35,27 +42,49 @@ struct BookReaderView: View {
         VStack(spacing: 0) {
             header
             Divider().opacity(0.4)
-            if let chapter {
-                text(of: chapter)
+            if let linkedParagraphs {
+                ReaderChapterText(
+                    chapterID: chapterIndex,
+                    paragraphs: linkedParagraphs,
+                    font: style.font.font(size: style.fontSize),
+                    textColor: style.text,
+                    lineSpacing: style.fontSize * style.spacing.factor,
+                    startParagraph: startParagraph,
+                    onVisible: { paragraph in
+                        // Место чтения — прямо в книгу: у читалки нет состояния, которое менялось бы при прокрутке
+                        guard chapterStarts.indices.contains(chapterIndex) else { return }
+                        book.position = chapterStarts[chapterIndex] + paragraph
+                    },
+                    onTap: handleTap
+                ) {
+                    chapterNavigation
+                }
+                .equatable()
+                .id(chapterIndex)
             } else {
                 Spacer()
                 ProgressView()
                 Spacer()
             }
         }
-        .background(Color.brandBackground.ignoresSafeArea())
+        .background(style.background.ignoresSafeArea())
+        // Тёмная тема книги — светлые часы и батарея в статус-баре
+        .preferredColorScheme(style.colorScheme)
         .readableColumn(720)
         .task { open() }
-        .onChange(of: visibleParagraph) { _, paragraph in
-            guard let paragraph, chapterStarts.indices.contains(chapterIndex) else { return }
-            book.position = chapterStarts[chapterIndex] + paragraph
-        }
+        // Глава готовится, когда главы загружены и при каждой смене главы
+        .task(id: "\(chapters.count)-\(chapterIndex)") { await prepareChapter() }
         .sheet(item: $tappedWord) { tapped in
             WordLookupView(tapped: tapped, bookTitle: book.title)
                 .presentationDetents([.medium, .large])
                 .appThemedColorScheme()
         }
         .sheet(isPresented: $isShowingContents) { contents }
+        .sheet(isPresented: $isShowingAppearance, onDismiss: { style = .current() }) {
+            ReaderAppearanceSheet()
+                .presentationDetents([.medium, .large])
+                .appThemedColorScheme()
+        }
         .sheet(isPresented: $isShowingDictionary) {
             BookDictionaryView(book: book)
                 .appThemedColorScheme()
@@ -72,17 +101,23 @@ struct BookReaderView: View {
                     Text("Книги")
                 }
                 .scaledFont(size: 17, weight: .semibold)
-                .foregroundColor(.brandDark)
+                .foregroundColor(style.text)
             }
             Spacer()
             Button { isShowingContents = true } label: {
                 Text(chapter?.title ?? book.title)
                     .scaledFont(size: 15, weight: .semibold)
-                    .foregroundColor(.brandDark)
+                    .foregroundColor(style.text)
                     .lineLimit(1)
             }
             .accessibilityHint("Оглавление")
             Spacer()
+            Button { isShowingAppearance = true } label: {
+                Text("Aa")
+                    .font(.system(size: 19, weight: .semibold, design: .serif))
+                    .foregroundColor(style.text)
+            }
+            .accessibilityLabel("Оформление")
             Menu {
                 Button { isShowingContents = true } label: {
                     Label("Оглавление", systemImage: "list.bullet")
@@ -90,10 +125,13 @@ struct BookReaderView: View {
                 Button { isShowingDictionary = true } label: {
                     Label("Словарь из книги", systemImage: "text.book.closed")
                 }
+                Button { isShowingAppearance = true } label: {
+                    Label("Оформление", systemImage: "textformat.size")
+                }
             } label: {
                 Image(systemName: "ellipsis.circle")
                     .scaledFont(size: 22)
-                    .foregroundColor(.brandDark)
+                    .foregroundColor(style.text)
             }
             .accessibilityLabel("Ещё")
         }
@@ -103,40 +141,13 @@ struct BookReaderView: View {
 
     // MARK: - Текст главы
 
-    private func text(of chapter: BookChapter) -> some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 14) {
-                ForEach(chapter.paragraphs.indices, id: \.self) { index in
-                    Text(Self.linked(chapter.paragraphs[index], paragraph: index))
-                        .scaledFont(size: 19, design: .serif)
-                        .foregroundColor(.brandDark)
-                        .lineSpacing(5)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .id(index)
-                }
-                chapterNavigation
-                    .padding(.top, 20)
-            }
-            .scrollTargetLayout()
-            .padding(.horizontal, 22)
-            .padding(.vertical, 18)
-        }
-        .scrollPosition(id: $visibleParagraph, anchor: .top)
-        // Слова — ссылки: цвет обычного текста, нажатие открывает перевод
-        .tint(.brandDark)
-        .environment(\.openURL, OpenURLAction { url in
-            handleTap(url)
-            return .handled
-        })
-        .id(chapterIndex)
-    }
-
     private var chapterNavigation: some View {
         HStack {
             if chapterIndex > 0 {
                 Button { go(to: chapterIndex - 1) } label: {
                     Label("Назад", systemImage: "chevron.left")
                 }
+                .foregroundColor(style.text)
             }
             Spacer()
             if chapterIndex + 1 < chapters.count {
@@ -150,7 +161,7 @@ struct BookReaderView: View {
                 .tint(.brown)
             } else {
                 Text("Конец книги")
-                    .foregroundColor(.gray)
+                    .foregroundColor(style.text.opacity(0.6))
             }
         }
         .scaledFont(size: 16, weight: .semibold)
@@ -204,19 +215,24 @@ struct BookReaderView: View {
         }
         let position = book.position
         chapterIndex = chapterStarts.lastIndex { $0 <= position } ?? 0
-        let paragraph = position - (chapterStarts.indices.contains(chapterIndex) ? chapterStarts[chapterIndex] : 0)
+        startParagraph = position - (chapterStarts.indices.contains(chapterIndex) ? chapterStarts[chapterIndex] : 0)
         book.lastOpenedAt = Date()
-        // Прокрутка к месту — после того как глава отрисовалась
-        Task {
-            try? await Task.sleep(for: .milliseconds(80))
-            visibleParagraph = paragraph
-        }
+    }
+
+    /// Ссылки на слова для всей главы — в фоне, один раз
+    private func prepareChapter() async {
+        guard let chapter else { return }
+        linkedParagraphs = nil
+        let paragraphs = chapter.paragraphs
+        linkedParagraphs = await Task.detached(priority: .userInitiated) {
+            paragraphs.enumerated().map { Self.linked($1, paragraph: $0) }
+        }.value
     }
 
     private func go(to index: Int) {
         guard chapters.indices.contains(index) else { return }
+        startParagraph = 0
         chapterIndex = index
-        visibleParagraph = 0
         book.position = chapterStarts[index]
     }
 
@@ -247,7 +263,7 @@ struct BookReaderView: View {
     }
 
     /// Абзац, где каждое английское слово — ссылка на себя
-    static func linked(_ text: String, paragraph: Int) -> AttributedString {
+    nonisolated static func linked(_ text: String, paragraph: Int) -> AttributedString {
         let ns = text as NSString
         guard let regex = try? NSRegularExpression(pattern: "[A-Za-z]+(?:['’-][A-Za-z]+)*") else { return AttributedString(text) }
         var result = AttributedString()
@@ -266,5 +282,63 @@ struct BookReaderView: View {
             result += AttributedString(ns.substring(from: last))
         }
         return result
+    }
+}
+
+/// Текст главы. Отдельно от читалки и сравнивается по содержимому: при прокрутке перерисовывается только он,
+/// а шапка, шторки и вся читалка — нет
+private struct ReaderChapterText<Navigation: View>: View, Equatable {
+    let chapterID: Int
+    let paragraphs: [AttributedString]
+    let font: Font
+    let textColor: Color
+    let lineSpacing: CGFloat
+    let startParagraph: Int
+    let onVisible: (Int) -> Void
+    let onTap: (URL) -> Void
+    @ViewBuilder let navigation: () -> Navigation
+
+    /// Верхний видимый абзац
+    @State private var visibleParagraph: Int?
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.chapterID == rhs.chapterID && lhs.paragraphs.count == rhs.paragraphs.count
+            && lhs.font == rhs.font && lhs.textColor == rhs.textColor && lhs.lineSpacing == rhs.lineSpacing
+    }
+
+    var body: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 14) {
+                ForEach(paragraphs.indices, id: \.self) { index in
+                    Text(paragraphs[index])
+                        .font(font)
+                        .foregroundColor(textColor)
+                        .lineSpacing(lineSpacing)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .id(index)
+                }
+                navigation()
+                    .padding(.top, 20)
+            }
+            .scrollTargetLayout()
+            .padding(.horizontal, 22)
+            .padding(.vertical, 18)
+        }
+        .scrollPosition(id: $visibleParagraph, anchor: .top)
+        // Слова — ссылки: цвет обычного текста, нажатие открывает перевод
+        .tint(textColor)
+        .environment(\.openURL, OpenURLAction { url in
+            onTap(url)
+            return .handled
+        })
+        .task {
+            // Прокрутка к месту — после того как глава отрисовалась
+            guard startParagraph > 0 else { return }
+            try? await Task.sleep(for: .milliseconds(80))
+            visibleParagraph = startParagraph
+        }
+        .onChange(of: visibleParagraph) { _, paragraph in
+            if let paragraph { onVisible(paragraph) }
+        }
     }
 }
