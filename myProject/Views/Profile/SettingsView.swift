@@ -149,6 +149,8 @@ struct SettingsView: View {
                     }
 
                     // Оформление
+                    BackupSection()
+
                     Section(header: Text("Оформление")) {
                         Picker("Тема оформления", selection: $selectedTheme) {
                             Text("Системная").tag("system")

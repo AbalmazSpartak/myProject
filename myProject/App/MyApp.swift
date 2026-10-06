@@ -21,6 +21,8 @@ struct MyApp: App {
 
             // Загружаем words.csv при первом запуске и сливаем его обновления
             Task { @MainActor in
+                // Один профиль: убирает дубликаты, если они успели появиться
+                UserProfile.ensureSingle(in: mainContext)
                 DataPreloader.syncBundledWords(context: mainContext)
                 DataPreloader.resetImagesIfSourcesChanged(context: mainContext)
                 // Встроенные темы «Сообщества» — после переустановки возвращаются, с новой версией обновляются
