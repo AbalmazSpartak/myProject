@@ -2,6 +2,9 @@ import SwiftUI
 import Charts
 
 extension FSRSRating {
+    /// Фон оценки — как у кнопок «Снова / Трудно / Хорошо / Легко» в карточках: тот же цвет, но бледный
+    var softColor: Color { color.opacity(0.15) }
+
     /// Цвета оценок — одни и те же в карточках, справке и профиле
     var color: Color {
         switch self {
@@ -271,16 +274,17 @@ struct DailyStudyCard: View {
             .annotation(position: .overlay) {
                 // В низком сегменте цифра не помещается и налезает на соседний
                 if Double(segment.count) >= Double(maxDayTotal) * 0.12 {
+                    // Цифра — цветом оценки на бледном фоне, как надпись на кнопке в карточках
                     Text("\(segment.count)")
                         .scaledFont(size: 12, weight: .semibold, design: .rounded)
-                        .foregroundColor(.white)
+                        .foregroundColor(FSRSRating.allCases.first { $0.title == segment.title }?.color ?? .brandDark)
                         .fixedSize()
                 }
             }
         }
         .chartForegroundStyleScale(
             domain: FSRSRating.allCases.map(\.title),
-            range: FSRSRating.allCases.map(\.color)
+            range: FSRSRating.allCases.map(\.softColor)
         )
         .chartLegend(.hidden)
         .chartXScale(domain: dateRange)
@@ -332,7 +336,7 @@ struct DailyStudyCard: View {
                         .gridColumnAlignment(.trailing)
                     HStack(spacing: 12) {
                         RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(rating.color)
+                            .fill(rating.softColor)
                             .frame(width: 24, height: 24)
                         Text(rating.title)
                     }
