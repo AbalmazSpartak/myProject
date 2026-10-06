@@ -63,7 +63,7 @@ final class CommunityTopic {
 
 enum CommunitySections {
     /// Разделы, которые есть всегда — даже без тем; свои разделы появляются вместе с первой темой в них
-    static let builtIn = ["Английский по кино", "Подборки слов", "Грамматика"]
+    static let builtIn = ["Английский по кино", "Подборки слов", "Грамматика", "Произношение"]
 
     /// Встроенные — первыми, свои — по алфавиту
     static func all(from topics: [CommunityTopic]) -> [String] {

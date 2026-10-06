@@ -71,12 +71,20 @@ enum BuiltInTopics {
     }
 
     /// Первая строка — шапка; labels — первый столбец тоже шапка (подписи строк)
-    private static func table(_ rows: [[String]], labels: Bool = false) -> TopicBlock {
+    /// highlighted — строки, выделенные цветом целиком (кроме подписи слева): например, транскрипция над примерами
+    private static func table(_ rows: [[String]], labels: Bool = false, highlighted: Set<Int> = []) -> TopicBlock {
         var block = TopicBlock(kind: .table)
         var table = TopicTable()
         table.cells = rows
         table.hasHeaderRow = true
         table.hasHeaderColumn = labels
+        for row in highlighted {
+            for column in (labels ? 1 : 0)..<(rows.first?.count ?? 0) {
+                var style = table.style(row: row, column: column)
+                style.tone = .red
+                table.setStyle(style, row: row, column: column)
+            }
+        }
         block.table = table
         return block
     }
@@ -94,7 +102,9 @@ enum BuiltInTopics {
 
     static let grammarSection = "Грамматика"
 
-    static let all: [Topic] = [tenses, irregularVerbs, articles, movieQuotes, airport, cafe]
+    static let all: [Topic] = [tenses, irregularVerbs, articles, movieQuotes, airport, cafe, vowelReading]
+
+    static let pronunciationSection = "Произношение"
 
     private static let tenses = Topic(
         number: 1,
@@ -293,6 +303,71 @@ enum BuiltInTopics {
         words: [
             ("menu", "меню"), ("waiter", "официант"), ("check", "счёт"), ("tip", "чаевые"),
             ("order", "заказывать"), ("dessert", "десерт"), ("reservation", "бронь"),
+        ]
+    )
+
+    private static let vowelReading = Topic(
+        number: 7,
+        section: pronunciationSection,
+        title: "Как читаются гласные: четыре типа слога",
+        blocks: blocks(7, [
+            text("Одна и та же гласная буква в английском читается по-разному. Как именно — подсказывает слог, в котором она стоит. Типов слога четыре, и у каждой гласной в каждом типе — свой звук."),
+            heading("1. Открытый слог"),
+            text("Слог заканчивается на гласную (me, we, fly) или после одной согласной идёт немая e на конце (name, hope, cute). Гласная читается так, как называется в алфавите: a — [ei], o — [əʊ], u — [ju:], e — [i:], i и y — [ai]."),
+            heading("2. Закрытый слог"),
+            text("Слог заканчивается на согласную: cat, hot, cup, met, kit. Гласная звучит коротко: [æ], [ɔ], [ʌ], [e], [i]."),
+            heading("3. Гласная + r"),
+            text("Буква r после гласной в британском варианте не читается, а гласная становится долгой: car [a:], for [ɔ:]. Сочетания er, ir, ur и yr звучат одинаково — [ɜ:]: verb, girl, hurt. В американском варианте r произносится: car [kɑːr]."),
+            heading("4. Гласная + re"),
+            text("После r идёт ещё гласная, обычно немая e: hare, here, fire, cure. Получается звук с призвуком [ə] на конце: [ɛə], [ɪə], [aiə], [jʊə]. У o звук тот же, что перед r, — [ɔ:]: more."),
+            heading("Таблица: a, o, u"),
+            text("Откр. — открытый слог, закр. — закрытый, +r и +re — гласная перед r и перед re."),
+            table([
+                ["", "Откр.", "Закр.", "+r", "+re"],
+                ["a", "[ei]", "[æ]", "[a:]", "[ɛə]"],
+                ["", "name", "cat", "car", "hare"],
+                ["", "take", "fat", "far", "care"],
+                ["", "baby", "rat", "dark", "dare"],
+                ["o", "[əʊ]", "[ɔ]", "[ɔ:]", "[ɔ:]"],
+                ["", "hope", "hot", "for", "more"],
+                ["", "Rome", "dog", "sport", "before"],
+                ["", "home", "stop", "horse", "score"],
+                ["u", "[ju:]", "[ʌ]", "[ɜ:]", "[jʊə]"],
+                ["", "cute", "cup", "turkey", "cure"],
+                ["", "computer", "bus", "hurt", "endure"],
+                ["", "cube", "lunch", "lurk", "pure"],
+            ], labels: true, highlighted: [1, 5, 9]),
+            heading("Таблица: e, i, y"),
+            table([
+                ["", "Откр.", "Закр.", "+r", "+re"],
+                ["e", "[i:]", "[e]", "[ɜ:]", "[ɪə]"],
+                ["", "me", "met", "German", "here"],
+                ["", "theme", "pet", "perfume", "mere"],
+                ["", "we", "let", "verb", "sphere"],
+                ["i", "[ai]", "[i]", "[ɜ:]", "[aiə]"],
+                ["", "wife", "kit", "girl", "fire"],
+                ["", "bike", "lit", "bird", "tired"],
+                ["", "kite", "fit", "", ""],
+                ["y", "[ai]", "[i]", "[ɜ:] или\n[ə:]", "[aiə]"],
+                ["", "fly", "typical", "Myrtle", "tyre"],
+                ["", "why", "system", "", ""],
+            ], labels: true, highlighted: [1, 5, 9]),
+            heading("Немая e меняет звук"),
+            text("Добавьте e на конце — и закрытый слог становится открытым: hat → hate, kit → kite, hop → hope, cub → cube, pet → Pete."),
+            speech("hat, hate. kit, kite. hop, hope. cub, cube.", caption: "Закрытый и открытый слог"),
+            heading("Послушайте по строкам"),
+            speech("name, cat, car, hare", caption: "a: [ei] — [æ] — [a:] — [ɛə]"),
+            speech("hope, hot, for, more", caption: "o: [əʊ] — [ɔ] — [ɔ:] — [ɔ:]"),
+            speech("cute, cup, hurt, cure", caption: "u: [ju:] — [ʌ] — [ɜ:] — [jʊə]"),
+            speech("me, met, verb, here", caption: "e: [i:] — [e] — [ɜ:] — [ɪə]"),
+            speech("bike, kit, girl, fire", caption: "i: [ai] — [i] — [ɜ:] — [aiə]"),
+            speech("fly, system, Myrtle, tyre", caption: "y: [ai] — [i] — [ɜ:] — [aiə]"),
+            text("Правила работают в ударных слогах и знают много исключений — например, have, give, love, come читаются как в закрытом слоге. Но для большинства слов таблица подсказывает чтение верно."),
+        ]),
+        words: [
+            ("name", "имя"), ("cat", "кошка"), ("car", "машина"), ("hope", "надеяться"), ("hot", "горячий"),
+            ("cup", "чашка"), ("cute", "милый"), ("here", "здесь"), ("bike", "велосипед"), ("bird", "птица"),
+            ("fly", "летать"), ("fire", "огонь"),
         ]
     )
 }
