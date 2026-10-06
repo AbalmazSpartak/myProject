@@ -23,8 +23,6 @@ struct OverviewView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
-                header
-
                 if !menuLayout.isHidden(.wordOfDay), !wordsOfDay.isEmpty {
                     WordOfDayCarousel(words: wordsOfDay)
                 }
@@ -42,6 +40,8 @@ struct OverviewView: View {
             .padding(.vertical, 12)
             .padding(.bottom, 30)
         }
+        // Шапка закреплена сверху: лента прокручивается под ней
+        .safeAreaInset(edge: .top, spacing: 0) { header }
         .background(Color.brandBackground.ignoresSafeArea())
         .onAppear {
             // Серия и норма меняются в тренировках — пересчитываем при каждом возвращении на «Обзор»
@@ -65,25 +65,43 @@ struct OverviewView: View {
         } label: {
             HStack(spacing: 14) {
                 avatar(profile)
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("Привет, \(profile?.name ?? "Студент")!")
-                        .scaledFont(size: 20, weight: .bold)
-                        .foregroundColor(.brandDark)
-                        .lineLimit(1)
-                    HStack(spacing: 16) {
+                // Слева — приветствие и рекорд Тетриса, справа столбиком — серия дней и норма слов
+                HStack(alignment: .center, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("Привет, \(profile?.name ?? "Студент")!")
+                            .scaledFont(size: 20, weight: .bold)
+                            .foregroundColor(.brandDark)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                        Text("🎮 \((profile?.tetrisHighScore ?? 0).formatted()) \(Self.pointsNoun(profile?.tetrisHighScore ?? 0))")
+                            .scaledFont(size: 14, weight: .medium)
+                            .foregroundColor(.brandDark.opacity(0.75))
+                    }
+                    Spacer(minLength: 8)
+                    VStack(alignment: .trailing, spacing: 5) {
                         Text("🔥 \(streak) \(Self.daysNoun(streak))")
                         Text(dailyLimit > 0 ? "🎯 \(introducedToday)/\(dailyLimit) слов" : "🎯 \(introducedToday) \(DailyStudyCard.wordsNoun(introducedToday))")
                     }
                     .scaledFont(size: 14, weight: .medium)
                     .foregroundColor(.brandDark.opacity(0.75))
                 }
-                Spacer(minLength: 0)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.horizontal, 20)
+            .padding(.top, 8)
+            .padding(.bottom, 20)
+            .frame(maxWidth: .infinity)
+            // Плашка на всю ширину: уходит под статус-бар, внизу скруглена
+            .background(alignment: .bottom) {
+                UnevenRoundedRectangle(bottomLeadingRadius: 28, bottomTrailingRadius: 28, style: .continuous)
+                    .fill(Color.cardBackground)
+                    .padding(.top, -300)
+                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
+            }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Привет, \(profile?.name ?? "Студент"). Серия \(streak) \(Self.daysNoun(streak)), сегодня \(introducedToday) из \(dailyLimit) слов. Открыть профиль")
+        .accessibilityLabel("Привет, \(profile?.name ?? "Студент"). Рекорд Тетриса \(profile?.tetrisHighScore ?? 0). Серия \(streak) \(Self.daysNoun(streak)), сегодня \(introducedToday) из \(dailyLimit) слов. Открыть профиль")
     }
 
     private func avatar(_ profile: UserProfile?) -> some View {
@@ -101,6 +119,17 @@ struct OverviewView: View {
             }
         }
         .frame(width: 58, height: 58)
+    }
+
+    /// 1 очко, 2 очка, 5 очков
+    private static func pointsNoun(_ count: Int) -> String {
+        let lastTwo = count % 100, last = count % 10
+        if (11...14).contains(lastTwo) { return "очков" }
+        switch last {
+        case 1: return "очко"
+        case 2...4: return "очка"
+        default: return "очков"
+        }
     }
 
     /// 1 день, 2 дня, 5 дней
