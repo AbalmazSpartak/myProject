@@ -9,9 +9,16 @@ struct OverviewView: View {
     private var savedTopics: [CommunityTopic]
     @AppStorage(MainMenuLayout.storageKey) private var menuLayout = MainMenuLayout.standard
 
+    @Query private var profiles: [UserProfile]
+    @AppStorage(DailyNewWords.limitKey) private var dailyLimit = DailyNewWords.defaultLimit
+
     @State private var wordsOfDay: [Word] = []
+    @State private var streak = 0
+    @State private var introducedToday = 0
 
     let open: (ActiveScreen) -> Void
+    /// Нажатие на шапку — вкладка «Профиль»
+    var openProfile: () -> Void = {}
 
     var body: some View {
         ScrollView {
@@ -37,6 +44,9 @@ struct OverviewView: View {
         }
         .background(Color.brandBackground.ignoresSafeArea())
         .onAppear {
+            // Серия и норма меняются в тренировках — пересчитываем при каждом возвращении на «Обзор»
+            streak = DailyStreak.current()
+            introducedToday = DailyNewWords.introducedToday
             // Скрытое «Слово дня» — слова не загружаем; включат в настройках — загрузим при возврате на «Обзор»
             if wordsOfDay.isEmpty, !menuLayout.isHidden(.wordOfDay) {
                 wordsOfDay = WordOfDay.recent(days: 7, from: modelContext.fetchAllWords())
@@ -46,11 +56,62 @@ struct OverviewView: View {
 
     // MARK: - Шапка
 
+    /// «Привет, имя!», серия дней и сколько новых слов из нормы сегодня; нажатие — профиль
     private var header: some View {
-        Text("WORDLEARNER")
-            .scaledFont(size: 26, weight: .heavy)
-            .foregroundColor(.brandDark)
+        let profile = profiles.first
+        return Button {
+            Haptics.tap()
+            openProfile()
+        } label: {
+            HStack(spacing: 14) {
+                avatar(profile)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Привет, \(profile?.name ?? "Студент")!")
+                        .scaledFont(size: 20, weight: .bold)
+                        .foregroundColor(.brandDark)
+                        .lineLimit(1)
+                    HStack(spacing: 16) {
+                        Text("🔥 \(streak) \(Self.daysNoun(streak))")
+                        Text(dailyLimit > 0 ? "🎯 \(introducedToday)/\(dailyLimit) слов" : "🎯 \(introducedToday) \(DailyStudyCard.wordsNoun(introducedToday))")
+                    }
+                    .scaledFont(size: 14, weight: .medium)
+                    .foregroundColor(.brandDark.opacity(0.75))
+                }
+                Spacer(minLength: 0)
+            }
             .padding(.horizontal, 20)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Привет, \(profile?.name ?? "Студент"). Серия \(streak) \(Self.daysNoun(streak)), сегодня \(introducedToday) из \(dailyLimit) слов. Открыть профиль")
+    }
+
+    private func avatar(_ profile: UserProfile?) -> some View {
+        ZStack {
+            Circle().fill(Color.teal.opacity(0.18))
+            if let data = profile?.avatarData, let image = UIImage(data: data) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .clipShape(Circle())
+            } else {
+                Image(systemName: "person.fill")
+                    .font(.system(size: 26))
+                    .foregroundColor(.teal)
+            }
+        }
+        .frame(width: 58, height: 58)
+    }
+
+    /// 1 день, 2 дня, 5 дней
+    private static func daysNoun(_ count: Int) -> String {
+        let lastTwo = count % 100, last = count % 10
+        if (11...14).contains(lastTwo) { return "дней" }
+        switch last {
+        case 1: return "день"
+        case 2...4: return "дня"
+        default: return "дней"
+        }
     }
 
     // MARK: - Подборки

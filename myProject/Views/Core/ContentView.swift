@@ -31,7 +31,7 @@ struct ContentView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
-                OverviewView { activeScreen = $0 }
+                OverviewView(open: { activeScreen = $0 }, openProfile: { selectedTab = 1 })
                     .navigationBarHidden(true)
                     // Разделы открываются переходом: свайп от левого края возвращает на «Обзор»
                     .navigationDestination(item: $activeScreen) { screen in
