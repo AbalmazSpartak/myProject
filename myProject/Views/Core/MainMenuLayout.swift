@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Раздел главного меню. «Мой профиль» сюда не входит: он всегда сверху, через него открываются настройки
 enum MenuSection: String, CaseIterable {
-    case flashcards, quiz, cloze, inputCards, dictionary, tetris, race, help, community, books, polyglot
+    case flashcards, quiz, cloze, inputCards, dictionary, tetris, race, help, community, books, polyglot, review
 
     var title: String {
         switch self {
@@ -17,6 +17,7 @@ enum MenuSection: String, CaseIterable {
         case .community: return "Сообщество"
         case .books: return "Книги"
         case .polyglot: return "Полиглот"
+        case .review: return "Повторение"
         }
     }
 
@@ -38,6 +39,7 @@ enum MenuSection: String, CaseIterable {
         case .community: return "person.3.fill"
         case .books: return "books.vertical.fill"
         case .polyglot: return "character.bubble.fill"
+        case .review: return "arrow.triangle.2.circlepath"
         }
     }
 
@@ -54,6 +56,7 @@ enum MenuSection: String, CaseIterable {
         case .community: return .cyan
         case .books: return .brown
         case .polyglot: return .red
+        case .review: return .mint
         }
     }
 
@@ -75,6 +78,7 @@ enum MenuSection: String, CaseIterable {
         case .community: return .community
         case .books: return .books
         case .polyglot: return .polyglot
+        case .review: return .review
         }
     }
 }
@@ -108,7 +112,7 @@ struct MenuGroup: Identifiable, Hashable {
     var color: Color { MenuPalette.color(named: colorName) }
 
     static let cards = MenuGroup(id: "cards", name: "Карточки", icon: "square.stack.3d.up.fill",
-                                 colorName: "blue", sections: [.flashcards, .quiz])
+                                 colorName: "blue", sections: [.flashcards, .quiz, .review])
     static let inputCards = MenuGroup(id: "inputCards", name: "Карточки ввода", icon: "keyboard.fill",
                                       colorName: "teal", sections: [.inputCards, .cloze])
     static let miniGames = MenuGroup(id: "miniGames", name: "Мини-игры", icon: "gamecontroller.fill",

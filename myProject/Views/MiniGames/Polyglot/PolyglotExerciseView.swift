@@ -244,9 +244,10 @@ struct PolyglotExerciseView<Scheme: View>: View {
     }
 }
 
-/// Карточки в строку с переносом, по центру
+/// Карточки в строку с переносом, по центру или по левому краю
 struct FlowLayout: Layout {
     var spacing: CGFloat = 8
+    var centered = true
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let rows = arrange(subviews, width: proposal.width ?? .infinity)
@@ -258,7 +259,7 @@ struct FlowLayout: Layout {
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         var y = bounds.minY
         for row in arrange(subviews, width: bounds.width) {
-            var x = bounds.minX + (bounds.width - row.width) / 2
+            var x = bounds.minX + (centered ? (bounds.width - row.width) / 2 : 0)
             for index in row.indices {
                 let size = subviews[index].sizeThatFits(.unspecified)
                 subviews[index].place(at: CGPoint(x: x, y: y + (row.height - size.height) / 2), proposal: .unspecified)
