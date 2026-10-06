@@ -64,19 +64,7 @@ enum PolyglotLesson1 {
 
     private static let futureRu = ["буду", "будешь", "будет", "будем", "будете", "будут"]
 
-    /// Задание: фраза на русском, правильный порядок карточек и все карточки вперемешку (с лишними)
-    struct Task: Identifiable {
-        let id = UUID()
-        let russian: String
-        let answer: [String]
-        let isQuestion: Bool
-        let tiles: [String]
-
-        /// Правильный ответ целиком: «Does she love?»
-        var answerText: String {
-            PolyglotLesson1.sentence(answer, isQuestion: isQuestion)
-        }
-    }
+    typealias Task = PolyglotTask
 
     // MARK: - Сборка заданий
 
@@ -131,32 +119,5 @@ enum PolyglotLesson1 {
         let auxiliaries = ["will", "do", "does", "did", "don't", "doesn't", "not"].filter { !answer.contains($0) }
         let forms = Array(Set([verb.base, verb.third, verb.past])).filter { !answer.contains($0) }
         return Array(auxiliaries.shuffled().prefix(3)) + Array(forms.shuffled().prefix(1))
-    }
-
-    // MARK: - Проверка
-
-    /// Сокращения считаются как полные формы: didn't = did not, won't = will not
-    static func isCorrect(_ tiles: [String], for task: Task) -> Bool {
-        normalized(tiles) == normalized(task.answer)
-    }
-
-    private static func normalized(_ words: [String]) -> String {
-        words.joined(separator: " ").lowercased()
-            .replacingOccurrences(of: "won't", with: "will not")
-            .replacingOccurrences(of: "didn't", with: "did not")
-            .replacingOccurrences(of: "doesn't", with: "does not")
-            .replacingOccurrences(of: "don't", with: "do not")
-    }
-
-    /// Карточки → предложение: с заглавной буквы и знаком в конце
-    static func sentence(_ words: [String], isQuestion: Bool) -> String {
-        guard !words.isEmpty else { return "" }
-        return words.joined(separator: " ").capitalizedFirst + (isQuestion ? "?" : ".")
-    }
-}
-
-private extension String {
-    var capitalizedFirst: String {
-        prefix(1).uppercased() + dropFirst()
     }
 }

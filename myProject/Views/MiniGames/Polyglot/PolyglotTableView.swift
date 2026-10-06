@@ -1,18 +1,19 @@
 import SwiftUI
 
-/// Таблица глаголов урока 1 — как в учебнике: Вопрос / Утверждение / Отрицание × WILL, DO, DOES, DID,
-/// в ячейке слева местоимения, справа — что к ним добавляется; справа вертикально — время
+/// Таблица глаголов — как в учебнике: Вопрос / Утверждение / Отрицание × строки (WILL, DO, DOES, DID — урок 1;
+/// WILL, AM, IS, ARE, WAS, WERE — урок 3). В ячейке слева местоимения, справа — что к ним добавляется;
+/// справа вертикально — время
 struct PolyglotTableView: View {
     /// Слово справа от местоимений: обычное или выделенное (WILL, NOT, ?, окончание -S)
-    private struct Piece: Hashable {
+    struct Piece: Hashable {
         let text: String
         var isKey = false
     }
 
     /// Строка справа: несколько кусков в одну линию — «LOVE» + «?», «LOVE» + «S»
-    private typealias Line = [Piece]
+    typealias Line = [Piece]
 
-    private struct Row: Hashable {
+    struct Row: Hashable {
         let label: String
         let pronouns: [String]
         let question: [Line]
@@ -20,10 +21,33 @@ struct PolyglotTableView: View {
         let negative: [Line]
     }
 
+    /// Время сбоку и сколько строк таблицы оно охватывает
+    struct Group {
+        let label: String
+        let rows: [Row]
+    }
+
+    var title = "Таблица глаголов"
+    var groups: [Group] = Self.lesson1
+    var accessibilityText = "Таблица глаголов: will, do, does, did — вопрос, утверждение и отрицание в будущем, настоящем и прошедшем"
+
+    init(title: String = "Таблица глаголов", groups: [Group] = Self.lesson1,
+         accessibilityText: String = "Таблица глаголов: will, do, does, did — вопрос, утверждение и отрицание в будущем, настоящем и прошедшем") {
+        self.title = title
+        self.groups = groups
+        self.accessibilityText = accessibilityText
+    }
+
     private static let all = ["I", "YOU", "WE", "THEY", "HE", "SHE"]
     private static let love = Piece(text: "LOVE")
 
-    private let rows: [Row] = [
+    static var lesson1: [Group] {
+        [Group(label: "Будущее", rows: [rows1[0]]),
+         Group(label: "Настоящее", rows: [rows1[1], rows1[2]]),
+         Group(label: "Прошедшее", rows: [rows1[3]])]
+    }
+
+    private static let rows1: [Row] = [
         Row(label: "WILL", pronouns: all,
             question: [[love, Piece(text: " ?", isKey: true)]],
             affirmative: [[Piece(text: "WILL", isKey: true)], [love]],
@@ -50,12 +74,14 @@ struct PolyglotTableView: View {
     private let line: CGFloat = 1
 
     private func height(_ row: Row) -> CGFloat {
-        CGFloat(row.pronouns.count) * lineHeight + 14
+        // По самому высокому столбику ячеек: местоимения или добавка («AM / NOT» при одном «I»)
+        let lines = max(row.pronouns.count, row.question.count, row.affirmative.count, row.negative.count)
+        return CGFloat(lines) * lineHeight + 14
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Таблица глаголов")
+            Text(title)
                 .scaledFont(size: 20, weight: .semibold, design: .serif)
                 .foregroundColor(.brandDark)
 
@@ -64,22 +90,21 @@ struct PolyglotTableView: View {
                 rule()
                 HStack(spacing: 0) {
                     VStack(spacing: 0) {
-                        tableRow(rows[0])
-                        rule()
-                        tableRow(rows[1])
-                        // DO и DOES — одно время, между ними тонкая серая линия
-                        Rectangle().fill(Color.gray.opacity(0.5)).frame(height: 1)
-                        tableRow(rows[2])
-                        rule()
-                        tableRow(rows[3])
+                        ForEach(Array(groups.enumerated()), id: \.offset) { groupIndex, group in
+                            if groupIndex > 0 { rule() }
+                            ForEach(Array(group.rows.enumerated()), id: \.offset) { rowIndex, row in
+                                // Строки одного времени (DO и DOES) — через тонкую серую линию
+                                if rowIndex > 0 { Rectangle().fill(Color.gray.opacity(0.5)).frame(height: 1) }
+                                tableRow(row)
+                            }
+                        }
                     }
                     rule(vertical: true)
                     VStack(spacing: 0) {
-                        side("Будущее", height: height(rows[0]))
-                        rule()
-                        side("Настоящее", height: height(rows[1]) + 1 + height(rows[2]))
-                        rule()
-                        side("Прошедшее", height: height(rows[3]))
+                        ForEach(Array(groups.enumerated()), id: \.offset) { groupIndex, group in
+                            if groupIndex > 0 { rule() }
+                            side(group.label, height: group.rows.map(height).reduce(0, +) + CGFloat(group.rows.count - 1))
+                        }
                     }
                     .frame(width: sideWidth)
                 }
@@ -89,7 +114,7 @@ struct PolyglotTableView: View {
             .foregroundColor(.brandDark)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Таблица глаголов: will, do, does, did — вопрос, утверждение и отрицание в будущем, настоящем и прошедшем")
+        .accessibilityLabel(accessibilityText)
     }
 
     /// Шапка по той же сетке, что и строки: над подписями WILL… — пусто, «Вопрос» над своим столбцом

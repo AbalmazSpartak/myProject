@@ -21,6 +21,42 @@ struct PolyglotView: View {
                                    subtitle: "Вопрос, утверждение и отрицание в будущем, настоящем и прошедшем")
                     }
                     .buttonStyle(.plain)
+
+                    NavigationLink {
+                        PolyglotLesson2View()
+                            .toolbar(.hidden, for: .navigationBar)
+                    } label: {
+                        lessonCard(number: 2, title: "Местоимения, вопросы, предлоги",
+                                   subtitle: "Me, him, them · what, where, why · in, to, from")
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        PolyglotLesson3View()
+                            .toolbar(.hidden, for: .navigationBar)
+                    } label: {
+                        lessonCard(number: 3, title: "Глагол to be",
+                                   subtitle: "Am, is, are · was, were · will be")
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        PolyglotLesson4View()
+                            .toolbar(.hidden, for: .navigationBar)
+                    } label: {
+                        lessonCard(number: 4, title: "Рассказ о себе и артикли",
+                                   subtitle: "Профессии · in, as, at · a, an, the")
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        PolyglotLesson5View()
+                            .toolbar(.hidden, for: .navigationBar)
+                    } label: {
+                        lessonCard(number: 5, title: "Сравнения и время",
+                                   subtitle: "Bigger, the best · in, ago, on, at · месяцы и дни")
+                    }
+                    .buttonStyle(.plain)
                 }
                 .padding(20)
             }
@@ -133,7 +169,7 @@ struct PolyglotLessonView: View {
         }
         .background(Color.brandBackground.ignoresSafeArea())
         .fullScreenCover(isPresented: $isExercising) {
-            PolyglotExerciseView()
+            PolyglotExerciseView(makeRound: { PolyglotLesson1.round() }) { PolyglotSchemeView() }
                 .appThemedColorScheme()
         }
     }

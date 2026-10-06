@@ -1,10 +1,14 @@
 import SwiftUI
 
-/// Упражнение «Составь фразу»: русская фраза → английская из карточек. Раунд — 15 фраз, без штрафов и таймеров
-struct PolyglotExerciseView: View {
+/// Упражнение «Составь фразу»: русская фраза → английская из карточек. Раунд — 15 фраз, без штрафов и таймеров.
+/// Задания и схему-подсказку даёт урок
+struct PolyglotExerciseView<Scheme: View>: View {
     @Environment(\.dismiss) private var dismiss
 
-    @State private var tasks = PolyglotLesson1.round()
+    let makeRound: () -> [PolyglotTask]
+    @ViewBuilder let scheme: () -> Scheme
+
+    @State private var tasks: [PolyglotTask]
     @State private var index = 0
     /// Выбранные карточки — номера в task.tiles (одинаковые слова различаются по месту)
     @State private var picked: [Int] = []
@@ -12,7 +16,13 @@ struct PolyglotExerciseView: View {
     @State private var correctCount = 0
     @State private var isShowingScheme = false
 
-    private var task: PolyglotLesson1.Task? { tasks.indices.contains(index) ? tasks[index] : nil }
+    init(makeRound: @escaping () -> [PolyglotTask], @ViewBuilder scheme: @escaping () -> Scheme) {
+        self.makeRound = makeRound
+        self.scheme = scheme
+        _tasks = State(initialValue: makeRound())
+    }
+
+    private var task: PolyglotTask? { tasks.indices.contains(index) ? tasks[index] : nil }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -27,7 +37,7 @@ struct PolyglotExerciseView: View {
         .sheet(isPresented: $isShowingScheme) {
             NavigationStack {
                 ScrollView {
-                    PolyglotSchemeView().padding(20)
+                    scheme().padding(20)
                 }
                 .background(Color.brandBackground.ignoresSafeArea())
                 .navigationTitle("Схема")
@@ -67,7 +77,7 @@ struct PolyglotExerciseView: View {
 
     // MARK: - Задание
 
-    private func exercise(_ task: PolyglotLesson1.Task) -> some View {
+    private func exercise(_ task: PolyglotTask) -> some View {
         ScrollView {
             VStack(spacing: 24) {
                 Text(task.russian)
@@ -106,7 +116,7 @@ struct PolyglotExerciseView: View {
     }
 
     /// Собранная фраза: нажатие на слово возвращает его обратно
-    private func answerArea(_ task: PolyglotLesson1.Task) -> some View {
+    private func answerArea(_ task: PolyglotTask) -> some View {
         FlowLayout(spacing: 10) {
             ForEach(Array(picked.enumerated()), id: \.offset) { position, tileIndex in
                 Button {
@@ -154,7 +164,7 @@ struct PolyglotExerciseView: View {
             .shadow(color: Color.black.opacity(isPicked ? 0 : 0.06), radius: 3, x: 0, y: 2)
     }
 
-    private func feedback(_ task: PolyglotLesson1.Task, isCorrect: Bool) -> some View {
+    private func feedback(_ task: PolyglotTask, isCorrect: Bool) -> some View {
         VStack(spacing: 8) {
             Label(isCorrect ? "Верно!" : "Почти. Правильно так:",
                   systemImage: isCorrect ? "checkmark.circle.fill" : "lightbulb.fill")
@@ -174,11 +184,11 @@ struct PolyglotExerciseView: View {
         .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.cardBackground))
     }
 
-    private func actionButton(_ task: PolyglotLesson1.Task) -> some View {
+    private func actionButton(_ task: PolyglotTask) -> some View {
         Button {
             if result == nil {
                 let words = picked.map { task.tiles[$0] }
-                let isCorrect = PolyglotLesson1.isCorrect(words, for: task)
+                let isCorrect = task.isCorrect(words)
                 if isCorrect { correctCount += 1 }
                 result = isCorrect
                 UINotificationFeedbackGenerator().notificationOccurred(isCorrect ? .success : .warning)
@@ -214,7 +224,7 @@ struct PolyglotExerciseView: View {
                 .foregroundColor(.gray)
             Spacer()
             Button {
-                tasks = PolyglotLesson1.round()
+                tasks = makeRound()
                 index = 0
                 correctCount = 0
             } label: {
