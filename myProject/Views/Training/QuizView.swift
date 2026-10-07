@@ -114,7 +114,6 @@ struct QuizView: View {
                         Text(currentQuestion)
                             .scaledFont(size: 38, weight: .semibold, design: .serif)
                             .foregroundColor(.primary)
-                        PartOfSpeechBadge(word: word)
                         
                         Button(action: { TextToSpeechManager.shared.speak(word.english) }) {
                             Image(systemName: "speaker.wave.2.bubble.fill")
@@ -124,10 +123,14 @@ struct QuizView: View {
                     }
                     .padding(.top, 28)
                     
-                    if translationMode == "en_ru" && !word.displayTranscription.isEmpty {
-                        Text(word.displayTranscription)
-                            .scaledFont(size: 18, weight: .bold, design: .rounded)
-                            .foregroundColor(.orange)
+                    // Транскрипция и часть речи — одной строкой; без транскрипции — только часть речи
+                    HStack(spacing: 8) {
+                        if translationMode == "en_ru" && !word.displayTranscription.isEmpty {
+                            Text(word.displayTranscription)
+                                .scaledFont(size: 18, weight: .bold, design: .rounded)
+                                .foregroundColor(.orange)
+                        }
+                        PartOfSpeechBadge(word: word)
                     }
                     
                     VStack(spacing: 12) {

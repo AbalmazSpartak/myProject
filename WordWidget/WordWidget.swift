@@ -214,14 +214,6 @@ struct ReviewWidgetView: View {
                     .font(.system(size: 30, design: .serif))
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
-                if !card.partOfSpeech.isEmpty {
-                    Text(card.partOfSpeech)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Capsule().fill(WidgetPalette.fill))
-                }
                 Button(intent: SpeakWordIntent(text: card.english)) {
                     Image(systemName: "speaker.wave.2.fill")
                         .font(.system(size: 15, weight: .semibold))
@@ -231,10 +223,21 @@ struct ReviewWidgetView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Произнести")
             }
-            if !card.transcription.isEmpty {
-                Text(card.transcription)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+            // Транскрипция и часть речи — одной строкой
+            HStack(spacing: 6) {
+                if !card.transcription.isEmpty {
+                    Text(card.transcription)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                if !card.partOfSpeech.isEmpty {
+                    Text(card.partOfSpeech)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Capsule().fill(WidgetPalette.fill))
+                }
             }
             Spacer(minLength: 0)
             Button(intent: RevealTranslationIntent(key: card.key)) {

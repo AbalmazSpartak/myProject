@@ -83,7 +83,6 @@ struct ReviewSessionView: View {
                             .scaledFont(size: 34, weight: .semibold, design: .serif)
                             .foregroundColor(.brandDark)
                             .multilineTextAlignment(.center)
-                        PartOfSpeechBadge(word: word)
                         if showEnglish || isRevealed {
                             Button { TextToSpeechManager.shared.speak(word.english) } label: {
                                 Image(systemName: "speaker.wave.2.fill")
@@ -95,10 +94,14 @@ struct ReviewSessionView: View {
                             .accessibilityLabel("Произнести")
                         }
                     }
-                    if showEnglish, !word.displayTranscription.isEmpty {
-                        Text(word.displayTranscription)
-                            .scaledFont(size: 16, weight: .medium, design: .rounded)
-                            .foregroundColor(.gray)
+                    // Транскрипция и часть речи — одной строкой; без транскрипции — только часть речи
+                    HStack(spacing: 8) {
+                        if showEnglish, !word.displayTranscription.isEmpty {
+                            Text(word.displayTranscription)
+                                .scaledFont(size: 16, weight: .medium, design: .rounded)
+                                .foregroundColor(.gray)
+                        }
+                        PartOfSpeechBadge(word: word)
                     }
                 }
                 .padding(.top, 30)

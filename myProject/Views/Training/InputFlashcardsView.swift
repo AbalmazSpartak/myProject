@@ -116,7 +116,6 @@ struct InputFlashcardsView: View {
                                 .scaledFont(size: 34, weight: .semibold, design: .serif)
                                 .foregroundColor(.brandDark)
                                 .multilineTextAlignment(.center)
-                            PartOfSpeechBadge(word: word)
                             
                             Button(action: { TextToSpeechManager.shared.speak(word.english) }) {
                                 Image(systemName: "speaker.wave.2.bubble.fill")
@@ -125,10 +124,14 @@ struct InputFlashcardsView: View {
                             }
                         }
                         
-                        if translationMode == "en_ru" && !word.displayTranscription.isEmpty {
-                            Text(word.displayTranscription)
-                                .scaledFont(size: 16, weight: .semibold, design: .rounded)
-                                .foregroundColor(.orange)
+                        // Транскрипция и часть речи — одной строкой; без транскрипции — только часть речи
+                        HStack(spacing: 8) {
+                            if translationMode == "en_ru" && !word.displayTranscription.isEmpty {
+                                Text(word.displayTranscription)
+                                    .scaledFont(size: 16, weight: .semibold, design: .rounded)
+                                    .foregroundColor(.orange)
+                            }
+                            PartOfSpeechBadge(word: word)
                         }
                     }
                     .padding(.top, 24)
