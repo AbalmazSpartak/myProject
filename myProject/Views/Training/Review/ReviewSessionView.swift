@@ -83,6 +83,7 @@ struct ReviewSessionView: View {
                             .scaledFont(size: 34, weight: .semibold, design: .serif)
                             .foregroundColor(.brandDark)
                             .multilineTextAlignment(.center)
+                        PartOfSpeechBadge(word: word)
                         if showEnglish || isRevealed {
                             Button { TextToSpeechManager.shared.speak(word.english) } label: {
                                 Image(systemName: "speaker.wave.2.fill")

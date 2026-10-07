@@ -114,6 +114,7 @@ struct QuizView: View {
                         Text(currentQuestion)
                             .scaledFont(size: 38, weight: .semibold, design: .serif)
                             .foregroundColor(.primary)
+                        PartOfSpeechBadge(word: word)
                         
                         Button(action: { TextToSpeechManager.shared.speak(word.english) }) {
                             Image(systemName: "speaker.wave.2.bubble.fill")

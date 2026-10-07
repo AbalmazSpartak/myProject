@@ -23,6 +23,8 @@ struct ReviewEntry: TimelineEntry {
     struct Card {
         let key: String
         let english: String
+        /// Часть речи по-русски: гл., сущ.
+        let partOfSpeech: String
         let transcription: String
         let russian: String
         let example: AttributedString
@@ -52,7 +54,7 @@ struct ReviewProvider: TimelineProvider {
     func placeholder(in context: Context) -> ReviewEntry {
         ReviewEntry(
             date: Date(),
-            card: .init(key: "", english: "remember", transcription: "/rɪˈmembər/", russian: "помнить, вспоминать",
+            card: .init(key: "", english: "remember", partOfSpeech: "гл.", transcription: "/rɪˈmembər/", russian: "помнить, вспоминать",
                         example: Word.attributedExample("I <b>remember</b> her name.")),
             isRevealed: false, dueCount: 12, nextDue: nil
         )
@@ -97,6 +99,7 @@ struct ReviewProvider: TimelineProvider {
         let card = ReviewEntry.Card(
             key: key,
             english: word.english,
+            partOfSpeech: word.russianPartOfSpeech,
             transcription: word.displayTranscription,
             russian: word.russian,
             example: word.attributedExample
@@ -211,6 +214,14 @@ struct ReviewWidgetView: View {
                     .font(.system(size: 30, design: .serif))
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
+                if !card.partOfSpeech.isEmpty {
+                    Text(card.partOfSpeech)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Capsule().fill(WidgetPalette.fill))
+                }
                 Button(intent: SpeakWordIntent(text: card.english)) {
                     Image(systemName: "speaker.wave.2.fill")
                         .font(.system(size: 15, weight: .semibold))
@@ -245,6 +256,9 @@ struct ReviewWidgetView: View {
                 Text(card.english)
                     .font(.system(size: 15, weight: .semibold, design: .serif))
                     .lineLimit(1)
+                Text(card.partOfSpeech)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
                 Spacer()
                 Text("\(entry.dueCount)")
                     .font(.caption.weight(.bold).monospacedDigit())

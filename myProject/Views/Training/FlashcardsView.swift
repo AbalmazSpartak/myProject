@@ -117,6 +117,7 @@ struct FlashcardsView: View {
                                 .scaledFont(size: 34, weight: .semibold, design: .serif)
                                 .foregroundColor(.brandDark)
                                 .multilineTextAlignment(.center)
+                            PartOfSpeechBadge(word: word)
                             
                             Button(action: { TextToSpeechManager.shared.speak(word.english) }) {
                                 Image(systemName: "speaker.wave.2.bubble.fill")

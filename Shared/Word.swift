@@ -75,6 +75,15 @@ extension Word {
             .trimmingCharacters(in: CharacterSet(charactersIn: "[]/"))
     }
 
+    /// Часть речи по-русски коротко: n. → сущ., v. → гл. — рядом со словом в тренировках
+    var russianPartOfSpeech: String {
+        let names = ["n.": "сущ.", "v.": "гл.", "adj.": "прил.", "adv.": "нар.", "prep.": "предл.", "pron.": "мест.",
+                     "num.": "числ.", "det.": "опред.", "conj.": "союз", "excl.": "межд.", "exclam.": "межд.",
+                     "modal v.": "мод. гл.", "phr. v.": "фраз. гл.", "phr.": "фраза", "art.": "арт.", "part.": "част."]
+        let tag = partOfSpeech.trimmingCharacters(in: .whitespaces).lowercased()
+        return names[tag] ?? tag
+    }
+
     var displayTranscription: String {
         let bare = Word.bareTranscription(transcription)
         return bare.isEmpty ? "" : "/\(bare)/"
