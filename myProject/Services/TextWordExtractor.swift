@@ -55,13 +55,23 @@ nonisolated enum TextWordExtractor {
         let options: NLTagger.Options = [.omitPunctuation, .omitWhitespace, .omitOther, .joinNames]
 
         tagger.enumerateTags(in: text.startIndex..<text.endIndex, unit: .word, scheme: .nameTypeOrLexicalClass, options: options) { tag, range in
-            guard let tag, !names.contains(tag), let pos = partsOfSpeech[tag] else { return true }
+            guard let tag, !names.contains(tag) else { return true }
+            var range = range
+            let lemma: String
+            let pos: String
+            if let contraction = contraction(at: range, in: text) {
+                // «can't» теггер режет на «ca» + «n't» — берём слово целиком
+                range = range.lowerBound..<contraction.end
+                lemma = contraction.word
+                pos = "modal v."
+            } else {
+                guard let lexical = partsOfSpeech[tag], isWordLike(String(text[range])) else { return true }
+                let lemmaTag = tagger.tag(at: range.lowerBound, unit: .word, scheme: .lemma).0
+                lemma = (lemmaTag?.rawValue ?? String(text[range])).lowercased()
+                pos = lexical
+                guard isWordLike(lemma), !skipped.contains(lemma) else { return true }
+            }
             let surface = String(text[range])
-            guard isWordLike(surface) else { return true }
-
-            let lemmaTag = tagger.tag(at: range.lowerBound, unit: .word, scheme: .lemma).0
-            let lemma = (lemmaTag?.rawValue ?? surface).lowercased()
-            guard isWordLike(lemma), !skipped.contains(lemma) else { return true }
 
             if found[lemma] != nil {
                 found[lemma]?.count += 1
@@ -82,6 +92,7 @@ nonisolated enum TextWordExtractor {
 
     /// Словарная форма и часть речи слова, на которое нажали в тексте: «ran» в предложении → «run», «v.»
     static func lemma(of word: String, at range: Range<String.Index>, in sentence: String) -> (lemma: String, partOfSpeech: String) {
+        if let contraction = contractionLemma(word) { return (contraction, "modal v.") }
         let tagger = NLTagger(tagSchemes: [.lexicalClass, .lemma])
         tagger.string = sentence
         tagger.setLanguage(.english, range: sentence.startIndex..<sentence.endIndex)
@@ -89,6 +100,30 @@ nonisolated enum TextWordExtractor {
         let lexical = tagger.tag(at: range.lowerBound, unit: .word, scheme: .lexicalClass).0
         let partOfSpeech = lexical.flatMap { partsOfSpeech[$0] } ?? ""
         return (lemma.flatMap { isWordLike($0) ? $0 : nil } ?? word.lowercased(), partOfSpeech)
+    }
+
+    /// Обрывки сокращений, на которые теггер режет «can't», «won't», «shan't», и слово, которым они станут
+    private static let contractions = ["ca": "can't", "wo": "won't", "sha": "shall"]
+
+    /// «ca» прямо перед «n't» (или «n’t») — это «can't»: возвращает слово и конец сокращения в тексте
+    private static func contraction(at range: Range<String.Index>, in text: String) -> (word: String, end: String.Index)? {
+        guard let word = contractions[text[range].lowercased()] else { return nil }
+        let rest = text[range.upperBound...]
+        for ending in ["n't", "n’t"] where rest.lowercased().hasPrefix(ending) {
+            return (word, text.index(range.upperBound, offsetBy: ending.count))
+        }
+        return nil
+    }
+
+    /// Нажатое в книге «can't» / «won't» — сразу словарная форма, а не обрывок «ca»
+    static func contractionLemma(_ word: String) -> String? {
+        let normalized = word.lowercased().replacingOccurrences(of: "’", with: "'")
+        switch normalized {
+        case "can't": return "can't"
+        case "won't": return "won't"
+        case "shan't": return "shall"
+        default: return nil
+        }
     }
 
     /// Только латинские буквы (и дефис внутри), минимум 2 буквы, не аббревиатура вроде USA.

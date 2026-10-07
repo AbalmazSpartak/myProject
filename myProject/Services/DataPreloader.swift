@@ -236,5 +236,29 @@ extension DataPreloader {
         UserDefaults.standard.removeObject(forKey: bundledHashKey)
         syncBundledWords(context: context)
     }
+
+    // MARK: - Обрывки сокращений
+
+    /// Раньше разбор книг сохранял «ca» из «can't», «wo» из «won't», «sha» из «shan't» как отдельные слова
+    /// с переводом вроде «к са». Заменяем их настоящими словами из базы в тех же словарях
+    static func fixContractionFragments(context: ModelContext) {
+        let replacements = ["ca": "can't", "wo": "won't", "sha": "shall"]
+        let fragments = Array(replacements.keys)
+        let descriptor = FetchDescriptor<Word>(predicate: #Predicate { $0.isCustom && fragments.contains($0.english) })
+        guard let found = try? context.fetch(descriptor), !found.isEmpty else { return }
+        for fragment in found {
+            guard let target = replacements[fragment.english] else { continue }
+            let english = target
+            var baseDescriptor = FetchDescriptor<Word>(predicate: #Predicate { !$0.isCustom && $0.english == english })
+            baseDescriptor.fetchLimit = 1
+            if let base = try? context.fetch(baseDescriptor).first {
+                for list in fragment.lists where !base.lists.contains(where: { $0.id == list.id }) {
+                    base.lists.append(list)
+                }
+            }
+            context.delete(fragment)
+        }
+        try? context.save()
+    }
 }
 #endif
