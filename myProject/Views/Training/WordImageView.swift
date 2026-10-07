@@ -39,11 +39,16 @@ struct WordImageView: View {
                     .foregroundColor(.gray)
             }
         } else if let data = word.imageData, let image = UIImage(data: data) {
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFill()
+            // Рамка задаёт размер, картинка заполняет её и обрезается: широкая картинка из интернета
+            // больше не растягивает карточку за края экрана
+            Color.clear
                 .frame(maxWidth: .infinity)
                 .frame(height: 160)
+                .overlay {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                }
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .opacity(isRefreshing ? 0.4 : 1)
                 .overlay(alignment: .topTrailing) { controls }
