@@ -1,9 +1,13 @@
 # Слова мастер-базы (myProject/Resources/words.csv) — для сверки новых слов
 # Обновить: python3 scripts/export_word_list.py
-# Значений: 5799, разных слов: 5056; A1 1014, A2 1006, B1 879, B2 1535, C1 1365
+# Значений: 6050, разных слов: 5301; A1 1039, A2 1072, B1 993, B2 1574, C1 1372
 # слово | часть речи | уровень | перевод
 
 a | det. | A1 | неопределенный артикль
+a couple of | phr. | A2 | пара, несколько
+a little bit | phr. | A2 | немного, чуть-чуть
+a lot of | phr. | A1 | много
+a piece of cake | phr. | B2 | проще простого
 abandon | v. | B2 | покидать
 ability | n. | A2 | способность, умение
 able | adj. | A2 | способный (что-то сделать)
@@ -131,6 +135,7 @@ afford | v. | B1 | позволить себе (финансово)
 affordable | adj. | B2 | доступный (по цене)
 afraid | adj. | A1 | испуганный, боящийся
 after | prep. | A1 | после, за
+after all | phr. | B1 | всё-таки, в конце концов
 aftermath | n. | C1 | последствия
 afternoon | n. | A1 | день (после полудня)
 afterwards | adv. | B2 | потом, впоследствии
@@ -177,7 +182,9 @@ alignment | n. | C1 | выравнивание; согласованность
 alike | adv. | C1 | одинаково; похожий
 alive | adj. | A2 | живой
 all | det. | A1 | все, всё
+all of a sudden | phr. | B2 | внезапно, вдруг
 all right | adj. | A2 | в порядке
+all the time | phr. | A2 | постоянно, всё время
 allegation | n. | C1 | обвинение, заявление (без доказательств)
 allege | v. | C1 | утверждать (без доказательств)
 allegedly | adv. | C1 | предположительно, якобы
@@ -273,6 +280,7 @@ applicable | adj. | C1 | применимый
 applicant | n. | B2 | кандидат, заявитель
 application | n. | B1 | заявление
 apply | v. | A2 | подавать заявление
+apply for | phr. v. | B1 | подавать заявление (на работу, визу)
 appoint | v. | C1 | назначать
 appointment | n. | B1 | встреча, прием (у врача)
 appreciate | v. | B1 | ценить
@@ -318,10 +326,18 @@ artist | n. | A1 | художник, артист
 artistic | adj. | B2 | художественный
 artwork | n. | B2 | произведение искусства; иллюстрации
 as | prep. | A1 | как, в качестве
+as a result | phr. | B1 | в результате
+as far as I know | phr. | B1 | насколько я знаю
+as long as | phr. | B1 | при условии что, пока
+as soon as | phr. | B1 | как только
+as soon as possible | phr. | B1 | как можно скорее
+as usual | phr. | B1 | как обычно
+as well | phr. | A2 | тоже, также
 ash | n. | C1 | пепел, зола
 ashamed | adj. | B2 | стыдящийся
 aside | adv. | B2 | в сторону
 ask | v. | A1 | спрашивать, просить
+ask for | phr. v. | A2 | просить (что-то)
 asleep | adj. | A2 | спящий
 aspect | n. | B2 | аспект
 aspiration | n. | C1 | стремление
@@ -352,6 +368,16 @@ assure | v. | B2 | уверять, заверять
 astonishing | adj. | B2 | поразительный
 asylum | n. | C1 | убежище
 at | prep. | A1 | в, у, около
+at first | phr. | A2 | сначала, поначалу
+at home | phr. | A1 | дома
+at last | phr. | B1 | наконец
+at least | phr. | A2 | по крайней мере, как минимум
+at night | phr. | A1 | ночью
+at the end of | phr. | A2 | в конце (чего-то)
+at the moment | phr. | A2 | в данный момент, сейчас
+at the same time | phr. | B1 | одновременно, в то же время
+at the weekend | phr. | A2 | на выходных
+at work | phr. | A1 | на работе
 athlete | n. | A2 | спортсмен, атлет
 atmosphere | n. | B1 | атмосфера
 atrocity | n. | C1 | зверство
@@ -406,6 +432,7 @@ back | adj. | A2 | задний
 back | adv. | A1 | назад
 back | n. | A1 | спина
 back | v. | B2 | поддерживать; давать задний ход
+back up | phr. v. | B2 | делать резервную копию
 backdrop | n. | C1 | фон, задник
 background | n. | A2 | фон, задний план
 backing | n. | C1 | поддержка
@@ -492,6 +519,7 @@ belief | n. | B1 | вера, убеждение
 believe | v. | A1 | верить, полагать
 bell | n. | B1 | колокол, звонок
 belong | v. | A2 | принадлежать
+belong to | phr. v. | B1 | принадлежать
 beloved | adj. | C1 | любимый, дорогой
 below | prep. | A1 | под, ниже
 belt | n. | A2 | ремень
@@ -610,6 +638,10 @@ breach | v. | C1 | нарушать
 bread | n. | A1 | хлеб
 break | n. | A1 | перерыв
 break | v. | A1 | ломать
+break down | phr. v. | B1 | ломаться (о машине, технике)
+break in | phr. v. | B2 | вламываться
+break the ice | phr. | B2 | растопить лёд, разрядить обстановку
+break up | phr. v. | B1 | расставаться
 breakdown | n. | C1 | поломка; срыв; разбивка
 breakfast | n. | A1 | завтрак
 breakthrough | n. | C1 | прорыв
@@ -627,6 +659,8 @@ briefly | adv. | B2 | вкратце
 bright | adj. | A2 | яркий, светлый
 brilliant | adj. | A2 | блестящий, отличный
 bring | v. | A1 | приносить, приводить
+bring back | phr. v. | A2 | приносить обратно
+bring up | phr. v. | B2 | воспитывать
 broad | adj. | B2 | широкий
 broadband | n. | C1 | широкополосный интернет
 broadcast | n. | B2 | передача, трансляция
@@ -640,6 +674,7 @@ brown | adj. | A1 | коричневый
 browser | n. | C1 | браузер
 brush | n. | A2 | щётка, кисть
 brush | v. | A2 | чистить (щеткой), причесывать
+brush up on | phr. v. | C1 | освежить (знания)
 brutal | adj. | C1 | жестокий
 bubble | n. | B1 | пузырь
 buck | n. | C1 | доллар (разг.)
@@ -671,6 +706,12 @@ butter | n. | A1 | сливочное масло
 button | n. | A2 | кнопка, пуговица
 buy | v. | A1 | покупать
 by | prep. | A1 | у, около, путем
+by car | phr. | A1 | на машине
+by chance | phr. | B1 | случайно
+by heart | phr. | B1 | наизусть
+by mistake | phr. | B1 | по ошибке
+by the time | phr. | B2 | к тому времени, когда
+by the way | phr. | A2 | кстати, между прочим
 bye | excl. | A1 | пока
 cabin | n. | B2 | хижина; каюта, салон
 cabinet | n. | C1 | шкафчик, комод
@@ -681,9 +722,13 @@ calculate | v. | B2 | рассчитывать, вычислять
 calculation | n. | C1 | вычисление, расчёт
 call | n. | A1 | звонок
 call | v. | A1 | звонить, звать
+call back | phr. v. | A2 | перезванивать
+call it a day | phr. | C1 | закончить (работу) на сегодня
+call off | phr. v. | B2 | отменять
 calm | adj. | B1 | спокойный, тихий
 calm | n. | B1 | спокойствие
 calm | v. | B1 | успокаивать
+calm down | phr. v. | B1 | успокаиваться
 camera | n. | A1 | фотоаппарат, камера
 camp | n. | A2 | лагерь
 camp | v. | A2 | жить в палатке, стоять лагерем
@@ -726,6 +771,8 @@ carpet | n. | A2 | ковер
 carriage | n. | C1 | карета; вагон
 carrot | n. | A1 | морковь
 carry | v. | A1 | нести, носить
+carry on | phr. v. | B1 | продолжать (делать)
+carry out | phr. v. | B2 | проводить, выполнять
 cartoon | n. | A2 | мультфильм
 carve | v. | C1 | вырезать; разрезать (мясо)
 case | n. | A2 | случай, чехол, дело
@@ -740,6 +787,8 @@ cat | n. | A1 | кошка, кот
 catalog | n. | C1 | каталог
 catch | n. | B2 | улов; подвох
 catch | v. | A2 | ловить, успевать (на транспорт)
+catch a cold | phr. | A2 | простудиться
+catch up | phr. v. | B1 | догонять
 category | n. | B1 | категория
 cater | v. | C1 | обслуживать; удовлетворять потребности
 cattle | n. | C1 | крупный рогатый скот
@@ -781,6 +830,7 @@ chance | n. | A2 | шанс, возможность
 change | n. | A1 | сдача
 change | n. | A1 | изменение
 change | v. | A1 | менять
+change your mind | phr. | B1 | передумать
 channel | n. | B1 | канал
 chaos | n. | C1 | хаос
 chapter | n. | B1 | глава
@@ -804,8 +854,12 @@ cheat | n. | B1 | обманщик; жульничество
 cheat | v. | B1 | жульничать, списывать
 check | n. | A2 | чек
 check | v. | A1 | проверять
+check in | phr. v. | A2 | регистрироваться (в отеле, аэропорту)
+check out | phr. v. | B1 | выезжать (из отеля)
+check out | phr. v. | B1 | посмотреть, проверить
 cheek | n. | B2 | щека
 cheer | v. | B2 | подбадривать криками
+cheer up | phr. v. | B1 | взбодриться, не унывать
 cheerful | adj. | B1 | бодрый, жизнерадостный
 cheese | n. | A1 | сыр
 chef | n. | A2 | шеф-повар
@@ -860,6 +914,7 @@ classroom | n. | A1 | классная комната
 clause | n. | B1 | придаточное предложение; пункт
 clean | adj. | A1 | чистый
 clean | v. | A1 | чистить
+clean up | phr. v. | A2 | убирать, наводить порядок
 cleaning | n. | B2 | уборка
 clear | adj. | A2 | ясный, понятный
 clear | v. | B1 | убирать, расчищать
@@ -931,6 +986,13 @@ combat | v. | C1 | бороться (с чем-то)
 combination | n. | B2 | комбинация, сочетание
 combine | v. | B1 | объединять
 come | v. | A1 | приходить, приезжать
+come across | phr. v. | B2 | натыкаться, случайно находить
+come back | phr. v. | A1 | возвращаться (сюда)
+come down with | phr. v. | C1 | заболеть (простудой, гриппом)
+come in | phr. v. | A1 | входить
+come on | phr. v. | A2 | давай!, ну же!
+come over | phr. v. | B1 | заходить (в гости)
+come up with | phr. v. | B2 | придумывать
 comedy | n. | A2 | комедия
 comfort | n. | B2 | утешение
 comfort | v. | B2 | утешать
@@ -1184,6 +1246,7 @@ counseling | n. | C1 | консультирование, психологиче�
 counselor | n. | C1 | консультант, психолог
 count | n. | B1 | подсчёт
 count | v. | A2 | считать, подсчитывать
+count on | phr. v. | B2 | рассчитывать на
 counter | n. | B2 | прилавок, стойка
 counter | v. | C1 | возражать, противодействовать
 counterpart | n. | C1 | коллега, аналог
@@ -1276,6 +1339,7 @@ custom | n. | B1 | обычай, традиция
 customer | n. | A1 | покупатель, клиент
 cut | n. | B1 | порез; сокращение
 cut | v. | A1 | резать
+cut down on | phr. v. | B2 | сокращать (потребление)
 cute | adj. | B2 | милый
 cutting | n. | C1 | вырезка; черенок
 cycle | n. | A2 | цикл, круговорот
@@ -1312,6 +1376,7 @@ deadly | adj. | B2 | смертельный
 deaf | adj. | A2 | глухой
 deal | n. | B1 | сделка
 deal | v. | A2 | иметь дело, справляться
+deal with | phr. v. | B1 | справляться, иметь дело
 dealer | n. | B2 | дилер, торговец
 dear | adj. | A1 | дорогой, милый
 death | n. | A2 | смерть
@@ -1390,6 +1455,7 @@ depart | v. | B2 | отправляться, уезжать
 department | n. | A2 | отдел, департамент
 departure | n. | B1 | отправление, вылет
 depend | v. | A2 | зависеть
+depend on | phr. v. | A2 | зависеть от
 dependence | n. | C1 | зависимость
 dependent | adj. | B2 | зависимый
 depict | v. | C1 | изображать
@@ -1555,6 +1621,8 @@ divorce | n. | B2 | развод
 divorce | v. | B2 | разводиться
 divorced | adj. | A2 | разведенный
 do | v. | A1 | делать
+do the shopping | phr. | A2 | ходить за покупками
+do your best | phr. | B1 | стараться изо всех сил
 doctor | n. | A1 | врач, доктор
 doctrine | n. | C1 | доктрина, учение
 document | n. | A2 | документ
@@ -1598,6 +1666,7 @@ dream | n. | A2 | сон, мечта
 dream | v. | A2 | мечтать, видеть сон
 dress | n. | A1 | платье
 dress | v. | A1 | одеваться
+dress up | phr. v. | B1 | наряжаться
 dressed | adj. | B1 | одетый
 drift | v. | C1 | дрейфовать, плыть по течению
 drink | n. | A1 | напиток
@@ -1609,6 +1678,7 @@ driving | adj. | C1 | движущий
 driving | n. | A2 | вождение
 drop | n. | B1 | капля
 drop | v. | A2 | ронять
+drop off | phr. v. | B1 | подвозить, высаживать (кого-то)
 drought | n. | B2 | засуха
 drown | v. | C1 | тонуть, топить
 drug | n. | A2 | лекарство, наркотик
@@ -1647,6 +1717,7 @@ east | n. | A1 | восток
 eastern | adj. | B1 | восточный
 easy | adj. | A1 | легкий, простой
 eat | v. | A1 | есть
+eat out | phr. v. | A2 | есть вне дома (в кафе, ресторане)
 echo | v. | C1 | отражаться эхом; повторять
 ecological | adj. | C1 | экологический
 economic | adj. | B1 | экономический
@@ -1739,6 +1810,7 @@ encouragement | n. | C1 | поддержка, ободрение
 encouraging | adj. | C1 | обнадеживающий
 end | n. | A1 | конец
 end | v. | A1 | заканчивать
+end up | phr. v. | B2 | в итоге оказаться
 endeavor | n. | C1 | попытка, усилие
 ending | n. | A2 | концовка, окончание
 endless | adj. | C1 | бесконечный
@@ -1954,6 +2026,8 @@ faith | n. | B2 | вера, доверие
 fake | adj. | B2 | поддельный, фальшивый
 fall | n. | A2 | падение, осень
 fall | v. | A1 | падать
+fall apart | phr. v. | B2 | разваливаться
+fall down | phr. v. | A2 | падать
 false | adj. | A1 | ложный, неверный
 fame | n. | B2 | слава
 familiar | adj. | B1 | знакомый
@@ -2004,6 +2078,7 @@ feedback | n. | B2 | обратная связь, отзыв
 feeding | n. | C1 | кормление
 feel | n. | B2 | ощущение; атмосфера
 feel | v. | A1 | чувствовать
+feel like | phr. | B1 | хотеть (чего-то), быть в настроении
 feeling | n. | A1 | чувство, ощущение
 fellow | adj. | B2 | товарищ, коллега (о людях)
 female | adj. | A2 | женский
@@ -2025,9 +2100,11 @@ fight | v. | A2 | драться, бороться
 fighting | n. | B1 | бои, драка
 figure | n. | A2 | цифра, фигура
 figure | v. | B2 | полагать; фигурировать
+figure out | phr. v. | B1 | понять, сообразить
 file | n. | B1 | файл; папка
 file | v. | B2 | подшивать; подавать (документ)
 fill | v. | A1 | наполнять
+fill in | phr. v. | A2 | заполнять (бланк)
 film | n. | A1 | фильм
 film | v. | A2 | снимать фильм
 filmmaker | n. | C1 | кинорежиссёр
@@ -2040,6 +2117,7 @@ finance | n. | B2 | финансы
 finance | v. | B2 | финансировать
 financial | adj. | B1 | финансовый
 find | v. | A1 | находить
+find out | phr. v. | A2 | узнавать, выяснять
 finding | n. | B2 | результат, находка
 fine | adj. | A1 | прекрасный
 fine | n. | C1 | штраф
@@ -2056,6 +2134,7 @@ firm | n. | B2 | фирма, компания
 firmly | adv. | B2 | твёрдо, крепко
 first | adv. | A1 | сначала
 first | det. | A1 | первый
+first of all | phr. | B1 | прежде всего, во-первых
 firstly | adv. | A2 | во-первых
 fish | n. | A1 | рыба
 fish | v. | A2 | ловить рыбу
@@ -2063,6 +2142,7 @@ fishing | n. | A2 | рыбалка
 fit | adj. | A2 | в хорошей форме, здоровый
 fit | n. | C1 | приступ; посадка (одежды)
 fit | v. | A2 | подходить по размеру
+fit in | phr. v. | B2 | вписываться (в коллектив)
 fitness | n. | B1 | физическая форма, фитнес
 five | num. | A1 | пять
 fix | n. | B2 | решение (проблемы)
@@ -2118,6 +2198,11 @@ foot | n. | A1 | нога
 footage | n. | C1 | видеозапись, отснятый материал
 football | n. | A1 | футбол
 for | prep. | A1 | для, на протяжении
+for a while | phr. | B1 | некоторое время
+for ages | phr. | B1 | целую вечность, очень долго
+for example | phr. | A1 | например
+for sure | phr. | B1 | наверняка, точно
+for the first time | phr. | A2 | впервые
 forbid | v. | B2 | запрещать
 force | n. | B1 | сила, воздействие
 force | v. | B1 | заставлять, принуждать
@@ -2186,6 +2271,7 @@ frightened | adj. | B1 | испуганный
 frightening | adj. | B1 | пугающий
 frog | n. | A2 | лягушка
 from | prep. | A1 | из, от
+from time to time | phr. | B1 | время от времени
 front | adj. | A1 | передний
 front | n. | A1 | передняя часть, фронт
 frozen | adj. | B1 | замороженный
@@ -2262,6 +2348,17 @@ genuinely | adv. | B2 | искренне, по-настоящему
 geography | n. | A1 | география
 gesture | n. | B2 | жест
 get | v. | A1 | получать, становиться
+get along | phr. v. | B1 | ладить, уживаться
+get back | phr. v. | A2 | возвращаться (домой, на место)
+get in | phr. v. | A2 | садиться (в машину)
+get off | phr. v. | A2 | выходить (из автобуса, поезда)
+get on | phr. v. | A2 | садиться (в автобус, поезд)
+get on with | phr. v. | B1 | ладить (с кем-то)
+get out | phr. v. | A2 | выходить, выбираться
+get over | phr. v. | B2 | оправиться, пережить
+get rid of | phr. | B1 | избавляться от
+get up | phr. v. | A1 | вставать (с постели)
+get used to | phr. | B1 | привыкать к
 ghost | n. | B1 | привидение
 giant | adj. | B1 | гигантский
 giant | n. | B1 | великан, гигант
@@ -2271,6 +2368,10 @@ giraffe | n. | A2 | жираф
 girl | n. | A1 | девочка
 girlfriend | n. | A1 | девушка
 give | v. | A1 | давать
+give away | phr. v. | B1 | раздавать, отдавать даром
+give back | phr. v. | A2 | отдавать обратно, возвращать
+give in | phr. v. | B2 | уступать, поддаваться
+give up | phr. v. | B1 | сдаваться, отказываться
 glad | adj. | B1 | рад
 glance | n. | C1 | беглый взгляд
 glance | v. | C1 | бросить взгляд
@@ -2285,6 +2386,14 @@ glory | n. | C1 | слава
 glove | n. | B1 | перчатка
 go | n. | B1 | попытка; очередь
 go | v. | A1 | идти, ехать
+go ahead | phr. v. | B1 | начинать, действовать (без ожидания)
+go back | phr. v. | A2 | возвращаться (туда)
+go down | phr. v. | B1 | снижаться, падать
+go off | phr. v. | B1 | срабатывать, звенеть (о будильнике)
+go on | phr. v. | B1 | продолжать
+go out | phr. v. | A1 | выходить, гулять (вне дома)
+go through | phr. v. | B2 | переживать (трудности)
+go up | phr. v. | B1 | расти (о ценах, числах)
 goal | n. | A2 | цель
 god | n. | A2 | бог
 gold | adj. | A2 | золотой
@@ -2293,6 +2402,7 @@ golden | adj. | B2 | золотой
 golf | n. | A2 | гольф
 good | adj. | A1 | хороший
 good | n. | A2 | добро; благо
+good luck | phr. | A1 | удачи
 good-looking | adj. | A2 | привлекательный, симпатичный
 goodbye | excl. | A1 | до свидания
 goodness | n. | B2 | доброта
@@ -2346,6 +2456,7 @@ grocery | n. | B2 | продуктовый магазин, продукты
 ground | n. | A2 | земля
 group | n. | A1 | группа
 grow | v. | A1 | расти
+grow up | phr. v. | A2 | расти, взрослеть
 growth | n. | B1 | рост
 guarantee | n. | B2 | гарантия
 guarantee | v. | B2 | гарантировать
@@ -2379,12 +2490,15 @@ hall | n. | A2 | холл, коридор
 halt | v. | C1 | останавливать(ся)
 hand | n. | A1 | рука
 hand | v. | B1 | передавать, вручать
+hand in | phr. v. | B1 | сдавать (работу, задание)
 handful | n. | C1 | горсть; небольшое количество
 handle | n. | B2 | ручка
 handle | v. | B2 | справляться, управлять
 handling | n. | C1 | обращение; обработка
 handy | adj. | C1 | удобный, полезный
 hang | v. | B1 | вешать, висеть
+hang out | phr. v. | B1 | проводить время, тусоваться
+hang up | phr. v. | B1 | вешать трубку
 happen | v. | A1 | происходить, случаться
 happily | adv. | A2 | счастливо, радостно
 happiness | n. | B1 | счастье
@@ -2407,6 +2521,9 @@ hate | v. | A1 | ненавидеть
 hatred | n. | C1 | ненависть
 haunt | v. | C1 | преследовать; являться (о призраке)
 have | v. | A1 | иметь
+have a good time | phr. | A2 | хорошо провести время
+have a look | phr. | A2 | взглянуть
+have fun | phr. | A1 | веселиться, хорошо проводить время
 have to | modal v. | A1 | быть должным, вынужденным
 hazard | n. | C1 | опасность, риск
 he | pron. | A1 | он
@@ -2476,10 +2593,12 @@ historical | adj. | B1 | исторический (относящийся к и�
 history | n. | A1 | история
 hit | n. | A2 | хит, успех; удар
 hit | v. | A2 | ударять, бить
+hit the road | phr. | C1 | отправляться в путь
 hobby | n. | A1 | хобби, увлечение
 hockey | n. | A2 | хоккей
 hold | n. | B2 | захват, хватка; ожидание (на линии)
 hold | v. | A2 | держать, проводить
+hold on | phr. v. | B1 | подождать (минутку)
 hole | n. | A2 | дыра, отверстие
 holiday | n. | A1 | каникулы, отпуск
 hollow | adj. | B2 | полый, пустой внутри
@@ -2518,6 +2637,7 @@ house | v. | B2 | размещать, вмещать
 household | n. | B2 | домохозяйство, семья
 housing | n. | B2 | жильё
 how | adv. | A1 | как
+how about | phr. | A2 | как насчёт
 however | adv. | A1 | однако, тем не менее
 huge | adj. | A2 | огромный
 human | adj. | A2 | человеческий
@@ -2536,6 +2656,7 @@ hunting | n. | B2 | охота
 hurricane | n. | B1 | ураган
 hurry | n. | B1 | спешка
 hurry | v. | B1 | спешить
+hurry up | phr. v. | A2 | торопиться
 hurt | adj. | A2 | раненый; обиженный
 hurt | n. | B2 | обида, боль
 hurt | v. | A2 | ранить, болеть
@@ -2543,6 +2664,7 @@ husband | n. | A1 | муж
 hydrogen | n. | C1 | водород
 hypothesis | n. | B2 | гипотеза
 I | pron. | A1 | я
+I'm afraid | phr. | B1 | боюсь, что (вежливо: к сожалению)
 ice | n. | A1 | лёд
 ice cream | n. | A1 | мороженое
 icon | n. | B2 | значок, иконка; кумир
@@ -2598,6 +2720,20 @@ imprisonment | n. | C1 | тюремное заключение
 improve | v. | A1 | улучшать
 improvement | n. | B1 | улучшение
 in | prep. | A1 | в
+in a hurry | phr. | B1 | в спешке, торопясь
+in advance | phr. | B1 | заранее
+in case | phr. | B1 | на случай, если
+in common | phr. | B1 | общее (у людей)
+in fact | phr. | B1 | на самом деле, фактически
+in general | phr. | B1 | в целом, вообще
+in my opinion | phr. | A2 | по-моему, на мой взгляд
+in order to | phr. | B1 | чтобы, для того чтобы
+in other words | phr. | B1 | другими словами
+in public | phr. | B1 | на людях, публично
+in the end | phr. | B1 | в конце концов, в итоге
+in the middle of | phr. | A2 | посреди, в середине
+in the morning | phr. | A1 | утром
+in time | phr. | B1 | вовремя (не опоздав), успеть
 inability | n. | C1 | неспособность
 inadequate | adj. | C1 | недостаточный, неадекватный
 inappropriate | adj. | C1 | неуместный
@@ -2788,6 +2924,7 @@ isolation | n. | C1 | изоляция, одиночество
 issue | n. | B1 | проблема, вопрос
 issue | v. | B2 | выпускать, выдавать
 it | pron. | A1 | оно
+it's up to you | phr. | B1 | решать тебе
 item | n. | A2 | предмет, пункт
 its | det. | A1 | его, её (неодуш.)
 itself | pron. | A2 | сам, себя (для предметов)
@@ -2829,11 +2966,15 @@ jurisdiction | n. | C1 | юрисдикция
 jury | n. | B2 | присяжные; жюри
 just | adj. | C1 | справедливый
 just | adv. | A1 | только что, просто
+just in case | phr. | B1 | на всякий случай
 justice | n. | B2 | справедливость, правосудие
 justification | n. | C1 | оправдание, обоснование
 justify | v. | B2 | оправдывать, обосновывать
 keen | adj. | B1 | увлечённый
 keep | v. | A1 | держать, сохранять
+keep in touch | phr. | B1 | поддерживать связь
+keep on | phr. v. | B1 | продолжать (упорно)
+keep up with | phr. v. | B2 | не отставать, поспевать
 key | adj. | A1 | ключевой, главный
 key | n. | A1 | ключ
 key | v. | B1 | вводить (с клавиатуры)
@@ -2850,6 +2991,7 @@ kilogram | n. | A2 | килограмм
 kilometer | n. | A1 | километр
 kind | adj. | B1 | добрый, любезный
 kind | n. | A1 | вид
+kind of | phr. | B1 | вроде, как бы, отчасти
 kindness | n. | B1 | доброта
 king | n. | A2 | король
 kingdom | n. | C1 | королевство
@@ -2956,6 +3098,7 @@ less | det. | A2 | меньше
 lesser | adj. | C1 | меньший
 lesson | n. | A1 | урок
 let | v. | A1 | позволять
+let down | phr. v. | B2 | подводить (кого-то)
 lethal | adj. | C1 | смертельный
 letter | n. | A1 | письмо
 letter | n. | A1 | буква
@@ -2972,6 +3115,7 @@ license | v. | C1 | выдавать лицензию
 lie | n. | B1 | ложь
 lie | v. | A1 | лежать
 lie | v. | B1 | лгать
+lie down | phr. v. | A2 | прилечь, ложиться
 life | n. | A1 | жизнь
 lifelong | adj. | C1 | пожизненный, на всю жизнь
 lifestyle | n. | A2 | образ жизни
@@ -3008,6 +3152,7 @@ liquid | n. | B1 | жидкость
 list | n. | A1 | список
 list | v. | A1 | составлять список, перечислять
 listen | v. | A1 | слушать
+listen to | phr. v. | A1 | слушать
 listener | n. | A2 | слушатель
 listing | n. | C1 | список, перечень; объявление
 liter | n. | B2 | литр
@@ -3017,6 +3162,7 @@ literary | adj. | B2 | литературный
 literature | n. | B1 | литература
 litter | n. | B2 | мусор (на улице)
 little | adj. | A1 | маленький
+little by little | phr. | B1 | понемногу, постепенно
 live | adj. | B1 | прямой (эфир)
 live | v. | A1 | жить
 lively | adj. | B2 | оживленный, бодрый
@@ -3037,22 +3183,35 @@ lock | n. | A2 | замок (на двери)
 lock | v. | A2 | запирать на замок
 log | n. | C1 | бревно; журнал (записей)
 log | v. | C1 | записывать, регистрировать
+log in | phr. v. | A2 | входить (в аккаунт)
+log out | phr. v. | A2 | выходить (из аккаунта)
 logic | n. | C1 | логика
 logical | adj. | B2 | логичный
 logo | n. | B2 | логотип
 lonely | adj. | B1 | одинокий
 long | adj. | A1 | длинный
+long time no see | phr. | B1 | сто лет не виделись
 long-standing | adj. | C1 | давний
 long-term | adj. | B2 | долгосрочный
 long-time | adj. | C1 | давний, многолетний
 look | n. | A2 | взгляд
 look | v. | A1 | смотреть, выглядеть
+look after | phr. v. | A2 | присматривать, заботиться
+look around | phr. v. | A2 | осматриваться, осматривать
+look at | phr. v. | A1 | смотреть на
+look down on | phr. v. | C1 | смотреть свысока
+look for | phr. v. | A2 | искать
+look forward to | phr. v. | B1 | ждать с нетерпением
+look into | phr. v. | B2 | изучать, расследовать
+look out | phr. v. | B1 | осторожно!, берегись!
+look up | phr. v. | B1 | искать (в словаре, справочнике)
 loom | v. | C1 | вырисовываться, нависать
 loop | n. | C1 | петля; цикл
 loose | adj. | B2 | свободный, широкий
 lord | n. | B2 | лорд, господин
 lorry | n. | A2 | грузовик
 lose | v. | A1 | терять
+lose weight | phr. | A2 | худеть
 loss | n. | B1 | потеря, утрата
 lost | adj. | A2 | потерянный, заблудившийся
 lot | pron. | A1 | много
@@ -3097,6 +3256,14 @@ major | n. | C1 | майор; профильный предмет
 majority | n. | B2 | большинство
 make | n. | B2 | марка (изделия)
 make | v. | A1 | делать, создавать
+make a decision | phr. | B1 | принимать решение
+make a mistake | phr. | A2 | ошибаться, совершать ошибку
+make friends | phr. | A2 | заводить друзей
+make money | phr. | B1 | зарабатывать деньги
+make sense | phr. | B1 | иметь смысл, быть понятным
+make sure | phr. | B1 | убедиться, проследить
+make up | phr. v. | B1 | выдумывать, сочинять
+make up | phr. v. | B2 | мириться
 make-up | n. | B2 | макияж
 making | n. | B2 | изготовление, создание
 male | adj. | A2 | мужской
@@ -3296,6 +3463,7 @@ moral | adj. | B2 | моральный, нравственный
 moral | n. | B2 | мораль (басни); нравы
 morality | n. | C1 | мораль, нравственность
 more | det. | A1 | больше
+more or less | phr. | B1 | более или менее
 moreover | adv. | B2 | более того
 morning | n. | A1 | утро
 mortgage | n. | B2 | ипотека
@@ -3317,6 +3485,8 @@ mouse | n. | A1 | мышь
 mouth | n. | A1 | рот
 move | n. | B1 | ход; переезд; шаг
 move | v. | A1 | двигаться, переезжать
+move in | phr. v. | B1 | въезжать (в жильё)
+move out | phr. v. | B1 | съезжать (с жилья)
 movement | n. | A2 | движение
 movie | n. | A1 | фильм
 moving | adj. | B2 | трогательный; движущийся
@@ -3390,6 +3560,7 @@ net | n. | B1 | сетка
 network | n. | A2 | сеть
 neutral | adj. | B2 | нейтральный
 never | adv. | A1 | никогда
+never mind | phr. | A2 | ничего страшного, неважно
 nevertheless | adv. | B2 | тем не менее
 new | adj. | A1 | новый
 newly | adv. | B2 | недавно, только что
@@ -3406,7 +3577,9 @@ nine | num. | A1 | девять
 nineteen | num. | A1 | девятнадцать
 ninety | num. | A1 | девяносто
 no | excl. | A1 | нет
+no matter | phr. | B2 | неважно, независимо от того
 no one | pron. | A1 | никто
+no problem | phr. | A1 | без проблем, пожалуйста
 noble | adj. | C1 | благородный; знатный
 nobody | pron. | A1 | никто
 nod | v. | C1 | кивать
@@ -3490,6 +3663,7 @@ October | n. | A1 | октябрь
 odd | adj. | B1 | странный; нечётный
 odds | n. | C1 | шансы, вероятность
 of | prep. | A1 | из, о
+of course | phr. | A1 | конечно
 off | adv. | A1 | выключенный
 offence | n. | B2 | правонарушение
 offend | v. | B2 | обижать, задевать
@@ -3510,7 +3684,18 @@ OK | excl. | A1 | хорошо
 old | adj. | A1 | старый
 old-fashioned | adj. | B1 | старомодный
 on | prep. | A1 | на
+on foot | phr. | A2 | пешком
+on holiday | phr. | A2 | в отпуске, на каникулах
+on my own | phr. | B1 | сам, в одиночку
+on purpose | phr. | B1 | нарочно, специально
+on the one hand | phr. | B2 | с одной стороны
+on the other hand | phr. | B1 | с другой стороны
+on the phone | phr. | A2 | по телефону
+on the way | phr. | A2 | по пути, по дороге
+on time | phr. | A2 | вовремя (точно по расписанию)
 once | adv. | A1 | один раз
+once again | phr. | B1 | ещё раз, снова
+once in a blue moon | phr. | C1 | очень редко
 one | num. | A1 | один
 ongoing | adj. | B2 | продолжающийся, текущий
 onion | n. | A1 | лук
@@ -3569,6 +3754,8 @@ our | det. | A1 | наш
 ours | pron. | B1 | наш (принадлежащий нам)
 ourselves | pron. | A2 | мы сами, себя
 out | adv. | A1 | снаружи
+out of date | phr. | B1 | устаревший, просроченный
+out of order | phr. | B1 | не работает, неисправен
 outbreak | n. | C1 | вспышка (болезни, войны)
 outcome | n. | B2 | результат, исход
 outdoor | adj. | B1 | открытый, на свежем воздухе
@@ -3590,6 +3777,7 @@ outsider | n. | C1 | посторонний, чужак
 outstanding | adj. | B2 | выдающийся
 oven | n. | A2 | духовка, печь
 over | prep. | A1 | над
+over and over | phr. | B2 | снова и снова
 overall | adj. | B2 | общий, в целом
 overcome | v. | B2 | преодолевать
 overlook | v. | C1 | не замечать; выходить на (о виде)
@@ -3684,6 +3872,8 @@ pattern | n. | A2 | узор, шаблон
 pause | v. | B2 | делать паузу
 pay | n. | A2 | зарплата, оплата
 pay | v. | A1 | платить
+pay attention | phr. | B1 | обращать внимание
+pay back | phr. v. | B1 | возвращать (деньги)
 payment | n. | B1 | платеж, оплата
 peace | n. | A2 | мир, покой
 peaceful | adj. | B1 | мирный, спокойный
@@ -3745,6 +3935,8 @@ physics | n. | A2 | физика
 piano | n. | A1 | пианино
 pick | n. | B2 | выбор
 pick | v. | A2 | выбирать, собирать
+pick up | phr. v. | A2 | поднимать (с пола)
+pick up | phr. v. | B1 | забирать (кого-то, на машине)
 picnic | n. | A2 | пикник
 picture | n. | A1 | картинка
 picture | v. | B2 | представлять себе
@@ -3808,6 +4000,7 @@ poet | n. | B1 | поэт
 poetry | n. | B1 | поэзия
 point | n. | A1 | суть, мысль
 point | v. | B1 | указывать
+point out | phr. v. | B2 | указывать, обращать внимание
 pointed | adj. | B2 | заострённый
 poison | n. | B1 | яд
 poison | v. | B1 | отравлять
@@ -4071,6 +4264,11 @@ pursuit | n. | B2 | погоня; стремление
 push | n. | B1 | толчок
 push | v. | A2 | толкать
 put | v. | A1 | класть, ставить
+put away | phr. v. | B1 | убирать (на место)
+put down | phr. v. | A2 | класть, ставить
+put off | phr. v. | B2 | откладывать
+put on | phr. v. | A2 | надевать
+put up with | phr. v. | B2 | терпеть, мириться
 puzzle | n. | B2 | головоломка, пазл
 qualification | n. | B1 | квалификация, диплом
 qualified | adj. | B1 | квалифицированный
@@ -4375,6 +4573,8 @@ rifle | n. | C1 | винтовка
 right | adj. | A1 | правый, верный
 right | adv. | A1 | прямо
 right | n. | A1 | право, правота
+right away | phr. | B1 | сразу, немедленно
+right now | phr. | A1 | прямо сейчас
 ring | n. | A2 | кольцо, звонок
 ring | v. | A2 | звонить
 riot | n. | C1 | беспорядки, бунт
@@ -4431,6 +4631,9 @@ ruling | n. | C1 | постановление (суда)
 rumour | n. | C1 | слух, сплетня
 run | n. | A2 | пробежка
 run | v. | A1 | бегать
+run away | phr. v. | B1 | убегать
+run into | phr. v. | B2 | случайно встретить
+run out of | phr. v. | B1 | заканчиваться (о запасах)
 runner | n. | A2 | бегун
 running | n. | A2 | бег
 rural | adj. | B2 | сельский
@@ -4524,6 +4727,7 @@ secure | adj. | B2 | безопасный, надежный
 secure | v. | B2 | обеспечивать, закреплять
 security | n. | B1 | безопасность
 see | v. | A1 | видеть
+see you later | phr. | A1 | увидимся позже, пока
 seed | n. | B1 | семя
 seek | v. | B2 | искать
 seeker | n. | B2 | ищущий (job seeker)
@@ -4566,6 +4770,8 @@ service | n. | A2 | служба, сервис
 session | n. | B2 | сессия, занятие
 set | n. | B1 | набор, комплект
 set | v. | B1 | устанавливать, ставить
+set off | phr. v. | B1 | отправляться (в путь)
+set up | phr. v. | B2 | основывать, создавать
 set-up | n. | C1 | устройство, организация
 setting | n. | B1 | обстановка, место действия
 settle | v. | B2 | поселиться; улаживать
@@ -4637,6 +4843,8 @@ shout | n. | A2 | крик
 shout | v. | A2 | кричать
 show | n. | A1 | шоу
 show | v. | A1 | показывать
+show off | phr. v. | B1 | хвастаться, красоваться
+show up | phr. v. | B1 | появляться, приходить
 shower | n. | A1 | душ
 shrink | v. | C1 | сжиматься, садиться (о ткани)
 shrug | v. | C1 | пожимать плечами
@@ -4651,6 +4859,7 @@ sigh | v. | C1 | вздыхать
 sight | n. | B1 | зрение, достопримечательность
 sign | n. | A2 | знак, вывеска
 sign | v. | A2 | подписывать
+sign up | phr. v. | B1 | записываться, регистрироваться
 signal | n. | B1 | сигнал
 signal | v. | B1 | подавать сигнал
 signature | n. | B2 | подпись
@@ -4683,6 +4892,7 @@ sink | v. | B1 | тонуть
 sir | n. | A2 | сэр, господин
 sister | n. | A1 | сестра
 sit | v. | A1 | сидеть
+sit down | phr. v. | A1 | садиться
 site | n. | A2 | сайт, место
 situated | adj. | C1 | расположенный
 situation | n. | A1 | ситуация
@@ -4724,6 +4934,7 @@ slope | v. | B2 | иметь наклон
 slot | n. | C1 | щель, прорезь; слот
 slow | adj. | A1 | медленный
 slow | v. | B1 | замедлять(ся)
+slow down | phr. v. | B1 | сбавлять скорость, замедляться
 slowly | adv. | A2 | медленно
 small | adj. | A1 | маленький
 smart | adj. | B1 | умный, элегантный
@@ -4778,10 +4989,12 @@ somewhere | adv. | A2 | где-то, куда-то
 son | n. | A1 | сын
 song | n. | A1 | песня
 soon | adv. | A1 | скоро
+sooner or later | phr. | B1 | рано или поздно
 sophisticated | adj. | B2 | сложный, современный
 sorry | adj. | A1 | сожалеющий
 sort | n. | A2 | вид, сорт
 sort | v. | B1 | сортировать
+sort out | phr. v. | B2 | улаживать, разбираться
 soul | n. | B2 | душа
 sound | adj. | C1 | здравый, надёжный
 sound | n. | A1 | звук
@@ -4876,6 +5089,7 @@ stamp | n. | A2 | почтовая марка
 stance | n. | B2 | позиция, точка зрения
 stand | n. | B2 | стенд, киоск; подставка
 stand | v. | A1 | стоять
+stand up | phr. v. | A1 | вставать (на ноги)
 standard | adj. | B1 | стандартный, обычный
 standard | n. | B1 | стандарт, уровень
 standing | adj. | C1 | постоянный; стоячий
@@ -4898,6 +5112,7 @@ statue | n. | B1 | статуя
 status | n. | B2 | статус, положение
 stay | n. | A2 | пребывание
 stay | v. | A1 | оставаться
+stay up | phr. v. | B1 | не ложиться спать (допоздна)
 steadily | adv. | B2 | постоянно, неуклонно
 steady | adj. | B2 | постоянный, устойчивый
 steal | v. | A2 | воровать
@@ -4909,6 +5124,7 @@ stem | n. | C1 | стебель
 stem | v. | C1 | происходить (stem from)
 step | n. | A2 | шаг
 step | v. | B2 | шагать, ступать
+step by step | phr. | B1 | шаг за шагом
 stereotype | n. | C1 | стереотип
 stick | n. | B1 | палка
 stick | v. | B1 | приклеивать(ся)
@@ -5109,6 +5325,18 @@ tactical | adj. | C1 | тактический
 tag | n. | B2 | бирка, ярлык; тег
 tail | n. | B1 | хвост
 take | v. | A1 | брать
+take a break | phr. | A2 | сделать перерыв
+take a photo | phr. | A1 | сфотографировать
+take after | phr. v. | B2 | быть похожим (на родственника)
+take care of | phr. | A2 | заботиться о
+take it easy | phr. | B1 | не волнуйся, расслабься
+take off | phr. v. | A2 | снимать (одежду, обувь)
+take off | phr. v. | B1 | взлетать
+take over | phr. v. | B2 | брать на себя, перенимать (управление)
+take part in | phr. | B1 | участвовать в
+take place | phr. | B1 | происходить, состояться
+take up | phr. v. | B2 | начать заниматься (хобби, спортом)
+take your time | phr. | B1 | не торопись
 tale | n. | B2 | сказка, история
 talent | n. | B1 | талант
 talented | adj. | B1 | талантливый
@@ -5190,6 +5418,7 @@ than | conj. | A1 | чем
 thank | v. | A1 | благодарить
 thankfully | adv. | C1 | к счастью
 thanks | excl. | A1 | спасибо
+thanks to | phr. | B1 | благодаря
 that | conj. | A1 | что
 that | det. | A1 | тот
 that | pron. | A1 | то
@@ -5219,6 +5448,7 @@ thief | n. | A2 | вор
 thin | adj. | A2 | тонкий, худой
 thing | n. | A1 | вещь
 think | v. | A1 | думать
+think over | phr. v. | B2 | обдумывать
 thinking | n. | A2 | мышление
 third | num. | A1 | третий
 thirsty | adj. | A1 | испытывающий жажду
@@ -5245,6 +5475,7 @@ throat | n. | B1 | горло
 through | prep. | A1 | через
 throughout | prep. | B1 | по всему, на протяжении
 throw | v. | A2 | бросать
+throw away | phr. v. | A2 | выбрасывать
 thumb | n. | B2 | большой палец
 thunder | n. | A2 | гром
 Thursday | n. | A1 | четверг
@@ -5253,6 +5484,7 @@ ticket | n. | A1 | билет
 tide | n. | C1 | прилив и отлив
 tidy | adj. | A2 | аккуратный
 tidy | v. | A2 | убирать
+tidy up | phr. v. | A2 | прибираться
 tie | n. | A2 | галстук; ничья
 tie | v. | A2 | завязывать, галстук
 tight | adj. | B1 | тесный, плотный
@@ -5275,6 +5507,7 @@ tissue | n. | B2 | бумажная салфетка
 title | n. | A1 | заглавие, название
 title | v. | B2 | озаглавливать
 to | prep. | A1 | в, к
+to be honest | phr. | B1 | честно говоря
 tobacco | n. | C1 | табак
 today | adv. | A1 | сегодня
 today | n. | A1 | сегодня
@@ -5403,6 +5636,7 @@ trustee | n. | C1 | попечитель, доверенное лицо
 truth | n. | B1 | правда
 try | n. | B2 | попытка
 try | v. | A1 | пробовать
+try on | phr. v. | A2 | примерять
 tsunami | n. | B2 | цунами
 tube | n. | B1 | труба, тюбик
 Tuesday | n. | A1 | вторник
@@ -5412,6 +5646,13 @@ tunnel | n. | B2 | тоннель
 turkey | n. | A2 | индейка
 turn | n. | A1 | поворот
 turn | v. | A1 | поворачивать
+turn down | phr. v. | B1 | убавлять (звук, огонь)
+turn down | phr. v. | B2 | отклонять, отказываться
+turn into | phr. v. | B1 | превращаться
+turn off | phr. v. | A2 | выключать
+turn on | phr. v. | A2 | включать
+turn out | phr. v. | B2 | оказываться
+turn up | phr. v. | B1 | прибавлять (звук, огонь)
 turnout | n. | C1 | явка
 turnover | n. | C1 | оборот; текучесть (кадров)
 TV | n. | A1 | телевизор
@@ -5438,6 +5679,7 @@ uncle | n. | A1 | дядя
 uncomfortable | adj. | B1 | неудобный
 unconscious | adj. | B2 | без сознания
 under | prep. | A1 | под
+under the weather | phr. | C1 | неважно себя чувствовать
 undergo | v. | B2 | подвергаться, проходить
 undergraduate | n. | C1 | студент (бакалавриата)
 underground | adj. | A2 | подземный, метро
@@ -5487,6 +5729,7 @@ unusually | adv. | A2 | необычно
 unveil | v. | C1 | открывать, представлять
 up | adv. | A1 | вверх
 up | prep. | A1 | наверх
+up to date | phr. | B1 | актуальный, современный
 upcoming | adj. | C1 | предстоящий
 update | n. | B1 | обновление
 update | v. | B1 | обновлять
@@ -5601,8 +5844,10 @@ vulnerable | adj. | C1 | уязвимый
 wage | n. | B2 | заработная плата
 wait | n. | A2 | ожидание
 wait | v. | A1 | ждать
+wait for | phr. v. | A1 | ждать (кого-то, чего-то)
 waiter | n. | A1 | официант
 wake | v. | A1 | просыпаться
+wake up | phr. v. | A1 | просыпаться
 walk | n. | A1 | прогулка
 walk | v. | A1 | гулять, ходить пешком
 wall | n. | A1 | стена
@@ -5629,6 +5874,7 @@ waste | n. | B1 | отходы, пустая трата
 waste | v. | B1 | тратить впустую
 watch | n. | A1 | наручные часы
 watch | v. | A1 | смотреть, наблюдать
+watch out | phr. v. | B1 | осторожно!, берегись!
 water | n. | A1 | вода
 water | v. | B1 | поливать
 wave | n. | A2 | волна
@@ -5669,6 +5915,7 @@ west | n. | A1 | запад
 western | adj. | B1 | западный
 wet | adj. | A2 | мокрый
 what | pron. | A1 | что
+what's up | phr. | A2 | как дела?, что случилось?
 whatever | det. | B1 | что бы ни
 whatsoever | adv. | C1 | вообще, совсем (в отрицании)
 wheat | n. | B2 | пшеница
@@ -5745,6 +5992,8 @@ wool | n. | B1 | шерсть
 word | n. | A1 | слово
 work | n. | A1 | работа
 work | v. | A1 | работать
+work out | phr. v. | B1 | тренироваться, заниматься спортом
+work out | phr. v. | B2 | разобраться, найти решение
 worker | n. | A1 | рабочий
 workforce | n. | B2 | рабочая сила, коллектив
 working | adj. | A2 | рабочий, работающий
@@ -5772,6 +6021,7 @@ wow | excl. | A2 | ух ты!
 wrap | v. | B2 | заворачивать
 wrist | n. | B2 | запястье
 write | v. | A1 | писать
+write down | phr. v. | A2 | записывать
 writer | n. | A1 | писатель
 writing | n. | A1 | письмо, написание
 written | adj. | B1 | письменный
@@ -5793,6 +6043,7 @@ yield | v. | C1 | давать (результат), приносить
 yoga | n. | A2 | йога
 yoghurt | n. | A2 | йогурт
 you | pron. | A1 | ты, вы
+you're welcome | phr. | A1 | пожалуйста (в ответ на спасибо)
 young | adj. | A1 | молодой
 youngster | n. | C1 | юноша, подросток
 your | det. | A1 | твой, ваш
