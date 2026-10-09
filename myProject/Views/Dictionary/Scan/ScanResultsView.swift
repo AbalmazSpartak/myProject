@@ -12,6 +12,20 @@ struct ScanCandidate: Identifiable {
 }
 
 enum ScanMatcher {
+    /// Выражения из базы (все записи из нескольких слов), которые сканер ищет в тексте целиком.
+    /// У выражения с несколькими значениями (take off) — один образец; фразовый глагол важнее: только ему разрешён разрыв
+    static func phrases(in words: [Word]) -> [PhrasePattern] {
+        var byText: [String: PhrasePattern] = [:]
+        for word in words {
+            let text = word.english.trimmingCharacters(in: .whitespaces).lowercased()
+            guard text.contains(" ") else { continue }
+            if byText[text] == nil || word.partOfSpeech == "phr. v." {
+                byText[text] = PhrasePattern(text: text, partOfSpeech: word.partOfSpeech)
+            }
+        }
+        return Array(byText.values)
+    }
+
     /// Ищет слово в базе по словарной форме, затем по форме из текста; при нескольких значениях — с той же частью речи
     static func match(_ found: [ExtractedWord], in words: [Word]) -> [ScanCandidate] {
         let index = Dictionary(grouping: words) { $0.english.lowercased() }
@@ -74,9 +88,14 @@ struct ScanResultsView: View {
         candidates.filter { $0.existing == nil }
     }
 
+    /// Фразовые глаголы и выражения из базы, найденные в тексте целиком
+    private var phrases: [ScanCandidate] {
+        candidates.filter { $0.existing != nil && $0.extracted.isPhrase }
+    }
+
     /// Сложные слова сверху; из файла — самые частые
     private var knownWords: [ScanCandidate] {
-        let known = candidates.filter { $0.existing != nil }
+        let known = candidates.filter { $0.existing != nil && !$0.extracted.isPhrase }
         return fileName == nil ? known.sorted { levelRank($0) > levelRank($1) } : known
     }
 
@@ -118,6 +137,15 @@ struct ScanResultsView: View {
                             }
                     } footer: {
                         Text("Тогда в словарь из текста сразу попадут все его слова. Настройка запоминается для следующих сканов.")
+                    }
+                }
+                if !phrases.isEmpty {
+                    Section {
+                        ForEach(phrases) { knownWordRow($0, showsExample: true) }
+                    } header: {
+                        sectionHeader("Выражения", items: phrases)
+                    } footer: {
+                        Text("Фразовые глаголы и устойчивые выражения из базы, найденные в тексте целиком. Проверьте по примеру, что значение то же: в «look up at the sky» не «искать в словаре».")
                     }
                 }
                 if !newWords.isEmpty {
@@ -220,7 +248,8 @@ struct ScanResultsView: View {
         }
     }
 
-    private func knownWordRow(_ candidate: ScanCandidate) -> some View {
+    /// showsExample — пример из текста: у выражений по нему видно, в том ли значении оно стоит
+    private func knownWordRow(_ candidate: ScanCandidate, showsExample: Bool = false) -> some View {
         let word = candidate.existing!
         return HStack(alignment: .top, spacing: 12) {
             checkbox(for: candidate)
@@ -228,6 +257,12 @@ struct ScanResultsView: View {
                 titleLine(english: word.english, partOfSpeech: word.partOfSpeech, count: candidate.extracted.count)
                 Text(word.russian)
                     .foregroundStyle(.secondary)
+                if showsExample {
+                    Text(Word.attributedExample(candidate.extracted.example))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(3)
+                }
                 if word.state != .new {
                     Text("уже учите")
                         .font(.caption.bold())

@@ -149,9 +149,11 @@ struct TextScanView: View {
         defer { isRecognizing = false }
 
         let limit = Self.maxFileWords
+        let words = modelContext.fetchAllWords()
+        let phrases = ScanMatcher.phrases(in: words)
         let parsed = await Task.detached(priority: .userInitiated) { () -> (FileTextReader.Result, [ExtractedWord])? in
             guard let file = try? FileTextReader.read(url) else { return nil }
-            let found = TextWordExtractor.extract(from: file.text)
+            let found = TextWordExtractor.extract(from: file.text, phrases: phrases)
                 .sorted { $0.count > $1.count }
             return (file, Array(found.prefix(limit)))
         }.value
@@ -169,7 +171,7 @@ struct TextScanView: View {
         if found.count == Self.maxFileWords { notes.append("В словарь берутся \(Self.maxFileWords) самых частых слов файла.") }
         fileNote = notes.isEmpty ? nil : notes.joined(separator: " ")
         fileName = url.deletingPathExtension().lastPathComponent
-        candidates = ScanMatcher.match(found, in: modelContext.fetchAllWords())
+        candidates = ScanMatcher.match(found, in: words)
         path.append(.results)
     }
 
@@ -222,7 +224,8 @@ struct TextScanView: View {
     }
 
     private func findWords() {
-        let found = TextWordExtractor.extract(from: text)
+        let words = modelContext.fetchAllWords()
+        let found = TextWordExtractor.extract(from: text, phrases: ScanMatcher.phrases(in: words))
         guard !found.isEmpty else {
             // Английские слова могут быть, но только служебные — сканер их пропускает намеренно
             errorMessage = "Не нашлось слов для изучения. Сканер берёт существительные, глаголы, прилагательные и наречия, а служебные слова (the, is, this…) пропускает."
@@ -230,7 +233,7 @@ struct TextScanView: View {
         }
         fileName = nil
         fileNote = nil
-        candidates = ScanMatcher.match(found, in: modelContext.fetchAllWords())
+        candidates = ScanMatcher.match(found, in: words)
         path.append(.results)
     }
 }
