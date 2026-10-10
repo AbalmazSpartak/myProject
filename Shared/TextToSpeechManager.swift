@@ -1,4 +1,4 @@
-import AVFoundation
+@preconcurrency import AVFoundation
 
 /// Настройки озвучки (Профиль → ⚙️ → «Озвучка»)
 enum SpeechSettings {
@@ -31,13 +31,22 @@ final class TextToSpeechManager: NSObject {
         super.init()
         synthesizer.delegate = self
         // .playback — слышно и в беззвучном режиме; .duckOthers — чужой звук приглушается, а не останавливается.
-        // Сессию здесь не включаем: включённая при запуске, она глушила музыку, даже когда ничего не озвучивалось
-        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])
+        // Сессию здесь не включаем: включённая при запуске, она глушила музыку, даже когда ничего не озвучивалось.
+        // Вызов блокирующий — в фоне, в той же очереди, что и включение сессии перед речью
+        Self.sessionQueue.async {
+            try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])
+        }
     }
 
-    /// Заранее найти голос — первое слово после запуска не ждёт его
+    /// Заранее найти голос — первое слово после запуска не ждёт его. Поиск занимает ~0,2 с — в фоне, не на главном потоке
     func prepare() {
-        _ = voice()
+        let accent = UserDefaults.standard.string(forKey: SpeechSettings.accentKey) ?? SpeechSettings.defaultAccent
+        Task.detached(priority: .utility) {
+            let voice = AVSpeechSynthesisVoice(language: accent)
+            await MainActor.run {
+                if self.cachedVoice?.accent != accent { self.cachedVoice = (accent, voice) }
+            }
+        }
     }
 
     func speak(_ text: String) {

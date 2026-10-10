@@ -322,7 +322,6 @@ enum Backup {
         // 8. Настройки и статистика — после того как данные сохранены
         apply(backup.settings, to: .standard)
         apply(backup.sharedSettings, to: AppGroup.defaults)
-        WordCache.shared.invalidateDictionaryIndex()
     }
 
     private static func apply(_ record: BackupFile.ProfileRecord, to profile: UserProfile) {

@@ -14,16 +14,17 @@ struct DictionaryView: View {
     
     @Query(sort: \Category.name) private var categories: [Category]
     @Query(sort: \WordList.createdAt, order: .reverse) private var lists: [WordList]
-    /// Слова читаем при открытии и после сохранения базы, а не через @Query:
-    /// тот перечитывает все слова при каждой перерисовке, то есть на каждую букву в форме добавления
-    @State private var allWords: [Word] = []
+    /// Читаем только слова выбранного раздела, запросом к базе. Все слова (10 000+ с книгами) не читаем:
+    /// на iPhone 12 это ~2 с подвисания при первом открытии «Словаря». И не через @Query — тот перечитывает
+    /// при каждой перерисовке, то есть на каждую букву в форме добавления
+    @State private var filteredWords: [Word] = []
     /// Вкладка «Словарь» живёт и под другими экранами — перечитывать базу на каждое сохранение стоит только на экране
     @State private var isOnScreen = false
-    @State private var filteredWords: [Word] = []
+    /// Сколько слов в каждой теме — считается, только когда открыт список тем
     @State private var categoryCounts: [UUID: Int] = [:]
     @State private var mistakeCount = 0
-    /// Слова по написанию (нижний регистр) — чтобы при добавлении брать слово из базы, а не делать дубль
-    @State private var wordsByEnglish: [String: [Word]] = [:]
+    /// Такое же слово уже есть (в базе или среди своих) — при добавлении берём его, а не делаем дубль
+    @State private var existingMatches: [Word] = []
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
     
     @State private var filter: DictionaryFilter
@@ -64,26 +65,52 @@ struct DictionaryView: View {
     @State private var newLevel: String = "A1"
     
     private func reloadWords() {
-        let index = WordCache.shared.dictionaryIndex(in: modelContext)
-        allWords = index.sortedWords
-        categoryCounts = index.categoryCounts
-        wordsByEnglish = index.wordsByEnglish
-        mistakeCount = allWords.count(where: \.isMistake)
+        mistakeCount = (try? modelContext.fetchCount(FetchDescriptor<Word>(predicate: #Predicate { $0.isMistake }))) ?? 0
+        if isDropdownExpanded { reloadCategoryCounts() }
         refilter()
+        refreshExistingMatches()
     }
 
     private func refilter() {
         switch filter {
         case .general:
-            filteredWords = allWords.filter { $0.category == nil }
+            filteredWords = words(matching: #Predicate { $0.category == nil })
         case .category(let category):
             let catID = category.id
-            filteredWords = allWords.filter { $0.category?.id == catID }
+            filteredWords = words(matching: #Predicate { $0.category?.id == catID })
         case .list(let list):
             filteredWords = list.words.sorted { $0.english.localizedCaseInsensitiveCompare($1.english) == .orderedAscending }
         case .mistakes:
-            filteredWords = allWords.filter { $0.isMistake }
+            filteredWords = words(matching: #Predicate { $0.isMistake })
         }
+    }
+
+    /// Слова по запросу, по алфавиту без учёта регистра
+    private func words(matching predicate: Predicate<Word>) -> [Word] {
+        let descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\Word.english, comparator: .localizedStandard)])
+        return (try? modelContext.fetch(descriptor)) ?? []
+    }
+
+    /// Счётчики тем — запросом «сколько», без чтения самих слов (~1 мс на тему)
+    private func reloadCategoryCounts() {
+        var counts: [UUID: Int] = [:]
+        for category in categories {
+            let catID = category.id
+            counts[catID] = (try? modelContext.fetchCount(FetchDescriptor<Word>(predicate: #Predicate { $0.category?.id == catID }))) ?? 0
+        }
+        categoryCounts = counts
+    }
+
+    /// Слово с тем же написанием: как введено, строчными и с заглавной (April, I)
+    private func refreshExistingMatches() {
+        let typed = newEnglish.trimmingCharacters(in: .whitespaces)
+        guard !typed.isEmpty else {
+            existingMatches = []
+            return
+        }
+        let lower = typed.lowercased()
+        let capitalized = lower.prefix(1).uppercased() + lower.dropFirst()
+        existingMatches = words(matching: #Predicate { $0.english == typed || $0.english == lower || $0.english == capitalized })
     }
 
     private var addTargetName: String {
@@ -173,9 +200,12 @@ struct DictionaryView: View {
         }
         .onDisappear { isOnScreen = false }
         .onChange(of: filter) { _, _ in refilter() }
+        .onChange(of: isDropdownExpanded) { _, expanded in
+            if expanded { reloadCategoryCounts() }
+        }
+        .onChange(of: newEnglish) { _, _ in refreshExistingMatches() }
         // Любое сохранение (правка, скан, удаление темы со словами) — перечитываем, чтобы не показать удалённые слова.
-        // Не на экране — не перечитываем: тренировки сохраняют каждый ответ, а 3000 слов на телефоне — до полсекунды
-        // зависания. Вернутся на «Словарь» — onAppear перечитает
+        // Не на экране — не перечитываем: тренировки сохраняют каждый ответ. Вернутся на «Словарь» — onAppear перечитает
         .onReceive(NotificationCenter.default.publisher(for: ModelContext.didSave)) { _ in
             if isOnScreen { reloadWords() }
         }
@@ -501,13 +531,6 @@ struct DictionaryView: View {
         .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
     }
     
-    /// Такое же слово уже есть (в базе или среди своих) — по написанию без учёта регистра
-    private var existingMatches: [Word] {
-        let key = newEnglish.trimmingCharacters(in: .whitespaces).lowercased()
-        guard !key.isEmpty else { return [] }
-        return wordsByEnglish[key] ?? []
-    }
-
     private var canAddNewWord: Bool {
         !newEnglish.trimmingCharacters(in: .whitespaces).isEmpty
             && !newRussian.trimmingCharacters(in: .whitespaces).isEmpty

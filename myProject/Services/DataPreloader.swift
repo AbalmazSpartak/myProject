@@ -27,8 +27,6 @@ final class DataPreloader {
             merge(dtos, context: context)
         }
 
-        // Обновление words.csv могло поменять написание и темы слов
-        WordCache.shared.invalidateDictionaryIndex()
         do {
             try context.save()
             UserDefaults.standard.set(hash, forKey: bundledHashKey)
@@ -250,6 +248,10 @@ extension DataPreloader {
     /// Раньше разбор книг сохранял «ca» из «can't», «wo» из «won't», «sha» из «shan't» как отдельные слова
     /// с переводом вроде «к са». Заменяем их настоящими словами из базы в тех же словарях
     static func fixContractionFragments(context: ModelContext) {
+        // Обрывки остались только от старого разбора — достаточно одного прохода, а не запроса при каждом запуске
+        let doneKey = "contraction_fragments_fixed"
+        guard !UserDefaults.standard.bool(forKey: doneKey) else { return }
+        defer { UserDefaults.standard.set(true, forKey: doneKey) }
         let replacements = ["ca": "can't", "wo": "won't", "sha": "shall"]
         let fragments = Array(replacements.keys)
         let descriptor = FetchDescriptor<Word>(predicate: #Predicate { $0.isCustom && fragments.contains($0.english) })
