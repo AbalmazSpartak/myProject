@@ -7,7 +7,6 @@ struct ClozeView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     @Environment(\.modelContext) private var modelContext
-    @State private var allWords: [Word] = []
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
 
     @State private var sessionWords: [Word] = []
@@ -25,9 +24,12 @@ struct ClozeView: View {
 
     @FocusState private var isInputFocused: Bool
 
-    /// Слова из выбранных словарей, у которых в примере отмечено целевое слово
-    private var clozeWords: [Word] {
-        allWords.filter { studyScope.includes($0) && $0.clozeParts != nil }
+    /// Слова из выбранных словарей, у которых в примере отмечено целевое слово.
+    /// Запросом к базе — все слова не читаем (10 000+ — ~2 с на iPhone 12)
+    private func clozeWords(limit: Int?) -> [Word] {
+        let marked = #Predicate<Word> { $0.example.contains("<b>") }
+        return StudyWords.random(StudyWords.all(StudyWords.scope(studyScope), marked), limit: limit, in: modelContext)
+            .filter { $0.clozeParts != nil }
     }
 
     private var currentWord: Word? {
@@ -57,7 +59,6 @@ struct ClozeView: View {
         }
         .background(Color.brandBackground.ignoresSafeArea())
         .onAppear {
-            allWords = modelContext.fetchAllWords()
             startSession()
         }
     }
@@ -196,7 +197,7 @@ struct ClozeView: View {
     // MARK: - Логика
 
     private func startSession() {
-        sessionWords = SessionLength.limited(clozeWords.shuffled(), to: sessionLength)
+        sessionWords = clozeWords(limit: sessionLength > 0 ? sessionLength : nil)
         currentIndex = 0
         isApproachFinished = false
         approachAnswered = 0

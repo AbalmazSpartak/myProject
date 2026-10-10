@@ -269,7 +269,8 @@ struct ReviewSetupView: View {
 
     private func load() {
         // Пройденные — те, что хоть раз оценивались
-        studied = modelContext.fetchAllWords().filter { $0.reps > 0 || $0.isMistake }
+        // Запросом к базе — все слова не читаем (10 000+ — ~2 с на iPhone 12)
+        studied = StudyWords.fetch(#Predicate<Word> { $0.reps > 0 || $0.isMistake }, in: modelContext)
     }
 
     private func toggle(_ stage: ReviewStage) {

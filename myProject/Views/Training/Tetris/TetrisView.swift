@@ -5,7 +5,8 @@ import Combine
 struct TetrisView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @State private var allWords: [Word] = []
+    /// Неправильные варианты ответа — из нескольких сотен случайных слов, а не из всей базы
+    @State private var distractors: [Word] = []
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
 
     /// Слова из словарей, выбранных в настройках
@@ -468,14 +469,18 @@ struct TetrisView: View {
         }
     }
     
+    /// Слова для игры запросами к базе, все не читаем (10 000+ — ~2 с на iPhone 12):
+    /// все ошибки из выбранных для изучения и несколько сотен случайных. Не выбрано ни одного — играем по всему словарю
     private func loadWords() {
-        allWords = modelContext.fetchAllWords()
-        studyWords = allWords.filter { studyScope.includes($0) }
+        var scope = StudyWords.scope(studyScope)
+        if StudyWords.count(scope, in: modelContext) == 0 { scope = #Predicate<Word> { _ in true } }
+        let mistakes = StudyWords.fetch(StudyWords.all(scope, #Predicate<Word> { $0.isMistake }), in: modelContext)
+        studyWords = mistakes + StudyWords.random(scope, limit: 400, excluding: Set(mistakes.map(\.persistentModelID)), in: modelContext)
+        distractors = StudyWords.random(#Predicate<Word> { _ in true }, limit: 300, in: modelContext)
     }
 
     private func pickRandomWord() {
-        // Если в настройках не выбрано ни одного слова, играем по всему словарю
-        let pool = studyWords.isEmpty ? allWords : studyWords
+        let pool = studyWords
         let mistakeWords = pool.filter { $0.isMistake }
         
         if !mistakeWords.isEmpty {
@@ -491,7 +496,7 @@ struct TetrisView: View {
     }
     private func generateOptions(for word: Word) {
         let correctAnswer = word.russian
-        let wrongAnswers = allWords.randomWrongAnswers(2, excluding: correctAnswer) { $0.russian }
+        let wrongAnswers = distractors.randomWrongAnswers(2, excluding: correctAnswer) { $0.russian }
         currentOptions = ([correctAnswer] + wrongAnswers).shuffled()
     }
 

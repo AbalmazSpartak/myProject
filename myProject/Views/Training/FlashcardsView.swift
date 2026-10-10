@@ -10,11 +10,9 @@ struct FlashcardsView: View {
     @AppStorage("show_word_images") private var showWordImages: Bool = true
 
     @Query(sort: \Category.name) private var categories: [Category]
-    @State private var allWords: [Word] = []
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
 
     /// Слова из словарей, выбранных в настройках
-    @State private var studyWords: [Word] = []
     /// Счётчики для меню фильтров — пересчитываются после загрузки и ответа
     @State private var counts = WordCounts()
     @Query private var profiles: [UserProfile]
@@ -227,10 +225,9 @@ struct FlashcardsView: View {
         generateSession()
     }
     
+    /// Счётчики для меню — запросами к базе: все слова не читаем (10 000+ — ~2 с на iPhone 12)
     private func loadWords() {
-        allWords = modelContext.fetchAllWords()
-        studyWords = allWords.filter { studyScope.includes($0) }
-        counts = WordCounts(studyWords, newWordsAllowance: newWordsAllowance)
+        counts = WordCounts(scope: studyScope, categories: categories, newWordsAllowance: newWordsAllowance, in: modelContext)
     }
 
     /// Сколько новых слов ещё можно начать сегодня; nil — без лимита
@@ -239,8 +236,8 @@ struct FlashcardsView: View {
     }
 
     private func generateSession() {
-        let words = currentFilter.sessionWords(from: studyWords, newWordsAllowance: newWordsAllowance)
-        sessionWords = SessionLength.limited(words, to: sessionLength)
+        sessionWords = StudyWords.session(currentFilter, scope: studyScope, newWordsAllowance: newWordsAllowance,
+                                          length: sessionLength, in: modelContext)
         currentIndex = 0
         isApproachFinished = false
         approachAnswered = 0
@@ -271,7 +268,7 @@ struct FlashcardsView: View {
         reviewedCount += 1
         approachAnswered += 1
         if rating != .again { approachCorrect += 1 }
-        counts = WordCounts(studyWords, newWordsAllowance: newWordsAllowance)
+        counts.refreshProgress(scope: studyScope, newWordsAllowance: newWordsAllowance, in: modelContext)
         profiles.first?.recordAnswer(.flashcards, translationMode: translationMode, isCorrect: rating != .again)
         DailyStudy.record(word, rating: rating)
         

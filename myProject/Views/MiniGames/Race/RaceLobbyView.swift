@@ -5,7 +5,6 @@ import MultipeerConnectivity
 struct RaceLobbyView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @State private var allWords: [Word] = []
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
 
     /// Слова из словарей, выбранных в настройках
@@ -155,13 +154,17 @@ struct RaceLobbyView: View {
         }
     }
     
+    /// Слова для гонки запросом к базе — все не читаем (10 000+ — ~2 с на iPhone 12).
+    /// Меньше четырёх выбранных для изучения — берём из всего словаря
     private func loadWords() {
-        allWords = modelContext.fetchAllWords()
-        studyWords = allWords.filter { studyScope.includes($0) }
+        studyWords = StudyWords.random(StudyWords.scope(studyScope), limit: 200, in: modelContext)
+        if studyWords.count < 4 {
+            studyWords = StudyWords.random(#Predicate<Word> { _ in true }, limit: 200, in: modelContext)
+        }
     }
 
     private func startRaceAsHost() {
-        let generated = RaceWordGenerator.generate(from: studyWords.count >= 4 ? studyWords : allWords)
+        let generated = RaceWordGenerator.generate(from: studyWords)
         guard !generated.isEmpty else {
             showEmptyPoolAlert = true
             return

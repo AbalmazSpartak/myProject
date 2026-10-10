@@ -9,11 +9,11 @@ struct QuizView: View {
     @AppStorage("translation_mode") private var translationMode: String = "en_ru"
     
     @Query(sort: \Category.name) private var categories: [Category]
-    @State private var allWords: [Word] = []
+    /// Неправильные варианты ответа — из нескольких сотен случайных слов, а не из всей базы
+    @State private var distractors: [Word] = []
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
 
     /// Слова из словарей, выбранных в настройках
-    @State private var studyWords: [Word] = []
     /// Счётчики для меню фильтров — пересчитываются после загрузки и ответа
     @State private var counts = WordCounts()
     @Query private var profiles: [UserProfile]
@@ -201,14 +201,14 @@ struct QuizView: View {
         generateSession()
     }
     
+    /// Счётчики для меню — запросами к базе: все слова не читаем (10 000+ — ~2 с на iPhone 12)
     private func loadWords() {
-        allWords = modelContext.fetchAllWords()
-        studyWords = allWords.filter { studyScope.includes($0) }
-        counts = WordCounts(studyWords)
+        counts = WordCounts(scope: studyScope, categories: categories, in: modelContext)
+        distractors = StudyWords.random(#Predicate<Word> { _ in true }, limit: 300, in: modelContext)
     }
 
     private func generateSession() {
-        sessionWords = SessionLength.limited(currentFilter.sessionWords(from: studyWords), to: sessionLength)
+        sessionWords = StudyWords.session(currentFilter, scope: studyScope, length: sessionLength, in: modelContext)
         currentIndex = 0
         isApproachFinished = false
         approachAnswered = 0
@@ -232,7 +232,7 @@ struct QuizView: View {
         
         let correctAnswer = translationMode == "en_ru" ? word.russian : word.english
         
-        let wrongAnswers = allWords.randomWrongAnswers(3, excluding: correctAnswer) {
+        let wrongAnswers = distractors.randomWrongAnswers(3, excluding: correctAnswer) {
             translationMode == "en_ru" ? $0.russian : $0.english
         }
         options = ([correctAnswer] + wrongAnswers).shuffled()
@@ -253,7 +253,7 @@ struct QuizView: View {
         totalAnswered += 1
         approachAnswered += 1
         if isCorrect { approachCorrect += 1 }
-        counts = WordCounts(studyWords)
+        counts.refreshProgress(scope: studyScope, in: modelContext)
         
         profiles.first?.recordAnswer(.quiz, translationMode: translationMode, isCorrect: isCorrect)
         DailyStudy.record(word, rating: isCorrect ? .good : .again)

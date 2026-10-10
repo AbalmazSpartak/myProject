@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 
 /// Счётчики для меню фильтров тренировок. Считаются одним проходом по словам после загрузки и ответа,
 /// а не фильтром всей базы на каждую тему и уровень при каждой перерисовке.
@@ -24,6 +25,30 @@ struct WordCounts {
             }
         }
         due += newWordsAllowance.map { min($0, newWords) } ?? newWords
+    }
+
+    /// Счётчики запросами к базе, без чтения слов: темы и уровни — один раз при открытии тренировки
+    init(scope: StudyScope, categories: [Category], newWordsAllowance: Int? = nil, now: Date = Date(), in context: ModelContext) {
+        let inScope = StudyWords.scope(scope)
+        for category in categories {
+            let categoryID = category.id
+            let count = StudyWords.count(StudyWords.all(inScope, #Predicate<Word> { $0.category?.id == categoryID }), in: context)
+            if count > 0 { byCategory[categoryID] = count }
+        }
+        for level in CEFRLevel.allCases {
+            let raw = level.rawValue
+            byLevel[raw] = StudyWords.count(StudyWords.all(inScope, #Predicate<Word> { $0.cefrLevel == raw }), in: context)
+        }
+        refreshProgress(scope: scope, newWordsAllowance: newWordsAllowance, now: now, in: context)
+    }
+
+    /// После ответа меняются только ошибки и «На повторение» — три быстрых запроса вместо пересчёта всего
+    mutating func refreshProgress(scope: StudyScope, newWordsAllowance: Int? = nil, now: Date = Date(), in context: ModelContext) {
+        let inScope = StudyWords.scope(scope)
+        mistakes = StudyWords.count(StudyWords.all(inScope, #Predicate<Word> { $0.isMistake }), in: context)
+        let newWords = StudyWords.count(StudyWords.all(inScope, StudyWords.isNew), in: context)
+        due = StudyWords.count(StudyWords.all(inScope, StudyWords.isDue(now: now)), in: context)
+            + (newWordsAllowance.map { min($0, newWords) } ?? newWords)
     }
 
     func count(for category: Category) -> Int {
