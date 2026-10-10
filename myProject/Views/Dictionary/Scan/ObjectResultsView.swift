@@ -136,13 +136,19 @@ struct ObjectResultsView: View {
         }
     }
 
-    /// Слово базы с тем же написанием; из нескольких значений — существительное
+    /// Темы, где у слова предметное значение: fan — «вентилятор» (Дом и быт), а не «фанат» (Развлечения)
+    private static let objectTopics = ["Предметы быта", "Дом и быт", "Быт", "Дом", "Вещи", "Предметы", "Одежда",
+                                       "Технологии", "Транспорт", "Город и места", "Музыка", "Еда и напитки", "Еда", "Животные"]
+
+    /// Существительное базы с тем же написанием, из значений — предметное. Есть только глагол (sink — «тонуть») —
+    /// слова в базе для этого предмета нет, перевод подставит переводчик
     private static func match(_ guesses: [ObjectGuess], in words: [Word]) -> [String: Word] {
-        let index = Dictionary(grouping: words) { $0.english.lowercased() }
+        let index = Dictionary(grouping: words.filter { $0.partOfSpeech == "n." }) { $0.english.lowercased() }
         var result: [String: Word] = [:]
         for guess in guesses {
-            guard let matches = index[guess.english.lowercased()] else { continue }
-            result[guess.id] = matches.first { $0.partOfSpeech == "n." } ?? matches.first
+            guard let nouns = index[guess.english.lowercased()] else { continue }
+            let rank = { (word: Word) in word.category.flatMap { objectTopics.firstIndex(of: $0.name) } ?? objectTopics.count }
+            result[guess.id] = nouns.min { rank($0) < rank($1) }
         }
         return result
     }

@@ -61,7 +61,7 @@ nonisolated enum ObjectRecognizer {
         "pepper_veggie": "pepper", "pot_cooking": "pot", "organ_instrument": "organ", "play_card": "playing card",
         "raw_glass": "glass", "drinking_glass": "glass", "shellfish_prepared": "shellfish", "slide_toy": "slide",
         "speakers_music": "speaker", "squash_sport": "squash", "steamer_cookware": "steamer", "straw_drinking": "straw",
-        "straw_hay": "straw", "submarine_water": "submarine", "swing_playground": "swing", "tea_drink": "tea",
+        "submarine_water": "submarine", "swing_playground": "swing", "tea_drink": "tea",
         "train_real": "train", "train_toy": "toy train", "water_body": "water", "wood_natural": "wood",
         "wood_processed": "wood", "balloon_hotair": "hot-air balloon", "cricket_sport": "cricket", "fencing_sport": "fencing",
         "track_rail": "railway", "monitor_lizard": "lizard", "computer_keyboard": "keyboard", "computer_mouse": "mouse",
@@ -70,6 +70,14 @@ nonisolated enum ObjectRecognizer {
         "kitchen_oven": "oven", "kitchen_sink": "sink", "toaster_oven": "toaster", "laundry_machine": "washing machine",
         "weight_scale": "scales", "wine_bottle": "bottle", "board_game": "board game", "stuffed_animals": "soft toy",
         "vehicle_toy": "toy car", "musical_instrument": "musical instrument", "string_instrument": "musical instrument",
-        "office_supplies": "stationery", "printed_page": "page", "sports_equipment": "sports equipment"
+        "office_supplies": "stationery", "printed_page": "page", "sports_equipment": "sports equipment",
+        // К словам словаря «Предметы быта»
+        "shoes": "shoe", "sneaker": "sneakers", "high_heel": "high heels", "matches": "match", "puzzles": "puzzle",
+        "jigsaw": "puzzle", "blocks": "building blocks", "domino": "dominoes", "bowtie": "bow tie", "necktie": "tie",
+        "lifejacket": "life jacket", "mower": "lawn mower", "power_saw": "saw", "firetruck": "fire engine",
+        "hydrant": "fire hydrant", "extinguisher": "fire extinguisher", "piggybank": "piggy bank",
+        "rollerskates": "roller skates", "videogame": "video game", "hardhat": "hard hat", "sunhat": "sun hat",
+        "baseball_hat": "cap", "toilet_seat": "toilet", "semi_truck": "truck", "oranges": "orange", "rocks": "rock",
+        "straw_hay": "hay", "kitchen_countertop": "kitchen"
     ]
 }
