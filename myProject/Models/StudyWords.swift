@@ -85,7 +85,8 @@ enum StudyWords {
         let inScope = Self.scope(scope)
         for (index, category) in categories.enumerated() {
             _ = categoryCount(category, scope: scope, inScope: inScope, in: context)
-            if index % 8 == 7 { try? await Task.sleep(for: .milliseconds(1)) }
+            // 4 темы (~20 мс) — и пауза в кадр: экран успевает перерисоваться и принять нажатие
+            if index % 4 == 3 { try? await Task.sleep(for: .milliseconds(16)) }
         }
     }
 
