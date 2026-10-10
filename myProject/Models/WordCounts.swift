@@ -30,14 +30,17 @@ struct WordCounts {
     /// Счётчики запросами к базе, без чтения слов: темы и уровни — один раз при открытии тренировки
     init(scope: StudyScope, categories: [Category], newWordsAllowance: Int? = nil, now: Date = Date(), in context: ModelContext) {
         let inScope = StudyWords.scope(scope)
+        let scopeKey = StudyWords.key(scope)
         for category in categories {
             let categoryID = category.id
-            let count = StudyWords.count(StudyWords.all(inScope, #Predicate<Word> { $0.category?.id == categoryID }), in: context)
+            let count = StudyWords.cachedCount("тема|\(scopeKey)|\(categoryID)",
+                                               StudyWords.all(inScope, #Predicate<Word> { $0.category?.id == categoryID }), in: context)
             if count > 0 { byCategory[categoryID] = count }
         }
         for level in CEFRLevel.allCases {
             let raw = level.rawValue
-            byLevel[raw] = StudyWords.count(StudyWords.all(inScope, #Predicate<Word> { $0.cefrLevel == raw }), in: context)
+            byLevel[raw] = StudyWords.cachedCount("уровень|\(scopeKey)|\(raw)",
+                                                  StudyWords.all(inScope, #Predicate<Word> { $0.cefrLevel == raw }), in: context)
         }
         refreshProgress(scope: scope, newWordsAllowance: newWordsAllowance, now: now, in: context)
     }

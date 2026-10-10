@@ -18,6 +18,13 @@ struct DictionaryView: View {
     /// на iPhone 12 это ~2 с подвисания при первом открытии «Словаря». И не через @Query — тот перечитывает
     /// при каждой перерисовке, то есть на каждую букву в форме добавления
     @State private var filteredWords: [Word] = []
+    /// Список подгружается частями: «Общий» со словами из книг — тысячи слов (~0,8 с на iPhone 12 целиком)
+    private static let pageSize = 100
+    @State private var pagePredicate: Predicate<Word>?
+    @State private var hasMoreWords = false
+    /// Слова добавили или удалили, пока «Словарь» был под другой вкладкой, — перечитать при возвращении.
+    /// Без этого список перечитывался при каждом переключении на вкладку
+    @State private var needsReload = true
     /// Вкладка «Словарь» живёт и под другими экранами — перечитывать базу на каждое сохранение стоит только на экране
     @State private var isOnScreen = false
     /// Сколько слов в каждой теме — считается, только когда открыт список тем
@@ -67,27 +74,53 @@ struct DictionaryView: View {
     private func reloadWords() {
         mistakeCount = (try? modelContext.fetchCount(FetchDescriptor<Word>(predicate: #Predicate { $0.isMistake }))) ?? 0
         if isDropdownExpanded { reloadCategoryCounts() }
-        refilter()
+        refilter(keepingLoaded: true)
         refreshExistingMatches()
     }
 
-    private func refilter() {
+    /// Первая часть слов раздела; при перечитывании — столько, сколько уже было загружено, чтобы список не прыгал
+    private func refilter(keepingLoaded: Bool = false) {
+        let predicate: Predicate<Word>
         switch filter {
         case .general:
-            filteredWords = words(matching: #Predicate { $0.category == nil })
+            predicate = #Predicate { $0.category == nil }
         case .category(let category):
             let catID = category.id
-            filteredWords = words(matching: #Predicate { $0.category?.id == catID })
+            predicate = #Predicate { $0.category?.id == catID }
         case .list(let list):
-            filteredWords = list.words.sorted { $0.english.localizedCaseInsensitiveCompare($1.english) == .orderedAscending }
+            let listID = list.id
+            predicate = #Predicate { word in word.lists.contains { $0.id == listID } }
         case .mistakes:
-            filteredWords = words(matching: #Predicate { $0.isMistake })
+            predicate = #Predicate { $0.isMistake }
+        }
+        let limit = keepingLoaded ? max(Self.pageSize, filteredWords.count) : Self.pageSize
+        pagePredicate = predicate
+        filteredWords = words(matching: predicate, limit: limit)
+        hasMoreWords = filteredWords.count == limit
+        needsReload = false
+    }
+
+    /// Сохранение добавило или удалило слова — список раздела под другой вкладкой устарел
+    private static func addsOrRemovesWords(_ notification: Notification) -> Bool {
+        [ModelContext.NotificationKey.insertedIdentifiers, .deletedIdentifiers].contains { key in
+            let ids = notification.userInfo?[key.rawValue] as? [PersistentIdentifier] ?? []
+            return ids.contains { $0.entityName == "Word" }
         }
     }
 
+    /// Следующая часть — когда долистали до конца загруженного
+    private func loadMoreWords() {
+        guard hasMoreWords, let pagePredicate else { return }
+        let next = words(matching: pagePredicate, limit: Self.pageSize, offset: filteredWords.count)
+        filteredWords += next
+        hasMoreWords = next.count == Self.pageSize
+    }
+
     /// Слова по запросу, по алфавиту без учёта регистра
-    private func words(matching predicate: Predicate<Word>) -> [Word] {
-        let descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\Word.english, comparator: .localizedStandard)])
+    private func words(matching predicate: Predicate<Word>, limit: Int? = nil, offset: Int = 0) -> [Word] {
+        var descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\Word.english, comparator: .localizedStandard)])
+        descriptor.fetchLimit = limit
+        descriptor.fetchOffset = offset
         return (try? modelContext.fetch(descriptor)) ?? []
     }
 
@@ -96,7 +129,7 @@ struct DictionaryView: View {
         var counts: [UUID: Int] = [:]
         for category in categories {
             let catID = category.id
-            counts[catID] = (try? modelContext.fetchCount(FetchDescriptor<Word>(predicate: #Predicate { $0.category?.id == catID }))) ?? 0
+            counts[catID] = StudyWords.cachedCount("словарь|\(catID)", #Predicate<Word> { $0.category?.id == catID }, in: modelContext)
         }
         categoryCounts = counts
     }
@@ -174,6 +207,9 @@ struct DictionaryView: View {
                                         WordRowCard(word: word) {
                                             wordToEdit = word
                                         }
+                                        .onAppear {
+                                            if word.id == filteredWords.last?.id { loadMoreWords() }
+                                        }
                                     }
                                 }
                             }
@@ -196,7 +232,12 @@ struct DictionaryView: View {
         }
         .onAppear {
             isOnScreen = true
-            reloadWords()
+            // Ответы в тренировках меняют ошибки — их число и раздел «Ошибки» обновляем всегда, остальное — если менялся состав
+            if needsReload || filter == .mistakes {
+                reloadWords()
+            } else {
+                mistakeCount = (try? modelContext.fetchCount(FetchDescriptor<Word>(predicate: #Predicate { $0.isMistake }))) ?? 0
+            }
         }
         .onDisappear { isOnScreen = false }
         .onChange(of: filter) { _, _ in refilter() }
@@ -206,8 +247,12 @@ struct DictionaryView: View {
         .onChange(of: newEnglish) { _, _ in refreshExistingMatches() }
         // Любое сохранение (правка, скан, удаление темы со словами) — перечитываем, чтобы не показать удалённые слова.
         // Не на экране — не перечитываем: тренировки сохраняют каждый ответ. Вернутся на «Словарь» — onAppear перечитает
-        .onReceive(NotificationCenter.default.publisher(for: ModelContext.didSave)) { _ in
-            if isOnScreen { reloadWords() }
+        .onReceive(NotificationCenter.default.publisher(for: ModelContext.didSave)) { notification in
+            if isOnScreen {
+                reloadWords()
+            } else if Self.addsOrRemovesWords(notification) {
+                needsReload = true
+            }
         }
         .alert("Новая категория", isPresented: $isShowingAddCategoryAlert) {
             TextField("Название категории", text: $newCategoryName)

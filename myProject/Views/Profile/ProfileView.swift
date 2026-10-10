@@ -144,7 +144,7 @@ struct ProfileView: View {
     }
     
     private func reloadProgress() {
-        levelProgress = LevelProgress.all(from: modelContext.fetchAllWords())
+        levelProgress = LevelProgress.counted(in: modelContext)
         studyDays = DailyStudy.recent()
         studyTotals = DailyStudy.totals()
         introducedToday = DailyNewWords.introducedToday

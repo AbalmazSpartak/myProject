@@ -14,6 +14,20 @@ struct LevelProgress: Identifiable {
         total > 0 ? learned * 100 / total : 0
     }
 
+    /// Запросами к базе, без чтения всех слов (10 000+ — ~2 с на iPhone 12): сколько слов в уровне — запомненным счётчиком,
+    /// изученные — среди уже оценённых (у новых слов состояния «на повторении» не бывает), их сотни, а не тысячи
+    static func counted(in context: ModelContext) -> [LevelProgress] {
+        var progress = Dictionary(uniqueKeysWithValues: CEFRLevel.allCases.map { level in
+            let raw = level.rawValue
+            return (level, LevelProgress(level: level, total: StudyWords.cachedCount("профиль|\(raw)", #Predicate<Word> { $0.cefrLevel == raw }, in: context)))
+        })
+        for word in StudyWords.fetch(#Predicate<Word> { $0.reps > 0 }, in: context) where word.state == .review {
+            guard let level = CEFRLevel(rawValue: word.cefrLevel) else { continue }
+            progress[level]?.learned += 1
+        }
+        return CEFRLevel.allCases.compactMap { progress[$0] }
+    }
+
     /// Один проход по словам — для всех уровней сразу
     static func all(from words: [Word]) -> [LevelProgress] {
         var progress = Dictionary(uniqueKeysWithValues: CEFRLevel.allCases.map { ($0, LevelProgress(level: $0)) })

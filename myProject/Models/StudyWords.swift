@@ -56,6 +56,50 @@ enum StudyWords {
         (try? context.fetchCount(FetchDescriptor(predicate: predicate))) ?? 0
     }
 
+    // MARK: - Запомненные счётчики
+
+    /// Сколько слов в каждой теме и уровне: 117 тем — ~0,5 с запросов на iPhone 12, поэтому считаем один раз.
+    /// Ответы в тренировках этих чисел не меняют; сбрасываем, когда слова добавили или удалили, поменяли тему или словарь
+    private static var countCache: [String: Int] = [:]
+    private static var countObserver: NSObjectProtocol?
+
+    /// Условие строится, только если числа ещё нет: построение условия для 117 тем само по себе заметно
+    static func cachedCount(_ key: String, _ predicate: @autoclosure () -> Predicate<Word>, in context: ModelContext) -> Int {
+        observeSaves()
+        if let cached = countCache[key] { return cached }
+        let value = count(predicate(), in: context)
+        countCache[key] = value
+        return value
+    }
+
+    static func invalidateCounts() {
+        countCache.removeAll()
+    }
+
+    /// Ключ выбранного для изучения — все настройки отсортированными строками.
+    /// Не `rawValue`: в JSON порядок полей от раза к разу разный, и запомненное ни разу не находилось
+    static func key(_ scope: StudyScope) -> String {
+        [scope.disabledLevels.sorted().joined(separator: ","),
+         scope.disabledPartsOfSpeech.sorted().joined(separator: ","),
+         scope.disabledTopics.sorted().joined(separator: ","),
+         scope.includeCustomWords ? "свои" : "",
+         scope.enabledLists.map(\.uuidString).sorted().joined(separator: ",")].joined(separator: "|")
+    }
+
+    private static func observeSaves() {
+        guard countObserver == nil else { return }
+        countObserver = NotificationCenter.default.addObserver(forName: ModelContext.didSave, object: nil, queue: .main) { notification in
+            let info = notification.userInfo ?? [:]
+            let ids = { (key: ModelContext.NotificationKey) in info[key.rawValue] as? [PersistentIdentifier] ?? [] }
+            // Новые и удалённые слова, темы, словари; изменённые темы и словари — слово перенесли или добавили в словарь.
+            // Изменённые слова не в счёт: так сохраняется каждый ответ в тренировке
+            let added = (ids(.insertedIdentifiers) + ids(.deletedIdentifiers)).contains { ["Word", "Category", "WordList"].contains($0.entityName) }
+            let moved = ids(.updatedIdentifiers).contains { ["Category", "WordList"].contains($0.entityName) }
+            guard added || moved else { return }
+            MainActor.assumeIsolated { invalidateCounts() }
+        }
+    }
+
     static func fetch(_ predicate: Predicate<Word>, sortBy: [SortDescriptor<Word>] = [], limit: Int? = nil,
                       in context: ModelContext) -> [Word] {
         var descriptor = FetchDescriptor(predicate: predicate, sortBy: sortBy)
