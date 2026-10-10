@@ -32,10 +32,8 @@ struct WordCounts {
         let inScope = StudyWords.scope(scope)
         let scopeKey = StudyWords.key(scope)
         for category in categories {
-            let categoryID = category.id
-            let count = StudyWords.cachedCount("тема|\(scopeKey)|\(categoryID)",
-                                               StudyWords.all(inScope, #Predicate<Word> { $0.category?.id == categoryID }), in: context)
-            if count > 0 { byCategory[categoryID] = count }
+            let count = StudyWords.categoryCount(category, scope: scope, inScope: inScope, in: context)
+            if count > 0 { byCategory[category.id] = count }
         }
         for level in CEFRLevel.allCases {
             let raw = level.rawValue

@@ -225,9 +225,14 @@ struct FlashcardsView: View {
         generateSession()
     }
     
-    /// Счётчики для меню — запросами к базе: все слова не читаем (10 000+ — ~2 с на iPhone 12)
+    /// Счётчики для меню — запросами к базе: все слова не читаем (10 000+ — ~2 с на iPhone 12).
+    /// «На повторение» — сразу, числа тем — порциями после показа первой карточки
     private func loadWords() {
-        counts = WordCounts(scope: studyScope, categories: categories, newWordsAllowance: newWordsAllowance, in: modelContext)
+        counts.refreshProgress(scope: studyScope, newWordsAllowance: newWordsAllowance, in: modelContext)
+        Task {
+            await StudyWords.warmCategoryCounts(scope: studyScope, categories: categories, in: modelContext)
+            counts = WordCounts(scope: studyScope, categories: categories, newWordsAllowance: newWordsAllowance, in: modelContext)
+        }
     }
 
     /// Сколько новых слов ещё можно начать сегодня; nil — без лимита

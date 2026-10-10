@@ -72,6 +72,23 @@ enum StudyWords {
         return value
     }
 
+    /// Сколько выбранных для изучения слов в теме (запомненное число)
+    static func categoryCount(_ category: Category, scope: StudyScope, inScope: Predicate<Word>, in context: ModelContext) -> Int {
+        let categoryID = category.id
+        return cachedCount("тема|\(key(scope))|\(categoryID)",
+                           all(inScope, #Predicate<Word> { $0.category?.id == categoryID }), in: context)
+    }
+
+    /// Досчитать числа тем порциями: 117 тем — ~0,5 с запросов на iPhone 12. Между порциями экран отвечает на нажатия,
+    /// поэтому тренировка показывает первое слово сразу, а меню фильтра получает числа чуть позже
+    static func warmCategoryCounts(scope: StudyScope, categories: [Category], in context: ModelContext) async {
+        let inScope = Self.scope(scope)
+        for (index, category) in categories.enumerated() {
+            _ = categoryCount(category, scope: scope, inScope: inScope, in: context)
+            if index % 8 == 7 { try? await Task.sleep(for: .milliseconds(1)) }
+        }
+    }
+
     static func invalidateCounts() {
         countCache.removeAll()
     }

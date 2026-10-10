@@ -203,7 +203,12 @@ struct QuizView: View {
     
     /// Счётчики для меню — запросами к базе: все слова не читаем (10 000+ — ~2 с на iPhone 12)
     private func loadWords() {
-        counts = WordCounts(scope: studyScope, categories: categories, in: modelContext)
+        // «На повторение» — сразу, числа тем — порциями после показа первого слова
+        counts.refreshProgress(scope: studyScope, in: modelContext)
+        Task {
+            await StudyWords.warmCategoryCounts(scope: studyScope, categories: categories, in: modelContext)
+            counts = WordCounts(scope: studyScope, categories: categories, in: modelContext)
+        }
         distractors = StudyWords.random(#Predicate<Word> { _ in true }, limit: 300, in: modelContext)
     }
 
