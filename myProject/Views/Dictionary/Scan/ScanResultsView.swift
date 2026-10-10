@@ -348,7 +348,7 @@ struct ScanResultsView: View {
     }
 
     /// «Маяк.» → «маяк», «чтобы бежать» → «бежать»
-    private static func cleanedTranslation(_ raw: String) -> String {
+    static func cleanedTranslation(_ raw: String) -> String {
         var text = raw.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
         if text.lowercased().hasPrefix("чтобы ") {
             text = String(text.dropFirst("чтобы ".count))

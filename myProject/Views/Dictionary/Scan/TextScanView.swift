@@ -11,7 +11,12 @@ struct TextScanView: View {
     @Environment(\.modelContext) private var modelContext
 
     private enum Route: Hashable {
-        case review, results
+        case review, results, objects
+    }
+
+    /// Текст — слова из надписей; предмет — что изображено на фото (дверь, кружка, коробка)
+    private enum Mode: Hashable {
+        case text, object
     }
 
     @State private var path: [Route] = []
@@ -29,6 +34,8 @@ struct TextScanView: View {
     /// Фото, с которого распознан текст (камера или галерея), — сохранится в словаре
     @State private var sourcePhoto: Data?
     @State private var scannerHandle = LiveTextScanner.Handle()
+    @State private var mode = Mode.text
+    @State private var guesses: [ObjectGuess] = []
 
     /// Сколько самых частых слов файла попадает в словарь
     static let maxFileWords = 5000
@@ -52,12 +59,21 @@ struct TextScanView: View {
                             onSaved(list)
                             dismiss()
                         }
+                    case .objects:
+                        if let sourcePhoto {
+                            ObjectResultsView(guesses: guesses, photo: sourcePhoto) { list in
+                                onSaved(list)
+                                dismiss()
+                            }
+                        }
                     }
                 }
         }
         .onChange(of: photoItem) { _, item in
             guard let item else { return }
-            Task { await recognize(item) }
+            Task {
+                if mode == .object { await identify(item) } else { await recognize(item) }
+            }
         }
         .alert("Не получилось", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("OK", role: .cancel) {}
@@ -92,6 +108,56 @@ struct TextScanView: View {
     }
 
     private var controls: some View {
+        VStack(spacing: 12) {
+            Picker("Что распознавать", selection: $mode) {
+                Text("Текст").tag(Mode.text)
+                Text("Предмет").tag(Mode.object)
+            }
+            .pickerStyle(.segmented)
+            .disabled(isRecognizing)
+            if mode == .object {
+                objectControls
+            } else {
+                textControls
+            }
+        }
+        .padding(16)
+        .background(Color.brandBackground)
+        .fileImporter(isPresented: $isImportingFile, allowedContentTypes: FileTextReader.allowedTypes) { result in
+            if case .success(let url) = result {
+                Task { await importFile(url) }
+            }
+        }
+    }
+
+    /// Предмет: снимок с камеры или фото из галереи → что на нём
+    private var objectControls: some View {
+        VStack(spacing: 12) {
+            if LiveTextScanner.isAvailable {
+                Button {
+                    Task { await identifyCameraFrame() }
+                } label: {
+                    Label("Что это?", systemImage: "camera.viewfinder")
+                        .scaledFont(size: 17, weight: .bold)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.orange)
+                .disabled(isRecognizing)
+            }
+            PhotosPicker(selection: $photoItem, matching: .images) {
+                Label("Фото предмета", systemImage: "photo")
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+            }
+            .buttonStyle(.bordered)
+            .tint(.orange)
+            .disabled(isRecognizing)
+        }
+    }
+
+    private var textControls: some View {
         VStack(spacing: 12) {
             if LiveTextScanner.isAvailable {
                 Button {
@@ -137,13 +203,6 @@ struct TextScanView: View {
             .buttonStyle(.bordered)
             .tint(.orange)
             .disabled(isRecognizing)
-        }
-        .padding(16)
-        .background(Color.brandBackground)
-        .fileImporter(isPresented: $isImportingFile, allowedContentTypes: FileTextReader.allowedTypes) { result in
-            if case .success(let url) = result {
-                Task { await importFile(url) }
-            }
         }
     }
 
@@ -204,6 +263,39 @@ struct TextScanView: View {
         } catch {
             errorMessage = "Не удалось распознать текст на фото."
         }
+    }
+
+    // MARK: - Предмет
+
+    private func identifyCameraFrame() async {
+        guard let image = await scannerHandle.capturePhoto(), let photo = ScanPhoto.jpeg(from: image) else {
+            errorMessage = "Камера не дала снимок. Попробуйте ещё раз."
+            return
+        }
+        await identify(photo: photo)
+    }
+
+    private func identify(_ item: PhotosPickerItem) async {
+        defer { photoItem = nil }
+        guard let data = try? await item.loadTransferable(type: Data.self), let photo = ScanPhoto.jpeg(from: data) else {
+            errorMessage = "Не получилось открыть фото."
+            return
+        }
+        await identify(photo: photo)
+    }
+
+    private func identify(photo: Data) async {
+        progressMessage = "Определяю предмет…"
+        isRecognizing = true
+        defer { isRecognizing = false }
+        let found = (try? await ObjectRecognizer.guesses(in: photo)) ?? []
+        guard !found.isEmpty else {
+            errorMessage = "Не получилось узнать предмет. Подойдите ближе, чтобы он занимал большую часть кадра, или выберите другое фото."
+            return
+        }
+        guesses = found
+        sourcePhoto = photo
+        path.append(.objects)
     }
 
     // MARK: - Шаг 2: проверить текст
