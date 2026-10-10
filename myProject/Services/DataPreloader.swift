@@ -82,15 +82,16 @@ final class DataPreloader {
             }
         }
 
-        // Совпавшие: обновляем текст, прогресс FSRS, ошибки и картинка остаются
+        // Совпавшие: обновляем текст, прогресс FSRS, ошибки и картинка остаются.
+        // Пишем только изменившееся: иначе все ~6000 слов станут «изменёнными» и сохранение займёт секунды
         for (word, dto) in matched {
-            word.english = dto.english
-            word.russian = dto.russian
-            word.transcription = dto.transcription
-            word.example = dto.example
-            word.cefrLevel = dto.cefrLevel
-            word.partOfSpeech = dto.partOfSpeech
-            word.tags = dto.tags
+            update(word, \.english, dto.english)
+            update(word, \.russian, dto.russian)
+            update(word, \.transcription, dto.transcription)
+            update(word, \.example, dto.example)
+            update(word, \.cefrLevel, dto.cefrLevel)
+            update(word, \.partOfSpeech, dto.partOfSpeech)
+            update(word, \.tags, dto.tags)
             // Слово, которое пользователь перенёс в свою папку, там и остаётся
             let isInTopic = word.category.map { topicNames.contains($0.name) } ?? true
             let category = categories.category(named: dto.categoryName)
@@ -127,6 +128,10 @@ final class DataPreloader {
         for category in touchedTopics where !category.isDeleted && category.words.allSatisfy(\.isDeleted) {
             context.delete(category)
         }
+    }
+
+    private static func update<Value: Equatable>(_ word: Word, _ keyPath: ReferenceWritableKeyPath<Word, Value>, _ value: Value) {
+        if word[keyPath: keyPath] != value { word[keyPath: keyPath] = value }
     }
 
     /// Переносит со своего слова на слово из базы словари и прогресс
@@ -236,7 +241,10 @@ extension DataPreloader {
         UserDefaults.standard.removeObject(forKey: bundledHashKey)
         syncBundledWords(context: context)
     }
+}
+#endif
 
+extension DataPreloader {
     // MARK: - Обрывки сокращений
 
     /// Раньше разбор книг сохранял «ca» из «can't», «wo» из «won't», «sha» из «shan't» как отдельные слова
@@ -261,4 +269,3 @@ extension DataPreloader {
         try? context.save()
     }
 }
-#endif
