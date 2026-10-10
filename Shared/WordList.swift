@@ -16,6 +16,21 @@ final class WordList {
     /// Новые слова такого словаря идут на изучение первыми — от самых частых
     var frequencies: [String: Int] = [:]
 
+    /// Фото, с которых сканом набраны слова (коробка игры, страница, вывеска): JPEG-файлы одним списком, новые в конце
+    @Attribute(.externalStorage) var photosData: Data? = nil
+
+    static let maxPhotos = 20
+
+    var photos: [Data] {
+        get { photosData.flatMap { try? PropertyListDecoder().decode([Data].self, from: $0) } ?? [] }
+        set { photosData = newValue.isEmpty ? nil : try? PropertyListEncoder().encode(newValue) }
+    }
+
+    /// Фото нового скана; самые старые уходят, когда их больше maxPhotos
+    func addPhoto(_ data: Data) {
+        photos = Array((photos + [data]).suffix(Self.maxPhotos))
+    }
+
     static func frequencyKey(_ word: Word) -> String {
         word.english.lowercased()
     }

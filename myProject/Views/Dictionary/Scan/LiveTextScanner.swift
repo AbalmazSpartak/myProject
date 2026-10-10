@@ -5,6 +5,18 @@ import VisionKit
 /// В `text` — весь видимый сейчас текст, строки сверху вниз.
 struct LiveTextScanner: UIViewControllerRepresentable {
     @Binding var text: String
+    /// Через него экран скана снимает кадр — фото сохранится в словаре
+    var handle: Handle
+
+    /// Доступ к камере сканера извне SwiftUI
+    final class Handle {
+        fileprivate weak var scanner: DataScannerViewController?
+
+        /// Кадр с камеры в момент «Снять текст»; nil — камера не дала снимок
+        func capturePhoto() async -> UIImage? {
+            try? await scanner?.capturePhoto()
+        }
+    }
 
     /// Нет на симуляторе и на старых устройствах; ещё может быть запрещён доступ к камере
     static var isAvailable: Bool {
@@ -20,6 +32,7 @@ struct LiveTextScanner: UIViewControllerRepresentable {
             isHighlightingEnabled: true
         )
         scanner.delegate = context.coordinator
+        handle.scanner = scanner
         return scanner
     }
 

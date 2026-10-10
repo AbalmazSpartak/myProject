@@ -49,6 +49,8 @@ nonisolated struct BackupFile: Codable, Sendable {
         var createdAt: Date
         var frequencies: [String: Int]
         var wordKeys: [String]
+        /// Фото скана — только в копии с медиа; в старых копиях поля нет
+        var photos: [Data]?
     }
 
     struct ProfileRecord: Codable, Sendable {
@@ -136,7 +138,7 @@ enum Backup {
             .map(record)
         let lists = ((try? context.fetch(FetchDescriptor<WordList>())) ?? []).map { list in
             BackupFile.ListRecord(id: list.id, name: list.name, createdAt: list.createdAt, frequencies: list.frequencies,
-                                  wordKeys: list.words.map(AppGroup.key(of:)))
+                                  wordKeys: list.words.map(AppGroup.key(of:)), photos: includeMedia ? list.photos : nil)
         }
         let categories = ((try? context.fetch(FetchDescriptor<Category>())) ?? []).map(\.name)
         // Профилей в базе бывает несколько (создавались при первом открытии экранов) — берём тот, где больше данных
@@ -268,6 +270,7 @@ enum Backup {
             list.id = record.id
             list.createdAt = record.createdAt
             list.frequencies = record.frequencies
+            if let photos = record.photos { list.photos = photos }
             context.insert(list)
             for key in record.wordKeys {
                 if let word = byKey[key], !word.lists.contains(where: { $0.id == list.id }) { word.lists.append(list) }

@@ -44,6 +44,8 @@ struct ScanResultsView: View {
     let fileName: String?
     /// Пояснение к файлу: обрезан, взяты самые частые слова
     let note: String?
+    /// Фото, с которого распознан текст, — сохраняется в словаре
+    let photo: Data?
     var onSave: (WordList) -> Void
 
     @Environment(\.modelContext) private var modelContext
@@ -67,10 +69,12 @@ struct ScanResultsView: View {
     /// Новых слов нет в базе (A1–B2), поэтому скорее всего они сложнее; уровень можно поправить в правке слова
     private let newWordLevel = CEFRLevel.c1.rawValue
 
-    init(candidates: [ScanCandidate], fileName: String? = nil, note: String? = nil, onSave: @escaping (WordList) -> Void) {
+    init(candidates: [ScanCandidate], fileName: String? = nil, note: String? = nil, photo: Data? = nil,
+         onSave: @escaping (WordList) -> Void) {
         self.candidates = candidates
         self.fileName = fileName
         self.note = note
+        self.photo = photo
         self.onSave = onSave
         if let fileName { _listName = State(initialValue: fileName) }
         // По умолчанию отмечены новые слова и слова из базы, которые ещё не начали учить,
@@ -125,6 +129,9 @@ struct ScanResultsView: View {
                             Text("Слова отсортированы по частоте в файле. Новые слова этого словаря пойдут на изучение первыми — от самых частых.")
                         }
                         if let note { Text(note) }
+                        if photo != nil {
+                            Text("Фото сохранится в словаре — его видно над словами.")
+                        }
                     }
                 }
                 if candidates.contains(where: Self.isLearning) {
@@ -370,6 +377,7 @@ struct ScanResultsView: View {
             list = WordList(name: listName.trimmingCharacters(in: .whitespaces))
             modelContext.insert(list)
         }
+        if let photo { list.addPhoto(photo) }
         for candidate in candidates where selected.contains(candidate.id) {
             // Из файла — запоминаем частоту: новые слова словаря учатся первыми, от частых
             if fileName != nil {

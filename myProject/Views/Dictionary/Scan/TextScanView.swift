@@ -26,6 +26,9 @@ struct TextScanView: View {
     /// Слова из файла: самые частые сверху, сразу отмечены, словарь запоминает частоту — учатся первыми
     @State private var fileName: String?
     @State private var fileNote: String?
+    /// Фото, с которого распознан текст (камера или галерея), — сохранится в словаре
+    @State private var sourcePhoto: Data?
+    @State private var scannerHandle = LiveTextScanner.Handle()
 
     /// Сколько самых частых слов файла попадает в словарь
     static let maxFileWords = 5000
@@ -45,7 +48,7 @@ struct TextScanView: View {
                     case .review:
                         review
                     case .results:
-                        ScanResultsView(candidates: candidates, fileName: fileName, note: fileNote) { list in
+                        ScanResultsView(candidates: candidates, fileName: fileName, note: fileNote, photo: sourcePhoto) { list in
                             onSaved(list)
                             dismiss()
                         }
@@ -69,7 +72,7 @@ struct TextScanView: View {
         VStack(spacing: 0) {
             ZStack {
                 if LiveTextScanner.isAvailable {
-                    LiveTextScanner(text: $liveText)
+                    LiveTextScanner(text: $liveText, handle: scannerHandle)
                         .ignoresSafeArea(edges: .horizontal)
                 } else {
                     ContentUnavailableView(
@@ -93,7 +96,10 @@ struct TextScanView: View {
             if LiveTextScanner.isAvailable {
                 Button {
                     text = liveText
-                    path.append(.review)
+                    Task {
+                        sourcePhoto = await scannerHandle.capturePhoto().flatMap(ScanPhoto.jpeg(from:))
+                        path.append(.review)
+                    }
                 } label: {
                     Label(liveText.isEmpty ? "Наведите камеру на текст" : "Снять текст", systemImage: "text.viewfinder")
                         .scaledFont(size: 17, weight: .bold)
@@ -113,6 +119,7 @@ struct TextScanView: View {
                 Button {
                     text = UIPasteboard.general.hasStrings ? (UIPasteboard.general.string ?? "") : ""
                     fileName = nil
+                    sourcePhoto = nil
                     path.append(.review)
                 } label: {
                     Label("Вставить", systemImage: "doc.on.clipboard")
@@ -171,6 +178,7 @@ struct TextScanView: View {
         if found.count == Self.maxFileWords { notes.append("В словарь берутся \(Self.maxFileWords) самых частых слов файла.") }
         fileNote = notes.isEmpty ? nil : notes.joined(separator: " ")
         fileName = url.deletingPathExtension().lastPathComponent
+        sourcePhoto = nil
         candidates = ScanMatcher.match(found, in: words)
         path.append(.results)
     }
@@ -191,6 +199,7 @@ struct TextScanView: View {
                 return
             }
             text = recognized
+            sourcePhoto = ScanPhoto.jpeg(from: data)
             path.append(.review)
         } catch {
             errorMessage = "Не удалось распознать текст на фото."

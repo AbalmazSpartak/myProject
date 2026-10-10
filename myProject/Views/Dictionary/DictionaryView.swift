@@ -124,6 +124,10 @@ struct DictionaryView: View {
                 if !isDropdownExpanded {
                     ScrollView {
                         VStack(spacing: 12) {
+                            if case .list(let list) = filter, list.photosData != nil {
+                                ListPhotosStrip(list: list)
+                                    .padding(.top, 4)
+                            }
                             addWordCard
                                 .padding(.top, 4)
                             
@@ -442,6 +446,7 @@ struct DictionaryView: View {
         for word in Array(source.words) where !word.lists.contains(where: { $0.id == target.id }) {
             word.lists.append(target)
         }
+        for photo in source.photos { target.addPhoto(photo) }
         // Был включён в изучение — включаем словарь, в который перешли слова
         if studyScope.enabledLists.remove(source.id) != nil {
             studyScope.enabledLists.insert(target.id)
