@@ -46,8 +46,10 @@ nonisolated enum TextWordExtractor {
     /// Слова и выражения в порядке первого появления в тексте; повторы складываются в `count`.
     /// Слова, вошедшие в найденное выражение (gave в «gave up»), отдельно не считаются
     static func extract(from raw: String, phrases: [PhrasePattern] = []) -> [ExtractedWord] {
-        let text = cleaned(raw)
+        var text = cleaned(raw)
         guard !text.isEmpty else { return [] }
+        // Обложка, коробка, вывеска — всё заглавными: иначе каждое слово сочтётся сокращением вроде USA и пропустится
+        if isMostlyUppercase(text) { text = text.lowercased() }
 
         let tagger = NLTagger(tagSchemes: [.nameTypeOrLexicalClass, .lemma])
         tagger.string = text
@@ -247,16 +249,24 @@ nonisolated enum TextWordExtractor {
         let tagger = NLTagger(tagSchemes: [.lexicalClass, .lemma])
         tagger.string = sentence
         tagger.setLanguage(.english, range: sentence.startIndex..<sentence.endIndex)
-        let lemma = tagger.tag(at: range.lowerBound, unit: .word, scheme: .lemma).0?.rawValue.lowercased()
+        let lemma = correctedLemma(word) ?? tagger.tag(at: range.lowerBound, unit: .word, scheme: .lemma).0?.rawValue.lowercased()
         let lexical = tagger.tag(at: range.lowerBound, unit: .word, scheme: .lexicalClass).0
         let partOfSpeech = lexical.flatMap { partsOfSpeech[$0] } ?? ""
         return (lemma.flatMap { isWordLike($0) ? $0 : nil } ?? word.lowercased(), partOfSpeech)
     }
 
-    /// Формы, которые теггер iOS приводит к словарной форме неверно: broke → «brake», fell и felt остаются как есть
+    /// Формы, которые теггер iOS приводит к словарной форме неверно: broke → «brake», fell и felt остаются как есть.
+    /// dice теггер сводит к die — а в базе die только «умирать»
     private static let lemmaCorrections = [
-        "broke": "break", "broken": "break", "fell": "fall", "found": "find", "saw": "see", "felt": "feel"
+        "broke": "break", "broken": "break", "fell": "fall", "found": "find", "saw": "see", "felt": "feel", "dice": "dice"
     ]
+
+    /// Почти все буквы заглавные — текст набран капсом, а не состоит из сокращений
+    private static func isMostlyUppercase(_ text: String) -> Bool {
+        let letters = text.filter(\.isLetter)
+        guard letters.count >= 4 else { return false }
+        return Double(letters.filter(\.isUppercase).count) >= Double(letters.count) * 0.8
+    }
 
     private static func correctedLemma(_ surface: String) -> String? {
         lemmaCorrections[surface.lowercased()]
