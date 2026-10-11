@@ -22,11 +22,52 @@ extension FSRSRating {
 struct DailyGoalCard: View {
     @AppStorage(DailyNewWords.limitKey) private var limit = DailyNewWords.defaultLimit
     let introduced: Int
+    /// Строкой: кольцо поменьше, «N из M слов» и карандаш справа (вкладка «Статистика» профиля)
+    var compact = false
 
     @State private var isChoosingLimit = false
 
     var body: some View {
         Button { isChoosingLimit = true } label: {
+            if compact { compactLabel } else { fullLabel }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Выучено сегодня \(introduced) из \(limit > 0 ? "\(limit)" : "без ограничений"). Изменить норму")
+        .sheet(isPresented: $isChoosingLimit) {
+            DailyGoalSheet(limit: $limit)
+                .appThemedColorScheme()
+        }
+    }
+
+    private var compactLabel: some View {
+        HStack(spacing: 16) {
+            ZStack {
+                GoalRing(done: introduced, total: limit)
+                Text("\(introduced)")
+                    .scaledFont(size: 15, weight: .bold, design: .rounded)
+                    .foregroundColor(.brandDark)
+            }
+            .frame(width: 54, height: 54)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Выучено сегодня")
+                    .scaledFont(size: 17, weight: .semibold)
+                    .foregroundColor(.brandDark)
+                Text(limit > 0 ? "\(introduced) из \(limit) \(DailyStudyCard.wordsNoun(limit))" : "\(introduced) \(DailyStudyCard.wordsNoun(introduced)), без нормы")
+                    .scaledFont(size: 14)
+                    .foregroundColor(.gray)
+            }
+            Spacer(minLength: 0)
+            Image(systemName: "pencil.circle.fill")
+                .scaledFont(size: 26)
+                .foregroundColor(.brandTint)
+        }
+        .padding(16)
+        .background(Color.cardBackground)
+        .cornerRadius(20)
+        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
+    }
+
+    private var fullLabel: some View {
             HStack(spacing: 20) {
                 GoalRing(done: introduced, total: limit)
                     .frame(width: 76, height: 76)
@@ -54,13 +95,6 @@ struct DailyGoalCard: View {
             .background(Color.cardBackground)
             .cornerRadius(20)
             .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Выучено сегодня \(introduced) из \(limit > 0 ? "\(limit)" : "без ограничений"). Изменить норму")
-        .sheet(isPresented: $isChoosingLimit) {
-            DailyGoalSheet(limit: $limit)
-                .appThemedColorScheme()
-        }
     }
 }
 
