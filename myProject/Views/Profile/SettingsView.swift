@@ -28,6 +28,22 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Group {
+                    // Оформление — первым: тема и вид «Обзора»
+                    Section(header: Text("Оформление")) {
+                        Picker("Тема оформления", selection: $selectedTheme) {
+                            Text("Системная").tag("system")
+                            Text("Светлая").tag("light")
+                            Text("Тёмная").tag("dark")
+                        }
+                        .pickerStyle(.segmented)
+
+                        NavigationLink {
+                            OverviewSettingsView()
+                        } label: {
+                            LabeledContent("Обзор", value: overviewLayout == .standard ? "Стандартный" : "Настроен")
+                        }
+                    }
+
                     // Личные данные
                     Section(header: Text("Личные данные")) {
                         HStack(spacing: 16) {
@@ -148,23 +164,8 @@ struct SettingsView: View {
                              : "Раз в день, без спешки и счётчиков — просто повод уделить словам пару минут.")
                     }
 
-                    // Оформление
+                    // Резервная копия
                     BackupSection()
-
-                    Section(header: Text("Оформление")) {
-                        Picker("Тема оформления", selection: $selectedTheme) {
-                            Text("Системная").tag("system")
-                            Text("Светлая").tag("light")
-                            Text("Тёмная").tag("dark")
-                        }
-                        .pickerStyle(.segmented)
-
-                        NavigationLink {
-                            OverviewSettingsView()
-                        } label: {
-                            LabeledContent("Обзор", value: overviewLayout == .standard ? "Стандартный" : "Настроен")
-                        }
-                    }
                     #if DEBUG
                     Section {
                         NavigationLink("🛠️ Раздел разработчика") {
