@@ -42,7 +42,24 @@ struct TetrisView: View {
     @State private var isThinking = false
     /// «Подумать» уже брали для этой фигуры
     @State private var usedThinkThisPiece = false
+    /// Замедление после серии верных ответов: до какого времени и во сколько раз
     @State private var speedBoostUntil: Date? = nil
+    @State private var speedBoostFactor = 1.0
+    /// Верных ответов подряд; каждые `streakForBonus` — бонус
+    @State private var answerStreak = 0
+    /// Сколько следующих фигур ещё получат ×2 за линии
+    @State private var bonusPiecesLeft = 0
+    /// У текущей фигуры ×2 за линии
+    @State private var pieceHasBonus = false
+
+    private static let streakForBonus = 5
+    private static let bonusPieces = 3
+    private static let slowdownSeconds: Double = 10
+    private static let slowdownFactor = 1.5
+    /// 3 верных подряд — лёгкое замедление
+    private static let smallStreak = 3
+    private static let smallSlowdownSeconds: Double = 5
+    private static let smallSlowdownFactor = 1.25
     
     // Динамическая скорость
     @State private var dropInterval: Double = 0.6
@@ -255,7 +272,7 @@ struct TetrisView: View {
             if !isGameOver && !isPaused && !isThinking {
                 var effectiveInterval = isSoftDropping ? max(0.05, dropInterval / 4) : dropInterval
                 if let boostUntil = speedBoostUntil, Date() < boostUntil {
-                    effectiveInterval *= 2
+                    effectiveInterval *= speedBoostFactor
                 }
                 if Date().timeIntervalSince(lastTickTime) >= effectiveInterval {
                     gameTick()
@@ -283,9 +300,12 @@ struct TetrisView: View {
             }
             .accessibilityLabel("Обзор")
 
-            Text("Счёт: \(score)")
-                .scaledFont(size: 17, weight: .bold, design: .rounded)
-                .foregroundColor(.indigo)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Счёт: \(score)")
+                    .scaledFont(size: 17, weight: .bold, design: .rounded)
+                    .foregroundColor(.indigo)
+                bonusStatus
+            }
 
             Spacer()
 
@@ -307,6 +327,32 @@ struct TetrisView: View {
         }
         .padding(.horizontal, 16)
         .padding(.top, 6)
+    }
+
+    /// Серия верных «🔥 3/5» или действующий бонус «×2 · ещё 3 фигуры»
+    @ViewBuilder
+    private var bonusStatus: some View {
+        let bonusLeft = bonusPiecesLeft + (pieceHasBonus ? 1 : 0)
+        if bonusLeft > 0 {
+            Text("×2 · ещё \(bonusLeft) \(Self.piecesNoun(bonusLeft))")
+                .scaledFont(size: 12, weight: .heavy, design: .rounded)
+                .foregroundColor(.orange)
+        } else {
+            Text("🔥 \(answerStreak % Self.streakForBonus)/\(Self.streakForBonus)")
+                .scaledFont(size: 12, weight: .semibold, design: .rounded)
+                .foregroundColor(.gray)
+        }
+    }
+
+    /// 1 фигура, 2 фигуры, 5 фигур
+    private static func piecesNoun(_ count: Int) -> String {
+        let lastTwo = count % 100, last = count % 10
+        if (11...14).contains(lastTwo) { return "фигур" }
+        switch last {
+        case 1: return "фигура"
+        case 2...4: return "фигуры"
+        default: return "фигур"
+        }
     }
 
     /// «Подумать»: раз за фигуру и только пока на слово не ответили
@@ -476,7 +522,8 @@ struct TetrisView: View {
         }
         
         if linesCleared > 0 {
-            score += linesCleared * 100
+            // Четыре линии разом («тетрис») или бонус за серию ответов — очки вдвое; вместе не складываются
+            score += linesCleared * 100 * (linesCleared == 4 || pieceHasBonus ? 2 : 1)
             
             dropInterval = max(0.15, 0.6 - Double(score / 300) * 0.05)
             
@@ -508,6 +555,8 @@ struct TetrisView: View {
             // Новая фигура — новое слово, свой ответ и своё «Подумать»
             usedThinkThisPiece = false
             isThinking = false
+            pieceHasBonus = bonusPiecesLeft > 0
+            if pieceHasBonus { bonusPiecesLeft -= 1 }
             pickRandomWord()
         }
     }
@@ -551,9 +600,18 @@ struct TetrisView: View {
         
         if isCorrect {
             word.isMistake = false
-            speedBoostUntil = Date().addingTimeInterval(5)
+            answerStreak += 1
+            // Серия из 5 верных подряд: замедление на 10 с и ×2 за линии следующих 3 фигур (повторная серия — продлевает)
+            if answerStreak % Self.streakForBonus == 0 {
+                slowDown(by: Self.slowdownFactor, for: Self.slowdownSeconds)
+                bonusPiecesLeft += Self.bonusPieces
+            } else if answerStreak % Self.streakForBonus == Self.smallStreak {
+                // 3 подряд — чуть медленнее на 5 с
+                slowDown(by: Self.smallSlowdownFactor, for: Self.smallSlowdownSeconds)
+            }
             UINotificationFeedbackGenerator().notificationOccurred(.success)
         } else {
+            answerStreak = 0
             word.isMistake = true
             UINotificationFeedbackGenerator().notificationOccurred(.error)
         }
@@ -563,6 +621,14 @@ struct TetrisView: View {
             isThinking = false
             lastTickTime = Date()
         }
+    }
+
+    /// Новое замедление не ослабляет действующее более сильное
+    private func slowDown(by factor: Double, for seconds: Double) {
+        let now = Date()
+        if let until = speedBoostUntil, until > now, speedBoostFactor > factor { return }
+        speedBoostFactor = factor
+        speedBoostUntil = now.addingTimeInterval(seconds)
     }
 
     private func optionBackground(_ option: String, word: Word) -> Color {
@@ -599,6 +665,11 @@ struct TetrisView: View {
         isGameOver = false
         isPaused = false
         nextShape = TetrominoShape.allCases.randomElement() ?? .T
+        answerStreak = 0
+        bonusPiecesLeft = 0
+        pieceHasBonus = false
+        speedBoostUntil = nil
+        speedBoostFactor = 1
         spawnNewPiece()
     }
     
