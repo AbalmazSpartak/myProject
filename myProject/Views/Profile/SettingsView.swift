@@ -23,27 +23,12 @@ struct SettingsView: View {
     @State private var notificationsDenied = false
 
     @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var isChoosingAvatar = false
     
     var body: some View {
         NavigationStack {
             Form {
                 Group {
-                    // Оформление — первым: тема и вид «Обзора»
-                    Section(header: Text("Оформление")) {
-                        Picker("Тема оформления", selection: $selectedTheme) {
-                            Text("Системная").tag("system")
-                            Text("Светлая").tag("light")
-                            Text("Тёмная").tag("dark")
-                        }
-                        .pickerStyle(.segmented)
-
-                        NavigationLink {
-                            OverviewSettingsView()
-                        } label: {
-                            LabeledContent("Обзор", value: overviewLayout == .standard ? "Стандартный" : "Настроен")
-                        }
-                    }
-
                     // Личные данные
                     Section(header: Text("Личные данные")) {
                         HStack(spacing: 16) {
@@ -73,6 +58,12 @@ struct SettingsView: View {
                                         .scaledFont(size: 15, weight: .semibold)
                                         .foregroundColor(.teal)
                                 }
+                                .buttonStyle(.borderless)
+
+                                Button("Выбрать аватарку") { isChoosingAvatar = true }
+                                    .scaledFont(size: 15, weight: .semibold)
+                                    .foregroundColor(.teal)
+                                    .buttonStyle(.borderless)
                             
                                 if profile.avatarData != nil {
                                     Button("Удалить фото", role: .destructive) {
@@ -80,6 +71,7 @@ struct SettingsView: View {
                                         selectedPhotoItem = nil
                                     }
                                     .scaledFont(size: 13)
+                                    .buttonStyle(.borderless)
                                 }
                             }
                         }
@@ -89,6 +81,22 @@ struct SettingsView: View {
                             .autocorrectionDisabled()
                     }
                 
+                    // Оформление — сразу после личных данных: тема и вид «Обзора»
+                    Section(header: Text("Оформление")) {
+                        Picker("Тема оформления", selection: $selectedTheme) {
+                            Text("Системная").tag("system")
+                            Text("Светлая").tag("light")
+                            Text("Тёмная").tag("dark")
+                        }
+                        .pickerStyle(.segmented)
+
+                        NavigationLink {
+                            OverviewSettingsView()
+                        } label: {
+                            LabeledContent("Обзор", value: overviewLayout == .standard ? "Стандартный" : "Настроен")
+                        }
+                    }
+
                     // Обучение
                     Section(header: Text("Обучение"), footer: Text("Новые слова в «На повторение» идут от простых к сложным, счётчик обнуляется в полночь. После подхода можно продолжить или вернуться в меню.")) {
                         VStack(alignment: .leading, spacing: 8) {
@@ -187,6 +195,13 @@ struct SettingsView: View {
                     }
                     .fontWeight(.bold)
                 }
+            }
+            .sheet(isPresented: $isChoosingAvatar) {
+                AvatarPickerView(name: profile.name) { data in
+                    profile.avatarData = data
+                    selectedPhotoItem = nil
+                }
+                .appThemedColorScheme()
             }
             .onChange(of: selectedPhotoItem) { _, newItem in
                 Task {
