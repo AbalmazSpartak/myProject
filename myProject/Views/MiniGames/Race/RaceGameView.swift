@@ -1,10 +1,10 @@
 import SwiftUI
 import SwiftData
-import MultipeerConnectivity
 
-struct RaceGameView: View {
+/// Экран гонки — с игроками рядом или в одиночку с ботом/призраком: соперники приходят из `manager`
+struct RaceGameView<Manager: RaceTransport>: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject var manager: MultipeerRaceManager
+    @ObservedObject var manager: Manager
 
     @Environment(\.modelContext) private var modelContext
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
@@ -78,6 +78,7 @@ struct RaceGameView: View {
                 Capsule().fill(Color.brandFill).frame(height: 24)
                 Image(systemName: "car.fill")
                     .foregroundColor(player.isMe ? .indigo : .gray)
+                    .opacity(player.isGhost ? 0.35 : 1)
                     .offset(x: progress * (geo.size.width - 24))
             }
         }
@@ -91,6 +92,14 @@ struct RaceGameView: View {
         VStack(spacing: 16) {
             Text("Гонка окончена!")
                 .scaledFont(size: 22, weight: .bold)
+
+            if let note = manager.resultNote {
+                Text(note)
+                    .scaledFont(size: 15, weight: .semibold)
+                    .foregroundColor(.indigo)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+            }
             
             VStack(spacing: 8) {
                 ForEach(Array(rankedPlayers.enumerated()), id: \.element.id) { index, player in
@@ -152,11 +161,7 @@ struct RaceGameView: View {
 
     private func setupPlayers() {
         loadWords()
-        var initial = [RacePlayer(id: manager.myName, name: manager.myName, isMe: true)]
-        for peer in manager.connectedPeers {
-            initial.append(RacePlayer(id: peer.displayName, name: peer.displayName))
-        }
-        players = initial
+        players = [RacePlayer(id: manager.myName, name: manager.myName, isMe: true)] + manager.opponents
         startTime = Date()
     }
     
@@ -244,6 +249,10 @@ struct RaceGameView: View {
         case "finished":
             if let name = message.playerName,
                let idx = players.firstIndex(where: { $0.name == name }) {
+                // Бот и призрак присылают последний ответ вместе с финишем
+                if let count = message.correctCount {
+                    players[idx].correctCount = count
+                }
                 if let time = message.finishTime {
                     players[idx].finishTime = time
                 }

@@ -23,6 +23,8 @@ struct RacePlayer: Identifiable {
     var correctCount: Int = 0
     var finishTime: Double? = nil
     var isMe: Bool = false
+    /// Призрак лучшей своей гонки — полупрозрачная машинка
+    var isGhost: Bool = false
 }
 
 enum RaceWordGenerator {
