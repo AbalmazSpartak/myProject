@@ -11,6 +11,25 @@ enum SpeechSettings {
     static let rateRange = 0.3...0.55
     /// Произносить английское слово сразу при показе, без нажатия на динамик
     static let autoSpeakKey = "speech_auto"
+    /// Выбранный голос (identifier); пусто — автоматически лучший скачанный для акцента
+    static let voiceKey = "speech_voice"
+
+    /// Голоса акцента: премиум и улучшенные первыми, внутри — по имени.
+    /// Без «забавных» (Bells, Bad News…) и личного голоса — его Apple сторонним приложениям не даёт
+    nonisolated static func voices(for accent: String) -> [AVSpeechSynthesisVoice] {
+        AVSpeechSynthesisVoice.speechVoices()
+            .filter { $0.language == accent && !$0.voiceTraits.contains(.isNoveltyVoice) && !$0.voiceTraits.contains(.isPersonalVoice) }
+            .sorted { ($0.quality.rawValue, $1.name) > ($1.quality.rawValue, $0.name) }
+    }
+
+    /// Голос для речи: выбранный, если он есть для этого акцента; иначе лучший скачанный (улучшенный или премиум);
+    /// если таких нет — голос iOS по умолчанию
+    nonisolated static func resolveVoice(accent: String, identifier: String) -> AVSpeechSynthesisVoice? {
+        let list = voices(for: accent)
+        if !identifier.isEmpty, let chosen = list.first(where: { $0.identifier == identifier }) { return chosen }
+        if let best = list.first, best.quality != .default { return best }
+        return AVSpeechSynthesisVoice(language: accent)
+    }
 }
 
 /// Озвучка слов. Музыку пользователя не останавливает: на время речи приглушает и потом возвращает громкость
@@ -24,8 +43,13 @@ final class TextToSpeechManager: NSObject {
     private static let sessionQueue = DispatchQueue(label: "speech.audio-session", qos: .userInitiated)
     /// Номер последней просьбы озвучить: устаревшие (успели нажать на другое слово) не говорят и не выключают сессию
     private var request = 0
-    /// Голос ищется долго — находим один раз на акцент
-    private var cachedVoice: (accent: String, voice: AVSpeechSynthesisVoice?)?
+    /// Голос ищется долго — находим один раз на акцент и выбранный голос
+    private var cachedVoice: (key: String, voice: AVSpeechSynthesisVoice?)?
+
+    private static var currentVoiceSetting: (accent: String, identifier: String) {
+        (UserDefaults.standard.string(forKey: SpeechSettings.accentKey) ?? SpeechSettings.defaultAccent,
+         UserDefaults.standard.string(forKey: SpeechSettings.voiceKey) ?? "")
+    }
 
     private override init() {
         super.init()
@@ -40,11 +64,12 @@ final class TextToSpeechManager: NSObject {
 
     /// Заранее найти голос — первое слово после запуска не ждёт его. Поиск занимает ~0,2 с — в фоне, не на главном потоке
     func prepare() {
-        let accent = UserDefaults.standard.string(forKey: SpeechSettings.accentKey) ?? SpeechSettings.defaultAccent
+        let (accent, identifier) = Self.currentVoiceSetting
+        let key = "\(accent)|\(identifier)"
         Task.detached(priority: .utility) {
-            let voice = AVSpeechSynthesisVoice(language: accent)
+            let voice = SpeechSettings.resolveVoice(accent: accent, identifier: identifier)
             await MainActor.run {
-                if self.cachedVoice?.accent != accent { self.cachedVoice = (accent, voice) }
+                if self.cachedVoice?.key != key { self.cachedVoice = (key, voice) }
             }
         }
     }
@@ -74,11 +99,28 @@ final class TextToSpeechManager: NSObject {
     }
 
     private func voice() -> AVSpeechSynthesisVoice? {
-        let accent = UserDefaults.standard.string(forKey: SpeechSettings.accentKey) ?? SpeechSettings.defaultAccent
-        if let cachedVoice, cachedVoice.accent == accent { return cachedVoice.voice }
-        let voice = AVSpeechSynthesisVoice(language: accent)
-        cachedVoice = (accent, voice)
+        let (accent, identifier) = Self.currentVoiceSetting
+        let key = "\(accent)|\(identifier)"
+        if let cachedVoice, cachedVoice.key == key { return cachedVoice.voice }
+        let voice = SpeechSettings.resolveVoice(accent: accent, identifier: identifier)
+        cachedVoice = (key, voice)
         return voice
+    }
+
+    /// Прослушать конкретный голос (выбор голоса в настройках) — без запоминания
+    func preview(_ text: String, voice: AVSpeechSynthesisVoice) {
+        if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
+        request += 1
+        let current = request
+        Self.sessionQueue.async {
+            try? AVAudioSession.sharedInstance().setActive(true)
+            Task { @MainActor in
+                guard current == self.request else { return }
+                let utterance = self.utterance(text)
+                utterance.voice = voice
+                self.synthesizer.speak(utterance)
+            }
+        }
     }
 
     /// Синтезатор для кнопки 🔊 виджета: говорит через системную аудиосессию iOS, а не через сессию приложения

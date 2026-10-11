@@ -15,6 +15,7 @@ struct SettingsView: View {
     @AppStorage(OverviewLayout.storageKey) private var overviewLayout = OverviewLayout.standard
     @AppStorage(SessionLength.key) private var sessionLength = SessionLength.defaultValue
     @AppStorage(SpeechSettings.accentKey) private var speechAccent = SpeechSettings.defaultAccent
+    @AppStorage(SpeechSettings.voiceKey) private var speechVoice = ""
     @AppStorage(SpeechSettings.rateKey) private var speechRate = SpeechSettings.defaultRate
     @AppStorage(SpeechSettings.autoSpeakKey) private var autoSpeak = false
     @AppStorage(DailyReminder.enabledKey) private var reminderEnabled = false
@@ -136,6 +137,12 @@ struct SettingsView: View {
                             Text("Британский").tag("en-GB")
                         }
                         .pickerStyle(.segmented)
+
+                        NavigationLink {
+                            VoicePickerView()
+                        } label: {
+                            LabeledContent("Голос", value: VoiceSummary.current(accent: speechAccent, voiceID: speechVoice))
+                        }
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Скорость речи")

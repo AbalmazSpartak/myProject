@@ -144,7 +144,7 @@ enum Backup {
         ReaderSettings.themeKey, ReaderSettings.fontSizeKey, ReaderSettings.fontKey, ReaderSettings.spacingKey,
         ReaderSettings.customTextKey, ReaderSettings.customBackgroundKey, "scan_select_learning",
         DailyReminder.enabledKey, DailyReminder.timeKey,
-        SpeechSettings.accentKey, SpeechSettings.rateKey, SpeechSettings.autoSpeakKey,
+        SpeechSettings.accentKey, SpeechSettings.rateKey, SpeechSettings.autoSpeakKey, SpeechSettings.voiceKey,
         DailyNewWords.limitKey, "new_words_day", "new_words_count", SessionLength.key, StudyScope.storageKey,
     ] + RaceGhost.allKeys
     /// Общие с виджетом: оценки по дням, серия дней
