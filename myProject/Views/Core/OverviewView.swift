@@ -321,7 +321,8 @@ struct SavedTopicRow: View {
                         .scaledFont(size: 17, weight: .semibold)
                         .foregroundColor(.brandDark)
                         .lineLimit(1)
-                    Text(topic.words.isEmpty ? topic.section : "\(topic.words.count) \(DailyStudyCard.wordsNoun(topic.words.count))")
+                    Text([topic.words.isEmpty ? topic.section : "\(topic.words.count) \(DailyStudyCard.wordsNoun(topic.words.count))",
+                          topic.ratingSummary].filter { !$0.isEmpty }.joined(separator: " · "))
                         .scaledFont(size: 14)
                         .foregroundColor(.gray)
                         .lineLimit(1)

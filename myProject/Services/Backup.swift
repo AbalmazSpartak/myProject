@@ -15,6 +15,8 @@ nonisolated struct BackupFile: Codable, Sendable {
     var categories: [String]
     var profile: ProfileRecord?
     var topics: [TopicRecord]
+    /// Оценки и реакции всех тем, и встроенных тоже — по id темы. В старых копиях поля нет
+    var topicRatings: [UUID: TopicRatingRecord]?
     var books: [BookRecord]
     /// Настройки приложения и общие с виджетом (статистика, серия) — как есть, в формате plist
     var settings: Data
@@ -73,6 +75,11 @@ nonisolated struct BackupFile: Codable, Sendable {
         var blocksData: Data
         var savedAt: Date?
         var clips: [ClipRecord]
+    }
+
+    struct TopicRatingRecord: Codable, Sendable {
+        var rating: Int
+        var reactions: [String]
     }
 
     struct ClipRecord: Codable, Sendable {
@@ -153,7 +160,11 @@ enum Backup {
                 quizRuEnCorrect: p.quizRuEnCorrect, quizRuEnTotal: p.quizRuEnTotal,
                 tetrisHighScore: p.tetrisHighScore)
         }
-        let topics = ((try? context.fetch(FetchDescriptor<CommunityTopic>())) ?? []).filter(\.isMine).map { topic in
+        let allTopics = (try? context.fetch(FetchDescriptor<CommunityTopic>())) ?? []
+        let topicRatings = Dictionary(allTopics.filter { $0.rating > 0 || !$0.reactions.isEmpty }.map {
+            ($0.id, BackupFile.TopicRatingRecord(rating: $0.rating, reactions: $0.reactions))
+        }, uniquingKeysWith: { first, _ in first })
+        let topics = allTopics.filter(\.isMine).map { topic in
             BackupFile.TopicRecord(
                 id: topic.id, section: topic.section, title: topic.title, text: topic.text, words: topic.words,
                 createdAt: topic.createdAt, blocksData: topic.blocksData, savedAt: topic.savedAt,
@@ -165,7 +176,7 @@ enum Backup {
                                   chaptersData: book.chaptersData, position: book.position)
         } : []
         return BackupFile(includesMedia: includeMedia, words: words, lists: lists, categories: categories, profile: profile,
-                          topics: topics, books: books,
+                          topics: topics, topicRatings: topicRatings, books: books,
                           settings: plist(from: .standard, keys: settingsKeys),
                           sharedSettings: plist(from: AppGroup.defaults, keys: sharedKeys))
     }
@@ -297,6 +308,15 @@ enum Backup {
                 let clip = TopicAudioClip(id: clipRecord.id, data: clipRecord.data, fileExtension: clipRecord.fileExtension)
                 context.insert(clip)
                 clip.topic = topic
+            }
+        }
+
+        // Оценки и реакции — и своим, и встроенным темам
+        if let ratings = backup.topicRatings {
+            for topic in (try? context.fetch(FetchDescriptor<CommunityTopic>())) ?? [] {
+                guard let record = ratings[topic.id] else { continue }
+                topic.rating = record.rating
+                topic.reactions = record.reactions
             }
         }
 

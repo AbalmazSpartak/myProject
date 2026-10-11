@@ -185,10 +185,17 @@ private struct SectionTopicRow: View {
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
                 }
-                if !topic.words.isEmpty {
-                    Label("\(topic.words.count) \(DailyStudyCard.wordsNoun(topic.words.count))", systemImage: "text.book.closed")
-                        .scaledFont(size: 12, weight: .semibold)
-                        .foregroundColor(.cyan)
+                HStack(spacing: 12) {
+                    if !topic.words.isEmpty {
+                        Label("\(topic.words.count) \(DailyStudyCard.wordsNoun(topic.words.count))", systemImage: "text.book.closed")
+                            .scaledFont(size: 12, weight: .semibold)
+                            .foregroundColor(.cyan)
+                    }
+                    if !topic.ratingSummary.isEmpty {
+                        Text(topic.ratingSummary)
+                            .scaledFont(size: 12, weight: .semibold)
+                            .foregroundColor(.orange)
+                    }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

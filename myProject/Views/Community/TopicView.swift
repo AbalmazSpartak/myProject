@@ -46,6 +46,7 @@ struct TopicView: View {
                     if !topic.words.isEmpty {
                         wordsCard
                     }
+                    TopicRatingCard(topic: topic)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(20)
@@ -199,5 +200,64 @@ struct TopicView: View {
         if items.count > 1 {
             addedMessage = "Слова добавлены в ваш словарь «\(list.name)»."
         }
+    }
+}
+
+// MARK: - Оценка
+
+/// «Оцените тему»: звёзды 1–5 (нажатие на ту же звезду снимает оценку) и реакции в любом сочетании
+private struct TopicRatingCard: View {
+    @Environment(\.modelContext) private var modelContext
+    let topic: CommunityTopic
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Оцените тему")
+                .scaledFont(size: 17, weight: .semibold)
+                .foregroundColor(.brandDark)
+
+            HStack(spacing: 10) {
+                ForEach(1...5, id: \.self) { star in
+                    Button {
+                        Haptics.tap()
+                        topic.rating = topic.rating == star ? 0 : star
+                        try? modelContext.save()
+                    } label: {
+                        Image(systemName: star <= topic.rating ? "star.fill" : "star")
+                            .scaledFont(size: 28)
+                            .foregroundColor(star <= topic.rating ? .orange : .gray.opacity(0.5))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(star) из 5")
+                    .accessibilityAddTraits(star == topic.rating ? .isSelected : [])
+                }
+            }
+
+            FlowLayout(spacing: 8) {
+                ForEach(TopicReaction.allCases) { reaction in
+                    let isOn = topic.reactions.contains(reaction.rawValue)
+                    Button {
+                        Haptics.tap()
+                        topic.toggle(reaction)
+                        try? modelContext.save()
+                    } label: {
+                        Text("\(reaction.emoji) \(reaction.title)")
+                            .scaledFont(size: 15, weight: .semibold)
+                            .foregroundColor(.brandDark)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Capsule().fill(isOn ? Color.orange.opacity(0.22) : Color.brandFill))
+                            .overlay(Capsule().strokeBorder(isOn ? Color.orange : .clear, lineWidth: 1.5))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(isOn ? .isSelected : [])
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.cardBackground)
+        .cornerRadius(16)
     }
 }

@@ -26,6 +26,10 @@ final class CommunityTopic {
     /// Тему создал этот пользователь — ему можно её править и удалять.
     /// Пока темы хранятся только на телефоне, все они свои; с общими темами (CloudKit) чужие будут false
     var isMine = true
+    /// Оценка темы звёздами 1–5; 0 — не оценена. Пока своя; с общими темами — ещё и средняя по всем
+    var rating = 0
+    /// Реакции на тему — rawValue TopicReaction, в любом сочетании
+    var reactions: [String] = []
     @Relationship(deleteRule: .cascade, inverse: \TopicAudioClip.topic)
     var audioClips: [TopicAudioClip] = []
 
@@ -58,6 +62,52 @@ final class CommunityTopic {
         let text = blocks.first { $0.kind == .text && !$0.text.isEmpty }
             ?? blocks.first { $0.kind == .heading && !$0.text.isEmpty }
         return text?.text ?? ""
+    }
+}
+
+/// Реакции на тему «Сообщества»
+nonisolated enum TopicReaction: String, CaseIterable, Identifiable {
+    case interesting, useful, hard, love
+
+    var id: String { rawValue }
+
+    var emoji: String {
+        switch self {
+        case .interesting: return "🔥"
+        case .useful: return "💡"
+        case .hard: return "🤔"
+        case .love: return "❤️"
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .interesting: return "Интересно"
+        case .useful: return "Полезно"
+        case .hard: return "Сложно"
+        case .love: return "Нравится"
+        }
+    }
+}
+
+extension CommunityTopic {
+    /// Реакции в постоянном порядке: 🔥 💡 🤔 ❤️
+    var topicReactions: [TopicReaction] {
+        TopicReaction.allCases.filter { reactions.contains($0.rawValue) }
+    }
+
+    func toggle(_ reaction: TopicReaction) {
+        if reactions.contains(reaction.rawValue) {
+            reactions.removeAll { $0 == reaction.rawValue }
+        } else {
+            reactions.append(reaction.rawValue)
+        }
+    }
+
+    /// Для карточки: «★ 4 🔥💡»; пусто — тему не оценивали
+    var ratingSummary: String {
+        let stars = rating > 0 ? "★ \(rating)" : ""
+        return [stars, topicReactions.map { $0.emoji }.joined()].filter { !$0.isEmpty }.joined(separator: " ")
     }
 }
 

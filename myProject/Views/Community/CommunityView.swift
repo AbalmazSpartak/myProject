@@ -197,6 +197,11 @@ struct TopicCard: View {
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)
                 Spacer(minLength: 0)
+                if !topic.ratingSummary.isEmpty {
+                    Text(topic.ratingSummary)
+                        .scaledFont(size: 12, weight: .semibold)
+                        .foregroundColor(.orange)
+                }
                 if !topic.words.isEmpty {
                     Label("\(topic.words.count) \(DailyStudyCard.wordsNoun(topic.words.count))", systemImage: "text.book.closed")
                         .scaledFont(size: 12, weight: .semibold)
