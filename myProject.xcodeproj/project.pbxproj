@@ -368,6 +368,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = myProject/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = WordLearner;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Камера нужна, чтобы распознать английский текст и добавить из него слова в словарь, а также перенести таблицу с фото в тему.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Приложению нужен доступ к локальной сети, чтобы находить других игроков для гонки слов.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Микрофон нужен, чтобы записать голос в тему сообщества.";
@@ -414,6 +415,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = myProject/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = WordLearner;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Камера нужна, чтобы распознать английский текст и добавить из него слова в словарь, а также перенести таблицу с фото в тему.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Приложению нужен доступ к локальной сети, чтобы находить других игроков для гонки слов.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Микрофон нужен, чтобы записать голос в тему сообщества.";
