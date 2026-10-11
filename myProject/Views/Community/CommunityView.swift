@@ -1,13 +1,11 @@
 import SwiftUI
 import SwiftData
 
-/// «Сообщество»: темы по разделам («Английский по кино», «Подборки слов», свои — «Грамматика» …)
-/// и для примера — ленты «Подборки сообщества» и «Английский по кино»
+/// «Сообщество»: сверху ленты «Подборки сообщества» (новые темы из всех разделов) и «Английский по кино»,
+/// ниже — список разделов («Английский по кино», «Подборки слов», «Грамматика», свои): раздел открывает все его темы
 struct CommunityView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \CommunityTopic.createdAt, order: .reverse) private var topics: [CommunityTopic]
-    @Query(sort: \WordList.createdAt, order: .reverse) private var lists: [WordList]
-    @Query(sort: \Category.name) private var categories: [Category]
 
     @State private var route: Route?
     @State private var isCreatingTopic = false
@@ -16,7 +14,7 @@ struct CommunityView: View {
 
     private enum Route: Hashable {
         case topic(CommunityTopic)
-        case collection(DictionaryFilter)
+        case section(String)
         case movies
     }
 
@@ -26,21 +24,14 @@ struct CommunityView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 28) {
-                    Text("Создавайте темы с текстом и словами — их можно добавить себе в словарь. Пока темы хранятся только на этом телефоне.")
-                        .scaledFont(size: 15)
-                        .foregroundColor(.gray)
-                        .padding(.horizontal, 20)
-
-                    ForEach(sectionsWithTopics, id: \.self) { section in
-                        topicRibbon(section)
+                    if !topics.isEmpty {
+                        latestRibbon
                     }
+                    moviesRibbon
+
+                    sectionsList
 
                     createTopicCard
-
-                    examplesTitle
-
-                    collectionsRibbon
-                    moviesRibbon
                 }
                 .padding(.vertical, 12)
                 .padding(.bottom, 30)
@@ -95,18 +86,33 @@ struct CommunityView: View {
 
     // MARK: - Темы
 
-    /// Разделы, в которых уже есть темы: встроенные — первыми
-    private var sectionsWithTopics: [String] {
-        let used = Set(topics.map(\.section))
-        return CommunitySections.all(from: topics).filter(used.contains)
-    }
-
-    private func topicRibbon(_ section: String) -> some View {
-        Ribbon(title: section) {
-            ForEach(topics.filter { $0.section == section }) { topic in
+    /// Новые темы из всех разделов — сначала свежие
+    private var latestRibbon: some View {
+        Ribbon(title: "Подборки сообщества") {
+            ForEach(topics.prefix(Self.latestCount)) { topic in
                 TopicCard(topic: topic) { route = .topic(topic) }
             }
         }
+    }
+
+    private static let latestCount = 10
+
+    /// Все разделы: встроенные — всегда, свои — когда в них есть темы
+    private var sectionsList: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Разделы".uppercased())
+                .scaledFont(size: 17, weight: .bold)
+                .foregroundColor(.brandDark)
+            Text("Создавайте темы с текстом и словами — их можно добавить себе в словарь. Пока темы хранятся только на этом телефоне.")
+                .scaledFont(size: 15)
+                .foregroundColor(.gray)
+            ForEach(CommunitySections.all(from: topics), id: \.self) { section in
+                CommunitySectionRow(section: section, topics: topics.filter { $0.section == section }) {
+                    route = .section(section)
+                }
+            }
+        }
+        .padding(.horizontal, 20)
     }
 
     private var createTopicCard: some View {
@@ -119,7 +125,7 @@ struct CommunityView: View {
                     Text(topics.isEmpty ? "Создать первую тему" : "Создать тему")
                         .scaledFont(size: 17, weight: .semibold)
                         .foregroundColor(.brandDark)
-                    Text("В готовый раздел или в новый — например, «Грамматика»")
+                    Text("В готовый раздел или в новый — например, «Сленг»")
                         .scaledFont(size: 13)
                         .foregroundColor(.gray)
                         .multilineTextAlignment(.leading)
@@ -134,25 +140,7 @@ struct CommunityView: View {
         .padding(.horizontal, 20)
     }
 
-    // MARK: - Примеры
-
-    private var examplesTitle: some View {
-        Text("Например")
-            .scaledFont(size: 22, weight: .semibold, design: .serif)
-            .foregroundColor(.brandDark)
-            .padding(.horizontal, 20)
-    }
-
-    private var collectionsRibbon: some View {
-        Ribbon(title: "Подборки сообщества") {
-            ForEach(lists) { list in
-                CollectionCard(name: list.name, words: list.words) { route = .collection(.list(list)) }
-            }
-            ForEach(categories) { category in
-                CollectionCard(name: category.name, words: category.words) { route = .collection(.category(category)) }
-            }
-        }
-    }
+    // MARK: - Кино
 
     // Заглушка: жанровые карточки без постеров
     private static let movieGenres: [(name: String, icon: String, color: Color)] = [
@@ -164,7 +152,10 @@ struct CommunityView: View {
     ]
 
     private var moviesRibbon: some View {
-        Ribbon(title: "Английский по кино", onTitleTap: { route = .movies }) {
+        Ribbon(title: "Английский по кино", onTitleTap: { route = .section("Английский по кино") }) {
+            if let quotes = topics.first(where: { $0.id == BuiltInTopics.movieQuotesID }) {
+                TileCard(title: "10 знаменитых фраз", icon: "quote.bubble.fill", color: .yellow) { route = .topic(quotes) }
+            }
             ForEach(Self.movieGenres, id: \.name) { genre in
                 TileCard(title: genre.name, icon: genre.icon, color: genre.color) { route = .movies }
             }
@@ -176,8 +167,8 @@ struct CommunityView: View {
         switch route {
         case .topic(let topic):
             TopicView(topic: topic)
-        case .collection(let filter):
-            DictionaryView(initialFilter: filter, backTitle: "Сообщество")
+        case .section(let section):
+            CommunitySectionView(section: section)
         case .movies:
             StubView(title: "Английский по кино", message: "Здесь будет раздел с подборками слов по фильмам", backTitle: "Сообщество")
         }

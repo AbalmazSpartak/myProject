@@ -22,11 +22,20 @@ struct TopicEditorView: View {
     /// Значение пикера для «Новый раздел…»
     private static let newSectionTag = "\u{0}new"
 
-    init(sections: [String], editing topic: CommunityTopic? = nil) {
+    /// Тема создаётся со страницы раздела — раздел уже выбран, пикера нет
+    private let fixedSection: String?
+
+    init(sections: [String], editing topic: CommunityTopic? = nil, fixedSection: String? = nil) {
         self.sections = sections
         self.topic = topic
+        self.fixedSection = fixedSection
         guard let topic else {
-            _section = State(initialValue: sections.first ?? Self.newSectionTag)
+            if let fixedSection, !sections.contains(fixedSection) {
+                _section = State(initialValue: Self.newSectionTag)
+                _newSection = State(initialValue: fixedSection)
+            } else {
+                _section = State(initialValue: fixedSection ?? sections.first ?? Self.newSectionTag)
+            }
             return
         }
         // Правка: всё как сохранено, звук — в черновик, пока не нажали «Сохранить»
@@ -70,12 +79,16 @@ struct TopicEditorView: View {
             Form {
                 Group {
                     Section("Раздел") {
-                        Picker("Раздел", selection: $section) {
-                            ForEach(sections, id: \.self) { Text($0).tag($0) }
-                            Text("Новый раздел…").tag(Self.newSectionTag)
-                        }
-                        if section == Self.newSectionTag {
-                            TextField("Название, например «Грамматика»", text: $newSection)
+                        if let fixedSection {
+                            Text(fixedSection)
+                        } else {
+                            Picker("Раздел", selection: $section) {
+                                ForEach(sections, id: \.self) { Text($0).tag($0) }
+                                Text("Новый раздел…").tag(Self.newSectionTag)
+                            }
+                            if section == Self.newSectionTag {
+                                TextField("Название, например «Грамматика»", text: $newSection)
+                            }
                         }
                     }
 

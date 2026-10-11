@@ -118,6 +118,9 @@ enum BuiltInTopics {
 
     static let grammarSection = "Грамматика"
 
+    /// «10 знаменитых фраз из фильмов» — плитка в ленте «Английский по кино»
+    static let movieQuotesID = uuid(topic: 4)
+
     static let all: [Topic] = [tenses, irregularVerbs, articles, movieQuotes, airport, cafe, vowelReading]
 
     static let pronunciationSection = "Произношение"
