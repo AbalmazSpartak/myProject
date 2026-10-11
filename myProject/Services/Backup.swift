@@ -17,6 +17,8 @@ nonisolated struct BackupFile: Codable, Sendable {
     var topics: [TopicRecord]
     /// Оценки и реакции всех тем, и встроенных тоже — по id темы. В старых копиях поля нет
     var topicRatings: [UUID: TopicRatingRecord]?
+    /// Обсуждения всех тем. В старых копиях поля нет
+    var topicComments: [CommentRecord]?
     var books: [BookRecord]
     /// Настройки приложения и общие с виджетом (статистика, серия) — как есть, в формате plist
     var settings: Data
@@ -75,6 +77,18 @@ nonisolated struct BackupFile: Codable, Sendable {
         var blocksData: Data
         var savedAt: Date?
         var clips: [ClipRecord]
+    }
+
+    struct CommentRecord: Codable, Sendable {
+        var id: UUID
+        var topicID: UUID
+        var text: String
+        var authorName: String
+        var createdAt: Date
+        var editedAt: Date?
+        var parentID: UUID?
+        var isMine: Bool
+        var isLikedByMe: Bool
     }
 
     struct TopicRatingRecord: Codable, Sendable {
@@ -164,6 +178,13 @@ enum Backup {
         let topicRatings = Dictionary(allTopics.filter { $0.rating > 0 || !$0.reactions.isEmpty }.map {
             ($0.id, BackupFile.TopicRatingRecord(rating: $0.rating, reactions: $0.reactions))
         }, uniquingKeysWith: { first, _ in first })
+        let topicComments = allTopics.flatMap { topic in
+            topic.comments.map {
+                BackupFile.CommentRecord(id: $0.id, topicID: topic.id, text: $0.text, authorName: $0.authorName,
+                                         createdAt: $0.createdAt, editedAt: $0.editedAt, parentID: $0.parentID,
+                                         isMine: $0.isMine, isLikedByMe: $0.isLikedByMe)
+            }
+        }
         let topics = allTopics.filter(\.isMine).map { topic in
             BackupFile.TopicRecord(
                 id: topic.id, section: topic.section, title: topic.title, text: topic.text, words: topic.words,
@@ -176,7 +197,7 @@ enum Backup {
                                   chaptersData: book.chaptersData, position: book.position)
         } : []
         return BackupFile(includesMedia: includeMedia, words: words, lists: lists, categories: categories, profile: profile,
-                          topics: topics, topicRatings: topicRatings, books: books,
+                          topics: topics, topicRatings: topicRatings, topicComments: topicComments, books: books,
                           settings: plist(from: .standard, keys: settingsKeys),
                           sharedSettings: plist(from: AppGroup.defaults, keys: sharedKeys))
     }
@@ -236,6 +257,10 @@ enum Backup {
         }
         for list in (try? context.fetch(FetchDescriptor<WordList>())) ?? [] { context.delete(list) }
         for topic in ((try? context.fetch(FetchDescriptor<CommunityTopic>())) ?? []).filter(\.isMine) { context.delete(topic) }
+        // Обсуждения встроенных тем тоже — копия вернёт их, а не добавит вторыми
+        if backup.topicComments != nil {
+            for comment in (try? context.fetch(FetchDescriptor<TopicComment>())) ?? [] { context.delete(comment) }
+        }
         if backup.includesMedia {
             for book in (try? context.fetch(FetchDescriptor<Book>())) ?? [] { context.delete(book) }
         }
@@ -317,6 +342,23 @@ enum Backup {
                 guard let record = ratings[topic.id] else { continue }
                 topic.rating = record.rating
                 topic.reactions = record.reactions
+            }
+        }
+
+        // Обсуждения — к темам по id
+        if let records = backup.topicComments {
+            let byID = Dictionary(((try? context.fetch(FetchDescriptor<CommunityTopic>())) ?? []).map { ($0.id, $0) },
+                                  uniquingKeysWith: { first, _ in first })
+            for record in records {
+                guard let topic = byID[record.topicID] else { continue }
+                let comment = TopicComment(text: record.text, authorName: record.authorName, parentID: record.parentID)
+                comment.id = record.id
+                comment.createdAt = record.createdAt
+                comment.editedAt = record.editedAt
+                comment.isMine = record.isMine
+                comment.isLikedByMe = record.isLikedByMe
+                context.insert(comment)
+                comment.topic = topic
             }
         }
 

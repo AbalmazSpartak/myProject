@@ -32,6 +32,8 @@ final class CommunityTopic {
     var reactions: [String] = []
     @Relationship(deleteRule: .cascade, inverse: \TopicAudioClip.topic)
     var audioClips: [TopicAudioClip] = []
+    @Relationship(deleteRule: .cascade, inverse: \TopicComment.topic)
+    var comments: [TopicComment] = []
 
     init(section: String, title: String, blocks: [TopicBlock], words: [TopicWord]) {
         self.section = section
@@ -104,10 +106,11 @@ extension CommunityTopic {
         }
     }
 
-    /// Для карточки: «★ 4 🔥💡»; пусто — тему не оценивали
+    /// Для карточки: «★ 4 🔥💡 💬 3»; пусто — тему не оценивали и не обсуждали
     var ratingSummary: String {
         let stars = rating > 0 ? "★ \(rating)" : ""
-        return [stars, topicReactions.map { $0.emoji }.joined()].filter { !$0.isEmpty }.joined(separator: " ")
+        let discussion = comments.isEmpty ? "" : "💬 \(comments.count)"
+        return [stars, topicReactions.map { $0.emoji }.joined(), discussion].filter { !$0.isEmpty }.joined(separator: " ")
     }
 }
 

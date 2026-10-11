@@ -47,6 +47,7 @@ struct TopicView: View {
                         wordsCard
                     }
                     TopicRatingCard(topic: topic)
+                    TopicDiscussionView(topic: topic, limit: 3)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(20)

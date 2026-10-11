@@ -11,6 +11,8 @@ struct CommunitySectionView: View {
 
     @State private var openedTopic: CommunityTopic?
     @State private var isCreatingTopic = false
+    @State private var isShowingSubscriptionLock = false
+    @AppStorage(Subscription.simulateMissingKey) private var simulateNoSubscription = false
 
     private var topics: [CommunityTopic] { allTopics.filter { $0.section == section } }
 
@@ -34,9 +36,23 @@ struct CommunitySectionView: View {
             TopicView(topic: topic, backTitle: section)
                 .toolbar(.hidden, for: .navigationBar)
         }
+        .alert("Нужна подписка", isPresented: $isShowingSubscriptionLock) {
+            Button("Понятно", role: .cancel) {}
+        } message: {
+            Text(Subscription.lockedMessage)
+        }
         .sheet(isPresented: $isCreatingTopic) {
             TopicEditorView(sections: CommunitySections.all(from: allTopics), fixedSection: section)
                 .appThemedColorScheme()
+        }
+    }
+
+    /// Создавать темы — только с подпиской
+    private func createTopic() {
+        if Subscription.canPost(simulatingMissing: simulateNoSubscription) {
+            isCreatingTopic = true
+        } else {
+            isShowingSubscriptionLock = true
         }
     }
 
@@ -51,7 +67,7 @@ struct CommunitySectionView: View {
                 .foregroundColor(.brandDark)
             }
             Spacer()
-            Button { isCreatingTopic = true } label: {
+            Button(action: createTopic) {
                 Image(systemName: "plus.circle.fill")
                     .scaledFont(size: 22)
                     .foregroundColor(.brandDark)
@@ -82,7 +98,7 @@ struct CommunitySectionView: View {
             Text("В разделе пока нет тем")
                 .scaledFont(size: 20, weight: .semibold, design: .serif)
                 .foregroundColor(.brandDark)
-            Button { isCreatingTopic = true } label: {
+            Button(action: createTopic) {
                 Label("Создать тему", systemImage: "square.and.pencil")
                     .scaledFont(size: 17, weight: .semibold)
                     .foregroundColor(.brandBackground)

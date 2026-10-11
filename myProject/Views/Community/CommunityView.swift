@@ -9,6 +9,8 @@ struct CommunityView: View {
 
     @State private var route: Route?
     @State private var isCreatingTopic = false
+    @State private var isShowingSubscriptionLock = false
+    @AppStorage(Subscription.simulateMissingKey) private var simulateNoSubscription = false
     /// Открыто вкладкой внизу — «назад» не нужен
     var showsBackButton = true
 
@@ -42,6 +44,11 @@ struct CommunityView: View {
             destination(for: route)
                 .toolbar(.hidden, for: .navigationBar)
         }
+        .alert("Нужна подписка", isPresented: $isShowingSubscriptionLock) {
+            Button("Понятно", role: .cancel) {}
+        } message: {
+            Text(Subscription.lockedMessage)
+        }
         .sheet(isPresented: $isCreatingTopic) {
             TopicEditorView(sections: CommunitySections.all(from: topics))
                 .appThemedColorScheme()
@@ -49,6 +56,15 @@ struct CommunityView: View {
     }
 
     // MARK: - Шапка
+
+    /// Создавать темы — только с подпиской
+    private func createTopic() {
+        if Subscription.canPost(simulatingMissing: simulateNoSubscription) {
+            isCreatingTopic = true
+        } else {
+            isShowingSubscriptionLock = true
+        }
+    }
 
     private var header: some View {
         HStack {
@@ -65,7 +81,7 @@ struct CommunityView: View {
             Spacer()
             HStack(spacing: 16) {
                 HelpButton(topic: .community)
-                Button { isCreatingTopic = true } label: {
+                Button(action: createTopic) {
                     Image(systemName: "plus.circle.fill")
                         .scaledFont(size: 22)
                         .foregroundColor(.brandDark)
@@ -116,7 +132,7 @@ struct CommunityView: View {
     }
 
     private var createTopicCard: some View {
-        Button { isCreatingTopic = true } label: {
+        Button(action: createTopic) {
             HStack(spacing: 14) {
                 Image(systemName: "square.and.pencil")
                     .scaledFont(size: 24, weight: .semibold)

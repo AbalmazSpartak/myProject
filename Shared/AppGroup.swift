@@ -13,7 +13,7 @@ enum AppGroup {
     /// Все модели базы. Виджет открывает базу с той же схемой, иначе SwiftData посчитает её другой моделью
     static let schema = Schema([
         Word.self, Category.self, UserProfile.self, WordList.self,
-        CommunityTopic.self, TopicAudioClip.self, Book.self
+        CommunityTopic.self, TopicAudioClip.self, TopicComment.self, Book.self
     ])
 
     /// База в общей папке; nil — группа недоступна (например, не подписано с App Group)

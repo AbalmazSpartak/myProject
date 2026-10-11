@@ -15,11 +15,16 @@ struct DeveloperView: View {
     @State private var showConfirmReseed = false
     @State private var showConfirmFSRSReset = false
     @State private var lastActionMessage: String?
+    @AppStorage(Subscription.simulateMissingKey) private var simulateNoSubscription = false
     
     var body: some View {
         NavigationStack {
             Form {
                 Group {
+                    Section(footer: Text("Показывает, как выглядят закрытые места: создание тем и поле комментария.")) {
+                        Toggle("Изобразить «без подписки»", isOn: $simulateNoSubscription)
+                    }
+
                     Section("Статус базы") {
                         LabeledContent("Слов всего", value: "\(allWords.count)")
                         LabeledContent("Категорий", value: "\(categories.count)")
