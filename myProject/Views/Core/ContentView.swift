@@ -33,7 +33,7 @@ struct ContentView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
-                OverviewView(open: { activeScreen = $0 }, openProfile: { selectedTab = 1 })
+                OverviewView(open: { activeScreen = $0 }, openProfile: { activeScreen = .profile })
                     .navigationBarHidden(true)
                     // Разделы открываются переходом: свайп от левого края возвращает на «Обзор»
                     .navigationDestination(item: $activeScreen) { screen in
@@ -46,10 +46,13 @@ struct ContentView: View {
             .tabItem { Label("Обзор", systemImage: "safari.fill") }
             .tag(0)
 
-            ProfileView()
-                .readableColumn()
-                .tabItem { Label("Профиль", systemImage: "person.fill") }
-                .tag(1)
+            // Сообщество — вкладкой: темы открываются переходом внутри её стека
+            NavigationStack {
+                CommunityView(showsBackButton: false)
+                    .navigationBarHidden(true)
+            }
+            .tabItem { Label("Сообщество", systemImage: "person.3.fill") }
+            .tag(1)
 
             DictionaryView(showsBackButton: false)
                 .readableColumn()
@@ -66,7 +69,7 @@ struct ContentView: View {
     private func destination(for screen: ActiveScreen) -> some View {
         switch screen {
         case .profile:
-            ProfileView()
+            ProfileView(showsBackButton: true)
                 .readableColumn()
         case .flashcardsFSRS:
             FlashcardsView()

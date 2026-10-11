@@ -11,6 +11,8 @@ struct CommunityView: View {
 
     @State private var route: Route?
     @State private var isCreatingTopic = false
+    /// Открыто вкладкой внизу — «назад» не нужен
+    var showsBackButton = true
 
     private enum Route: Hashable {
         case topic(CommunityTopic)
@@ -59,13 +61,15 @@ struct CommunityView: View {
 
     private var header: some View {
         HStack {
-            Button(action: { dismiss() }) {
-                HStack(spacing: 4) {
-                    Image(systemName: "chevron.left")
-                    Text("Обзор")
+            if showsBackButton {
+                Button(action: { dismiss() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                        Text("Обзор")
+                    }
+                    .scaledFont(size: 17, weight: .semibold)
+                    .foregroundColor(.brandDark)
                 }
-                .scaledFont(size: 17, weight: .semibold)
-                .foregroundColor(.brandDark)
             }
             Spacer()
             HStack(spacing: 16) {

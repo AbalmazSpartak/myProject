@@ -20,7 +20,7 @@ struct OverviewView: View {
     @State private var dueCount = 0
 
     let open: (ActiveScreen) -> Void
-    /// Нажатие на шапку — вкладка «Профиль»
+    /// Нажатие на шапку — экран «Профиль»
     var openProfile: () -> Void = {}
 
     /// Сколько подборок видно на «Обзоре»; остальные — по кнопке «Все»
