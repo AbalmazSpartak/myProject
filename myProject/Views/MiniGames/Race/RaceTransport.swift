@@ -16,6 +16,8 @@ protocol RaceTransport: ObservableObject {
     var resultNote: String? { get }
     /// Соперник финишировал первым — можно доработать оставшиеся слова и узнать своё время (только в одиночку)
     var canContinueAfterFinish: Bool { get }
+    /// Отсчёт 3-2-1 перед стартом — онлайн, чтобы задержка сети не давала форы
+    var startsWithCountdown: Bool { get }
     func send(_ message: RaceMessage)
     func startRaceAsHost(with words: [RaceWordPayload], mode: RaceAnswerMode)
     /// «Продолжить» после финиша соперника: время на экране итога в забег не идёт
@@ -29,5 +31,6 @@ extension MultipeerRaceManager: RaceTransport {
 
     var resultNote: String? { nil }
     var canContinueAfterFinish: Bool { false }
+    var startsWithCountdown: Bool { false }
     func continueAfterFinish() {}
 }

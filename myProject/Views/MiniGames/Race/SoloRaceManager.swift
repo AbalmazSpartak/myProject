@@ -97,6 +97,7 @@ final class SoloRaceManager: ObservableObject, RaceTransport {
     private var opponentFinishedAt: Date?
 
     var canContinueAfterFinish: Bool { true }
+    var startsWithCountdown: Bool { false }
 
     var opponents: [RacePlayer] {
         [RacePlayer(id: opponentName, name: opponentName, isGhost: opponent == .ghost)]

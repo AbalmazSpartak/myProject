@@ -17,6 +17,11 @@ struct RaceMessage: Codable, Equatable {
     var finishTime: Double?
     /// Режим ответа (RaceAnswerMode) — в сообщении start; нет — «Выбор», как в прошлых версиях
     var mode: String?
+    /// Онлайн: список игроков комнаты («roster»), код и роль после подбора («matched»), текст ошибки
+    var players: [String]?
+    var code: String?
+    var role: String?
+    var error: String?
 }
 
 struct RacePlayer: Identifiable {
@@ -27,6 +32,8 @@ struct RacePlayer: Identifiable {
     var isMe: Bool = false
     /// Призрак лучшей своей гонки — полупрозрачная машинка
     var isGhost: Bool = false
+    /// Онлайн: игрок вышел из гонки
+    var hasLeft: Bool = false
 }
 
 enum RaceWordGenerator {

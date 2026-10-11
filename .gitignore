@@ -13,3 +13,7 @@ full_code.txt
 *.xcuserstate
 *.xcworkspace/
 xcuserdata/
+
+# Cloudflare wrangler
+server/**/.wrangler/
+server/**/node_modules/

@@ -29,6 +29,11 @@ struct RaceGameView<Manager: RaceTransport>: View {
     @State private var typed = ""
     @State private var isTypedCorrect = false
     @FocusState private var isTypingFocused: Bool
+    /// Онлайн: отсчёт 3-2-1 перед стартом; nil — гонка идёт
+    @State private var countdown: Int?
+    @State private var countdownTask: Task<Void, Never>?
+    /// Онлайн: связь оборвалась посреди гонки
+    @State private var isDisconnected = false
     
     private var words: [RaceWordPayload] { manager.raceWords }
     let isHost: Bool
@@ -44,9 +49,22 @@ struct RaceGameView<Manager: RaceTransport>: View {
                 trackRow(for: player)
             }
             
+            if isDisconnected {
+                Label("Связь потеряна — соперники больше не видны", systemImage: "wifi.exclamationmark")
+                    .scaledFont(size: 14, weight: .semibold)
+                    .foregroundColor(.orange)
+            }
+
             Spacer()
             
-            if let word = currentWord, !raceEnded, manager.answerMode.isTyping {
+            if let countdown, !raceEnded {
+                Text("\(countdown)")
+                    .scaledFont(size: 96, weight: .bold, design: .rounded)
+                    .foregroundColor(.indigo)
+                    .contentTransition(.numericText())
+                    .animation(.snappy, value: countdown)
+                Spacer()
+            } else if let word = currentWord, !raceEnded, manager.answerMode.isTyping {
                 typingArea(word)
             } else if let word = currentWord, !raceEnded {
                 VStack(spacing: 16) {
@@ -141,6 +159,28 @@ struct RaceGameView<Manager: RaceTransport>: View {
         .onAppear { isTypingFocused = true }
     }
 
+    /// Онлайн — 3, 2, 1: слова показываются всем разом, время забега — с конца отсчёта
+    private func startCountdownIfNeeded() {
+        countdownTask?.cancel()
+        guard manager.startsWithCountdown else {
+            countdown = nil
+            return
+        }
+        countdown = 3
+        countdownTask = Task {
+            for value in [2, 1] {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { return }
+                countdown = value
+            }
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
+            countdown = nil
+            startTime = Date()
+            isTypingFocused = true
+        }
+    }
+
     /// Слово не засчитано: 2 секунды стоим (видно ответ), затем следующее
     private func skipWord() {
         guard !isLocked, !raceEnded else { return }
@@ -196,8 +236,10 @@ struct RaceGameView<Manager: RaceTransport>: View {
         }
         .frame(height: 24)
         .overlay(alignment: .trailing) {
-            Text(player.name).scaledFont(size: 11).foregroundColor(.gray).padding(.trailing, 4)
+            Text(player.hasLeft ? "\(player.name) · вышел" : player.name)
+                .scaledFont(size: 11).foregroundColor(.gray).padding(.trailing, 4)
         }
+        .opacity(player.hasLeft ? 0.5 : 1)
     }
     
     private var finishedView: some View {
@@ -302,6 +344,7 @@ struct RaceGameView<Manager: RaceTransport>: View {
         loadWords()
         players = [RacePlayer(id: manager.myName, name: manager.myName, isMe: true)] + manager.opponents
         startTime = Date()
+        startCountdownIfNeeded()
     }
     
     private func resetRoundState() {
@@ -314,6 +357,7 @@ struct RaceGameView<Manager: RaceTransport>: View {
         typed = ""
         isTypedCorrect = false
         startTime = Date()
+        startCountdownIfNeeded()
         for idx in players.indices {
             players[idx].correctCount = 0
             players[idx].finishTime = nil
@@ -411,6 +455,12 @@ struct RaceGameView<Manager: RaceTransport>: View {
                 raceEnded = true
                 endedAt = Date()
             }
+        case "left":
+            if let name = message.playerName, let idx = players.firstIndex(where: { $0.name == name }) {
+                players[idx].hasLeft = true
+            }
+        case "disconnected":
+            isDisconnected = true
         default:
             break
         }
