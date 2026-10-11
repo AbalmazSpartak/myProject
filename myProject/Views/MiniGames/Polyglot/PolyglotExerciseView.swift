@@ -1,10 +1,13 @@
 import SwiftUI
 
 /// Упражнение «Составь фразу»: русская фраза → английская из карточек. Раунд — 15 фраз, без штрафов и таймеров.
-/// Задания и схему-подсказку даёт урок
+/// Задания и схему-подсказку даёт урок. Баллы — за верные с первого раза (и бонус за серию), в конце раунда
+/// результат записывается в освоение урока (PolyglotProgress)
 struct PolyglotExerciseView<Scheme: View>: View {
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(PolyglotProgress.storageKey) private var progress = PolyglotProgress()
 
+    let lesson: Int
     let makeRound: () -> [PolyglotTask]
     @ViewBuilder let scheme: () -> Scheme
 
@@ -15,8 +18,15 @@ struct PolyglotExerciseView<Scheme: View>: View {
     @State private var result: Bool?
     @State private var correctCount = 0
     @State private var isShowingScheme = false
+    @State private var points = 0
+    /// Верных подряд — за каждые 5 бонус
+    @State private var streak = 0
+    /// Освоение урока до этого раунда — для «Практика → Уверенно»
+    @State private var levelBefore: PolyglotProgress.Level?
+    @State private var bestBefore = 0
 
-    init(makeRound: @escaping () -> [PolyglotTask], @ViewBuilder scheme: @escaping () -> Scheme) {
+    init(lesson: Int, makeRound: @escaping () -> [PolyglotTask], @ViewBuilder scheme: @escaping () -> Scheme) {
+        self.lesson = lesson
         self.makeRound = makeRound
         self.scheme = scheme
         _tasks = State(initialValue: makeRound())
@@ -60,9 +70,16 @@ struct PolyglotExerciseView<Scheme: View>: View {
                 .foregroundColor(.brandDark)
             Spacer()
             if task != nil {
-                Text("\(index + 1) из \(tasks.count)")
-                    .scaledFont(size: 15, weight: .semibold, design: .rounded)
-                    .foregroundColor(.gray)
+                VStack(spacing: 2) {
+                    Text("\(index + 1) из \(tasks.count)")
+                        .scaledFont(size: 15, weight: .semibold, design: .rounded)
+                        .foregroundColor(.gray)
+                    Text("\(points) \(PolyglotProgress.pointsNoun(points))")
+                        .scaledFont(size: 13, weight: .bold, design: .rounded)
+                        .foregroundColor(.orange)
+                        .contentTransition(.numericText())
+                        .animation(.snappy, value: points)
+                }
             }
             Spacer()
             Button { isShowingScheme = true } label: {
@@ -189,13 +206,20 @@ struct PolyglotExerciseView<Scheme: View>: View {
             if result == nil {
                 let words = picked.map { task.tiles[$0] }
                 let isCorrect = task.isCorrect(words)
-                if isCorrect { correctCount += 1 }
+                if isCorrect {
+                    correctCount += 1
+                    streak += 1
+                    points += PolyglotProgress.points(forCorrectAnswerWithStreak: streak)
+                } else {
+                    streak = 0
+                }
                 result = isCorrect
                 UINotificationFeedbackGenerator().notificationOccurred(isCorrect ? .success : .warning)
                 TextToSpeechManager.shared.speakAutomatically(task.answerText)
             } else {
                 result = nil
                 picked = []
+                if index == tasks.count - 1 { finishRound() }
                 index += 1
             }
         } label: {
@@ -211,38 +235,103 @@ struct PolyglotExerciseView<Scheme: View>: View {
 
     // MARK: - Итог
 
+    private func finishRound() {
+        let before = progress.lesson(lesson)
+        levelBefore = before.level
+        bestBefore = before.bestPoints
+        progress.record(lesson: lesson, correct: correctCount, total: tasks.count, points: points)
+    }
+
     private var finished: some View {
-        VStack(spacing: 20) {
-            Spacer()
-            Text("🎉")
-                .font(.system(size: 64))
-            Text("Раунд пройден")
-                .scaledFont(size: 28, weight: .regular, design: .serif)
-                .foregroundColor(.brandDark)
-            Text("Верно с первого раза: \(correctCount) из \(tasks.count)")
-                .scaledFont(size: 17)
-                .foregroundColor(.gray)
-            Spacer()
-            Button {
-                tasks = makeRound()
-                index = 0
-                correctCount = 0
-            } label: {
-                Text("Ещё раунд")
-                    .scaledFont(size: 18, weight: .bold)
-                    .foregroundColor(.brandBackground)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(Capsule().fill(Color.brandDark))
+        let lessonProgress = progress.lesson(lesson)
+        let percent = tasks.isEmpty ? 0 : correctCount * 100 / tasks.count
+        return ScrollView {
+            VStack(spacing: 18) {
+                Text(percent >= 90 ? "🏆" : percent >= 70 ? "🎉" : "💪")
+                    .font(.system(size: 64))
+                    .padding(.top, 30)
+                Text("Раунд пройден")
+                    .scaledFont(size: 28, weight: .regular, design: .serif)
+                    .foregroundColor(.brandDark)
+
+                Text("+\(points) \(PolyglotProgress.pointsNoun(points))")
+                    .scaledFont(size: 34, weight: .bold, design: .rounded)
+                    .foregroundColor(.orange)
+                if points > bestBefore, bestBefore > 0 {
+                    Label("Лучший раунд в уроке!", systemImage: "star.fill")
+                        .scaledFont(size: 15, weight: .semibold)
+                        .foregroundColor(.orange)
+                }
+
+                Text("Верно с первого раза: \(correctCount) из \(tasks.count) · \(percent)%")
+                    .scaledFont(size: 17)
+                    .foregroundColor(.gray)
+
+                if let level = lessonProgress.level, let mastery = lessonProgress.mastery {
+                    masteryCard(level: level, mastery: mastery, best: lessonProgress.bestPoints)
+                }
             }
-            Button("К уроку") { dismiss() }
-                .scaledFont(size: 17, weight: .semibold)
-                .foregroundColor(.brandTint)
-                .padding(.bottom, 20)
+            .frame(maxWidth: .infinity)
+        }
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: 14) {
+                Button {
+                    tasks = makeRound()
+                    index = 0
+                    correctCount = 0
+                    points = 0
+                    streak = 0
+                } label: {
+                    Text("Ещё раунд")
+                        .scaledFont(size: 18, weight: .bold)
+                        .foregroundColor(.brandBackground)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Capsule().fill(Color.brandDark))
+                }
+                Button("К уроку") { dismiss() }
+                    .scaledFont(size: 17, weight: .semibold)
+                    .foregroundColor(.brandTint)
+                    .padding(.bottom, 12)
+            }
+            .padding(.top, 8)
+            .background(Color.brandBackground)
         }
         .padding(.horizontal, 20)
     }
+
+    /// Освоение темы по последним раундам: уровень, звёзды, полоска; повышение — «Практика → Уверенно»
+    private func masteryCard(level: PolyglotProgress.Level, mastery: Double, best: Int) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Освоение темы")
+                    .scaledFont(size: 15, weight: .semibold)
+                    .foregroundColor(.gray)
+                Spacer()
+                Text(level.stars)
+                    .scaledFont(size: 18)
+                    .foregroundColor(.orange)
+            }
+            if let levelBefore, levelBefore != level {
+                Text("\(levelBefore.title) → \(level.title)")
+                    .scaledFont(size: 22, weight: .semibold, design: .serif)
+                    .foregroundColor(level > levelBefore ? .green : .brandDark)
+            } else {
+                Text(level.title)
+                    .scaledFont(size: 22, weight: .semibold, design: .serif)
+                    .foregroundColor(.brandDark)
+            }
+            ProgressView(value: mastery)
+                .tint(.orange)
+            Text("\(Int((mastery * 100).rounded()))% верных за последние раунды · лучший раунд \(best) \(PolyglotProgress.pointsNoun(best))")
+                .scaledFont(size: 13)
+                .foregroundColor(.gray)
+        }
+        .padding(16)
+        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.cardBackground))
+    }
 }
+
 
 /// Карточки в строку с переносом, по центру или по левому краю
 struct FlowLayout: Layout {

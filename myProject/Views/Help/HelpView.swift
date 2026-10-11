@@ -12,6 +12,7 @@ enum HelpTopic: String, CaseIterable, Identifiable {
     case race
     case community
     case books
+    case polyglot
 
     var id: String { rawValue }
 
@@ -27,6 +28,7 @@ enum HelpTopic: String, CaseIterable, Identifiable {
         case .race: return "Гонка слов"
         case .community: return "Сообщество"
         case .books: return "Книги"
+        case .polyglot: return "Полиглот"
         }
     }
 
@@ -42,6 +44,7 @@ enum HelpTopic: String, CaseIterable, Identifiable {
         case .race: return "car.fill"
         case .community: return "person.3.fill"
         case .books: return "books.vertical.fill"
+        case .polyglot: return "character.bubble.fill"
         }
     }
 
@@ -57,6 +60,7 @@ enum HelpTopic: String, CaseIterable, Identifiable {
         case .race: return .green
         case .community: return .cyan
         case .books: return .brown
+        case .polyglot: return .red
         }
     }
 
@@ -73,6 +77,7 @@ enum HelpTopic: String, CaseIterable, Identifiable {
         case .race: RaceHelpView()
         case .community: CommunityHelpView()
         case .books: BooksHelpView()
+        case .polyglot: PolyglotHelpView()
         }
     }
 }

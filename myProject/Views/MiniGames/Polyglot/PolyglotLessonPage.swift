@@ -72,7 +72,7 @@ struct PolyglotLessonPage<Content: View, Scheme: View>: View {
         }
         .background(Color.brandBackground.ignoresSafeArea())
         .fullScreenCover(isPresented: $isExercising) {
-            PolyglotExerciseView(makeRound: makeRound, scheme: scheme)
+            PolyglotExerciseView(lesson: number, makeRound: makeRound, scheme: scheme)
                 .appThemedColorScheme()
         }
     }

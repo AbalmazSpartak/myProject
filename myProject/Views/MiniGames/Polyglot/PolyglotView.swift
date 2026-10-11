@@ -3,6 +3,7 @@ import SwiftUI
 /// «Полиглот»: уроки грамматики по схемам — схема и упражнение «Составь фразу» из карточек
 struct PolyglotView: View {
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(PolyglotProgress.storageKey) private var progress = PolyglotProgress()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -12,6 +13,13 @@ struct PolyglotView: View {
                     Text("Уроки по схемам: посмотрите правило, потом соберите фразы из карточек.")
                         .scaledFont(size: 15)
                         .foregroundColor(.gray)
+
+                    if progress.totalPoints > 0 {
+                        Label("\(progress.totalPoints) \(PolyglotProgress.pointsNoun(progress.totalPoints)) в «Полиглоте»",
+                              systemImage: "star.circle.fill")
+                            .scaledFont(size: 16, weight: .bold)
+                            .foregroundColor(.orange)
+                    }
 
                     NavigationLink {
                         PolyglotLessonView()
@@ -106,11 +114,37 @@ struct PolyglotView: View {
                 .scaledFont(size: 20, weight: .bold)
                 .foregroundColor(.brandDark)
             Spacer()
-            Color.clear.frame(width: 70, height: 1)
+            HelpButton(topic: .polyglot)
+                .frame(width: 70, alignment: .trailing)
         }
         .padding(.horizontal, 16)
         .padding(.top, 8)
         .padding(.bottom, 4)
+    }
+
+    /// Освоение урока: звёзды, уровень и полоска; не проходили — «Не начат»
+    @ViewBuilder
+    private func lessonMastery(_ number: Int) -> some View {
+        let lesson = progress.lesson(number)
+        if let level = lesson.level, let mastery = lesson.mastery {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(level.stars)
+                        .foregroundColor(.orange)
+                    Text("\(level.title) · \(Int((mastery * 100).rounded()))%")
+                        .foregroundColor(.brandDark)
+                }
+                .scaledFont(size: 13, weight: .semibold)
+                ProgressView(value: mastery)
+                    .tint(.orange)
+            }
+            .padding(.top, 4)
+        } else {
+            Text("Не начат")
+                .scaledFont(size: 13, weight: .semibold)
+                .foregroundColor(.gray)
+                .padding(.top, 4)
+        }
     }
 
     private func lessonCard(number: Int, title: String, subtitle: String) -> some View {
@@ -131,6 +165,7 @@ struct PolyglotView: View {
                     .scaledFont(size: 14)
                     .foregroundColor(.gray)
                     .fixedSize(horizontal: false, vertical: true)
+                lessonMastery(number)
             }
             Spacer(minLength: 0)
             Image(systemName: "chevron.right")
@@ -196,7 +231,7 @@ struct PolyglotLessonView: View {
         }
         .background(Color.brandBackground.ignoresSafeArea())
         .fullScreenCover(isPresented: $isExercising) {
-            PolyglotExerciseView(makeRound: { PolyglotLesson1.round() }) { PolyglotSchemeView() }
+            PolyglotExerciseView(lesson: 1, makeRound: { PolyglotLesson1.round() }) { PolyglotSchemeView() }
                 .appThemedColorScheme()
         }
     }
