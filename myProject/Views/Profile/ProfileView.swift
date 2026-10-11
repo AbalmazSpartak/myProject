@@ -27,30 +27,19 @@ struct ProfileView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Шапка
+                // Шапка: кнопки по краям, заголовок поверх — по центру экрана, сколько бы места ни заняла «‹ Обзор»
                 HStack {
-                    // Без кнопки «назад» пустое место держит заголовок по центру
-                    Group {
-                        if showsBackButton {
-                            Button(action: { dismiss() }) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "chevron.left")
-                                    Text("Обзор")
-                                }
-                                .scaledFont(size: 17, weight: .semibold)
-                                .foregroundColor(.brandDark)
+                    if showsBackButton {
+                        Button(action: { dismiss() }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "chevron.left")
+                                Text("Обзор")
                             }
-                        } else {
-                            Color.clear.frame(height: 1)
+                            .scaledFont(size: 17, weight: .semibold)
+                            .foregroundColor(.brandDark)
+                            .fixedSize()
                         }
                     }
-                    .frame(width: 70, alignment: .leading)
-                    
-                    Spacer()
-                    
-                    Text("Профиль")
-                        .scaledFont(size: 20, weight: .bold)
-                        .foregroundColor(.brandDark)
                     
                     Spacer()
                     
@@ -62,7 +51,13 @@ struct ProfileView: View {
                                 .foregroundColor(.gray)
                         }
                     }
-                    .frame(width: 70, alignment: .trailing)
+                }
+                .frame(minHeight: 30)
+                .overlay {
+                    Text("Профиль")
+                        .scaledFont(size: 20, weight: .bold)
+                        .foregroundColor(.brandDark)
+                        .allowsHitTesting(false)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
