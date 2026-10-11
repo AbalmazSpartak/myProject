@@ -2,8 +2,11 @@ import SwiftUI
 import SwiftData
 import Combine
 
+/// Тетрис слов: поле на весь экран, следующая фигура в шапке. На каждую фигуру — одно слово и один ответ;
+/// «Подумать» останавливает фигуру до ответа (раз за фигуру). Обычная пауза меняет слово при возвращении
 struct TetrisView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var modelContext
     /// Неправильные варианты ответа — из нескольких сотен случайных слов, а не из всей базы
     @State private var distractors: [Word] = []
@@ -24,6 +27,7 @@ struct TetrisView: View {
     
     // Падающая фигура
     @State private var currentShape: TetrominoShape = .I
+    @State private var nextShape: TetrominoShape = TetrominoShape.allCases.randomElement() ?? .T
     @State private var currentBlocks: [BlockPosition] = TetrominoShape.I.relativeBlocks
     @State private var currentOffset = BlockPosition(x: 4, y: 0)
     
@@ -34,6 +38,10 @@ struct TetrisView: View {
     @State private var currentWord: Word?
     @State private var currentOptions: [String] = []
     @State private var selectedAnswer: String? = nil
+    /// «Подумать»: фигура стоит, пока не выбран перевод
+    @State private var isThinking = false
+    /// «Подумать» уже брали для этой фигуры
+    @State private var usedThinkThisPiece = false
     @State private var speedBoostUntil: Date? = nil
     
     // Динамическая скорость
@@ -52,38 +60,7 @@ struct TetrisView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 10) {
-                HStack {
-                    Button(action: { dismiss() }) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "chevron.left")
-                            Text("Обзор")
-                        }
-                        .scaledFont(size: 17, weight: .semibold)
-                        .foregroundColor(.indigo)
-                    }
-                    
-                    Spacer()
-                    
-                    Text("Тетрис слов")
-                        .scaledFont(size: 20, weight: .bold)
-                        .foregroundColor(.brandDark)
-                    
-                    Button(action: { isPaused.toggle() }) {
-                        Image(systemName: isPaused ? "play.fill" : "pause.fill")
-                            .scaledFont(size: 18)
-                            .foregroundColor(.indigo)
-                    }
-
-                    HelpButton(topic: .tetris) { isPaused = true }
-                    
-                    Spacer()
-                    
-                    Text("Счет: \(score)")
-                        .scaledFont(size: 16, weight: .bold, design: .rounded)
-                        .foregroundColor(.indigo)
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
+                header
                 
                 if let word = currentWord {
                     VStack(spacing: 8) {
@@ -92,15 +69,17 @@ struct TetrisView: View {
                                 .scaledFont(size: 18, weight: .bold, design: .rounded)
                                 .foregroundColor(.brandDark)
                             
-                            Spacer()
-                            
                             Button(action: {
                                 TextToSpeechManager.shared.speak(word.english)
                             }) {
                                 Image(systemName: "speaker.wave.2.fill")
-                                    .scaledFont(size: 20)
+                                    .scaledFont(size: 18)
                                     .foregroundColor(.indigo)
                             }
+
+                            Spacer()
+
+                            thinkButton
                         }
                         
                         HStack(spacing: 8) {
@@ -187,8 +166,7 @@ struct TetrisView: View {
                             // на отпускание пальца больше ничего делать не нужно
                         }
                 )
-                .modifier(PadBoardFit { size in fitCells(to: size) })
-                Spacer()
+                .modifier(BoardFit { size in fitCells(to: size) })
             }
             .background(Color.brandBackground.ignoresSafeArea())
             
@@ -250,42 +228,31 @@ struct TetrisView: View {
                 .shadow(radius: 20)
             }
             if isPaused && !isGameOver {
-                Color.black.opacity(0.6)
-                    .ignoresSafeArea()
-                
-                VStack(spacing: 16) {
-                    Image(systemName: "pause.circle.fill")
-                        .font(.system(size: 50))
-                        .foregroundColor(.indigo)
-                    
-                    Text("Пауза")
-                        .scaledFont(size: 22, weight: .bold, design: .rounded)
-                        .foregroundColor(.brandDark)
-                    
-                    Button(action: { isPaused = false }) {
-                        Text("Продолжить")
-                            .scaledFont(size: 16, weight: .bold)
-                            .foregroundColor(.white)
-                            .padding(.vertical, 12)
-                            .padding(.horizontal, 28)
-                            .background(Color.indigo)
-                            .cornerRadius(12)
-                    }
+                // Без затемнения: слово всё равно сменится при возвращении в игру
+                Button(action: resume) {
+                    Label("Продолжить", systemImage: "play.fill")
+                        .scaledFont(size: 18, weight: .bold)
+                        .foregroundColor(.white)
+                        .padding(.vertical, 14)
+                        .padding(.horizontal, 30)
+                        .background(Capsule().fill(Color.indigo))
+                        .shadow(color: .black.opacity(0.2), radius: 10, y: 4)
                 }
-                .padding(24)
-                .background(Color.brandBackground)
-                .cornerRadius(20)
-                .shadow(radius: 10)
             }
         }
         // Палец ведёт фигуру — свайп от края не должен выкидывать из игры
         .swipeBackDisabled()
+        .statusBarHidden(true)
+        // Свернули приложение — обычная пауза
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active, !isGameOver { isPaused = true }
+        }
         .onAppear {
             loadWords()
             restartGame()
         }
         .onReceive(timer) { _ in
-            if !isGameOver && !isPaused {
+            if !isGameOver && !isPaused && !isThinking {
                 var effectiveInterval = isSoftDropping ? max(0.05, dropInterval / 4) : dropInterval
                 if let boostUntil = speedBoostUntil, Date() < boostUntil {
                     effectiveInterval *= 2
@@ -298,11 +265,82 @@ struct TetrisView: View {
         }
     }
     
-    /// iPad: поле 10 × 20 занимает свободное место, клетки — от 22 до 48 точек
+    /// Поле 10 × 20 занимает всё место под словом: клетки — от 14 до 48 точек
     private func fitCells(to size: CGSize) {
-        let byHeight = (size.height - 12 - CGFloat(rows - 1) * 2 - 16) / CGFloat(rows)
-        let byWidth = (size.width - 12 - CGFloat(cols - 1) * 2 - 32) / CGFloat(cols)
-        cellSize = max(22, min(48, floor(min(byHeight, byWidth))))
+        let byHeight = (size.height - 12 - CGFloat(rows - 1) * 2 - 8) / CGFloat(rows)
+        let byWidth = (size.width - 12 - CGFloat(cols - 1) * 2 - 16) / CGFloat(cols)
+        cellSize = max(14, min(48, floor(min(byHeight, byWidth))))
+    }
+
+    // MARK: - Шапка, следующая фигура, пауза
+
+    private var header: some View {
+        HStack(spacing: 14) {
+            Button(action: { dismiss() }) {
+                Image(systemName: "chevron.left")
+                    .scaledFont(size: 20, weight: .semibold)
+                    .foregroundColor(.indigo)
+            }
+            .accessibilityLabel("Обзор")
+
+            Text("Счёт: \(score)")
+                .scaledFont(size: 17, weight: .bold, design: .rounded)
+                .foregroundColor(.indigo)
+
+            Spacer()
+
+            HStack(spacing: 6) {
+                Text("Далее")
+                    .scaledFont(size: 12, weight: .semibold)
+                    .foregroundColor(.gray)
+                NextPiecePreview(shape: nextShape)
+            }
+
+            Button(action: { isPaused ? resume() : pause() }) {
+                Image(systemName: isPaused ? "play.fill" : "pause.fill")
+                    .scaledFont(size: 18)
+                    .foregroundColor(.indigo)
+            }
+            .accessibilityLabel(isPaused ? "Продолжить" : "Пауза")
+
+            HelpButton(topic: .tetris) { pause() }
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 6)
+    }
+
+    /// «Подумать»: раз за фигуру и только пока на слово не ответили
+    private var thinkButton: some View {
+        let isAvailable = !usedThinkThisPiece && selectedAnswer == nil && !isPaused
+        return Button {
+            isThinking = true
+            usedThinkThisPiece = true
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        } label: {
+            Label(isThinking ? "Фигура ждёт ответа" : "Подумать", systemImage: isThinking ? "hourglass" : "pause.circle.fill")
+                .scaledFont(size: 14, weight: .bold)
+                .foregroundColor(isThinking ? .orange : .indigo)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Capsule().fill((isThinking ? Color.orange : Color.indigo).opacity(0.12)))
+        }
+        .disabled(!isAvailable && !isThinking)
+        .opacity(isAvailable || isThinking ? 1 : 0.4)
+    }
+
+    private func pause() {
+        guard !isGameOver else { return }
+        isPaused = true
+    }
+
+    /// После обычной паузы — другое слово: пока игра стояла, ответ можно было подсмотреть.
+    /// Если на слово уже ответили, оно остаётся — второго ответа за фигуру нет
+    private func resume() {
+        isPaused = false
+        lastTickTime = Date()
+        if selectedAnswer == nil {
+            pickRandomWord()
+        }
     }
 
     private func cellColor(r: Int, c: Int) -> Color {
@@ -351,6 +389,8 @@ struct TetrisView: View {
     }
     
     private func moveLeft() {
+        // Фигура стоит на паузе и пока ждёт ответа — двигать её тоже нельзя
+        guard !isPaused, !isThinking, !isGameOver else { return }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         if canMove(blocks: currentBlocks, offset: BlockPosition(x: currentOffset.x - 1, y: currentOffset.y)) {
             currentOffset.x -= 1
@@ -358,6 +398,8 @@ struct TetrisView: View {
     }
     
     private func moveRight() {
+        // Фигура стоит на паузе и пока ждёт ответа — двигать её тоже нельзя
+        guard !isPaused, !isThinking, !isGameOver else { return }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         if canMove(blocks: currentBlocks, offset: BlockPosition(x: currentOffset.x + 1, y: currentOffset.y)) {
             currentOffset.x += 1
@@ -365,6 +407,8 @@ struct TetrisView: View {
     }
     
     private func rotate() {
+        // Фигура стоит на паузе и пока ждёт ответа — двигать её тоже нельзя
+        guard !isPaused, !isThinking, !isGameOver else { return }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         let rotated = currentBlocks.map { BlockPosition(x: -$0.y, y: $0.x) }
         
@@ -438,19 +482,15 @@ struct TetrisView: View {
             
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             
-            if let word = currentWord {
-                TextToSpeechManager.shared.speak(word.english)
-                if word.isMistake {
-                    word.isMistake = false
-                }
+            if let word = currentWord, word.isMistake {
+                word.isMistake = false
             }
-            
-            pickRandomWord()
         }
     }
     
     private func spawnNewPiece() {
-        guard let newShape = TetrominoShape.allCases.randomElement() else { return }
+        let newShape = nextShape
+        nextShape = TetrominoShape.allCases.randomElement() ?? .T
         currentShape = newShape
         currentBlocks = newShape.relativeBlocks
         currentOffset = BlockPosition(x: cols / 2 - 1, y: 0)
@@ -465,6 +505,9 @@ struct TetrisView: View {
             handleGameOver()
             UINotificationFeedbackGenerator().notificationOccurred(.error)
         } else {
+            // Новая фигура — новое слово, свой ответ и своё «Подумать»
+            usedThinkThisPiece = false
+            isThinking = false
             pickRandomWord()
         }
     }
@@ -515,14 +558,10 @@ struct TetrisView: View {
             UINotificationFeedbackGenerator().notificationOccurred(.error)
         }
         
-        Task {
-            try? await Task.sleep(for: .seconds(0.8))
-            // Если слово уже сменилось (например, из-за очистки линии), выбор не сбрасываем повторно
-            if currentWord?.id == word.id {
-                withAnimation {
-                    selectedAnswer = nil
-                }
-            }
+        // Ответ дан — фигура, остановленная «Подумать», падает дальше. Подсветка ответа — до следующей фигуры
+        if isThinking {
+            isThinking = false
+            lastTickTime = Date()
         }
     }
 
@@ -558,6 +597,8 @@ struct TetrisView: View {
         dropInterval = 0.6
         lastTickTime = Date()
         isGameOver = false
+        isPaused = false
+        nextShape = TetrominoShape.allCases.randomElement() ?? .T
         spawnNewPiece()
     }
     
@@ -570,24 +611,45 @@ struct TetrisView: View {
     }
 }
 
-/// На iPad поле занимает всё место до низа экрана и узнаёт его размер; на iPhone ничего не меняет
-private struct PadBoardFit: ViewModifier {
+/// Поле занимает всё место до низа экрана и узнаёт его размер — по нему считается сторона клетки
+private struct BoardFit: ViewModifier {
     let onSize: (CGSize) -> Void
 
     func body(content: Content) -> some View {
-        if PadLayout.isPad {
-            content
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                .background {
-                    // Не onGeometryChange: его замыкание iOS может вызвать не на главном потоке
-                    GeometryReader { proxy in
-                        Color.clear
-                            .onAppear { onSize(proxy.size) }
-                            .onChange(of: proxy.size) { _, size in onSize(size) }
-                    }
+        content
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .background {
+                // Не onGeometryChange: его замыкание iOS может вызвать не на главном потоке
+                GeometryReader { proxy in
+                    Color.clear
+                        .onAppear { onSize(proxy.size) }
+                        .onChange(of: proxy.size) { _, size in onSize(size) }
                 }
-        } else {
-            content
+            }
+    }
+}
+
+/// Следующая фигура — маленькая, в рамке 4 × 2
+private struct NextPiecePreview: View {
+    let shape: TetrominoShape
+    private let cell: CGFloat = 8
+
+    var body: some View {
+        let blocks = shape.relativeBlocks
+        let minX = blocks.map(\.x).min() ?? 0, minY = blocks.map(\.y).min() ?? 0
+        let width = (blocks.map(\.x).max() ?? 0) - minX + 1, height = (blocks.map(\.y).max() ?? 0) - minY + 1
+        ZStack(alignment: .topLeading) {
+            ForEach(Array(blocks.enumerated()), id: \.offset) { _, block in
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(shape.color)
+                    .frame(width: cell, height: cell)
+                    .offset(x: CGFloat(block.x - minX) * (cell + 1), y: CGFloat(block.y - minY) * (cell + 1))
+            }
         }
+        .frame(width: CGFloat(width) * (cell + 1), height: CGFloat(height) * (cell + 1), alignment: .topLeading)
+        .frame(width: 4 * (cell + 1), height: 2 * (cell + 1))
+        .padding(5)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color.cardBackground))
+        .accessibilityLabel("Следующая фигура")
     }
 }
