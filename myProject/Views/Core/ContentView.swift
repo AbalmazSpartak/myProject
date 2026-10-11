@@ -17,6 +17,8 @@ enum ActiveScreen: Hashable, Identifiable {
     case review
     /// Тема сообщества из «Ваших подборок»
     case topic(CommunityTopic)
+    /// Все «Ваши подборки» — кнопка «Все» на «Обзоре»
+    case bookmarks
 
     var id: String { "\(self)" }
 }
@@ -103,6 +105,9 @@ struct ContentView: View {
             BooksView()
         case .topic(let topic):
             TopicView(topic: topic, backTitle: "Обзор")
+        case .bookmarks:
+            BookmarksView()
+                .readableColumn()
         }
     }
 }

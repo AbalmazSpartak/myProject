@@ -1,40 +1,49 @@
 import SwiftUI
 import SwiftData
 
-/// «Обзор» — главный экран в стиле журнала: слово дня, ваши подборки, ленты тренировок и игр
+/// «Обзор» — главный экран: шапка, «Фокус дня» (главное занятие одной кнопкой), слово дня,
+/// «Быстрый доступ» к разделам и «Ваши подборки». Что показывать — Настройки → «Обзор»
 struct OverviewView: View {
     @Environment(\.modelContext) private var modelContext
     /// Темы сообщества, добавленные в «Ваши подборки»
     @Query(filter: #Predicate<CommunityTopic> { $0.savedAt != nil }, sort: \CommunityTopic.savedAt, order: .reverse)
     private var savedTopics: [CommunityTopic]
-    @AppStorage(MainMenuLayout.storageKey) private var menuLayout = MainMenuLayout.standard
+    @AppStorage(OverviewLayout.storageKey) private var layout = OverviewLayout.standard
+    @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
 
     @Query private var profiles: [UserProfile]
     @AppStorage(DailyNewWords.limitKey) private var dailyLimit = DailyNewWords.defaultLimit
 
-    @State private var wordsOfDay: [Word] = []
+    @State private var wordOfDay: Word?
     @State private var streak = 0
     @State private var introducedToday = 0
+    @State private var dueCount = 0
 
     let open: (ActiveScreen) -> Void
     /// Нажатие на шапку — вкладка «Профиль»
     var openProfile: () -> Void = {}
 
+    /// Сколько подборок видно на «Обзоре»; остальные — по кнопке «Все»
+    private static let collectionsShown = 3
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
-                if !menuLayout.isHidden(.wordOfDay), !wordsOfDay.isEmpty {
-                    WordOfDayCarousel(words: wordsOfDay)
+                FocusCard(section: layout.focus, dueCount: dueCount, introducedToday: introducedToday,
+                          dailyLimit: dailyLimit) { open(layout.focus.screen) }
+                    .padding(.horizontal, 20)
+
+                if layout.showsWordOfDay, let wordOfDay {
+                    block("Слово дня") { WordOfDayRow(word: wordOfDay) }
                 }
 
-                // Пустая лента не показывается: темы добавляются кнопкой «В мои подборки» в «Сообществе»
-                if !menuLayout.isHidden(.collections), !savedTopics.isEmpty {
-                    collectionsRibbon
+                if !layout.quickAccess.isEmpty {
+                    block("Быстрый доступ") { quickAccess }
                 }
 
-                // Ленты разделов — по настройке «Ленты «Обзора»»: каждая группа — своя лента
-                ForEach(ribbons, id: \.title) { ribbon in
-                    sectionRibbon(ribbon)
+                // Пустой блок не показывается: темы добавляются кнопкой «В мои подборки» в «Сообществе»
+                if layout.showsCollections, !savedTopics.isEmpty {
+                    block("Ваши подборки", action: ("Все", { open(.bookmarks) })) { collections }
                 }
             }
             .padding(.vertical, 12)
@@ -44,14 +53,44 @@ struct OverviewView: View {
         .safeAreaInset(edge: .top, spacing: 0) { header }
         .background(Color.brandBackground.ignoresSafeArea())
         .onAppear {
-            // Серия и норма меняются в тренировках — пересчитываем при каждом возвращении на «Обзор»
+            // Серия, норма и слова к повторению меняются в тренировках — пересчитываем при каждом возвращении на «Обзор»
             streak = DailyStreak.current()
             introducedToday = DailyNewWords.introducedToday
+            if layout.focus == .flashcards {
+                dueCount = StudyWords.count(StudyWords.all(StudyWords.scope(studyScope), StudyWords.isDue(now: Date())),
+                                            in: modelContext)
+            }
             // Скрытое «Слово дня» — слова не загружаем; включат в настройках — загрузим при возврате на «Обзор»
-            if wordsOfDay.isEmpty, !menuLayout.isHidden(.wordOfDay) {
-                wordsOfDay = WordOfDay.recent(days: 7, from: modelContext.fetchAllWords())
+            if wordOfDay == nil, layout.showsWordOfDay {
+                wordOfDay = WordOfDay.recent(days: 1, from: modelContext.fetchAllWords()).first
             }
         }
+    }
+
+    /// Заголовок прописными (справа — кнопка, если есть) и содержимое
+    private func block<Content: View>(_ title: String, action: (title: String, run: () -> Void)? = nil,
+                                      @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text(title.uppercased())
+                    .scaledFont(size: 17, weight: .bold)
+                    .foregroundColor(.brandDark)
+                Spacer()
+                if let action {
+                    Button {
+                        Haptics.tap()
+                        action.run()
+                    } label: {
+                        Text(action.title)
+                            .scaledFont(size: 16, weight: .semibold)
+                            .foregroundColor(.orange)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            content()
+        }
+        .padding(.horizontal, 20)
     }
 
     // MARK: - Шапка
@@ -143,104 +182,97 @@ struct OverviewView: View {
         }
     }
 
+    // MARK: - Быстрый доступ
+
+    private var quickAccess: some View {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+            ForEach(layout.quickAccess, id: \.self) { section in
+                QuickAccessTile(section: section) { open(section.screen) }
+            }
+        }
+    }
+
     // MARK: - Подборки
 
-    private var collectionsRibbon: some View {
-        Ribbon(title: "Ваши подборки", onTitleTap: { open(.community) }) {
-            ForEach(savedTopics) { topic in
-                TopicCard(topic: topic) { open(.topic(topic)) }
-            }
-        }
-    }
-
-    // MARK: - Разделы
-
-    private struct SectionRibbon {
-        let title: String
-        let sections: [MenuSection]
-    }
-
-    /// Группы — отдельными лентами по порядку меню; разделы вне групп — одной лентой «Разделы»
-    /// на месте первого из них
-    private var ribbons: [SectionRibbon] {
-        var result: [SectionRibbon] = []
-        var loose: [MenuSection] = []
-        var looseIndex: Int?
-        for item in menuLayout.visibleItems {
-            switch item {
-            case .group(let id):
-                guard let group = menuLayout.groups[id] else { continue }
-                result.append(SectionRibbon(title: group.name, sections: menuLayout.visibleSections(in: id)))
-            case .section(let section):
-                if looseIndex == nil { looseIndex = result.count }
-                loose.append(section)
-            }
-        }
-        if let looseIndex {
-            result.insert(SectionRibbon(title: "Разделы", sections: loose), at: looseIndex)
-        }
-        return result
-    }
-
-    private func sectionRibbon(_ ribbon: SectionRibbon) -> some View {
-        Ribbon(title: ribbon.title) {
-            ForEach(ribbon.sections, id: \.self) { section in
-                TileCard(title: section.title, icon: section.icon, color: section.color) { open(section.screen) }
+    private var collections: some View {
+        VStack(spacing: 10) {
+            ForEach(savedTopics.prefix(Self.collectionsShown)) { topic in
+                SavedTopicRow(topic: topic) { open(.topic(topic)) }
             }
         }
     }
 }
 
-// MARK: - Лента
+// MARK: - Фокус дня
 
-/// Заголовок прописными и горизонтальная лента карточек
-struct Ribbon<Content: View>: View {
-    let title: String
-    var onTitleTap: (() -> Void)? = nil
-    @ViewBuilder let content: Content
+/// Главное занятие одной кнопкой. Для «Карточек для запоминания» — интервальное повторение:
+/// сколько слов пора повторить и полоска дневной нормы новых слов
+private struct FocusCard: View {
+    let section: MenuSection
+    let dueCount: Int
+    let introducedToday: Int
+    let dailyLimit: Int
+    let action: () -> Void
+
+    private var isSpacedRepetition: Bool { section == .flashcards }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Group {
-                if let onTitleTap {
-                    Button {
-                        Haptics.tap()
-                        onTitleTap()
-                    } label: {
-                        HStack(spacing: 4) {
-                            titleText
-                            Image(systemName: "chevron.right")
-                                .scaledFont(size: 14, weight: .bold)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                } else {
-                    titleText
-                }
-            }
-            .foregroundColor(.brandDark)
-            .padding(.horizontal, 20)
+        VStack(alignment: .leading, spacing: 14) {
+            Label("Фокус дня".uppercased(), systemImage: "sparkles")
+                .scaledFont(size: 14, weight: .bold)
+                .foregroundColor(.orange)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(alignment: .top, spacing: 12) {
-                    content
+            VStack(alignment: .leading, spacing: 6) {
+                Text(isSpacedRepetition ? "Интервальное повторение" : section.title)
+                    .scaledFont(size: 24, weight: .semibold, design: .serif)
+                    .foregroundColor(.brandDark)
+                Text(subtitle)
+                    .scaledFont(size: 15)
+                    .foregroundColor(.gray)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Button {
+                Haptics.tap()
+                action()
+            } label: {
+                Label(isSpacedRepetition ? "Начать повторение" : "Начать", systemImage: "play.fill")
+                    .scaledFont(size: 18, weight: .bold)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Color.orange, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
+
+            // Без лимита новых слов норму показать не из чего
+            if dailyLimit > 0 {
+                VStack(alignment: .leading, spacing: 6) {
+                    ProgressView(value: Double(min(introducedToday, dailyLimit)), total: Double(dailyLimit))
+                        .tint(.orange)
+                    Text("Новые слова сегодня: \(introducedToday) из \(dailyLimit)")
+                        .scaledFont(size: 13)
+                        .foregroundColor(.gray)
                 }
-                .padding(.horizontal, 20)
             }
         }
+        .padding(18)
+        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 
-    private var titleText: some View {
-        Text(title.uppercased())
-            .scaledFont(size: 17, weight: .bold)
+    private var subtitle: String {
+        guard isSpacedRepetition else { return section.focusHint }
+        return dueCount > 0
+            ? "Пора повторить: \(dueCount) \(DailyStudyCard.wordsNoun(dueCount))"
+            : "Повторять пока нечего — можно взять новые слова"
     }
 }
 
-/// Карточка раздела или жанра: цветная плашка с иконкой и подпись
-struct TileCard: View {
-    let title: String
-    let icon: String
-    let color: Color
+// MARK: - Плитки и строки
+
+/// Плитка «Быстрого доступа»: иконка раздела и название в две строки
+private struct QuickAccessTile: View {
+    let section: MenuSection
     let action: () -> Void
 
     var body: some View {
@@ -248,31 +280,30 @@ struct TileCard: View {
             Haptics.tap()
             action()
         } label: {
-            VStack(alignment: .leading, spacing: 8) {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(color.opacity(0.18))
-                    .frame(width: PadLayout.tileSize.width, height: PadLayout.tileSize.height)
-                    .overlay {
-                        Image(systemName: icon)
-                            .scaledFont(size: PadLayout.isPad ? 40 : 30, weight: .semibold)
-                            .foregroundColor(color)
-                    }
-                Text(title)
-                    .scaledFont(size: 15, weight: .medium)
+            HStack(spacing: 10) {
+                Image(systemName: section.icon)
+                    .scaledFont(size: 20, weight: .semibold)
+                    .foregroundColor(section.color)
+                    .frame(width: 28)
+                Text(section.title)
+                    .scaledFont(size: 15, weight: .semibold)
                     .foregroundColor(.brandDark)
                     .lineLimit(2)
+                    .minimumScaleFactor(0.85)
                     .multilineTextAlignment(.leading)
-                    .frame(width: PadLayout.tileSize.width, alignment: .leading)
+                Spacer(minLength: 0)
             }
+            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+            .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
     }
 }
 
-/// Подборка: обложка — картинка одного из её слов, если уже загружена; иначе градиент
-struct CollectionCard: View {
-    let name: String
-    let words: [Word]
+/// Подборка из «Сообщества»: название и число слов
+struct SavedTopicRow: View {
+    let topic: CommunityTopic
     let action: () -> Void
 
     var body: some View {
@@ -280,88 +311,29 @@ struct CollectionCard: View {
             Haptics.tap()
             action()
         } label: {
-            VStack(alignment: .leading, spacing: 8) {
-                cover
-                    .frame(width: PadLayout.tileSize.width, height: PadLayout.tileSize.height)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                Text(name)
-                    .scaledFont(size: 15, weight: .medium)
-                    .foregroundColor(.brandDark)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                    .frame(width: PadLayout.tileSize.width, alignment: .leading)
+            HStack(spacing: 14) {
+                Image(systemName: "text.book.closed.fill")
+                    .scaledFont(size: 22)
+                    .foregroundColor(.cyan)
+                    .frame(width: 30)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(topic.title)
+                        .scaledFont(size: 17, weight: .semibold)
+                        .foregroundColor(.brandDark)
+                        .lineLimit(1)
+                    Text(topic.words.isEmpty ? topic.section : "\(topic.words.count) \(DailyStudyCard.wordsNoun(topic.words.count))")
+                        .scaledFont(size: 14)
+                        .foregroundColor(.gray)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .scaledFont(size: 14, weight: .semibold)
+                    .foregroundColor(.gray)
             }
+            .padding(14)
+            .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
-    }
-
-    @ViewBuilder
-    private var cover: some View {
-        // Смотрим только первые слова — картинки хранятся отдельно, всю подборку не перебираем
-        if let data = words.prefix(12).lazy.compactMap(\.imageData).first, let image = UIImage(data: data) {
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFill()
-        } else {
-            let color = MenuPalette.colors[Self.stableIndex(of: name, count: MenuPalette.colors.count)].color
-            LinearGradient(colors: [color.opacity(0.75), color.opacity(0.35)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                .overlay {
-                    Image(systemName: "text.book.closed.fill")
-                        .scaledFont(size: 26)
-                        .foregroundColor(.white.opacity(0.9))
-                }
-        }
-    }
-
-    /// Один и тот же цвет для подборки при каждом запуске (hashValue меняется между запусками)
-    private static func stableIndex(of name: String, count: Int) -> Int {
-        Int(name.unicodeScalars.reduce(UInt32(0)) { $0 &* 31 &+ $1.value } % UInt32(count))
-    }
-}
-
-// MARK: - Заглушка
-
-/// Раздел, который ещё не сделан
-struct StubView: View {
-    @Environment(\.dismiss) private var dismiss
-    let title: String
-    let message: String
-    var backTitle = "Обзор"
-
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Button(action: { dismiss() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                        Text(backTitle)
-                    }
-                    .scaledFont(size: 17, weight: .semibold)
-                    .foregroundColor(.brandDark)
-                }
-                Spacer()
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
-
-            Spacer()
-
-            VStack(spacing: 16) {
-                Image(systemName: "hammer.fill")
-                    .font(.system(size: 48))
-                    .foregroundColor(.gray)
-                Text(title)
-                    .scaledFont(size: 26, weight: .semibold, design: .serif)
-                    .foregroundColor(.brandDark)
-                Text(message)
-                    .scaledFont(size: 17)
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-            }
-            .padding(.horizontal, 40)
-
-            Spacer()
-        }
-        .background(Color.brandBackground.ignoresSafeArea())
     }
 }

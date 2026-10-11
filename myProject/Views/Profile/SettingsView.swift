@@ -12,7 +12,7 @@ struct SettingsView: View {
     @AppStorage("show_word_images") private var showWordImages: Bool = true
     @AppStorage(Haptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
-    @AppStorage(MainMenuLayout.storageKey) private var menuLayout = MainMenuLayout.standard
+    @AppStorage(OverviewLayout.storageKey) private var overviewLayout = OverviewLayout.standard
     @AppStorage(SessionLength.key) private var sessionLength = SessionLength.defaultValue
     @AppStorage(SpeechSettings.accentKey) private var speechAccent = SpeechSettings.defaultAccent
     @AppStorage(SpeechSettings.rateKey) private var speechRate = SpeechSettings.defaultRate
@@ -160,9 +160,9 @@ struct SettingsView: View {
                         .pickerStyle(.segmented)
 
                         NavigationLink {
-                            MainMenuSettingsView()
+                            OverviewSettingsView()
                         } label: {
-                            LabeledContent("Ленты «Обзора»", value: menuLayout == .standard ? "Стандартное" : "Настроено")
+                            LabeledContent("Обзор", value: overviewLayout == .standard ? "Стандартный" : "Настроен")
                         }
                     }
                     #if DEBUG

@@ -20,89 +20,39 @@ enum WordOfDay {
     }
 }
 
-/// Карусель «Слово дня»: сегодняшнее и слова прошлых дней, листается вбок
-struct WordOfDayCarousel: View {
-    let words: [Word]
-
-    var body: some View {
-        // Значение — заранее: замыкание размера SwiftUI может вызвать не на главном потоке
-        let maxWidth = PadLayout.wordOfDayMaxWidth
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 12) {
-                ForEach(Array(words.enumerated()), id: \.offset) { offset, word in
-                    WordOfDayCard(word: word, label: Self.label(daysAgo: offset))
-                        .containerRelativeFrame(.horizontal) { width, _ in min(width - 56, maxWidth) }
-                }
-            }
-            .scrollTargetLayout()
-        }
-        .contentMargins(.horizontal, 20, for: .scrollContent)
-        .scrollTargetBehavior(.viewAligned)
-    }
-
-    private static func label(daysAgo: Int) -> String {
-        switch daysAgo {
-        case 0: return "Слово дня"
-        case 1: return "Вчера"
-        default:
-            let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: Date()) ?? Date()
-            return date.formatted(.dateTime.day().month(.wide))
-        }
-    }
-}
-
-private struct WordOfDayCard: View {
+/// «Слово дня» на «Обзоре»: картинка (если есть), слово, перевод; нажатие — послушать слово
+struct WordOfDayRow: View {
     @AppStorage("show_word_images") private var showWordImages = true
     let word: Word
-    let label: String
 
     var body: some View {
-        VStack(spacing: 0) {
-            ZStack(alignment: .topLeading) {
-                // Картинка заполняет рамку карточки, но не раздвигает её
-                Color.clear
-                    .frame(height: 190)
-                    .overlay { background }
-                    .clipped()
-                    .overlay(LinearGradient(colors: [.black.opacity(0.15), .black.opacity(0.6)], startPoint: .top, endPoint: .bottom))
-
-                Label(label, systemImage: "bolt.fill")
-                    .scaledFont(size: 15, weight: .semibold)
-                    .foregroundColor(.white)
-                    .padding(14)
-
-                VStack(spacing: 4) {
+        Button {
+            TextToSpeechManager.shared.speak(word.english)
+        } label: {
+            HStack(spacing: 14) {
+                picture
+                    .frame(width: 60, height: 60)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                VStack(alignment: .leading, spacing: 3) {
                     Text(word.english)
-                        .scaledFont(size: 38, weight: .regular, design: .serif)
+                        .scaledFont(size: 24, weight: .regular, design: .serif)
+                        .foregroundColor(.brandDark)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.6)
+                        .minimumScaleFactor(0.7)
                     Text(word.russian)
-                        .scaledFont(size: 17)
+                        .scaledFont(size: 15)
+                        .foregroundColor(.gray)
                         .lineLimit(2)
-                        .multilineTextAlignment(.center)
                 }
-                .foregroundColor(.white)
-                .padding(.horizontal, 16)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                .padding(.bottom, 16)
+                Spacer(minLength: 0)
+                Image(systemName: "speaker.wave.2.fill")
+                    .scaledFont(size: 20)
+                    .foregroundColor(.orange)
             }
-            .frame(height: 190)
-
-            Text(word.attributedExample)
-                .scaledFont(size: 18, design: .serif)
-                .foregroundColor(.brandDark)
-                .multilineTextAlignment(.center)
-                .lineLimit(3)
-                .frame(maxWidth: .infinity, minHeight: 80)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .background(Color.brandAccent)
+            .padding(14)
+            .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .contentShape(Rectangle())
-        // Нажатие — послушать слово
-        .onTapGesture { TextToSpeechManager.shared.speak(word.english) }
-        .accessibilityAddTraits(.isButton)
+        .buttonStyle(.plain)
         .accessibilityHint("Озвучить слово")
         .task(id: word.persistentModelID) {
             if showWordImages { await WordImageLoader.loadIfNeeded(word) }
@@ -110,15 +60,20 @@ private struct WordOfDayCard: View {
     }
 
     @ViewBuilder
-    private var background: some View {
+    private var picture: some View {
         if showWordImages, !word.isImageHidden, let data = word.imageData, let image = UIImage(data: data) {
             Image(uiImage: image)
                 .resizable()
                 .scaledToFill()
         } else {
-            // Без картинки — тёмный «ночной» градиент, как на макете
+            // Без картинки — тёмный «ночной» градиент с молнией, как раньше на большой карточке
             LinearGradient(colors: [Color(red: 0.10, green: 0.12, blue: 0.22), Color(red: 0.28, green: 0.20, blue: 0.35)],
                            startPoint: .topLeading, endPoint: .bottomTrailing)
+                .overlay {
+                    Image(systemName: "bolt.fill")
+                        .scaledFont(size: 22)
+                        .foregroundColor(.white.opacity(0.85))
+                }
         }
     }
 }
