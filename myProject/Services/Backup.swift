@@ -140,13 +140,13 @@ enum Backup {
     /// Настройки приложения, которые входят в копию. Служебные (хэш словаря, версии картинок) — нет:
     /// после восстановления приложение пересчитает их само
     private static let settingsKeys = [
-        "app_theme", "translation_mode", "show_word_images", Haptics.enabledKey, OverviewLayout.storageKey, PolyglotProgress.storageKey, RaceGhost.storageKey, RaceBotLevel.storageKey,
+        "app_theme", "translation_mode", "show_word_images", Haptics.enabledKey, OverviewLayout.storageKey, PolyglotProgress.storageKey, RaceBotLevel.storageKey, RaceWordSource.storageKey, RaceAnswerMode.storageKey,
         ReaderSettings.themeKey, ReaderSettings.fontSizeKey, ReaderSettings.fontKey, ReaderSettings.spacingKey,
         ReaderSettings.customTextKey, ReaderSettings.customBackgroundKey, "scan_select_learning",
         DailyReminder.enabledKey, DailyReminder.timeKey,
         SpeechSettings.accentKey, SpeechSettings.rateKey, SpeechSettings.autoSpeakKey,
         DailyNewWords.limitKey, "new_words_day", "new_words_count", SessionLength.key, StudyScope.storageKey,
-    ]
+    ] + RaceGhost.allKeys
     /// Общие с виджетом: оценки по дням, серия дней
     private static let sharedKeys = ["daily_study_ratings", "daily_study_totals", "streak_days", "streak_best", StudyScope.storageKey]
 

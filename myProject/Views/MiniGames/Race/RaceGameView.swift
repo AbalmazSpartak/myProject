@@ -8,6 +8,7 @@ struct RaceGameView<Manager: RaceTransport>: View {
 
     @Environment(\.modelContext) private var modelContext
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
+    @AppStorage(RaceWordSource.storageKey) private var wordSource = "study"
 
     /// Слова из словарей, выбранных в настройках
     @State private var studyWords: [Word] = []
@@ -19,6 +20,15 @@ struct RaceGameView<Manager: RaceTransport>: View {
     @State private var wrongOption: String? = nil
     @State private var raceEnded = false
     @State private var startTime = Date()
+    /// Когда гонка остановилась — для «Продолжить»: время на экране итога в забег не идёт
+    @State private var endedAt: Date?
+    /// Свайп от левого края: экран едет за пальцем; в идущей гонке — сначала вопрос
+    @State private var swipeOffset: CGFloat = 0
+    @State private var isConfirmingExit = false
+    /// Набор: что напечатано; совпало с ответом — слово засчитывается само
+    @State private var typed = ""
+    @State private var isTypedCorrect = false
+    @FocusState private var isTypingFocused: Bool
     
     private var words: [RaceWordPayload] { manager.raceWords }
     let isHost: Bool
@@ -36,7 +46,9 @@ struct RaceGameView<Manager: RaceTransport>: View {
             
             Spacer()
             
-            if let word = currentWord, !raceEnded {
+            if let word = currentWord, !raceEnded, manager.answerMode.isTyping {
+                typingArea(word)
+            } else if let word = currentWord, !raceEnded {
                 VStack(spacing: 16) {
                     Text(word.english)
                         .scaledFont(size: 32, weight: .semibold, design: .serif)
@@ -62,6 +74,15 @@ struct RaceGameView<Manager: RaceTransport>: View {
             }
         }
         .padding()
+        .background(Color.brandBackground.ignoresSafeArea())
+        .offset(x: swipeOffset)
+        .overlay(alignment: .leading) { exitSwipeEdge }
+        .alert("Выйти из гонки?", isPresented: $isConfirmingExit) {
+            Button("Остаться", role: .cancel) {}
+            Button("Выйти", role: .destructive) { dismiss() }
+        } message: {
+            Text("Забег не засчитается.")
+        }
         .onAppear(perform: setupPlayers)
         .onChange(of: manager.lastMessage) { _, message in
             handleIncoming(message)
@@ -71,6 +92,97 @@ struct RaceGameView<Manager: RaceTransport>: View {
         }
     }
     
+    // MARK: - Набор
+
+    private func typingArea(_ word: RaceWordPayload) -> some View {
+        let mode = manager.answerMode
+        return VStack(spacing: 14) {
+            Text(mode.prompt(for: word))
+                .scaledFont(size: 32, weight: .semibold, design: .serif)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.6)
+            Text(mode == .typeEnglish ? "Наберите по-английски" : "Наберите перевод")
+                .scaledFont(size: 14)
+                .foregroundColor(.gray)
+
+            TextField(mode == .typeEnglish ? "по-английски" : "перевод", text: $typed)
+                .scaledFont(size: 22, weight: .semibold)
+                .multilineTextAlignment(.center)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .keyboardType(mode == .typeEnglish ? .asciiCapable : .default)
+                .submitLabel(.next)
+                .focused($isTypingFocused)
+                .disabled(isLocked)
+                .padding(.vertical, 14)
+                .padding(.horizontal, 16)
+                .background(RoundedRectangle(cornerRadius: 14).fill(Color.brandFill))
+                .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(isTypedCorrect ? Color.green : (isLocked ? Color.red : .clear), lineWidth: 2))
+                .onChange(of: typed) { _, text in
+                    // Совпало — засчитываем сразу, без «Готово»: это гонка на скорость
+                    guard !isLocked, !isTypedCorrect, mode.matches(text, word: word) else { return }
+                    isTypedCorrect = true
+                    countCorrectAnswer()
+                }
+
+            if isLocked {
+                // После пропуска — правильный ответ, пока стоим
+                Text(mode == .typeEnglish ? word.english : word.correctAnswer)
+                    .scaledFont(size: 16, weight: .semibold)
+                    .foregroundColor(.red)
+            } else {
+                Button("Пропустить ›", action: skipWord)
+                    .scaledFont(size: 15, weight: .semibold)
+                    .foregroundColor(.gray)
+            }
+        }
+        .padding()
+        .onAppear { isTypingFocused = true }
+    }
+
+    /// Слово не засчитано: 2 секунды стоим (видно ответ), затем следующее
+    private func skipWord() {
+        guard !isLocked, !raceEnded else { return }
+        isLocked = true
+        Task {
+            try? await Task.sleep(for: .seconds(2))
+            isLocked = false
+            typed = ""
+            if currentIndex + 1 >= words.count {
+                finishRace()
+            } else {
+                currentIndex += 1
+            }
+            isTypingFocused = true
+        }
+    }
+
+    /// Полоска у левого края ловит свайп «назад» — гонка открыта поверх лобби, системного свайпа здесь нет
+    private var exitSwipeEdge: some View {
+        Color.clear
+            .frame(width: 24)
+            .frame(maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 10)
+                    .onChanged { value in
+                        swipeOffset = max(0, value.translation.width)
+                    }
+                    .onEnded { value in
+                        let isExit = value.translation.width > 100 || value.predictedEndTranslation.width > 220
+                        // После финиша — выходим сразу, экран уезжает с того места, где его отпустили
+                        if isExit, raceEnded {
+                            dismiss()
+                            return
+                        }
+                        withAnimation(.snappy(duration: 0.25)) { swipeOffset = 0 }
+                        if isExit { isConfirmingExit = true }
+                    }
+            )
+            .ignoresSafeArea()
+    }
+
     private func trackRow(for player: RacePlayer) -> some View {
         GeometryReader { geo in
             let progress = words.isEmpty ? 0 : CGFloat(player.correctCount) / CGFloat(words.count)
@@ -108,13 +220,26 @@ struct RaceGameView<Manager: RaceTransport>: View {
                             .scaledFont(size: 16, weight: .bold)
                         Text(player.name)
                         Spacer()
-                        Text("\(player.correctCount)/\(words.count)")
+                        Text("\(player.correctCount)/\(words.count)" + (player.finishTime.map { " · " + Self.seconds($0) } ?? ""))
                             .foregroundColor(.gray)
                     }
                     .padding(.horizontal)
                 }
             }
             
+            if canContinue {
+                Button(action: continueRace) {
+                    Text("Продолжить — доработать слова")
+                        .scaledFont(size: 16, weight: .bold)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.indigo)
+                        .foregroundColor(.white)
+                        .cornerRadius(14)
+                }
+                .padding(.horizontal)
+            }
+
             HStack(spacing: 12) {
                 Button(action: { dismiss() }) {
                     Text("Выйти")
@@ -141,6 +266,24 @@ struct RaceGameView<Manager: RaceTransport>: View {
         }
     }
 
+    /// Соперник доехал первым, а слова ещё остались — можно доработать их и узнать своё время
+    private var canContinue: Bool {
+        manager.canContinueAfterFinish && currentWord != nil
+            && players.first(where: { $0.isMe })?.finishTime == nil
+    }
+
+    private func continueRace() {
+        if let endedAt { startTime += Date().timeIntervalSince(endedAt) }
+        endedAt = nil
+        manager.continueAfterFinish()
+        raceEnded = false
+    }
+
+    /// 24,3 с
+    private static func seconds(_ value: Double) -> String {
+        value.formatted(.number.precision(.fractionLength(1)).locale(Locale(identifier: "ru_RU"))) + " с"
+    }
+
     private var rankedPlayers: [RacePlayer] {
         players.sorted {
             if $0.correctCount != $1.correctCount {
@@ -150,13 +293,9 @@ struct RaceGameView<Manager: RaceTransport>: View {
         }
     }
     
-    /// Слова для гонки запросом к базе — все не читаем (10 000+ — ~2 с на iPhone 12).
-    /// Меньше четырёх выбранных для изучения — берём из всего словаря
+    /// Слова из словаря, выбранного для гонки (RaceWordSource)
     private func loadWords() {
-        studyWords = StudyWords.random(StudyWords.scope(studyScope), limit: 200, in: modelContext)
-        if studyWords.count < 4 {
-            studyWords = StudyWords.random(#Predicate<Word> { _ in true }, limit: 200, in: modelContext)
-        }
+        studyWords = RaceWordSource(storedValue: wordSource).words(scope: studyScope, in: modelContext)
     }
 
     private func setupPlayers() {
@@ -171,6 +310,9 @@ struct RaceGameView<Manager: RaceTransport>: View {
         wrongOption = nil
         isLocked = false
         raceEnded = false
+        endedAt = nil
+        typed = ""
+        isTypedCorrect = false
         startTime = Date()
         for idx in players.indices {
             players[idx].correctCount = 0
@@ -181,7 +323,7 @@ struct RaceGameView<Manager: RaceTransport>: View {
     private func playAgain() {
         let generated = RaceWordGenerator.generate(from: studyWords)
         guard !generated.isEmpty else { return }
-        manager.startRaceAsHost(with: generated)
+        manager.startRaceAsHost(with: generated, mode: manager.answerMode)
     }
     
     private func selectAnswer(_ answer: String, word: RaceWordPayload) {
@@ -191,20 +333,7 @@ struct RaceGameView<Manager: RaceTransport>: View {
         
         if isCorrectTap {
             selectedAnswer = answer
-            if let idx = players.firstIndex(where: { $0.isMe }) {
-                players[idx].correctCount += 1
-                manager.send(RaceMessage(type: "progress", playerName: manager.myName, correctCount: players[idx].correctCount))
-            }
-            
-            Task {
-                try? await Task.sleep(for: .seconds(0.4))
-                selectedAnswer = nil
-                if currentIndex + 1 >= words.count {
-                    finishRace()
-                } else if !raceEnded {
-                    currentIndex += 1
-                }
-            }
+            countCorrectAnswer()
         } else {
             wrongOption = answer
             isLocked = true
@@ -213,6 +342,28 @@ struct RaceGameView<Manager: RaceTransport>: View {
                 try? await Task.sleep(for: .seconds(1))
                 wrongOption = nil
                 isLocked = false
+            }
+        }
+    }
+
+    /// Верный ответ (нажатием или набором): +1, сообщение соперникам и через миг — следующее слово
+    private func countCorrectAnswer() {
+        if let idx = players.firstIndex(where: { $0.isMe }) {
+            players[idx].correctCount += 1
+            manager.send(RaceMessage(type: "progress", playerName: manager.myName, correctCount: players[idx].correctCount))
+        }
+
+        Task {
+            try? await Task.sleep(for: .seconds(manager.answerMode.isTyping ? 0.25 : 0.4))
+            selectedAnswer = nil
+            typed = ""
+            isTypedCorrect = false
+            // Слово засчитано — дальше следующее, даже если соперник успел финишировать:
+            // после «Продолжить» не должно вернуться уже отвеченное слово
+            if currentIndex + 1 >= words.count {
+                finishRace()
+            } else {
+                currentIndex += 1
             }
         }
     }
@@ -258,6 +409,7 @@ struct RaceGameView<Manager: RaceTransport>: View {
                 }
                 // Как только кто-то первым закончил все вопросы — гонка останавливается для всех
                 raceEnded = true
+                endedAt = Date()
             }
         default:
             break

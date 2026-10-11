@@ -17,6 +17,7 @@ final class MultipeerRaceManager: NSObject, ObservableObject {
     @Published var lastMessage: RaceMessage?
     @Published var raceWords: [RaceWordPayload] = []
     @Published var raceStarted: Bool = false
+    @Published var answerMode: RaceAnswerMode = .choice
     
     var myName: String { myPeerID.displayName }
     
@@ -85,10 +86,11 @@ final class MultipeerRaceManager: NSObject, ObservableObject {
         }
     }
     
-    func startRaceAsHost(with words: [RaceWordPayload]) {
+    func startRaceAsHost(with words: [RaceWordPayload], mode: RaceAnswerMode) {
+        answerMode = mode
         raceWords = words
         raceStarted = true
-        send(RaceMessage(type: "start", words: words))
+        send(RaceMessage(type: "start", words: words, mode: mode.rawValue))
     }
 
     private func sendOnce(_ message: RaceMessage) {
@@ -118,6 +120,8 @@ extension MultipeerRaceManager: MCSessionDelegate {
             guard let message = try? JSONDecoder().decode(RaceMessage.self, from: data) else { return }
             self.lastMessage = message
             if message.type == "start", let words = message.words {
+                // Режим — до слов: экран гонки перестраивается по приходу слов
+                self.answerMode = message.mode.flatMap(RaceAnswerMode.init(rawValue:)) ?? .choice
                 self.raceWords = words
                 self.raceStarted = true
             }

@@ -11,10 +11,15 @@ protocol RaceTransport: ObservableObject {
     var opponents: [RacePlayer] { get }
     var lastMessage: RaceMessage? { get }
     var raceWords: [RaceWordPayload] { get }
+    var answerMode: RaceAnswerMode { get }
     /// Строка под итогом гонки: «Быстрее рекорда на 2,4 с»; nil — нечего сказать
     var resultNote: String? { get }
+    /// Соперник финишировал первым — можно доработать оставшиеся слова и узнать своё время (только в одиночку)
+    var canContinueAfterFinish: Bool { get }
     func send(_ message: RaceMessage)
-    func startRaceAsHost(with words: [RaceWordPayload])
+    func startRaceAsHost(with words: [RaceWordPayload], mode: RaceAnswerMode)
+    /// «Продолжить» после финиша соперника: время на экране итога в забег не идёт
+    func continueAfterFinish()
 }
 
 extension MultipeerRaceManager: RaceTransport {
@@ -23,4 +28,6 @@ extension MultipeerRaceManager: RaceTransport {
     }
 
     var resultNote: String? { nil }
+    var canContinueAfterFinish: Bool { false }
+    func continueAfterFinish() {}
 }

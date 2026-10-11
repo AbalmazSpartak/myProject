@@ -6,6 +6,8 @@ struct RaceLobbyView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
+    @AppStorage(RaceWordSource.storageKey) private var wordSource = "study"
+    @State private var isChoosingWords = false
 
     /// Слова из словарей, выбранных в настройках
     @State private var studyWords: [Word] = []
@@ -15,7 +17,9 @@ struct RaceLobbyView: View {
     /// Гонка в одиночку — с ботом или призраком
     @StateObject private var solo = SoloRaceManager()
     @AppStorage(RaceBotLevel.storageKey) private var botLevel = RaceBotLevel.medium
-    @State private var hasGhost = RaceGhost.best != nil
+    @AppStorage(RaceAnswerMode.storageKey) private var answerMode = RaceAnswerMode.choice
+    /// Рекорд есть в выбранном режиме — можно гоняться с призраком
+    @State private var hasGhost = RaceGhost.best(for: .choice) != nil
     @State private var mode: LobbyMode = .choosing
     @State private var showEmptyPoolAlert = false
     
@@ -69,7 +73,7 @@ struct RaceLobbyView: View {
         .fullScreenCover(isPresented: $solo.raceStarted, onDismiss: {
             solo.stop()
             // Рекорд мог появиться — кнопка призрака станет доступна
-            hasGhost = RaceGhost.best != nil
+            hasGhost = RaceGhost.best(for: answerMode) != nil
         }) {
             RaceGameView(manager: solo, isHost: true)
         }
@@ -78,10 +82,78 @@ struct RaceLobbyView: View {
     private var chooserView: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
+                wordSourceRow
+                answerModeRow
                 soloSection
                 nearbySection
             }
         }
+    }
+
+    // MARK: - Слова
+
+    /// «Слова: …» — из какого словаря гонка, и в одиночку, и в комнате
+    private var wordSourceRow: some View {
+        Button { isChoosingWords = true } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "books.vertical.fill")
+                    .foregroundColor(.indigo)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Слова для гонки")
+                        .scaledFont(size: 13)
+                        .foregroundColor(.gray)
+                    Text(RaceWordSource(storedValue: wordSource).title(in: modelContext))
+                        .scaledFont(size: 17, weight: .semibold)
+                        .foregroundColor(.brandDark)
+                        .lineLimit(1)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.gray)
+            }
+            .padding(14)
+            .background(Color.brandFill)
+            .cornerRadius(14)
+        }
+        .buttonStyle(.plain)
+        .sheet(isPresented: $isChoosingWords) {
+            RaceWordSourcePicker(selection: $wordSource)
+                .appThemedColorScheme()
+        }
+        .onChange(of: wordSource) { _, _ in loadWords() }
+    }
+
+    // MARK: - Как отвечать
+
+    /// «Выбор» или «Набор» и, для набора, направление. В комнате режим задаёт её создатель
+    private var answerModeRow: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Ответ".uppercased())
+                .scaledFont(size: 15, weight: .bold)
+                .foregroundColor(.brandDark)
+            Picker("Ответ", selection: Binding(
+                get: { answerMode.isTyping },
+                set: { answerMode = $0 ? (answerMode.isTyping ? answerMode : .typeEnglish) : .choice }
+            )) {
+                Text("Выбор").tag(false)
+                Text("Набор").tag(true)
+            }
+            .pickerStyle(.segmented)
+            if answerMode.isTyping {
+                Picker("Направление", selection: $answerMode) {
+                    Text(RaceAnswerMode.typeEnglish.title).tag(RaceAnswerMode.typeEnglish)
+                    Text(RaceAnswerMode.typeRussian.title).tag(RaceAnswerMode.typeRussian)
+                }
+                .pickerStyle(.segmented)
+            }
+            Text(answerMode.isTyping
+                 ? "Наберите слово — засчитывается, как только совпало. Регистр и ё/е не важны."
+                 : "Нажмите на правильный перевод из трёх.")
+                .scaledFont(size: 13)
+                .foregroundColor(.gray)
+        }
+        .onChange(of: answerMode) { _, mode in hasGhost = RaceGhost.best(for: mode) != nil }
+        .onAppear { hasGhost = RaceGhost.best(for: answerMode) != nil }
     }
 
     // MARK: - Один
@@ -122,8 +194,8 @@ struct RaceLobbyView: View {
             .opacity(hasGhost ? 1 : 0.5)
 
             Text(hasGhost
-                 ? "Призрак едет точно как вы в лучшей гонке. Обгоните — и он станет новым рекордом."
-                 : "Сначала пройдите гонку до конца — например, с ботом. Тогда появится призрак вашего рекорда.")
+                 ? "Призрак едет точно как вы в лучшей гонке этого режима. Обгоните — и он станет новым рекордом."
+                 : "Сначала пройдите гонку в этом режиме до конца — например, с ботом. Тогда появится призрак вашего рекорда.")
                 .scaledFont(size: 13)
                 .foregroundColor(.gray)
         }
@@ -135,7 +207,7 @@ struct RaceLobbyView: View {
             showEmptyPoolAlert = true
             return
         }
-        solo.start(against: opponent, words: generated)
+        solo.start(against: opponent, words: generated, mode: answerMode)
     }
 
     // MARK: - Рядом
@@ -239,13 +311,9 @@ struct RaceLobbyView: View {
         }
     }
     
-    /// Слова для гонки запросом к базе — все не читаем (10 000+ — ~2 с на iPhone 12).
-    /// Меньше четырёх выбранных для изучения — берём из всего словаря
+    /// Слова из словаря, выбранного для гонки (RaceWordSource)
     private func loadWords() {
-        studyWords = StudyWords.random(StudyWords.scope(studyScope), limit: 200, in: modelContext)
-        if studyWords.count < 4 {
-            studyWords = StudyWords.random(#Predicate<Word> { _ in true }, limit: 200, in: modelContext)
-        }
+        studyWords = RaceWordSource(storedValue: wordSource).words(scope: studyScope, in: modelContext)
     }
 
     private func startRaceAsHost() {
@@ -254,6 +322,6 @@ struct RaceLobbyView: View {
             showEmptyPoolAlert = true
             return
         }
-        manager.startRaceAsHost(with: generated)
+        manager.startRaceAsHost(with: generated, mode: answerMode)
     }
 }

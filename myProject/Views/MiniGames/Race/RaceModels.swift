@@ -15,6 +15,8 @@ struct RaceMessage: Codable, Equatable {
     var words: [RaceWordPayload]?
     var correctCount: Int?
     var finishTime: Double?
+    /// Режим ответа (RaceAnswerMode) — в сообщении start; нет — «Выбор», как в прошлых версиях
+    var mode: String?
 }
 
 struct RacePlayer: Identifiable {
