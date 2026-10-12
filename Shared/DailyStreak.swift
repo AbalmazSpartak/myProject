@@ -15,7 +15,16 @@ enum DailyStreak {
         let limit = defaults.object(forKey: DailyNewWords.limitKey) as? Int ?? DailyNewWords.defaultLimit
         let introduced = DailyNewWords.introducedToday
         guard introduced >= max(limit, 1) else { return }
+        markToday(now: now)
+    }
 
+    /// День засчитывается и без новых слов, если повторили всё, что было к повторению:
+    /// вызывается после оценки слова в «Интервальном повторении» и в виджете, когда к повторению ничего не осталось
+    static func recordReviewsCleared(now: Date = Date()) {
+        markToday(now: now)
+    }
+
+    private static func markToday(now: Date) {
         var days = activeDays()
         let today = key(for: now)
         guard !days.contains(today) else { return }

@@ -155,6 +155,8 @@ struct AnswerWordIntent: AppIntent {
         word.isMistake = !isKnown
         try context.save()
         DailyStudy.record(word, rating: rating)
+        // Последнее слово к повторению — день идёт в серию, как в приложении
+        if ReviewProvider.currentEntry().card == nil { DailyStreak.recordReviewsCleared() }
         AppGroup.markChangedByWidget(word)
         ReviewWidgetState.revealedWord = nil
         return .result()

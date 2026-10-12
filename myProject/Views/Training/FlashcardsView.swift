@@ -261,8 +261,13 @@ struct FlashcardsView: View {
     private func processRating(_ rating: FSRSRating) {
         guard let word = currentWord else { return }
         
-        if word.state == .new { DailyNewWords.recordIntroduced() }
+        let isReview = word.state != .new
+        if !isReview { DailyNewWords.recordIntroduced() }
         fsrs.calculateNextReview(word: word, rating: rating)
+        // Повторили последнее слово к повторению — день идёт в серию и без нормы новых слов
+        if isReview, StudyWords.count(StudyWords.all(StudyWords.scope(studyScope), StudyWords.isDue(now: Date())), in: modelContext) == 0 {
+            DailyStreak.recordReviewsCleared()
+        }
         
         if rating == .again {
             word.isMistake = true
