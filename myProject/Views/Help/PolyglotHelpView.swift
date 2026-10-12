@@ -41,7 +41,7 @@ struct PolyglotHelpView: View {
             .padding(20)
         }
         .background(Color.brandBackground.ignoresSafeArea())
-        .navigationTitle("Полиглот")
+        .navigationTitle("Грамматика за 8 шагов")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

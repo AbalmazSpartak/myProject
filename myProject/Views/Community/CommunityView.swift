@@ -1,8 +1,8 @@
 import SwiftUI
 import SwiftData
 
-/// «Сообщество»: сверху ленты «Подборки сообщества» (новые темы из всех разделов) и «Английский по кино»,
-/// ниже — список разделов («Английский по кино», «Подборки слов», «Грамматика», свои): раздел открывает все его темы
+/// «Сообщество»: сверху ленты «Подборки сообщества» (новые темы из всех разделов), «Английский по кино» и «по музыке»,
+/// ниже — список разделов («Английский по кино», «по музыке», «Подборки слов», «Грамматика», свои): раздел открывает все его темы
 struct CommunityView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \CommunityTopic.createdAt, order: .reverse) private var topics: [CommunityTopic]
@@ -18,6 +18,7 @@ struct CommunityView: View {
         case topic(CommunityTopic)
         case section(String)
         case movies
+        case music
     }
 
     var body: some View {
@@ -30,6 +31,7 @@ struct CommunityView: View {
                         latestRibbon
                     }
                     moviesRibbon
+                    musicRibbon
 
                     sectionsList
 
@@ -178,6 +180,25 @@ struct CommunityView: View {
         }
     }
 
+    // MARK: - Музыка
+
+    // Заглушка: жанровые карточки, тем пока нет
+    private static let musicGenres: [(name: String, icon: String, color: Color)] = [
+        ("Поп", "music.mic", .pink),
+        ("Рок", "guitars.fill", .red),
+        ("Хип-хоп", "headphones", .indigo),
+        ("Баллады", "music.note", .teal),
+        ("Классика хитов", "opticaldisc.fill", .orange)
+    ]
+
+    private var musicRibbon: some View {
+        Ribbon(title: "Английский по музыке", onTitleTap: { route = .section("Английский по музыке") }) {
+            ForEach(Self.musicGenres, id: \.name) { genre in
+                TileCard(title: genre.name, icon: genre.icon, color: genre.color) { route = .music }
+            }
+        }
+    }
+
     @ViewBuilder
     private func destination(for route: Route) -> some View {
         switch route {
@@ -187,6 +208,8 @@ struct CommunityView: View {
             CommunitySectionView(section: section)
         case .movies:
             StubView(title: "Английский по кино", message: "Здесь будет раздел с подборками слов по фильмам", backTitle: "Сообщество")
+        case .music:
+            StubView(title: "Английский по музыке", message: "Здесь будут слова и фразы из песен по жанрам", backTitle: "Сообщество")
         }
     }
 }

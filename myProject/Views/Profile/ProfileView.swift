@@ -177,7 +177,7 @@ struct GameRecordsCard: View {
 
             row(icon: "car.fill", color: .green, title: "Гонка слов", subtitle: "лучшее время", values: raceRecords)
 
-            row(icon: "character.bubble.fill", color: .red, title: "Полиглот", subtitle: polyglotSubtitle,
+            row(icon: "character.bubble.fill", color: .red, title: "Грамматика за 8 шагов", subtitle: polyglotSubtitle,
                 values: polyglot.totalPoints > 0 ? ["\(polyglot.totalPoints) \(PolyglotProgress.pointsNoun(polyglot.totalPoints))"] : [])
         }
         .padding(16)

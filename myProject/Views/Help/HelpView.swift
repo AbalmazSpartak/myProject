@@ -28,7 +28,7 @@ enum HelpTopic: String, CaseIterable, Identifiable {
         case .race: return "Гонка слов"
         case .community: return "Сообщество"
         case .books: return "Книги"
-        case .polyglot: return "Полиглот"
+        case .polyglot: return "Грамматика за 8 шагов"
         }
     }
 

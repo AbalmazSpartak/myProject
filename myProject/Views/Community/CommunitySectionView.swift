@@ -123,6 +123,7 @@ struct CommunitySectionRow: View {
     static func icon(for section: String) -> String {
         switch section {
         case "Английский по кино": return "film.fill"
+        case "Английский по музыке": return "music.note"
         case "Подборки слов": return "text.book.closed.fill"
         case "Грамматика": return "textformat.abc"
         case "Произношение": return "waveform"

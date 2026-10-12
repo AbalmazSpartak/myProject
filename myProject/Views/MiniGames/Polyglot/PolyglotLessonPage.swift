@@ -20,7 +20,7 @@ struct PolyglotLessonPage<Content: View, Scheme: View>: View {
                 Button(action: { dismiss() }) {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
-                        Text("Полиглот")
+                        Text("Грамматика")
                     }
                     .scaledFont(size: 17, weight: .semibold)
                     .foregroundColor(.brandDark)

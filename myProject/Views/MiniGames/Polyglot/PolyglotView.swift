@@ -15,7 +15,7 @@ struct PolyglotView: View {
                         .foregroundColor(.gray)
 
                     if progress.totalPoints > 0 {
-                        Label("\(progress.totalPoints) \(PolyglotProgress.pointsNoun(progress.totalPoints)) в «Полиглоте»",
+                        Label("\(progress.totalPoints) \(PolyglotProgress.pointsNoun(progress.totalPoints)) за уроки",
                               systemImage: "star.circle.fill")
                             .scaledFont(size: 16, weight: .bold)
                             .foregroundColor(.orange)
@@ -110,9 +110,11 @@ struct PolyglotView: View {
                 .foregroundColor(.brandDark)
             }
             Spacer()
-            Text("Полиглот")
+            Text("Грамматика за 8 шагов")
                 .scaledFont(size: 20, weight: .bold)
                 .foregroundColor(.brandDark)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
             Spacer()
             HelpButton(topic: .polyglot)
                 .frame(width: 70, alignment: .trailing)
@@ -189,7 +191,7 @@ struct PolyglotLessonView: View {
                 Button(action: { dismiss() }) {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
-                        Text("Полиглот")
+                        Text("Грамматика")
                     }
                     .scaledFont(size: 17, weight: .semibold)
                     .foregroundColor(.brandDark)
