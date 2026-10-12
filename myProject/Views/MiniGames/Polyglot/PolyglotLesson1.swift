@@ -6,38 +6,8 @@ enum PolyglotLesson1 {
     enum Tense: CaseIterable { case future, present, past }
     enum Form: CaseIterable { case question, affirmative, negative }
 
-    /// Глагол: английские формы и русское спряжение (я, ты, он/она, мы, вы, они), прошедшее — м., ж., мн.
-    struct Verb {
-        let base: String
-        let third: String
-        let past: String
-        let infinitive: String
-        let present: [String]
-        let pastRu: (masculine: String, feminine: String, plural: String)
-    }
-
-    static let verbs: [Verb] = [
-        Verb(base: "love", third: "loves", past: "loved", infinitive: "любить",
-             present: ["люблю", "любишь", "любит", "любим", "любите", "любят"], pastRu: ("любил", "любила", "любили")),
-        Verb(base: "want", third: "wants", past: "wanted", infinitive: "хотеть",
-             present: ["хочу", "хочешь", "хочет", "хотим", "хотите", "хотят"], pastRu: ("хотел", "хотела", "хотели")),
-        Verb(base: "work", third: "works", past: "worked", infinitive: "работать",
-             present: ["работаю", "работаешь", "работает", "работаем", "работаете", "работают"], pastRu: ("работал", "работала", "работали")),
-        Verb(base: "live", third: "lives", past: "lived", infinitive: "жить",
-             present: ["живу", "живёшь", "живёт", "живём", "живёте", "живут"], pastRu: ("жил", "жила", "жили")),
-        Verb(base: "play", third: "plays", past: "played", infinitive: "играть",
-             present: ["играю", "играешь", "играет", "играем", "играете", "играют"], pastRu: ("играл", "играла", "играли")),
-        Verb(base: "know", third: "knows", past: "knew", infinitive: "знать",
-             present: ["знаю", "знаешь", "знает", "знаем", "знаете", "знают"], pastRu: ("знал", "знала", "знали")),
-        Verb(base: "speak", third: "speaks", past: "spoke", infinitive: "говорить",
-             present: ["говорю", "говоришь", "говорит", "говорим", "говорите", "говорят"], pastRu: ("говорил", "говорила", "говорили")),
-        Verb(base: "help", third: "helps", past: "helped", infinitive: "помогать",
-             present: ["помогаю", "помогаешь", "помогает", "помогаем", "помогаете", "помогают"], pastRu: ("помогал", "помогала", "помогали")),
-        Verb(base: "cook", third: "cooks", past: "cooked", infinitive: "готовить",
-             present: ["готовлю", "готовишь", "готовит", "готовим", "готовите", "готовят"], pastRu: ("готовил", "готовила", "готовили")),
-        Verb(base: "read", third: "reads", past: "read", infinitive: "читать",
-             present: ["читаю", "читаешь", "читает", "читаем", "читаете", "читают"], pastRu: ("читал", "читала", "читали")),
-    ]
+    /// Глаголы — общий запас уроков (PolyglotWords): в уроке 1 около 25 глаголов уровня A1
+    typealias Verb = PolyglotLesson2.Verb
 
     /// Местоимение: английское, русское и чьё спряжение у глагола
     struct Pronoun {
@@ -62,8 +32,6 @@ enum PolyglotLesson1 {
         Pronoun(english: "she", russian: "она", person: 2, pastGender: .feminine),
     ]
 
-    private static let futureRu = ["буду", "будешь", "будет", "будем", "будете", "будут"]
-
     typealias Task = PolyglotTask
 
     // MARK: - Сборка заданий
@@ -71,11 +39,19 @@ enum PolyglotLesson1 {
     static func round(count: Int = 15) -> [Task] {
         // Все сочетания времени и формы — поровну, остальное случайно
         let combos = Tense.allCases.flatMap { tense in Form.allCases.map { (tense, $0) } }
-        return (0..<count).map { index in
+        let verbs = PolyglotWords.verbs(upTo: 1)
+        var index = 0
+        return PolyglotRound.build([(count, {
             let (tense, form) = combos[index % combos.count]
+            index += 1
             return task(tense: tense, form: form, verb: verbs.randomElement()!, pronoun: pronouns.randomElement()!)
-        }
-        .shuffled()
+        })])
+    }
+
+    /// Задание по схеме урока 1 с глаголами уроков 1…lesson — повторение в следующих уроках
+    static func randomTask(upTo lesson: Int) -> Task? {
+        task(tense: Tense.allCases.randomElement()!, form: Form.allCases.randomElement()!,
+             verb: PolyglotWords.verbs(upTo: lesson).randomElement()!, pronoun: pronouns.randomElement()!)
     }
 
     static func task(tense: Tense, form: Form, verb: Verb, pronoun: Pronoun) -> Task {
@@ -98,14 +74,9 @@ enum PolyglotLesson1 {
 
         let ruVerb: String
         switch tense {
-        case .future: ruVerb = "\(futureRu[pronoun.person]) \(verb.infinitive)"
+        case .future: ruVerb = verb.future[pronoun.person]
         case .present: ruVerb = verb.present[pronoun.person]
-        case .past:
-            switch pronoun.pastGender ?? (Bool.random() ? .masculine : .feminine) {
-            case .masculine: ruVerb = verb.pastRu.masculine
-            case .feminine: ruVerb = verb.pastRu.feminine
-            case .plural: ruVerb = verb.pastRu.plural
-            }
+        case .past: ruVerb = verb.russian(.past, pronoun, feminine: Bool.random())
         }
         russian = "\(pronounRu) \(form == .negative ? "не " : "")\(ruVerb)"
         russian += form == .question ? "?" : "."

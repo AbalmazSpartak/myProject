@@ -148,25 +148,18 @@ enum PolyglotLesson2 {
 
     // MARK: - Раунд
 
-    static func round(count: Int = 15) -> [PolyglotTask] {
-        let makers: [() -> PolyglotTask?] = [withObject, withQuestionWord, withPreposition]
-        var tasks: [PolyglotTask] = []
-        var attempts = 0
-        while tasks.count < count, attempts < count * 20 {
-            attempts += 1
-            // Поровну трёх видов: по очереди
-            if let task = makers[tasks.count % makers.count](),
-               !tasks.contains(where: { $0.russian == task.russian }) {
-                tasks.append(task)
-            }
-        }
-        return tasks.shuffled()
+    /// 11 заданий урока (поровну трёх видов) и 4 на схему урока 1 — уже с глаголами урока 2
+    static func round() -> [PolyglotTask] {
+        PolyglotRound.build([
+            (4, withObject), (4, withQuestionWord), (3, withPreposition),
+            (4, { PolyglotLesson1.randomTask(upTo: 2) }),
+        ])
     }
 
     // MARK: - С местоимением: «Она не любит нас» → She doesn't love us
 
     static func withObject() -> PolyglotTask? {
-        let verb = [see, love, know, hear, help, ask, answer, take].randomElement()!
+        let verb = PolyglotWords.verbs(upTo: 2, takingObject: true).randomElement()!
         let subject = PolyglotLesson1.pronouns.randomElement()!
         let object = objects.randomElement()!
         guard fits(subject, object) else { return nil }
@@ -192,11 +185,13 @@ enum PolyglotLesson2 {
 
     /// Какие глаголы с каким словом звучат естественно
     private static let questionVerbs: [(english: String, russian: String, verbs: [Verb])] = [
-        ("what", "что", [take, see, give, know, want]),
-        ("where", "где", [live, work]),
-        ("when", "когда", [help, come, answer]),
-        ("why", "почему", [ask, help, travel]),
-        ("how", "как", [work, speak, live, travel]),
+        ("what", "что", [take, see, give, know, want, PolyglotWords.write, PolyglotWords.draw, PolyglotWords.drink,
+                         PolyglotWords.eat, PolyglotLesson6.read, PolyglotLesson6.cook, PolyglotWords.understand, PolyglotWords.remember]),
+        ("where", "где", [live, work, PolyglotWords.study, PolyglotWords.swim, PolyglotWords.walk, PolyglotWords.sleep]),
+        ("when", "когда", [help, come, answer, PolyglotWords.call, PolyglotWords.sleep, PolyglotWords.eat]),
+        ("why", "почему", [ask, help, travel, PolyglotWords.run, PolyglotWords.dance, PolyglotWords.sing, PolyglotWords.wait]),
+        ("how", "как", [work, speak, live, travel, PolyglotWords.swim, PolyglotWords.dance, PolyglotWords.sing,
+                        PolyglotWords.drive, PolyglotWords.write]),
     ]
 
     static func withQuestionWord() -> PolyglotTask? {

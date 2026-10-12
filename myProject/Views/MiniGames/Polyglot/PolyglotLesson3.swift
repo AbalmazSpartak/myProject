@@ -34,24 +34,81 @@ enum PolyglotLesson3 {
         .adjective(english: "happy", russian: ("счастлив", "счастлива", "счастливы")),
         .adjective(english: "right", russian: ("прав", "права", "правы")),
         .adjective(english: "busy", russian: ("занят", "занята", "заняты")),
+        // Слова A1 из базы приложения
+        .place(english: ["in", "Paris"], russian: "в Париже"),
+        .place(english: ["in", "Rome"], russian: "в Риме"),
+        .noun(singular: "friend", plural: "friends",
+              russian: ("друг", "подруга", "друзья"), instrumental: ("другом", "подругой", "друзьями")),
+        .noun(singular: "neighbor", plural: "neighbors",
+              russian: ("сосед", "соседка", "соседи"), instrumental: ("соседом", "соседкой", "соседями")),
+        .adjective(english: "hungry", russian: ("голоден", "голодна", "голодны")),
+        .adjective(english: "sick", russian: ("болен", "больна", "больны")),
+        .adjective(english: "angry", russian: ("зол", "зла", "злы")),
+        .adjective(english: "free", russian: ("свободен", "свободна", "свободны")),
+        .adjective(english: "sure", russian: ("уверен", "уверена", "уверены")),
     ]
+
+    /// Какой — для вопросов «Почему ты занят?», «Когда она будет готова?»
+    static var adjectives: [Complement] {
+        complements.filter { if case .adjective = $0 { return true } else { return false } }
+    }
 
     fileprivate enum Number { case masculine, feminine, plural }
 
     // MARK: - Раунд
 
-    static func round(count: Int = 15) -> [PolyglotTask] {
+    /// 10 заданий на to be, 3 — to be с вопросительным словом урока 2 («Где ты был?»), 2 — повторение урока 2
+    static func round() -> [PolyglotTask] {
         let combos = Tense.allCases.flatMap { tense in Form.allCases.map { (tense, $0) } }
-        var tasks: [PolyglotTask] = []
         var index = 0
-        while tasks.count < count, index < count * 20 {
-            let (tense, form) = combos[index % combos.count]
-            index += 1
-            let task = task(tense: tense, form: form, subject: PolyglotLesson1.pronouns.randomElement()!,
+        return PolyglotRound.build([
+            (10, {
+                let (tense, form) = combos[index % combos.count]
+                index += 1
+                return task(tense: tense, form: form, subject: PolyglotLesson1.pronouns.randomElement()!,
                             complement: complements.randomElement()!, feminine: Bool.random())
-            if !tasks.contains(where: { $0.russian == task.russian }) { tasks.append(task) }
+            }),
+            (3, { questionTask() }),
+            (2, { Bool.random() ? PolyglotLesson2.withObject() : PolyglotLesson2.withQuestionWord() }),
+        ])
+    }
+
+    // MARK: - To be с вопросительным словом: «Где ты был?» → Where were you?
+
+    /// Где — без дополнения; почему / когда — с «какой»: «Почему она занята?», «Когда вы будете готовы?»
+    static func questionTask(complement: Complement? = nil) -> PolyglotTask? {
+        let subject = PolyglotLesson1.pronouns.filter { $0.person != 0 }.randomElement()!
+        let tense = Tense.allCases.randomElement()!
+        let feminine = Bool.random()
+        let number: Number = switch subject.pastGender {
+        case .plural?: .plural
+        case .masculine?: .masculine
+        case .feminine?: .feminine
+        case nil: feminine ? .feminine : .masculine
         }
-        return tasks.shuffled()
+        let (word, wordRu) = [("where", "где"), ("why", "почему"), ("when", "когда")].randomElement()!
+        // «Где ты?» — без слова «какой»; «Почему ты?» и «Когда ты?» без него не бывает
+        let adjective: Complement? = word == "where" ? complement : (complement ?? adjectives.randomElement()!)
+        // «Когда ты готов?» в настоящем звучит странно — когда спрашивают о прошлом или будущем
+        if word == "when", tense == .present { return nil }
+
+        let be = beForm(tense, subject)
+        var answer = [word] + (tense == .future ? ["will", subject.english, "be"] : [be, subject.english])
+        var parts = [wordRu.capitalizedFirst, subject.russian]
+        switch tense {
+        case .present: break
+        case .past: parts.append(["был", "была", "были"][number.index])
+        case .future: parts.append(["буду", "будешь", "будет", "будем", "будете", "будут"][subject.person])
+        }
+        if let adjective {
+            answer += english(adjective, number: number)
+            parts.append(russian(adjective, number: number, tense: tense))
+        }
+        let russian = parts.joined(separator: " ") + "?"
+        // Ловушка — do/does/did после вопросительного слова, как в уроке 2
+        let extra = ["do", "does", "did"].shuffled().prefix(2)
+            + (tense == .future ? ["is", "are"] : ["am", "is", "are", "was", "were"].filter { !answer.contains($0) }).shuffled().prefix(1)
+        return PolyglotTask(russian: russian, answer: answer, isQuestion: true, tiles: (answer + extra).shuffled())
     }
 
     static func task(tense: Tense, form: Form, subject: Pronoun, complement: Complement, feminine: Bool) -> PolyglotTask {
@@ -100,7 +157,7 @@ enum PolyglotLesson3 {
         }
     }
 
-    private static func english(_ complement: Complement, number: Number) -> [String] {
+    fileprivate static func english(_ complement: Complement, number: Number) -> [String] {
         switch complement {
         case .place(let english, _): return english
         case .noun(let singular, let plural, _, _): return number == .plural ? [plural] : [article(singular), singular]
@@ -113,7 +170,7 @@ enum PolyglotLesson3 {
         "aeiou".contains(noun.prefix(1).lowercased()) ? "an" : "a"
     }
 
-    private static func russian(_ complement: Complement, number: Number, tense: Tense) -> String {
+    fileprivate static func russian(_ complement: Complement, number: Number, tense: Tense) -> String {
         switch complement {
         case .place(_, let russian): return russian
         case .noun(_, _, let nominative, let instrumental):

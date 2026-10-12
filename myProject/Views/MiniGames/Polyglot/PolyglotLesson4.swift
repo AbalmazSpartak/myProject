@@ -38,6 +38,14 @@ enum PolyglotLesson4 {
         Profession(english: "inventor", plural: "inventors", russian: "изобретатель", russianPlural: "изобретатели", instrumental: "изобретателем", instrumentalPlural: "изобретателями"),
         Profession(english: "electrician", plural: "electricians", russian: "электрик", russianPlural: "электрики", instrumental: "электриком", instrumentalPlural: "электриками"),
         Profession(english: "artist", plural: "artists", russian: "художник", russianPlural: "художники", instrumental: "художником", instrumentalPlural: "художниками"),
+        // Слова A1–A2 из базы приложения
+        Profession(english: "driver", plural: "drivers", russian: "водитель", russianPlural: "водители", instrumental: "водителем", instrumentalPlural: "водителями"),
+        Profession(english: "pilot", plural: "pilots", russian: "пилот", russianPlural: "пилоты", instrumental: "пилотом", instrumentalPlural: "пилотами"),
+        Profession(english: "lawyer", plural: "lawyers", russian: "юрист", russianPlural: "юристы", instrumental: "юристом", instrumentalPlural: "юристами"),
+        Profession(english: "designer", plural: "designers", russian: "дизайнер", russianPlural: "дизайнеры", instrumental: "дизайнером", instrumentalPlural: "дизайнерами"),
+        Profession(english: "dentist", plural: "dentists", russian: "стоматолог", russianPlural: "стоматологи", instrumental: "стоматологом", instrumentalPlural: "стоматологами"),
+        Profession(english: "architect", plural: "architects", russian: "архитектор", russianPlural: "архитекторы", instrumental: "архитектором", instrumentalPlural: "архитекторами"),
+        Profession(english: "farmer", plural: "farmers", russian: "фермер", russianPlural: "фермеры", instrumental: "фермером", instrumentalPlural: "фермерами"),
     ]
 
     /// Где с целью — at: на работе, в школе (учатся), в аэропорту (летят)
@@ -47,7 +55,32 @@ enum PolyglotLesson4 {
         .place(english: ["at", "home"], russian: "дома"),
         .place(english: ["at", "the", "airport"], russian: "в аэропорту"),
         .place(english: ["at", "the", "cinema"], russian: "в кино"),
+        .place(english: ["at", "the", "station"], russian: "на вокзале"),
+        .place(english: ["at", "the", "hotel"], russian: "в отеле"),
+        .place(english: ["at", "the", "university"], russian: "в университете"),
+        .place(english: ["at", "the", "office"], russian: "в офисе"),
+        .place(english: ["at", "the", "library"], russian: "в библиотеке"),
+        .place(english: ["at", "the", "hospital"], russian: "в больнице"),
+        .place(english: ["at", "the", "bank"], russian: "в банке"),
     ]
+
+    /// Где кто что делает — глаголы уроков 1–2 с подходящими местами: «Я учусь в университете»
+    private static let verbPlaces: [(verb: PolyglotLesson2.Verb, places: [String])] = [
+        (PolyglotLesson2.work, ["home", "the office", "the hospital", "the bank", "the university", "the hotel", "school"]),
+        (PolyglotWords.study, ["school", "the university", "the library", "home"]),
+        (PolyglotLesson6.read, ["the library", "home", "school"]),
+        (PolyglotWords.wait, ["the station", "the airport", "the hotel", "the office"]),
+        (PolyglotWords.eat, ["home", "school", "work"]),
+        (PolyglotWords.sleep, ["home", "the hotel"]),
+    ]
+
+    /// Место по английскому «the office» → «at the office», «в офисе»
+    private static func atPlace(_ name: String) -> (english: [String], russian: String)? {
+        for case .place(let english, let russian) in atPlaces where english.dropFirst().joined(separator: " ") == name {
+            return (english, russian)
+        }
+        return nil
+    }
 
     /// Готовые фразы урока: про артикли и знакомство
     static let phrases: [(russian: String, answer: [String], isQuestion: Bool, extra: [String])] = [
@@ -64,25 +97,63 @@ enum PolyglotLesson4 {
         ("Я работаю на заводе.", ["I", "work", "in", "a", "factory"], false, ["at", "an", "as"]),
     ]
 
-    // MARK: - Раунд: 5 «кем является», 4 «кем работает», 4 «где», 2 готовые фразы
+    // MARK: - Раунд: 10 заданий урока, 3 — урок 4 вместе с прошлыми, 2 — повторение урока 3
 
     static func round() -> [PolyglotTask] {
-        var tasks: [PolyglotTask] = []
-        func add(_ count: Int, _ make: () -> PolyglotTask?) {
-            var added = 0, attempts = 0
-            while added < count, attempts < 50 {
-                attempts += 1
-                if let task = make(), !tasks.contains(where: { $0.russian == task.russian }) {
-                    tasks.append(task)
-                    added += 1
-                }
-            }
-        }
-        add(5, professionTask)
-        add(4, workAsTask)
-        add(4, placeTask)
-        add(2, phraseTask)
-        return tasks.shuffled()
+        PolyglotRound.build([
+            (4, professionTask), (3, workAsTask), (2, placeTask), (1, phraseTask),
+            (1, verbAtPlaceTask), (1, objectAtPlaceTask), (1, questionAtPlaceTask),
+            (2, { Bool.random() ? PolyglotLesson3.questionTask() : PolyglotLesson3.task(
+                tense: Tense.allCases.randomElement()!, form: Form.allCases.randomElement()!,
+                subject: PolyglotLesson1.pronouns.randomElement()!,
+                complement: PolyglotLesson3.complements.randomElement()!, feminine: Bool.random()) }),
+        ])
+    }
+
+    // MARK: - Вместе с прошлыми уроками
+
+    /// Урок 1 + at: «Она учится в университете» → She studies at the university
+    static func verbAtPlaceTask() -> PolyglotTask? {
+        let (verb, names) = verbPlaces.randomElement()!
+        guard let place = atPlace(names.randomElement()!) else { return nil }
+        let subject = PolyglotLesson1.pronouns.randomElement()!
+        let tense = Tense.allCases.randomElement()!
+        let form = Form.allCases.randomElement()!
+        let answer = PolyglotLesson2.englishCore(verb: verb, subject: subject.english, thirdPerson: subject.isThirdSingular,
+                                                 tense: tense, form: form) + place.english
+        let russian = subject.russian.capitalizedFirst + " " + (form == .negative ? "не " : "")
+            + verb.russian(tense, subject, feminine: Bool.random()) + " " + place.russian + (form == .question ? "?" : ".")
+        let extra = ["in", "as"] + ["do", "does", "did", "will"].filter { !answer.contains($0) }.shuffled().prefix(1)
+        return PolyglotTask(russian: russian, answer: answer, isQuestion: form == .question, tiles: (answer + extra).shuffled())
+    }
+
+    /// Урок 2 + at: «Я видел его на работе» → I saw him at work
+    static func objectAtPlaceTask() -> PolyglotTask? {
+        let verb = [PolyglotLesson2.see, PolyglotWords.meet, PolyglotWords.visit].randomElement()!
+        let names = verb.base == "visit" ? ["the hospital", "home", "the hotel", "work"]
+            : ["work", "school", "the station", "the airport", "the university", "the library"]
+        guard let place = atPlace(names.randomElement()!) else { return nil }
+        let subject = PolyglotLesson1.pronouns.randomElement()!
+        let object = PolyglotLesson2.objects.randomElement()!
+        guard subject.person != object.person, !([0, 3].contains(subject.person) && [0, 3].contains(object.person)),
+              !([1, 4].contains(subject.person) && [1, 4].contains(object.person)) else { return nil }
+        let tense = Tense.allCases.randomElement()!
+        let base = PolyglotLesson2.objectTask(verb: verb, subject: subject, object: object, tense: tense, form: .affirmative, feminine: Bool.random())
+        let answer = base.answer + place.english
+        let russian = String(base.russian.dropLast()) + " " + place.russian + "."
+        let extra = ["in", object.subjectForm].filter { !answer.contains($0) }
+            + ["did", "will"].filter { !answer.contains($0) }.prefix(1)
+        return PolyglotTask(russian: russian, answer: answer, isQuestion: false, tiles: (answer + extra).shuffled())
+    }
+
+    /// Урок 3 + at: «Почему ты был в школе?» → Why were you at school?
+    static func questionAtPlaceTask() -> PolyglotTask? {
+        guard case .place(let english, let russian)? = atPlaces.randomElement() else { return nil }
+        guard let task = PolyglotLesson3.questionTask(complement: .place(english: english, russian: russian)) else { return nil }
+        // «Где ты в школе?» не бывает — только почему и когда
+        guard task.answer.first != "where" else { return nil }
+        return PolyglotTask(russian: task.russian, answer: task.answer, isQuestion: true,
+                            tiles: (task.tiles + ["in"]).shuffled())
     }
 
     /// «Она инженер» → She is an engineer. Ловушка — a вместо an и артикль у множественного

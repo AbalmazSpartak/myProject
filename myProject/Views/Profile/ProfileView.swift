@@ -93,6 +93,9 @@ struct ProfileView: View {
                 DailyStreakCard(current: streak, best: bestStreak, week: streakWeek)
                     .padding(.horizontal, 20)
                 
+                DailyGoalCard(introduced: introducedToday, compact: true)
+                    .padding(.horizontal, 20)
+                
                 Picker("Раздел", selection: $tab) {
                     ForEach(ProfileTab.allCases) { tab in
                         Text(tab.title).tag(tab)
@@ -103,8 +106,6 @@ struct ProfileView: View {
 
                 switch tab {
                 case .stats:
-                    DailyGoalCard(introduced: introducedToday, compact: true)
-                        .padding(.horizontal, 20)
                     VocabularyStatusCard(status: vocabularyStatus)
                         .padding(.horizontal, 20)
                     DailyStudyCard(days: studyDays, totals: studyTotals)
