@@ -156,6 +156,8 @@ struct ReaderPagedText: View, Equatable {
     let hasNext: Bool
     /// Загиб страницы вместо сдвига
     let curl: Bool
+    /// false — страница меняется мгновенно, и нажатием у края, и свайпом
+    let animated: Bool
     let background: Color
     let speech: ReaderSpeech
     /// Для «В словарь» в панели выделения
@@ -189,7 +191,7 @@ struct ReaderPagedText: View, Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.chapterID == rhs.chapterID && lhs.paragraphs.count == rhs.paragraphs.count && lhs.readerFont == rhs.readerFont
             && lhs.fontSize == rhs.fontSize && lhs.textColor == rhs.textColor && lhs.lineSpacing == rhs.lineSpacing
-            && lhs.curl == rhs.curl && lhs.background == rhs.background && lhs.bookTitle == rhs.bookTitle
+            && lhs.curl == rhs.curl && lhs.animated == rhs.animated && lhs.background == rhs.background && lhs.bookTitle == rhs.bookTitle
     }
 
     var body: some View {
@@ -203,10 +205,10 @@ struct ReaderPagedText: View, Equatable {
                     // Сдвиг и загиб — системный UIPageViewController: только у него листание надёжно выключается,
                     // пока выделяют текст (у TabView .scrollDisabled страницу не держал — проверено на iPhone)
                     PageCurlView(page: $page, range: (hasPrevious ? -1 : 0)...(hasNext ? pages.count : pages.count - 1),
-                                 curl: curl, background: UIColor(background), isLocked: selection != nil) { index in
+                                 curl: curl, animated: animated, background: UIColor(background), isLocked: selection != nil) { index in
                         AnyView(pageContent(index, width: proxy.size.width, textWidth: textSize.width))
                     }
-                    .id(curl)
+                    .id("\(curl)-\(animated)")
                     Text("\(min(max(page, 0), pages.count - 1) + 1) из \(pages.count)")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(textColor.opacity(0.5))
@@ -352,7 +354,15 @@ struct ReaderPagedText: View, Equatable {
                     }
                     return
                 }
-                guard dragMode == nil, !current.moved else { return }
+                guard dragMode == nil else { return }
+                if current.moved {
+                    // Без анимации свайп листает сам: системный сдвиг выключен
+                    let dx = value.translation.width
+                    if !animated, selection == nil, abs(dx) > 40, abs(dx) > abs(value.translation.height) {
+                        turn(dx < 0 ? 1 : -1)
+                    }
+                    return
+                }
                 // Нажатие мимо выделения — снять его
                 if selection != nil {
                     clearSelection()
@@ -428,7 +438,11 @@ struct ReaderPagedText: View, Equatable {
     private func turn(_ step: Int) {
         let target = page + step
         guard target >= (hasPrevious ? -1 : 0), target <= (hasNext ? pages.count : pages.count - 1) else { return }
-        withAnimation(.easeInOut(duration: 0.3)) { page = target }
+        if animated {
+            withAnimation(.easeInOut(duration: 0.3)) { page = target }
+        } else {
+            page = target
+        }
     }
 
     /// Нажатие на слово в середине страницы — карточка слова
@@ -461,7 +475,11 @@ struct ReaderPagedText: View, Equatable {
         guard let target = pages.firstIndex(where: { segments in
             segments.contains { $0.paragraph == paragraph && location >= $0.range.location && location < NSMaxRange($0.range) }
         }), target != page else { return }
-        withAnimation(.easeInOut(duration: 0.3)) { page = target }
+        if animated {
+            withAnimation(.easeInOut(duration: 0.3)) { page = target }
+        } else {
+            page = target
+        }
     }
 }
 
@@ -521,6 +539,8 @@ struct PageCurlView: UIViewControllerRepresentable {
     let range: ClosedRange<Int>
     /// true — загиб страницы, false — сдвиг
     let curl: Bool
+    /// false — без анимации: свайп не тянет страницу, смена мгновенная
+    var animated = true
     let background: UIColor
     /// Идёт выделение текста — страница не листается
     var isLocked = false
@@ -552,7 +572,7 @@ struct PageCurlView: UIViewControllerRepresentable {
             current.view.backgroundColor = background
         } else if !context.coordinator.isTurning {
             controller.setViewControllers([context.coordinator.host(page)],
-                                          direction: page > current.index ? .forward : .reverse, animated: true)
+                                          direction: page > current.index ? .forward : .reverse, animated: animated)
         }
     }
 
@@ -575,12 +595,12 @@ struct PageCurlView: UIViewControllerRepresentable {
         }
 
         func pageViewController(_ controller: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
-            guard !parent.isLocked, let index = (viewController as? PageHost)?.index, parent.range.contains(index - 1) else { return nil }
+            guard !parent.isLocked, parent.animated, let index = (viewController as? PageHost)?.index, parent.range.contains(index - 1) else { return nil }
             return host(index - 1)
         }
 
         func pageViewController(_ controller: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
-            guard !parent.isLocked, let index = (viewController as? PageHost)?.index, parent.range.contains(index + 1) else { return nil }
+            guard !parent.isLocked, parent.animated, let index = (viewController as? PageHost)?.index, parent.range.contains(index + 1) else { return nil }
             return host(index + 1)
         }
 

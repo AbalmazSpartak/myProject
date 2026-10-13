@@ -103,7 +103,7 @@ enum ReaderLayout: String, CaseIterable, Identifiable {
 
 /// Анимация листания страниц
 enum ReaderPageTurn: String, CaseIterable, Identifiable {
-    case slide, curl
+    case slide, curl, instant
 
     var id: String { rawValue }
 
@@ -111,6 +111,7 @@ enum ReaderPageTurn: String, CaseIterable, Identifiable {
         switch self {
         case .slide: return "Сдвиг"
         case .curl: return "Загиб страницы"
+        case .instant: return "Без анимации"
         }
     }
 }

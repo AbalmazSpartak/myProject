@@ -60,6 +60,7 @@ struct BookReaderView: View {
                     hasPrevious: chapterIndex > 0,
                     hasNext: chapterIndex + 1 < chapters.count,
                     curl: style.pageTurn == .curl,
+                    animated: style.pageTurn != .instant,
                     background: style.background,
                     speech: speech,
                     bookTitle: book.title,
