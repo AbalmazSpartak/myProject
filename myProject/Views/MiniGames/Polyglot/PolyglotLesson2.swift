@@ -184,7 +184,7 @@ enum PolyglotLesson2 {
     // MARK: - С вопросительным словом: «Где ты живёшь?» → Where do you live?
 
     /// Какие глаголы с каким словом звучат естественно
-    private static let questionVerbs: [(english: String, russian: String, verbs: [Verb])] = [
+    static let questionVerbs: [(english: String, russian: String, verbs: [Verb])] = [
         ("what", "что", [take, see, give, know, want, PolyglotWords.write, PolyglotWords.draw, PolyglotWords.drink,
                          PolyglotWords.eat, PolyglotLesson6.read, PolyglotLesson6.cook, PolyglotWords.understand, PolyglotWords.remember]),
         ("where", "где", [live, work, PolyglotWords.study, PolyglotWords.swim, PolyglotWords.walk, PolyglotWords.sleep]),

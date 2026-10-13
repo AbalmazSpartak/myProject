@@ -165,7 +165,7 @@ struct GameRecordsCard: View {
     let tetrisHighScore: Int
 
     /// Уроков в «Полиглоте» (PolyglotView)
-    private static let polyglotLessons = 8
+    private static let polyglotLessons = 16
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {

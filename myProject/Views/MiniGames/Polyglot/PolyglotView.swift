@@ -92,6 +92,78 @@ struct PolyglotView: View {
                                    subtitle: "On, under, over · with, without, about · go back, look for")
                     }
                     .buttonStyle(.plain)
+
+                    NavigationLink {
+                        PolyglotLesson9View()
+                            .toolbar(.hidden, for: .navigationBar)
+                    } label: {
+                        lessonCard(number: 9, title: "Вопрос внутри фразы и «сам»",
+                                   subtitle: "Do you know where he lives? · myself, herself · fortunately")
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        PolyglotLesson10View()
+                            .toolbar(.hidden, for: .navigationBar)
+                    } label: {
+                        lessonCard(number: 10, title: "Думаю, что… Когда придёт…",
+                                   subtitle: "I think that… · when he comes, I will · children, people")
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        PolyglotLesson11View()
+                            .toolbar(.hidden, for: .navigationBar)
+                    } label: {
+                        lessonCard(number: 11, title: "Процесс: am, was, will be + -ing",
+                                   subtitle: "I am reading now · I was sleeping when… · usually или now")
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        PolyglotLesson12View()
+                            .toolbar(.hidden, for: .navigationBar)
+                    } label: {
+                        lessonCard(number: 12, title: "Числа, даты и годы",
+                                   subtitle: "forty-two · the third · on the fifth of May · nineteen ninety-nine")
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        PolyglotLesson13View()
+                            .toolbar(.hidden, for: .navigationBar)
+                    } label: {
+                        lessonCard(number: 13, title: "Могу, стоит, должен, давай",
+                                   subtitle: "can, could · should · must, mustn't · let's, let him")
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        PolyglotLesson14View()
+                            .toolbar(.hidden, for: .navigationBar)
+                    } label: {
+                        lessonCard(number: 14, title: "Кто сделал? Кому сделал?",
+                                   subtitle: "Who helped you? · Who did you help? · if it rains")
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        PolyglotLesson15View()
+                            .toolbar(.hidden, for: .navigationBar)
+                    } label: {
+                        lessonCard(number: 15, title: "Есть, был, будет: there is",
+                                   subtitle: "There is a cat · Are there any…? · There won't be…")
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        PolyglotLesson16View()
+                            .toolbar(.hidden, for: .navigationBar)
+                    } label: {
+                        lessonCard(number: 16, title: "Сделано: был построен, будет отправлено",
+                                   subtitle: "The room is cleaned · was built by · will be sent")
+                    }
+                    .buttonStyle(.plain)
                 }
                 .padding(20)
             }
