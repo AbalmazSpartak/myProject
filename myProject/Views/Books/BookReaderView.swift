@@ -59,7 +59,10 @@ struct BookReaderView: View {
                     startParagraph: startParagraph,
                     hasPrevious: chapterIndex > 0,
                     hasNext: chapterIndex + 1 < chapters.count,
+                    curl: style.pageTurn == .curl,
+                    background: style.background,
                     speech: speech,
+                    bookTitle: book.title,
                     onVisible: { paragraph in
                         guard chapterStarts.indices.contains(chapterIndex) else { return }
                         book.position = chapterStarts[chapterIndex] + paragraph

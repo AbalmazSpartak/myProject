@@ -101,6 +101,20 @@ enum ReaderLayout: String, CaseIterable, Identifiable {
     }
 }
 
+/// Анимация листания страниц
+enum ReaderPageTurn: String, CaseIterable, Identifiable {
+    case slide, curl
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .slide: return "Сдвиг"
+        case .curl: return "Загиб страницы"
+        }
+    }
+}
+
 /// Ключи настроек и разбор своих цветов (хранятся строкой «r,g,b»)
 enum ReaderSettings {
     static let themeKey = "reader_theme"
@@ -108,6 +122,7 @@ enum ReaderSettings {
     static let fontKey = "reader_font"
     static let spacingKey = "reader_spacing"
     static let layoutKey = "reader_layout"
+    static let pageTurnKey = "reader_page_turn"
     static let customTextKey = "reader_custom_text"
     static let customBackgroundKey = "reader_custom_background"
 
@@ -135,6 +150,7 @@ struct ReaderStyle: Equatable {
     let font: ReaderFont
     let spacing: ReaderSpacing
     var layout: ReaderLayout = .pages
+    var pageTurn: ReaderPageTurn = .slide
     let customText: Color
     let customBackground: Color
 
@@ -148,6 +164,7 @@ struct ReaderStyle: Equatable {
             font: defaults.string(forKey: ReaderSettings.fontKey).flatMap(ReaderFont.init(rawValue:)) ?? .serif,
             spacing: defaults.string(forKey: ReaderSettings.spacingKey).flatMap(ReaderSpacing.init(rawValue:)) ?? .normal,
             layout: defaults.string(forKey: ReaderSettings.layoutKey).flatMap(ReaderLayout.init(rawValue:)) ?? .pages,
+            pageTurn: defaults.string(forKey: ReaderSettings.pageTurnKey).flatMap(ReaderPageTurn.init(rawValue:)) ?? .slide,
             customText: ReaderSettings.color(from: defaults.string(forKey: ReaderSettings.customTextKey) ?? "", fallback: .black),
             customBackground: ReaderSettings.color(from: defaults.string(forKey: ReaderSettings.customBackgroundKey) ?? "", fallback: .white))
     }
@@ -187,6 +204,7 @@ struct ReaderAppearanceSheet: View {
     @AppStorage(ReaderSettings.fontKey) private var font = ReaderFont.serif
     @AppStorage(ReaderSettings.spacingKey) private var spacing = ReaderSpacing.normal
     @AppStorage(ReaderSettings.layoutKey) private var layout = ReaderLayout.pages
+    @AppStorage(ReaderSettings.pageTurnKey) private var pageTurn = ReaderPageTurn.slide
     @AppStorage(ReaderSettings.customTextKey) private var customTextRaw = ""
     @AppStorage(ReaderSettings.customBackgroundKey) private var customBackgroundRaw = ""
 
@@ -215,6 +233,12 @@ struct ReaderAppearanceSheet: View {
                         ForEach(ReaderLayout.allCases) { Text($0.title).tag($0) }
                     }
                     .pickerStyle(.segmented)
+                    if layout == .pages {
+                        Picker("Анимация", selection: $pageTurn) {
+                            ForEach(ReaderPageTurn.allCases) { Text($0.title).tag($0) }
+                        }
+                        .pickerStyle(.segmented)
+                    }
 
                     section("Тема")
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 10)], spacing: 10) {
@@ -268,6 +292,7 @@ struct ReaderAppearanceSheet: View {
                         font = .serif
                         spacing = .normal
                         layout = .pages
+                        pageTurn = .slide
                     }
                     .foregroundColor(.brandTint)
                     .frame(maxWidth: .infinity)
