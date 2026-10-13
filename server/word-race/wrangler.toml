@@ -13,3 +13,11 @@ class_name = "Matchmaker"
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["RaceRoom", "Matchmaker"]
+
+[[durable_objects.bindings]]
+name = "REPORTS"
+class_name = "Reports"
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["Reports"]

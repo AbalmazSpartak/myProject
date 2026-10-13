@@ -9,6 +9,7 @@ struct EditWordView: View {
     @State private var isConfirmingDelete = false
     /// Удаляем после закрытия окна, чтобы форма не обращалась к уже удалённому слову
     @State private var deleteOnClose = false
+    @State private var isReporting = false
 
     var body: some View {
         NavigationStack {
@@ -39,6 +40,18 @@ struct EditWordView: View {
                         }
                         .pickerStyle(.segmented)
                     }
+                    // Ошибка в слове из встроенного словаря — сообщить, чтобы поправили в базе для всех
+                    if !word.isCustom {
+                        Section {
+                            Button {
+                                isReporting = true
+                            } label: {
+                                Label("Сообщить об ошибке", systemImage: "exclamationmark.bubble")
+                            }
+                        } footer: {
+                            Text("Ваши правки выше меняют слово только у вас. Сообщение об ошибке поможет исправить его во встроенном словаре.")
+                        }
+                    }
                     // Удалить можно только своё слово: слово из базы вернулось бы при обновлении words.csv
                     if word.isCustom {
                         Section {
@@ -61,6 +74,11 @@ struct EditWordView: View {
                 guard deleteOnClose else { return }
                 modelContext.delete(word)
                 try? modelContext.save()
+            }
+            .sheet(isPresented: $isReporting) {
+                ReportWordView(word: word)
+                    .presentationDetents([.medium, .large])
+                    .appThemedColorScheme()
             }
             .brandListBackground()
             .navigationTitle("Редактирование")

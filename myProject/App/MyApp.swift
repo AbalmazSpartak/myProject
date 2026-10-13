@@ -47,7 +47,10 @@ struct MyApp: App {
         }
         .onChange(of: scenePhase) { _, phase in
             switch phase {
-            case .active: reloadWordsChangedByWidget()
+            case .active:
+                reloadWordsChangedByWidget()
+                // Сообщения об ошибках, сохранённые без интернета
+                Task { await WordReports.flush() }
             case .background: shareWithWidget()
             default: break
             }

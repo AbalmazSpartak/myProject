@@ -200,27 +200,13 @@ struct ReaderPagedText: View, Equatable {
                 if pages.isEmpty {
                     ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    if curl {
-                        PageCurlView(page: $page, range: (hasPrevious ? -1 : 0)...(hasNext ? pages.count : pages.count - 1),
-                                     background: UIColor(background), isLocked: selection != nil) { index in
-                            AnyView(pageContent(index, width: proxy.size.width, textWidth: textSize.width))
-                        }
-                    } else {
-                        TabView(selection: $page) {
-                            if hasPrevious {
-                                pageContent(-1, width: proxy.size.width, textWidth: textSize.width).tag(-1)
-                            }
-                            ForEach(pages.indices, id: \.self) { index in
-                                pageContent(index, width: proxy.size.width, textWidth: textSize.width).tag(index)
-                            }
-                            if hasNext {
-                                pageContent(pages.count, width: proxy.size.width, textWidth: textSize.width).tag(pages.count)
-                            }
-                        }
-                        .tabViewStyle(.page(indexDisplayMode: .never))
-                        // Пока выделяют текст, страница не уезжает
-                        .scrollDisabled(selection != nil)
+                    // Сдвиг и загиб — системный UIPageViewController: только у него листание надёжно выключается,
+                    // пока выделяют текст (у TabView .scrollDisabled страницу не держал — проверено на iPhone)
+                    PageCurlView(page: $page, range: (hasPrevious ? -1 : 0)...(hasNext ? pages.count : pages.count - 1),
+                                 curl: curl, background: UIColor(background), isLocked: selection != nil) { index in
+                        AnyView(pageContent(index, width: proxy.size.width, textWidth: textSize.width))
                     }
+                    .id(curl)
                     Text("\(min(max(page, 0), pages.count - 1) + 1) из \(pages.count)")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(textColor.opacity(0.5))
@@ -528,11 +514,13 @@ private extension Array {
     subscript(safe index: Int) -> Element? { indices.contains(index) ? self[index] : nil }
 }
 
-/// Листание с загибом страницы, как в бумажной книге: системный UIPageViewController.
-/// Страницы — те же SwiftUI-виды; номер страницы общий со сдвигом (нажатия у края, чтение вслух)
+/// Листание страниц системным UIPageViewController: сдвигом или с загибом, как в бумажной книге.
+/// Страницы — SwiftUI-виды; номер страницы общий для свайпа, нажатий у края и чтения вслух
 struct PageCurlView: UIViewControllerRepresentable {
     @Binding var page: Int
     let range: ClosedRange<Int>
+    /// true — загиб страницы, false — сдвиг
+    let curl: Bool
     let background: UIColor
     /// Идёт выделение текста — страница не листается
     var isLocked = false
@@ -541,8 +529,8 @@ struct PageCurlView: UIViewControllerRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
     func makeUIViewController(context: Context) -> UIPageViewController {
-        let controller = UIPageViewController(transitionStyle: .pageCurl, navigationOrientation: .horizontal)
-        controller.isDoubleSided = false
+        let controller = UIPageViewController(transitionStyle: curl ? .pageCurl : .scroll, navigationOrientation: .horizontal)
+        if curl { controller.isDoubleSided = false }
         controller.dataSource = context.coordinator
         controller.delegate = context.coordinator
         controller.view.backgroundColor = background
@@ -555,7 +543,9 @@ struct PageCurlView: UIViewControllerRepresentable {
     func updateUIViewController(_ controller: UIPageViewController, context: Context) {
         context.coordinator.parent = self
         controller.view.backgroundColor = background
+        // Выделяют текст — листание стоит: у загиба — его жесты, у сдвига — прокрутка внутри
         controller.gestureRecognizers.filter { !($0 is UITapGestureRecognizer) }.forEach { $0.isEnabled = !isLocked }
+        controller.view.subviews.compactMap { $0 as? UIScrollView }.forEach { $0.isScrollEnabled = !isLocked }
         guard let current = controller.viewControllers?.first as? PageHost else { return }
         if current.index == page {
             current.rootView = content(page)

@@ -48,9 +48,47 @@ export default {
     if (parts.length === 1 && parts[0] === "match") {
       return env.MATCH.get(env.MATCH.idFromName("global")).fetch(request);
     }
+    // POST /report — сообщение об ошибке в слове из встроенного словаря приложения
+    if (request.method === "POST" && parts.length === 1 && parts[0] === "report") {
+      return env.REPORTS.get(env.REPORTS.idFromName("all")).fetch(request);
+    }
+    // GET /reports?key=… — все сообщения (для правки words.csv); ключ — секрет REPORTS_KEY
+    if (request.method === "GET" && parts.length === 1 && parts[0] === "reports") {
+      if (!env.REPORTS_KEY || url.searchParams.get("key") !== env.REPORTS_KEY) return json({ error: "Нет доступа" }, 403);
+      return env.REPORTS.get(env.REPORTS.idFromName("all")).fetch(request);
+    }
     return json({ ok: true, service: "word-race" });
   },
 };
+
+/// Сообщения об ошибках в словах: одна таблица SQLite. Повтор с тем же id (очередь приложения отправила дважды) не дублируется
+export class Reports extends DurableObject {
+  constructor(ctx, env) {
+    super(ctx, env);
+    ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS reports (
+      id TEXT PRIMARY KEY, received TEXT, created TEXT, word TEXT, part_of_speech TEXT,
+      field TEXT, comment TEXT, current TEXT, app_version TEXT)`);
+  }
+
+  async fetch(request) {
+    if (request.method === "GET") {
+      const rows = this.ctx.storage.sql.exec("SELECT * FROM reports ORDER BY received DESC").toArray();
+      return json({ count: rows.length, reports: rows });
+    }
+    const text = await request.text();
+    if (text.length > 8000) return json({ error: "Слишком длинно" }, 413);
+    let body;
+    try { body = JSON.parse(text); } catch { return json({ error: "Неверные данные" }, 400); }
+    const str = (v, max) => (typeof v === "string" ? v.slice(0, max) : "");
+    const id = str(body.id, 64);
+    if (!id || !str(body.word, 100)) return json({ error: "Нет слова" }, 400);
+    this.ctx.storage.sql.exec(
+      "INSERT OR IGNORE INTO reports VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      id, new Date().toISOString(), str(body.created, 40), str(body.word, 100), str(body.partOfSpeech, 20),
+      str(body.field, 40), str(body.comment, 1000), JSON.stringify(body.current ?? {}).slice(0, 3000), str(body.appVersion, 20));
+    return json({ ok: true });
+  }
+}
 
 /// Комната гонки: игроки по WebSocket, первый подключившийся с role=host — создатель (задаёт слова и старт)
 export class RaceRoom extends DurableObject {
