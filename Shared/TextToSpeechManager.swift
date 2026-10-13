@@ -35,6 +35,8 @@ enum SpeechSettings {
 /// Озвучка слов. Музыку пользователя не останавливает: на время речи приглушает и потом возвращает громкость
 final class TextToSpeechManager: NSObject {
     static let shared = TextToSpeechManager()
+    /// Читалка читает книгу вслух — сессию после озвучки слова не выключаем, иначе чтение замолкнет
+    static var keepsSessionActive = false
 
     private let synthesizer = AVSpeechSynthesizer()
 
@@ -155,7 +157,7 @@ final class TextToSpeechManager: NSObject {
         let current = request
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             MainActor.assumeIsolated {
-                guard current == self.request, !self.synthesizer.isSpeaking else { return }
+                guard current == self.request, !self.synthesizer.isSpeaking, !Self.keepsSessionActive else { return }
                 Self.sessionQueue.async {
                     try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
                 }

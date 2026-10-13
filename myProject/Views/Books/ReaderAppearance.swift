@@ -87,12 +87,27 @@ enum ReaderSpacing: String, CaseIterable, Identifiable {
     }
 }
 
+/// Как идёт текст: по страницам (листать) или одной лентой (прокручивать)
+enum ReaderLayout: String, CaseIterable, Identifiable {
+    case pages, scroll
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .pages: return "Страницы"
+        case .scroll: return "Прокрутка"
+        }
+    }
+}
+
 /// Ключи настроек и разбор своих цветов (хранятся строкой «r,g,b»)
 enum ReaderSettings {
     static let themeKey = "reader_theme"
     static let fontSizeKey = "reader_font_size"
     static let fontKey = "reader_font"
     static let spacingKey = "reader_spacing"
+    static let layoutKey = "reader_layout"
     static let customTextKey = "reader_custom_text"
     static let customBackgroundKey = "reader_custom_background"
 
@@ -119,6 +134,7 @@ struct ReaderStyle: Equatable {
     let fontSize: CGFloat
     let font: ReaderFont
     let spacing: ReaderSpacing
+    var layout: ReaderLayout = .pages
     let customText: Color
     let customBackground: Color
 
@@ -131,6 +147,7 @@ struct ReaderStyle: Equatable {
             fontSize: defaults.object(forKey: ReaderSettings.fontSizeKey) as? Double ?? ReaderSettings.defaultFontSize,
             font: defaults.string(forKey: ReaderSettings.fontKey).flatMap(ReaderFont.init(rawValue:)) ?? .serif,
             spacing: defaults.string(forKey: ReaderSettings.spacingKey).flatMap(ReaderSpacing.init(rawValue:)) ?? .normal,
+            layout: defaults.string(forKey: ReaderSettings.layoutKey).flatMap(ReaderLayout.init(rawValue:)) ?? .pages,
             customText: ReaderSettings.color(from: defaults.string(forKey: ReaderSettings.customTextKey) ?? "", fallback: .black),
             customBackground: ReaderSettings.color(from: defaults.string(forKey: ReaderSettings.customBackgroundKey) ?? "", fallback: .white))
     }
@@ -169,6 +186,7 @@ struct ReaderAppearanceSheet: View {
     @AppStorage(ReaderSettings.fontSizeKey) private var fontSize = ReaderSettings.defaultFontSize
     @AppStorage(ReaderSettings.fontKey) private var font = ReaderFont.serif
     @AppStorage(ReaderSettings.spacingKey) private var spacing = ReaderSpacing.normal
+    @AppStorage(ReaderSettings.layoutKey) private var layout = ReaderLayout.pages
     @AppStorage(ReaderSettings.customTextKey) private var customTextRaw = ""
     @AppStorage(ReaderSettings.customBackgroundKey) private var customBackgroundRaw = ""
 
@@ -191,6 +209,12 @@ struct ReaderAppearanceSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     sample
+
+                    section("Листание")
+                    Picker("Листание", selection: $layout) {
+                        ForEach(ReaderLayout.allCases) { Text($0.title).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
 
                     section("Тема")
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 10)], spacing: 10) {
@@ -243,6 +267,7 @@ struct ReaderAppearanceSheet: View {
                         fontSize = ReaderSettings.defaultFontSize
                         font = .serif
                         spacing = .normal
+                        layout = .pages
                     }
                     .foregroundColor(.brandTint)
                     .frame(maxWidth: .infinity)

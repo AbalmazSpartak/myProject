@@ -31,6 +31,11 @@ struct BookReaderView: View {
 
     /// Оформление — снимок настроек: обновляется после шторки «Оформление»
     @State private var style = ReaderStyle.current()
+    /// Чтение вслух
+    @State private var speech = ReaderSpeech()
+    /// Глава дочитана вслух — следующую начать читать, как только она готова
+    @State private var continuesReading = false
+    @AppStorage(ReaderSpeech.speedKey) private var speechSpeed = 1.0
 
     nonisolated private static let wordScheme = "wlword"
 
@@ -42,7 +47,30 @@ struct BookReaderView: View {
         VStack(spacing: 0) {
             header
             Divider().opacity(0.4)
-            if let linkedParagraphs {
+            if let linkedParagraphs, style.layout == .pages, let chapter {
+                ReaderPagedText(
+                    chapterID: chapterIndex,
+                    paragraphs: linkedParagraphs,
+                    plainParagraphs: chapter.paragraphs,
+                    readerFont: style.font,
+                    fontSize: style.fontSize,
+                    textColor: style.text,
+                    lineSpacing: style.fontSize * style.spacing.factor,
+                    startParagraph: startParagraph,
+                    hasPrevious: chapterIndex > 0,
+                    hasNext: chapterIndex + 1 < chapters.count,
+                    speech: speech,
+                    onVisible: { paragraph in
+                        guard chapterStarts.indices.contains(chapterIndex) else { return }
+                        book.position = chapterStarts[chapterIndex] + paragraph
+                    },
+                    onTap: handleTap,
+                    onPrevious: { go(to: chapterIndex - 1, atEnd: true) },
+                    onNext: { go(to: chapterIndex + 1) }
+                )
+                .equatable()
+                .id(chapterIndex)
+            } else if let linkedParagraphs {
                 ReaderChapterText(
                     chapterID: chapterIndex,
                     paragraphs: linkedParagraphs,
@@ -50,6 +78,7 @@ struct BookReaderView: View {
                     textColor: style.text,
                     lineSpacing: style.fontSize * style.spacing.factor,
                     startParagraph: startParagraph,
+                    speech: speech,
                     onVisible: { paragraph in
                         // Место чтения — прямо в книгу: у читалки нет состояния, которое менялось бы при прокрутке
                         guard chapterStarts.indices.contains(chapterIndex) else { return }
@@ -71,7 +100,17 @@ struct BookReaderView: View {
         // Тёмная тема книги — светлые часы и батарея в статус-баре
         .preferredColorScheme(style.colorScheme)
         .readableColumn(720)
-        .task { open() }
+        .task {
+            open()
+            speech.onChapterEnd = {
+                guard chapterIndex + 1 < chapters.count else { speech.stop(); return }
+                continuesReading = true
+                startParagraph = 0
+                chapterIndex += 1
+                book.position = chapterStarts[chapterIndex]
+            }
+        }
+        .onDisappear { speech.stop() }
         // Глава готовится, когда главы загружены и при каждой смене главы
         .task(id: "\(chapters.count)-\(chapterIndex)") { await prepareChapter() }
         .sheet(item: $tappedWord) { tapped in
@@ -112,6 +151,12 @@ struct BookReaderView: View {
             }
             .accessibilityHint("Оглавление")
             Spacer()
+            Button(action: toggleReading) {
+                Image(systemName: speech.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                    .scaledFont(size: 24)
+                    .foregroundColor(style.text)
+            }
+            .accessibilityLabel(speech.isPlaying ? "Пауза" : "Читать вслух")
             Button { isShowingAppearance = true } label: {
                 Text("Aa")
                     .font(.system(size: 19, weight: .semibold, design: .serif))
@@ -128,6 +173,14 @@ struct BookReaderView: View {
                 Button { isShowingAppearance = true } label: {
                     Label("Оформление", systemImage: "textformat.size")
                 }
+                Picker(selection: $speechSpeed) {
+                    ForEach(ReaderSpeech.speeds, id: \.self) { speed in
+                        Text(speed == 1 ? "Обычная" : "\(speed.formatted(.number.locale(Locale(identifier: "ru_RU"))))×").tag(speed)
+                    }
+                } label: {
+                    Label("Скорость чтения вслух", systemImage: "speedometer")
+                }
+                .pickerStyle(.menu)
             } label: {
                 Image(systemName: "ellipsis.circle")
                     .scaledFont(size: 22)
@@ -227,13 +280,32 @@ struct BookReaderView: View {
         linkedParagraphs = await Task.detached(priority: .userInitiated) {
             paragraphs.enumerated().map { Self.linked($1, paragraph: $0) }
         }.value
+        speech.load(paragraphs: paragraphs, chapterTitle: chapter.title, bookTitle: book.title)
+        if continuesReading {
+            continuesReading = false
+            speech.start(from: 0)
+        }
     }
 
-    private func go(to index: Int) {
+    /// ▶️ — с абзаца вверху экрана; ⏸ — пауза; снова ▶️ — с того же слова
+    private func toggleReading() {
+        if speech.isPlaying {
+            speech.pause()
+        } else if speech.paragraph != nil {
+            speech.resume()
+        } else if chapterStarts.indices.contains(chapterIndex), let chapter {
+            let top = min(max(book.position - chapterStarts[chapterIndex], 0), max(chapter.paragraphs.count - 1, 0))
+            speech.start(from: top)
+        }
+    }
+
+    /// atEnd — листают назад с первой страницы: предыдущая глава открывается на последней странице
+    private func go(to index: Int, atEnd: Bool = false) {
         guard chapters.indices.contains(index) else { return }
-        startParagraph = 0
+        speech.stop()
+        startParagraph = atEnd ? max(chapters[index].paragraphs.count - 1, 0) : 0
         chapterIndex = index
-        book.position = chapterStarts[index]
+        book.position = chapterStarts[index] + startParagraph
     }
 
     /// wlword://w/<абзац>/<начало>/<длина> — в UTF-16, как NSRange
@@ -241,6 +313,8 @@ struct BookReaderView: View {
         guard url.scheme == Self.wordScheme, let chapter else { return }
         let parts = url.pathComponents.compactMap(Int.init)
         guard parts.count == 3, chapter.paragraphs.indices.contains(parts[0]) else { return }
+        // Перевод слова — чтение вслух на паузу, продолжится кнопкой ▶️
+        speech.pause()
         let paragraph = chapter.paragraphs[parts[0]]
         guard let range = Range(NSRange(location: parts[1], length: parts[2]), in: paragraph) else { return }
         let sentenceRange = Self.sentence(containing: range, in: paragraph)
@@ -294,6 +368,7 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
     let textColor: Color
     let lineSpacing: CGFloat
     let startParagraph: Int
+    let speech: ReaderSpeech
     let onVisible: (Int) -> Void
     let onTap: (URL) -> Void
     @ViewBuilder let navigation: () -> Navigation
@@ -311,11 +386,8 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 14) {
                     ForEach(paragraphs.indices, id: \.self) { index in
-                        Text(paragraphs[index])
-                            .font(font)
-                            .foregroundColor(textColor)
-                            .lineSpacing(lineSpacing)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        ReaderParagraph(index: index, text: paragraphs[index], font: font, textColor: textColor,
+                                        lineSpacing: lineSpacing, speech: speech)
                             .id(index)
                     }
                     navigation()
@@ -333,6 +405,11 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
                 guard phase == .idle, let top = visible.ids.min() else { return }
                 onVisible(top)
             }
+            // Чтение вслух ведёт за собой: читаемый абзац — у верха экрана
+            .onChange(of: speech.paragraph) { _, paragraph in
+                guard let paragraph, speech.isPlaying else { return }
+                withAnimation(.easeInOut(duration: 0.4)) { proxy.scrollTo(paragraph, anchor: UnitPoint(x: 0, y: 0.15)) }
+            }
             .task {
                 // Прокрутка к месту — после того как глава отрисовалась
                 guard startParagraph > 0 else { return }
@@ -346,6 +423,41 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
             onTap(url)
             return .handled
         })
+    }
+}
+
+/// Абзац. Читаемый вслух — с лёгким фоном, произносимое слово — ярче.
+/// Слово читает только читаемый абзац: при смене слова перерисовывается он один
+private struct ReaderParagraph: View {
+    let index: Int
+    let text: AttributedString
+    let font: Font
+    let textColor: Color
+    let lineSpacing: CGFloat
+    let speech: ReaderSpeech
+
+    var body: some View {
+        let isReading = speech.paragraph == index
+        Text(isReading ? highlighted : text)
+            .font(font)
+            .foregroundColor(textColor)
+            .lineSpacing(lineSpacing)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background {
+                if isReading {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(textColor.opacity(0.06))
+                        .padding(-8)
+                }
+            }
+    }
+
+    private var highlighted: AttributedString {
+        var result = text
+        if let word = speech.word, let range = Range(word, in: result) {
+            result[range].backgroundColor = Color.yellow.opacity(0.45)
+        }
+        return result
     }
 }
 
