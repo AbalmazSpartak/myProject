@@ -59,6 +59,11 @@ final class CommunityTopic {
         return audioClips.first { $0.id == id }
     }
 
+    /// Превью для карточки — без разметки: **жирный** и *курсив* в коротком тексте видны как звёздочки
+    var previewText: String {
+        text.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "*", with: "")
+    }
+
     /// Первый текст темы, иначе первый подзаголовок
     private static func preview(of blocks: [TopicBlock]) -> String {
         let text = blocks.first { $0.kind == .text && !$0.text.isEmpty }

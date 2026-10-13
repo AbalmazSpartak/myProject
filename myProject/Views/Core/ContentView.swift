@@ -33,7 +33,9 @@ struct ContentView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
-                OverviewView(open: { activeScreen = $0 }, openProfile: { activeScreen = .profile })
+                // «Сообщество» с «Обзора» — вкладка, а не вторая копия поверх «Обзора»: у него своя история переходов
+                OverviewView(open: { $0 == .community ? (selectedTab = 1) : (activeScreen = $0) },
+                             openProfile: { activeScreen = .profile })
                     .navigationBarHidden(true)
                     // Разделы открываются переходом: свайп от левого края возвращает на «Обзор»
                     .navigationDestination(item: $activeScreen) { screen in
@@ -47,10 +49,7 @@ struct ContentView: View {
             .tag(0)
 
             // Сообщество — вкладкой: темы открываются переходом внутри её стека
-            NavigationStack {
-                CommunityView(showsBackButton: false)
-                    .navigationBarHidden(true)
-            }
+            CommunityView(showsBackButton: false)
             .tabItem { Label("Сообщество", systemImage: "person.3.fill") }
             .tag(1)
 
@@ -103,7 +102,11 @@ struct ContentView: View {
                 .readableColumn()
         // «Сообщество» и «Книги» — во всю ширину: ленты и сетка обложек на iPad занимают место с пользой
         case .community:
-            CommunityView()
+            // Сюда не попадаем: «Сообщество» открывается вкладкой (см. OverviewView open) — на всякий случай переключаем
+            Color.clear.onAppear {
+                activeScreen = nil
+                selectedTab = 1
+            }
         case .books:
             BooksView()
         case .topic(let topic):

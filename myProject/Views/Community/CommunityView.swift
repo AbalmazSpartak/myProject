@@ -7,21 +7,43 @@ struct CommunityView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \CommunityTopic.createdAt, order: .reverse) private var topics: [CommunityTopic]
 
-    @State private var route: Route?
+    /// Одна история переходов на всё «Сообщество»: раздел → тема — по очереди в одном стеке.
+    /// Раньше раздел открывал темы своим переходом внутри перехода — при быстром переключении SwiftUI зацикливался и приложение висло
+    @State private var path: [CommunityRoute] = []
+    /// Идёт анимация перехода. Нажать «назад» и сразу открыть другое, пока экран ещё едет, — и NavigationStack
+    /// ломался: «Сообщество» оставалось пустым белым экраном (воспроизведено на симуляторе). На это время нажатия не принимаем
+    @State private var isNavigating = false
+    @State private var navigationTick = 0
     @State private var isCreatingTopic = false
     @State private var isShowingSubscriptionLock = false
     @AppStorage(Subscription.simulateMissingKey) private var simulateNoSubscription = false
     /// Открыто вкладкой внизу — «назад» не нужен
     var showsBackButton = true
 
-    private enum Route: Hashable {
-        case topic(CommunityTopic)
-        case section(String)
-        case movies
-        case music
-    }
 
     var body: some View {
+        NavigationStack(path: $path) {
+            home
+                .navigationBarHidden(true)
+                .navigationDestination(for: CommunityRoute.self) { route in
+                    destination(for: route)
+                        .toolbar(.hidden, for: .navigationBar)
+                }
+        }
+        .allowsHitTesting(!isNavigating)
+        .onChange(of: path) { _, _ in
+            isNavigating = true
+            navigationTick += 1
+            let tick = navigationTick
+            Task {
+                try? await Task.sleep(for: .milliseconds(450))
+                // Снимает блокировку только последний переход
+                if tick == navigationTick { isNavigating = false }
+            }
+        }
+    }
+
+    private var home: some View {
         VStack(spacing: 0) {
             header
 
@@ -42,10 +64,6 @@ struct CommunityView: View {
             }
         }
         .background(Color.brandBackground.ignoresSafeArea())
-        .navigationDestination(item: $route) { route in
-            destination(for: route)
-                .toolbar(.hidden, for: .navigationBar)
-        }
         .alert("Нужна подписка", isPresented: $isShowingSubscriptionLock) {
             Button("Понятно", role: .cancel) {}
         } message: {
@@ -108,7 +126,7 @@ struct CommunityView: View {
     private var latestRibbon: some View {
         Ribbon(title: "Подборки сообщества") {
             ForEach(topics.prefix(Self.latestCount)) { topic in
-                TopicCard(topic: topic) { route = .topic(topic) }
+                TopicCard(topic: topic) { path.append(.topic(topic.id)) }
             }
         }
     }
@@ -126,7 +144,7 @@ struct CommunityView: View {
                 .foregroundColor(.gray)
             ForEach(CommunitySections.all(from: topics), id: \.self) { section in
                 CommunitySectionRow(section: section, topics: topics.filter { $0.section == section }) {
-                    route = .section(section)
+                    path.append(.section(section))
                 }
             }
         }
@@ -170,16 +188,16 @@ struct CommunityView: View {
     ]
 
     private var moviesRibbon: some View {
-        Ribbon(title: "Английский по кино", onTitleTap: { route = .section("Английский по кино") }) {
+        Ribbon(title: "Английский по кино", onTitleTap: { path.append(.section("Английский по кино")) }) {
             if let quotes = topics.first(where: { $0.id == BuiltInTopics.movieQuotesID }) {
-                TileCard(title: "10 знаменитых фраз", icon: "quote.bubble.fill", color: .yellow) { route = .topic(quotes) }
+                TileCard(title: "10 знаменитых фраз", icon: "quote.bubble.fill", color: .yellow) { path.append(.topic(quotes.id)) }
             }
             ForEach(Self.movieGenres, id: \.name) { genre in
                 // У «Фэнтези» уже есть тема — открываем её; остальные жанры пока заглушки
                 if genre.name == "Фэнтези", let fantasy = topics.first(where: { $0.id == BuiltInTopics.fantasyID }) {
-                    TileCard(title: genre.name, icon: genre.icon, color: genre.color) { route = .topic(fantasy) }
+                    TileCard(title: genre.name, icon: genre.icon, color: genre.color) { path.append(.topic(fantasy.id)) }
                 } else {
-                    TileCard(title: genre.name, icon: genre.icon, color: genre.color) { route = .movies }
+                    TileCard(title: genre.name, icon: genre.icon, color: genre.color) { path.append(.movies) }
                 }
             }
         }
@@ -197,32 +215,42 @@ struct CommunityView: View {
     ]
 
     private var musicRibbon: some View {
-        Ribbon(title: "Английский по музыке", onTitleTap: { route = .section("Английский по музыке") }) {
+        Ribbon(title: "Английский по музыке", onTitleTap: { path.append(.section("Английский по музыке")) }) {
             if let words = topics.first(where: { $0.id == BuiltInTopics.musicWordsID }) {
-                TileCard(title: "Слова о музыке", icon: "music.note.list", color: .purple) { route = .topic(words) }
+                TileCard(title: "Слова о музыке", icon: "music.note.list", color: .purple) { path.append(.topic(words.id)) }
             }
             if let slang = topics.first(where: { $0.id == BuiltInTopics.songSlangID }) {
-                TileCard(title: "Gonna, wanna", icon: "quote.bubble.fill", color: .yellow) { route = .topic(slang) }
+                TileCard(title: "Gonna, wanna", icon: "quote.bubble.fill", color: .yellow) { path.append(.topic(slang.id)) }
             }
             ForEach(Self.musicGenres, id: \.name) { genre in
-                TileCard(title: genre.name, icon: genre.icon, color: genre.color) { route = .music }
+                TileCard(title: genre.name, icon: genre.icon, color: genre.color) { path.append(.music) }
             }
         }
     }
 
     @ViewBuilder
-    private func destination(for route: Route) -> some View {
+    private func destination(for route: CommunityRoute) -> some View {
         switch route {
-        case .topic(let topic):
-            TopicView(topic: topic)
+        case .topic(let id, let backTitle):
+            if let topic = topics.first(where: { $0.id == id }) {
+                if let backTitle { TopicView(topic: topic, backTitle: backTitle) } else { TopicView(topic: topic) }
+            }
         case .section(let section):
-            CommunitySectionView(section: section)
+            CommunitySectionView(section: section) { topic in path.append(.topic(topic.id, backTitle: section)) }
         case .movies:
             StubView(title: "Английский по кино", message: "Здесь будет раздел с подборками слов по фильмам", backTitle: "Сообщество")
         case .music:
             StubView(title: "Английский по музыке", message: "Здесь будут слова и фразы из песен по жанрам", backTitle: "Сообщество")
         }
     }
+}
+
+/// Куда ведёт переход в «Сообществе». Темы — по id, а не самим объектом: значение не меняется, когда тему правят
+enum CommunityRoute: Hashable {
+    case topic(UUID, backTitle: String? = nil)
+    case section(String)
+    case movies
+    case music
 }
 
 /// Карточка темы в ленте раздела
@@ -241,7 +269,7 @@ struct TopicCard: View {
                     .foregroundColor(.brandDark)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
-                Text(topic.text)
+                Text(topic.previewText)
                     .scaledFont(size: 13)
                     .foregroundColor(.gray)
                     .lineLimit(3)

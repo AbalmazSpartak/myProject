@@ -8,8 +8,9 @@ struct CommunitySectionView: View {
     @Query(sort: \CommunityTopic.createdAt, order: .reverse) private var allTopics: [CommunityTopic]
 
     let section: String
+    /// Тема открывается в общей истории переходов «Сообщества», а не своим переходом
+    let onOpen: (CommunityTopic) -> Void
 
-    @State private var openedTopic: CommunityTopic?
     @State private var isCreatingTopic = false
     @State private var isShowingSubscriptionLock = false
     @AppStorage(Subscription.simulateMissingKey) private var simulateNoSubscription = false
@@ -25,17 +26,13 @@ struct CommunitySectionView: View {
                         empty
                     }
                     ForEach(topics) { topic in
-                        SectionTopicRow(topic: topic) { openedTopic = topic }
+                        SectionTopicRow(topic: topic) { onOpen(topic) }
                     }
                 }
                 .padding(20)
             }
         }
         .background(Color.brandBackground.ignoresSafeArea())
-        .navigationDestination(item: $openedTopic) { topic in
-            TopicView(topic: topic, backTitle: section)
-                .toolbar(.hidden, for: .navigationBar)
-        }
         .alert("Нужна подписка", isPresented: $isShowingSubscriptionLock) {
             Button("Понятно", role: .cancel) {}
         } message: {
@@ -56,7 +53,20 @@ struct CommunitySectionView: View {
         }
     }
 
+    /// «‹ Сообщество» и «+» — строкой, название раздела — крупно под ней: в одну строку они наезжали друг на друга
     private var header: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            headerButtons
+            Text(section)
+                .scaledFont(size: 28, weight: .bold, design: .serif)
+                .foregroundColor(.brandDark)
+                .lineLimit(2)
+                .padding(.horizontal, 20)
+        }
+        .padding(.bottom, 4)
+    }
+
+    private var headerButtons: some View {
         HStack {
             Button(action: { dismiss() }) {
                 HStack(spacing: 4) {
@@ -76,18 +86,6 @@ struct CommunitySectionView: View {
         }
         .padding(.horizontal, 16)
         .padding(.top, 8)
-        .padding(.bottom, 4)
-        .overlay {
-            // Узкая середина: длинное название раздела не наезжает на кнопки
-            Text(section)
-                .scaledFont(size: 20, weight: .bold)
-                .foregroundColor(.brandDark)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-                .padding(.horizontal, 130)
-                .padding(.top, 8)
-                .allowsHitTesting(false)
-        }
     }
 
     private var empty: some View {
@@ -196,7 +194,7 @@ private struct SectionTopicRow: View {
                     .foregroundColor(.brandDark)
                     .multilineTextAlignment(.leading)
                 if !topic.text.isEmpty {
-                    Text(topic.text)
+                    Text(topic.previewText)
                         .scaledFont(size: 14)
                         .foregroundColor(.gray)
                         .lineLimit(2)
