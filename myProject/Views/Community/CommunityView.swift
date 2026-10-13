@@ -175,7 +175,12 @@ struct CommunityView: View {
                 TileCard(title: "10 знаменитых фраз", icon: "quote.bubble.fill", color: .yellow) { route = .topic(quotes) }
             }
             ForEach(Self.movieGenres, id: \.name) { genre in
-                TileCard(title: genre.name, icon: genre.icon, color: genre.color) { route = .movies }
+                // У «Фэнтези» уже есть тема — открываем её; остальные жанры пока заглушки
+                if genre.name == "Фэнтези", let fantasy = topics.first(where: { $0.id == BuiltInTopics.fantasyID }) {
+                    TileCard(title: genre.name, icon: genre.icon, color: genre.color) { route = .topic(fantasy) }
+                } else {
+                    TileCard(title: genre.name, icon: genre.icon, color: genre.color) { route = .movies }
+                }
             }
         }
     }
@@ -193,6 +198,12 @@ struct CommunityView: View {
 
     private var musicRibbon: some View {
         Ribbon(title: "Английский по музыке", onTitleTap: { route = .section("Английский по музыке") }) {
+            if let words = topics.first(where: { $0.id == BuiltInTopics.musicWordsID }) {
+                TileCard(title: "Слова о музыке", icon: "music.note.list", color: .purple) { route = .topic(words) }
+            }
+            if let slang = topics.first(where: { $0.id == BuiltInTopics.songSlangID }) {
+                TileCard(title: "Gonna, wanna", icon: "quote.bubble.fill", color: .yellow) { route = .topic(slang) }
+            }
             ForEach(Self.musicGenres, id: \.name) { genre in
                 TileCard(title: genre.name, icon: genre.icon, color: genre.color) { route = .music }
             }

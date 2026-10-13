@@ -120,8 +120,15 @@ enum BuiltInTopics {
 
     /// «10 знаменитых фраз из фильмов» — плитка в ленте «Английский по кино»
     static let movieQuotesID = uuid(topic: 4)
+    /// Плитки лент: «Фэнтези» у кино, «Слова о музыке» и «Gonna, wanna» у музыки
+    static let fantasyID = uuid(topic: 18)
+    static let musicWordsID = uuid(topic: 20)
+    static let songSlangID = uuid(topic: 21)
 
-    static let all: [Topic] = [tenses, irregularVerbs, articles, movieQuotes, airport, cafe, vowelReading]
+    static let all: [Topic] = [tenses, irregularVerbs, articles, movieQuotes, airport, cafe, vowelReading,
+                               hotel, doctor, shopping, city, timePrepositions, quantifiers, comparatives,
+                               thSound, minimalPairs, silentLetters, fantasyPhrases, seriesPhrases, musicWords, songSlang,
+                               idioms, textingSlang]
 
     static let pronunciationSection = "Произношение"
 
@@ -390,5 +397,400 @@ enum BuiltInTopics {
             ("cup", "чашка"), ("cute", "милый"), ("here", "здесь"), ("bike", "велосипед"), ("bird", "птица"),
             ("fly", "летать"), ("fire", "огонь"),
         ]
+    )
+
+    // MARK: - Подборки слов
+
+    private static let hotel = Topic(
+        number: 8,
+        section: "Подборки слов",
+        title: "В отеле",
+        blocks: blocks(8, [
+            text("От бронирования до выезда: как заселиться, попросить что-нибудь в номер и решить проблему."),
+            table([
+                ["Фраза и перевод"],
+                ["**I have a reservation under the name Ivanov.**\nУ меня бронь на имя Иванов."],
+                ["**What time is check-out?**\nДо скольких нужно выехать?"],
+                ["**Is breakfast included?**\nЗавтрак включён?"],
+                ["**Could I have an extra towel, please?**\nМожно ещё одно полотенце?"],
+                ["**The air conditioning doesn't work.**\nНе работает кондиционер."],
+                ["**What's the Wi-Fi password?**\nКакой пароль от вайфая?"],
+                ["**Can I leave my luggage here?**\nМожно оставить у вас багаж?"],
+                ["**I'd like to check out, please.**\nЯ хотел бы выехать."],
+            ]),
+            text("Check in — заселиться, check out — выехать. Reception — стойка администратора; там же говорят front desk."),
+            speech("I have a reservation under the name Ivanov.", caption: "Заселение"),
+            speech("Could I have an extra towel, please?", caption: "Просьба в номер"),
+        ]),
+        words: [
+            ("reservation", "бронирование"), ("reception", "стойка администратора"), ("towel", "полотенце"),
+            ("key", "ключ"), ("floor", "этаж"), ("single room", "одноместный номер"), ("double room", "двухместный номер"),
+        ]
+    )
+
+    private static let doctor = Topic(
+        number: 9,
+        section: "Подборки слов",
+        title: "У врача и в аптеке",
+        blocks: blocks(9, [
+            text("Как описать, что болит, и купить лекарство. В экстренной ситуации в США звонят 911, в Великобритании — 999, в Европе — 112."),
+            table([
+                ["Фраза и перевод"],
+                ["**I don't feel well.**\nМне нехорошо."],
+                ["**I have a headache.**\nУ меня болит голова."],
+                ["**I have a sore throat.**\nУ меня болит горло."],
+                ["**I have a fever.**\nУ меня температура."],
+                ["**It hurts here.**\nБолит вот здесь."],
+                ["**I'm allergic to penicillin.**\nУ меня аллергия на пенициллин."],
+                ["**Do I need a prescription?**\nНужен рецепт?"],
+                ["**How often should I take it?**\nКак часто это принимать?"],
+            ]),
+            heading("Что болит: -ache"),
+            text("headache — голова, toothache — зуб, stomachache — живот, backache — спина. Остальное — через hurt: My knee hurts — болит колено."),
+            speech("I have a headache and a sore throat.", caption: "Голова и горло"),
+        ]),
+        words: [
+            ("headache", "головная боль"), ("fever", "жар"), ("cough", "кашель"), ("pill", "таблетка"),
+            ("prescription", "рецепт (врача)"), ("pharmacy", "аптека"), ("hurt", "болеть"), ("medicine", "лекарство"),
+        ]
+    )
+
+    private static let shopping = Topic(
+        number: 10,
+        section: "Подборки слов",
+        title: "Покупки и одежда",
+        blocks: blocks(10, [
+            text("Спросить размер, примерить, узнать цену и вернуть покупку."),
+            table([
+                ["Фраза и перевод"],
+                ["**I'm just looking, thanks.**\nЯ просто смотрю, спасибо."],
+                ["**Do you have this in a medium?**\nЕсть такое размера M?"],
+                ["**Can I try it on?**\nМожно примерить?"],
+                ["**Where are the fitting rooms?**\nГде примерочные?"],
+                ["**It's too small. Do you have a bigger size?**\nМаловато. Есть размер побольше?"],
+                ["**How much is it?**\nСколько стоит?"],
+                ["**Is it on sale?**\nНа это есть скидка?"],
+                ["**I'd like to return this.**\nЯ хочу это вернуть."],
+            ]),
+            text("Размеры одежды: small (S), medium (M), large (L). Обувь в США и Великобритании меряют своими номерами — например, русский 42 — это примерно US 9 и UK 8."),
+            speech("Can I try it on?", caption: "Примерить"),
+        ]),
+        words: [
+            ("size", "размер"), ("shirt", "рубашка"), ("dress", "платье"), ("shoes", "обувь"),
+            ("jacket", "куртка"), ("price", "цена"), ("receipt", "чек"), ("discount", "скидка"),
+        ]
+    )
+
+    private static let city = Topic(
+        number: 11,
+        section: "Подборки слов",
+        title: "Транспорт и город",
+        blocks: blocks(11, [
+            text("Как спросить дорогу, купить билет и не уехать не туда."),
+            table([
+                ["Фраза и перевод"],
+                ["**Excuse me, how do I get to the station?**\nИзвините, как пройти к вокзалу?"],
+                ["**Is it far from here?**\nЭто далеко отсюда?"],
+                ["**Go straight and turn left.**\nИдите прямо и поверните налево."],
+                ["**Which bus goes to the city centre?**\nКакой автобус идёт в центр?"],
+                ["**A return ticket, please.**\nБилет туда и обратно, пожалуйста."],
+                ["**Where do I change trains?**\nГде пересадка?"],
+                ["**Could you call me a taxi?**\nВызовите мне такси, пожалуйста."],
+                ["**Is this seat free?**\nЭто место свободно?"],
+            ]),
+            text("В Лондоне метро — the Underground или the Tube, в Нью-Йорке — the subway. Билет в одну сторону: в Британии single, в США one-way."),
+            speech("Excuse me, how do I get to the station?", caption: "Спросить дорогу"),
+        ]),
+        words: [
+            ("ticket", "билет"), ("station", "вокзал"), ("bus stop", "остановка"), ("straight", "прямо"),
+            ("turn", "поворачивать"), ("map", "карта"), ("traffic", "дорожное движение"), ("crossroads", "перекрёсток"),
+        ]
+    )
+
+    // MARK: - Грамматика
+
+    private static let timePrepositions = Topic(
+        number: 12,
+        section: grammarSection,
+        title: "Предлоги времени: in, on, at",
+        blocks: blocks(12, [
+            text("Три предлога на все случаи: чем короче и точнее время, тем «острее» предлог. **in** — большие отрезки, **on** — дни, **at** — точка на часах."),
+            table([
+                ["Предлог", "Когда и пример"],
+                ["in", "Месяцы, годы, века, времена года, части суток\n*in May, in 2020, in summer, in the morning*"],
+                ["on", "Дни недели и даты\n*on Monday, on the 5th of June, on my birthday*"],
+                ["at", "Точное время и праздники-моменты\n*at 7 o'clock, at noon, at night, at the weekend*"],
+            ], labels: true),
+            heading("Без предлога"),
+            text("Перед this, next, last, every, tomorrow, yesterday предлог не нужен: *next Friday*, *last year*, *every morning*."),
+            speech("I get up at seven in the morning on weekdays.", caption: "Все три предлога в одной фразе"),
+            text("*at the weekend* — по-британски; американцы говорят *on the weekend*."),
+        ]),
+        words: [("weekday", "будний день"), ("noon", "полдень"), ("century", "век")]
+    )
+
+    private static let quantifiers = Topic(
+        number: 13,
+        section: grammarSection,
+        title: "Some, any, much, many",
+        blocks: blocks(13, [
+            text("Сначала решите: предмет можно посчитать (apples, chairs) или нет (milk, money, time)? От этого зависит, какое слово выбрать."),
+            table([
+                ["Слово", "Когда и пример"],
+                ["some", "В утверждении — «немного, несколько»\n*I have some apples. There's some milk.*"],
+                ["any", "В вопросе и отрицании\n*Do you have any money? I don't have any time.*"],
+                ["many", "Много — с тем, что считают\n*How many friends? Not many people.*"],
+                ["much", "Много — с тем, что не считают\n*How much water? Not much time.*"],
+                ["a lot of", "Много — и с тем, и с другим, в утверждении\n*a lot of books, a lot of fun*"],
+            ], labels: true),
+            heading("Исключение для some"),
+            text("В просьбах и предложениях some остаётся и в вопросе: *Would you like some tea? Can I have some water?*"),
+            speech("How much does it cost? How many do you need?", caption: "Сколько стоит? Сколько нужно?"),
+        ]),
+        words: [("countable", "исчисляемый"), ("uncountable", "неисчисляемый"), ("amount", "количество")]
+    )
+
+    private static let comparatives = Topic(
+        number: 14,
+        section: grammarSection,
+        title: "Сравнение: bigger, the biggest",
+        blocks: blocks(14, [
+            text("Короткие прилагательные получают -er и -est, длинные — more и most. Неправильных всего несколько — их стоит выучить."),
+            table([
+                ["Правило", "Пример"],
+                ["Короткое: -er, the -est", "cheap — cheaper — the cheapest"],
+                ["Гласная + согласная: удвоение", "big — bigger — the biggest"],
+                ["На -y: -ier, -iest", "easy — easier — the easiest"],
+                ["Длинное: more, the most", "expensive — more expensive — the most expensive"],
+            ]),
+            heading("Неправильные"),
+            table([
+                ["Слово", "Сравнение", "Превосходная"],
+                ["good", "better", "the best"],
+                ["bad", "worse", "the worst"],
+                ["far", "farther", "the farthest"],
+                ["many / much", "more", "the most"],
+                ["little", "less", "the least"],
+            ]),
+            text("«Чем» — **than**: *My brother is taller than me.* «Такой же, как» — **as … as**: *She is as tall as her mother.*"),
+            speech("This is the best day of my life.", caption: "Лучший день в моей жизни"),
+        ]),
+        words: [("cheap", "дешёвый"), ("expensive", "дорогой"), ("easy", "лёгкий"), ("tall", "высокий"), ("than", "чем")]
+    )
+
+    // MARK: - Произношение
+
+    private static let thSound = Topic(
+        number: 15,
+        section: pronunciationSection,
+        title: "Звук th",
+        blocks: blocks(15, [
+            text("В русском такого звука нет, поэтому вместо th часто говорят «с», «з» или «ф». Секрет простой: кончик языка — между зубами, и дуть сквозь щель."),
+            table([
+                ["Звук", "Как и примеры"],
+                ["[θ]", "Глухой: язык между зубами, без голоса\n*think, three, thank, month, birthday*"],
+                ["[ð]", "Звонкий: то же, но с голосом\n*this, that, mother, weather, they*"],
+            ], labels: true),
+            heading("Не перепутайте"),
+            table([
+                ["С th", "Без th"],
+                ["think — думать", "sink — раковина"],
+                ["three — три", "tree — дерево"],
+                ["thank — благодарить", "tank — бак, танк"],
+                ["they — они", "day — день"],
+            ]),
+            speech("think, sink. three, tree. thank, tank.", caption: "Глухой th и похожие слова"),
+            speech("this, that, mother, weather.", caption: "Звонкий th"),
+            speech("Thank you for the three things you brought.", caption: "Скороговорка"),
+        ]),
+        words: [("think", "думать"), ("three", "три"), ("thank", "благодарить"), ("weather", "погода"), ("month", "месяц")]
+    )
+
+    private static let minimalPairs = Topic(
+        number: 16,
+        section: pronunciationSection,
+        title: "Ship или sheep: долгие и краткие звуки",
+        blocks: blocks(16, [
+            text("В английском длина гласного меняет смысл. Краткий звук — коротко и расслабленно, долгий — тянем, губы напряжены. Двоеточие в транскрипции [i:] и значит «долгий»."),
+            table([
+                ["Краткий", "Долгий"],
+                ["ship [ʃɪp] — корабль", "sheep [ʃi:p] — овца"],
+                ["live [lɪv] — жить", "leave [li:v] — уходить"],
+                ["full [fʊl] — полный", "fool [fu:l] — дурак"],
+                ["pull [pʊl] — тянуть", "pool [pu:l] — бассейн"],
+                ["cot [kɒt] — детская кроватка", "caught [kɔ:t] — поймал"],
+            ]),
+            speech("ship, sheep. live, leave. full, fool.", caption: "Краткий и долгий"),
+            text("Ещё одна важная пара — [e] и [æ]: bed — кровать, bad — плохой; men — мужчины, man — мужчина. Для [æ] рот открыт шире, почти как для «а»."),
+            speech("bed, bad. men, man.", caption: "[e] и [æ]"),
+        ]),
+        words: [("ship", "корабль"), ("sheep", "овца"), ("leave", "уходить"), ("pool", "бассейн"), ("bad", "плохой")]
+    )
+
+    private static let silentLetters = Topic(
+        number: 17,
+        section: pronunciationSection,
+        title: "Немые буквы",
+        blocks: blocks(17, [
+            text("Пишется, но не читается: в старом английском эти буквы звучали, а написание осталось. Запомните несколько частых сочетаний — и большая часть слов станет понятной."),
+            table([
+                ["Буква", "Когда молчит и пример"],
+                ["k", "kn- в начале\n*know, knife, knee, knock*"],
+                ["w", "wr- в начале и в who, whole\n*write, wrong, answer*"],
+                ["b", "после m в конце\n*climb, comb, lamb, thumb*"],
+                ["h", "в начале нескольких слов\n*hour, honest, honour*"],
+                ["l", "в -alk, -ould и некоторых других\n*walk, talk, could, should, half*"],
+                ["gh", "часто в середине и конце\n*night, light, daughter, though*"],
+            ], labels: true),
+            text("Из-за немой h говорят **an** hour и **an** honest man: слово начинается с гласного звука."),
+            speech("know, write, climb, hour, walk, night.", caption: "Немые буквы"),
+        ]),
+        words: [("knife", "нож"), ("knee", "колено"), ("climb", "карабкаться"), ("honest", "честный"), ("daughter", "дочь")]
+    )
+
+    // MARK: - Кино
+
+    private static let fantasyPhrases = Topic(
+        number: 18,
+        section: "Английский по кино",
+        title: "Фэнтези: короткие фразы из фильмов",
+        blocks: blocks(18, [
+            text("Короткие реплики из фэнтези-фильмов, которые давно живут своей жизнью. Курсивом — фильм."),
+            table([
+                ["Фраза и перевод"],
+                ["**You shall not pass!**\nТы не пройдёшь! *The Lord of the Rings*"],
+                ["**One does not simply walk into Mordor.**\nНельзя просто так взять и войти в Мордор. *The Lord of the Rings*"],
+                ["**After all this time? Always.**\nСпустя столько времени? Всегда. *Harry Potter*"],
+                ["**Winter is coming.**\nЗима близко. *Game of Thrones*"],
+                ["**I am Groot.**\nЯ есть Грут. *Guardians of the Galaxy*"],
+                ["**Hakuna matata.**\nАкуна матата — «нет проблем» на суахили. *The Lion King*"],
+            ]),
+            text("**shall** — старинное «будет, должен»: в фэнтези звучит торжественно. В обычной речи вместо него — will или must."),
+            speech("You shall not pass!", caption: "The Lord of the Rings"),
+            speech("Winter is coming.", caption: "Game of Thrones"),
+        ]),
+        words: [("pass", "проходить"), ("simply", "просто"), ("always", "всегда"), ("winter", "зима")]
+    )
+
+    private static let seriesPhrases = Topic(
+        number: 19,
+        section: "Английский по кино",
+        title: "Как говорят в сериалах",
+        blocks: blocks(19, [
+            text("Разговорные выражения, которые слышишь в каждом сериале, но редко встречаешь в учебниках."),
+            table([
+                ["Фраза и перевод"],
+                ["**What's up?**\nКак дела? Что нового?"],
+                ["**No way!**\nДа ладно! Не может быть! / Ни за что!"],
+                ["**I'm on it.**\nУже занимаюсь. Сделаю."],
+                ["**Fair enough.**\nСправедливо. Резонно."],
+                ["**My bad.**\nМоя ошибка. Виноват."],
+                ["**Hang on a sec.**\nПодожди секунду."],
+                ["**You got this.**\nУ тебя получится."],
+                ["**It's not a big deal.**\nНичего страшного."],
+                ["**I'm good, thanks.**\nНе нужно, спасибо. — вежливый отказ"],
+            ]),
+            text("«I'm good» на вопрос «Хочешь чаю?» — это не «мне хорошо», а «нет, спасибо»."),
+            speech("Hang on a sec. I'm on it.", caption: "Подожди секунду, уже делаю"),
+        ]),
+        words: [("deal", "дело, сделка"), ("fair", "справедливый"), ("enough", "достаточно")]
+    )
+
+    // MARK: - Музыка
+
+    private static let musicWords = Topic(
+        number: 20,
+        section: "Английский по музыке",
+        title: "Слова о музыке",
+        blocks: blocks(20, [
+            text("Чтобы рассказать о любимой группе, концерте или песне, которая не выходит из головы."),
+            table([
+                ["Фраза и перевод"],
+                ["**What kind of music are you into?**\nКакую музыку ты любишь?"],
+                ["**This song is stuck in my head.**\nЭта песня не выходит у меня из головы."],
+                ["**They're going on tour next year.**\nВ следующем году они едут в тур."],
+                ["**I can't carry a tune.**\nМне медведь на ухо наступил."],
+                ["**Turn it up!**\nСделай погромче!"],
+                ["**The lyrics are really deep.**\nУ песни очень глубокий текст."],
+            ]),
+            text("**lyrics** — текст песни, всегда во множественном числе. **Band** — группа, **singer** — певец, **gig** — небольшой концерт."),
+            speech("This song is stuck in my head.", caption: "Песня застряла в голове"),
+        ]),
+        words: [
+            ("song", "песня"), ("lyrics", "текст песни"), ("band", "музыкальная группа"), ("singer", "певец"),
+            ("concert", "концерт"), ("album", "альбом"), ("tune", "мелодия"),
+        ]
+    )
+
+    private static let songSlang = Topic(
+        number: 21,
+        section: "Английский по музыке",
+        title: "Gonna, wanna, ain't: разговорное в песнях",
+        blocks: blocks(21, [
+            text("В песнях почти никогда не поют «going to» или «I am not» — поют так, как говорят. Вот самые частые сокращения: их полезно узнавать на слух, но в письме и на экзамене лучше полные формы."),
+            table([
+                ["Как поют", "Полная форма"],
+                ["gonna", "going to — собираться"],
+                ["wanna", "want to — хотеть"],
+                ["gotta", "have got to — должен"],
+                ["ain't", "am not / isn't / haven't"],
+                ["'cause", "because — потому что"],
+                ["ya", "you — ты"],
+                ["lemme", "let me — дай мне"],
+                ["kinda", "kind of — вроде, типа"],
+            ]),
+            speech("I'm gonna tell you. I wanna know. I gotta go.", caption: "Как это звучит"),
+            text("Ain't — очень разговорное и грамматически «неправильное»: в песнях и кино встречается часто, но в обычной вежливой речи его избегают."),
+        ]),
+        words: [("because", "потому что"), ("kind of", "вроде, отчасти"), ("let me", "позволь мне")]
+    )
+
+    // MARK: - Идиомы и переписка
+
+    private static let idioms = Topic(
+        number: 22,
+        section: "Идиомы",
+        title: "Идиомы на каждый день",
+        blocks: blocks(22, [
+            text("Выражения, смысл которых не сложить из отдельных слов. Носители используют их постоянно — и в разговоре, и на работе."),
+            table([
+                ["Идиома и значение"],
+                ["**It's a piece of cake.**\nПроще простого."],
+                ["**Break a leg!**\nНи пуха ни пера! — пожелание удачи перед выступлением"],
+                ["**I'm under the weather.**\nМне нездоровится."],
+                ["**Let's call it a day.**\nНа сегодня хватит."],
+                ["**It costs an arm and a leg.**\nСтоит бешеных денег."],
+                ["**Once in a blue moon.**\nРаз в сто лет."],
+                ["**Hit the books.**\nЗасесть за учебники."],
+                ["**Spill the beans.**\nПроболтаться, выдать секрет."],
+            ]),
+            speech("Let's call it a day.", caption: "На сегодня хватит"),
+            speech("It's a piece of cake.", caption: "Проще простого"),
+        ]),
+        words: [("piece", "кусок"), ("cake", "торт"), ("weather", "погода"), ("leg", "нога")]
+    )
+
+    private static let textingSlang = Topic(
+        number: 23,
+        section: "Сленг и переписка",
+        title: "Сокращения в переписке",
+        blocks: blocks(23, [
+            text("В чатах и комментариях пишут коротко. Без этих сокращений половину сообщений не понять."),
+            table([
+                ["Сокращение", "Значение"],
+                ["btw", "by the way — кстати"],
+                ["idk", "I don't know — не знаю"],
+                ["imo", "in my opinion — по-моему"],
+                ["tbh", "to be honest — честно говоря"],
+                ["lol", "laughing out loud — смеюсь"],
+                ["brb", "be right back — скоро вернусь"],
+                ["asap", "as soon as possible — как можно скорее"],
+                ["ngl", "not gonna lie — не буду врать"],
+                ["np", "no problem — не за что"],
+                ["thx / ty", "thanks / thank you — спасибо"],
+            ]),
+            text("Asap уместно и в рабочей переписке, остальные — только с друзьями."),
+        ]),
+        words: [("opinion", "мнение"), ("honest", "честный"), ("possible", "возможный")]
     )
 }
