@@ -10,6 +10,7 @@ struct SettingsView: View {
     @AppStorage("app_theme") private var selectedTheme: String = "system"
     @AppStorage("translation_mode") private var translationMode: String = "en_ru"
     @AppStorage("show_word_images") private var showWordImages: Bool = true
+    @AppStorage(DictionarySignals.enabledKey) private var improveDictionary = true
     @AppStorage(Haptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
     @AppStorage(OverviewLayout.storageKey) private var overviewLayout = OverviewLayout.standard
@@ -177,6 +178,12 @@ struct SettingsView: View {
                         Text(notificationsDenied
                              ? "Уведомления запрещены — включите их в Настройках iPhone → WordLearner → Уведомления."
                              : "Раз в день, без спешки и счётчиков — просто повод уделить словам пару минут.")
+                    }
+
+                    Section {
+                        Toggle("Помогать улучшать словарь", isOn: $improveDictionary)
+                    } footer: {
+                        Text("Анонимно, без имени и почты: ваши правки слов из встроенного словаря, слова, добавленные из книг (с предложением), и слова, которые долго не запоминаются. По ним исправляются переводы для всех.")
                     }
 
                     // Резервная копия

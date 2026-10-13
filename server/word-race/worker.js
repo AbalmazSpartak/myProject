@@ -53,8 +53,12 @@ export default {
       return env.REPORTS.get(env.REPORTS.idFromName("all")).fetch(request);
     }
     // GET /reports?key=… — все сообщения (для правки words.csv); ключ — секрет REPORTS_KEY
-    if (request.method === "GET" && parts.length === 1 && parts[0] === "reports") {
-      if (!env.REPORTS_KEY || url.searchParams.get("key") !== env.REPORTS_KEY) return json({ error: "Нет доступа" }, 403);
+    // POST /signals — сигналы для улучшения словаря (правки, слова из текста, трудные слова) — от приложения
+    // GET /signals?key=… — все сигналы; GET /patch?since=N — одобренные правки словаря для всех; POST /patch?key=… — добавить
+    const admin = env.REPORTS_KEY && url.searchParams.get("key") === env.REPORTS_KEY;
+    if (parts.length === 1 && ["reports", "signals", "patch"].includes(parts[0])) {
+      const open = (parts[0] === "signals" && request.method === "POST") || (parts[0] === "patch" && request.method === "GET");
+      if (!open && !admin) return json({ error: "Нет доступа" }, 403);
       return env.REPORTS.get(env.REPORTS.idFromName("all")).fetch(request);
     }
     return json({ ok: true, service: "word-race" });
@@ -68,9 +72,20 @@ export class Reports extends DurableObject {
     ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS reports (
       id TEXT PRIMARY KEY, received TEXT, created TEXT, word TEXT, part_of_speech TEXT,
       field TEXT, comment TEXT, current TEXT, app_version TEXT)`);
+    // Сигналы: правка встроенного слова (edit), слово из текста (context), слова нет в базе (missing), трудное слово (hard)
+    ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS signals (
+      id TEXT PRIMARY KEY, received TEXT, install TEXT, kind TEXT, word TEXT, part_of_speech TEXT,
+      field TEXT, old TEXT, new TEXT, sentence TEXT)`);
+    // Патч словаря: одобренные правки, по порядку; приложение берёт новые после своего номера
+    ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS patch (
+      version INTEGER PRIMARY KEY AUTOINCREMENT, created TEXT, word TEXT, part_of_speech TEXT,
+      match_russian TEXT, field TEXT, value TEXT)`);
   }
 
   async fetch(request) {
+    const path = new URL(request.url).pathname.split("/").filter(Boolean)[0];
+    if (path === "signals") return this.signals(request);
+    if (path === "patch") return this.patch(request);
     if (request.method === "GET") {
       const rows = this.ctx.storage.sql.exec("SELECT * FROM reports ORDER BY received DESC").toArray();
       return json({ count: rows.length, reports: rows });
@@ -87,6 +102,51 @@ export class Reports extends DurableObject {
       id, new Date().toISOString(), str(body.created, 40), str(body.word, 100), str(body.partOfSpeech, 20),
       str(body.field, 40), str(body.comment, 1000), JSON.stringify(body.current ?? {}).slice(0, 3000), str(body.appVersion, 20));
     return json({ ok: true });
+  }
+
+  async signals(request) {
+    if (request.method === "GET") {
+      const rows = this.ctx.storage.sql.exec("SELECT * FROM signals ORDER BY received DESC").toArray();
+      return json({ count: rows.length, signals: rows });
+    }
+    const text = await request.text();
+    if (text.length > 60000) return json({ error: "Слишком длинно" }, 413);
+    let items;
+    try { items = JSON.parse(text); } catch { return json({ error: "Неверные данные" }, 400); }
+    if (!Array.isArray(items)) return json({ error: "Нужен список" }, 400);
+    const str = (v, max) => (typeof v === "string" ? v.slice(0, max) : "");
+    const kinds = ["edit", "context", "missing", "hard"];
+    const received = new Date().toISOString();
+    let saved = 0;
+    for (const item of items.slice(0, 50)) {
+      if (!item || !str(item.id, 64) || !str(item.word, 100) || !kinds.includes(item.kind)) continue;
+      this.ctx.storage.sql.exec("INSERT OR IGNORE INTO signals VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        str(item.id, 64), received, str(item.install, 64), item.kind, str(item.word, 100), str(item.partOfSpeech, 20),
+        str(item.field, 30), str(item.old, 500), str(item.new, 500), str(item.sentence, 600));
+      saved++;
+    }
+    return json({ ok: true, saved });
+  }
+
+  async patch(request) {
+    if (request.method === "GET") {
+      const since = Number(new URL(request.url).searchParams.get("since") || 0) || 0;
+      const rows = this.ctx.storage.sql.exec("SELECT * FROM patch WHERE version > ? ORDER BY version", since).toArray();
+      return json({ entries: rows });
+    }
+    let items;
+    try { items = await request.json(); } catch { return json({ error: "Неверные данные" }, 400); }
+    if (!Array.isArray(items)) return json({ error: "Нужен список" }, 400);
+    const fields = ["russian", "transcription", "example", "cefrLevel", "partOfSpeech"];
+    const created = new Date().toISOString();
+    let saved = 0;
+    for (const e of items) {
+      if (!e || typeof e.word !== "string" || !fields.includes(e.field) || typeof e.value !== "string") continue;
+      this.ctx.storage.sql.exec("INSERT INTO patch (created, word, part_of_speech, match_russian, field, value) VALUES (?, ?, ?, ?, ?, ?)",
+        created, e.word, e.partOfSpeech || "", e.matchRussian || "", e.field, e.value);
+      saved++;
+    }
+    return json({ ok: true, saved });
   }
 }
 

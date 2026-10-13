@@ -221,5 +221,13 @@ struct WordLookupView: View {
         }
         try? modelContext.save()
         UINotificationFeedbackGenerator().notificationOccurred(.success)
+        // Сигнал для словаря: в каком значении слово встречается в книгах; или его нет в базе
+        if let baseWord {
+            DictionarySignals.record(.init(kind: "context", word: baseWord.english, partOfSpeech: baseWord.partOfSpeech,
+                                           field: "russian", old: baseWord.russian, sentence: tapped.sentence))
+        } else {
+            DictionarySignals.record(.init(kind: "missing", word: lemma, partOfSpeech: partOfSpeech,
+                                           field: "russian", new: translation, sentence: tapped.sentence))
+        }
     }
 }

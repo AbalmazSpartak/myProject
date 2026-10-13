@@ -29,6 +29,8 @@ struct MyApp: App {
                 DataPreloader.resetImagesIfSourcesChanged(context: mainContext)
                 // Встроенные темы «Сообщества» — после переустановки возвращаются, с новой версией обновляются
                 BuiltInTopics.sync(context: mainContext)
+                // Одобренные правки словаря с сервера — поверх words.csv
+                await DictionaryPatch.sync(context: mainContext)
                 // Голос для озвучки — заранее, чтобы первое слово не запиналось
                 TextToSpeechManager.shared.prepare()
             }
@@ -49,8 +51,12 @@ struct MyApp: App {
             switch phase {
             case .active:
                 reloadWordsChangedByWidget()
-                // Сообщения об ошибках, сохранённые без интернета
-                Task { await WordReports.flush() }
+                // Сообщения об ошибках и сигналы словаря, сохранённые без интернета; новые правки словаря
+                Task {
+                    await WordReports.flush()
+                    await DictionarySignals.flush()
+                    await DictionaryPatch.sync(context: container.mainContext)
+                }
             case .background: shareWithWidget()
             default: break
             }

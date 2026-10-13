@@ -10,6 +10,8 @@ struct EditWordView: View {
     /// Удаляем после закрытия окна, чтобы форма не обращалась к уже удалённому слову
     @State private var deleteOnClose = false
     @State private var isReporting = false
+    /// Слово из базы до правки — что поменяли, уходит сигналом для улучшения словаря
+    @State private var original: [String: String]?
 
     var body: some View {
         NavigationStack {
@@ -75,6 +77,9 @@ struct EditWordView: View {
                 modelContext.delete(word)
                 try? modelContext.save()
             }
+            .onAppear {
+                if !word.isCustom, original == nil { original = DictionarySignals.fields(of: word) }
+            }
             .sheet(isPresented: $isReporting) {
                 ReportWordView(word: word)
                     .presentationDetents([.medium, .large])
@@ -91,6 +96,7 @@ struct EditWordView: View {
                         word.russian = word.russian.trimmingCharacters(in: .whitespacesAndNewlines)
                         word.example = word.example.trimmingCharacters(in: .whitespacesAndNewlines)
                         word.partOfSpeech = word.partOfSpeech.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if let original { DictionarySignals.recordEdit(word, original: original) }
                         dismiss()
                     }
                     .bold()
