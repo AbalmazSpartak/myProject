@@ -53,6 +53,15 @@ struct OverviewView: View {
         .safeAreaInset(edge: .top, spacing: 0) { header }
         .background(Color.brandBackground.ignoresSafeArea())
         .onAppear {
+            // Новый раздел один раз появляется в «Быстром доступе» сам — дальше его можно убрать в настройках «Обзора»
+            if !UserDefaults.standard.bool(forKey: "overview_added_schulte") {
+                UserDefaults.standard.set(true, forKey: "overview_added_schulte")
+                if !layout.quickAccess.contains(.schulte) { layout.quickAccess.append(.schulte) }
+            }
+            if !UserDefaults.standard.bool(forKey: "overview_added_speak") {
+                UserDefaults.standard.set(true, forKey: "overview_added_speak")
+                if !layout.quickAccess.contains(.speak) { layout.quickAccess.append(.speak) }
+            }
             // Серия, норма и слова к повторению меняются в тренировках — пересчитываем при каждом возвращении на «Обзор»
             streak = DailyStreak.current()
             introducedToday = DailyNewWords.introducedToday

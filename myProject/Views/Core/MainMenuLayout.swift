@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Раздел главного меню. «Мой профиль» сюда не входит: он всегда сверху, через него открываются настройки
 enum MenuSection: String, CaseIterable {
-    case flashcards, quiz, cloze, inputCards, dictionary, tetris, race, help, community, books, polyglot, review
+    case flashcards, quiz, cloze, inputCards, dictionary, tetris, race, help, community, books, polyglot, review, schulte, speak
 
     var title: String {
         switch self {
@@ -18,6 +18,8 @@ enum MenuSection: String, CaseIterable {
         case .books: return "Книги"
         case .polyglot: return "Step by Step"
         case .review: return "Повторение"
+        case .schulte: return "Таблицы Шульте"
+        case .speak: return "Произнеси"
         }
     }
 
@@ -40,6 +42,8 @@ enum MenuSection: String, CaseIterable {
         case .books: return "books.vertical.fill"
         case .polyglot: return "character.bubble.fill"
         case .review: return "arrow.triangle.2.circlepath"
+        case .schulte: return "square.grid.3x3.fill"
+        case .speak: return "mic.fill"
         }
     }
 
@@ -57,6 +61,8 @@ enum MenuSection: String, CaseIterable {
         case .books: return .brown
         case .polyglot: return .red
         case .review: return .mint
+        case .schulte: return .cyan
+        case .speak: return .orange
         }
     }
 
@@ -75,6 +81,8 @@ enum MenuSection: String, CaseIterable {
         case .books: return "Читайте книги и сохраняйте слова"
         case .polyglot: return "Грамматика по схемам: составьте фразу из карточек"
         case .review: return "Прогон пройденных слов без сдвига расписания"
+        case .schulte: return "Находите числа по порядку — внимание и боковое зрение для быстрого чтения"
+        case .speak: return "Скажите слово — телефон проверит, понятно ли звучит"
         }
     }
 
@@ -98,6 +106,8 @@ enum MenuSection: String, CaseIterable {
         case .books: return .books
         case .polyglot: return .polyglot
         case .review: return .review
+        case .schulte: return .schulte
+        case .speak: return .speak
         }
     }
 }

@@ -159,7 +159,8 @@ enum ProfileTab: String, CaseIterable, Identifiable {
     }
 }
 
-/// «Рекорды в мини-играх»: Тетрис (очки), Гонка слов (лучшее время по режимам), Полиглот (баллы и освоенные уроки)
+/// «Рекорды в мини-играх»: Тетрис (очки), Гонка слов (лучшее время по режимам), Полиглот (баллы и освоенные уроки),
+/// Таблицы Шульте (лучшее время по размерам)
 struct GameRecordsCard: View {
     @AppStorage(PolyglotProgress.storageKey) private var polyglot = PolyglotProgress()
     let tetrisHighScore: Int
@@ -180,6 +181,11 @@ struct GameRecordsCard: View {
 
             row(icon: "character.bubble.fill", color: .red, title: "Step by Step", subtitle: polyglotSubtitle,
                 values: polyglot.totalPoints > 0 ? ["\(polyglot.totalPoints) \(PolyglotProgress.pointsNoun(polyglot.totalPoints))"] : [])
+
+            row(icon: "square.grid.3x3.fill", color: .cyan, title: "Таблицы Шульте", subtitle: "лучшее время",
+                values: SchulteRecords.sizes.compactMap { size in
+                    SchulteRecords.best(size).map { "\(size)×\(size): \(SchulteRecords.format($0))" }
+                })
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
