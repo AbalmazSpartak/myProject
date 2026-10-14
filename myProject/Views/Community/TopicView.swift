@@ -233,6 +233,8 @@ private struct TopicRatingCard: View {
                     .accessibilityAddTraits(star == topic.rating ? .isSelected : [])
                 }
             }
+            // По центру, как и реакции под ними
+            .frame(maxWidth: .infinity)
 
             FlowLayout(spacing: 8) {
                 ForEach(TopicReaction.allCases) { reaction in

@@ -182,7 +182,7 @@ struct PolyglotView: View {
                 .foregroundColor(.brandDark)
             }
             Spacer()
-            Text("Грамматика за 8 шагов")
+            Text("Step by Step")
                 .scaledFont(size: 20, weight: .bold)
                 .foregroundColor(.brandDark)
                 .lineLimit(1)

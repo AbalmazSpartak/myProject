@@ -49,7 +49,7 @@ struct PolyglotHelpView: View {
             .padding(20)
         }
         .background(Color.brandBackground.ignoresSafeArea())
-        .navigationTitle("Грамматика за 8 шагов")
+        .navigationTitle("Step by Step")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

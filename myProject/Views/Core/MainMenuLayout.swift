@@ -16,7 +16,7 @@ enum MenuSection: String, CaseIterable {
         case .help: return "Справка"
         case .community: return "Сообщество"
         case .books: return "Книги"
-        case .polyglot: return "Грамматика за 8 шагов"
+        case .polyglot: return "Step by Step"
         case .review: return "Повторение"
         }
     }
