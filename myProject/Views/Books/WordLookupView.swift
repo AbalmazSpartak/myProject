@@ -34,6 +34,7 @@ struct WordLookupView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 wordHeader
+                ReadingBreakdownView(word: tapped.word, lemma: lemma, transcription: baseWord?.transcription)
                 translationBlock
                 sentenceBlock
                 addButton

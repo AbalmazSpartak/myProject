@@ -124,6 +124,11 @@ enum BuiltInTopics {
     static let fantasyID = uuid(topic: 18)
     static let musicWordsID = uuid(topic: 20)
     static let songSlangID = uuid(topic: 21)
+    /// Темы о произношении — на них ссылается разбор «Как читать» в читалке
+    static let vowelReadingID = uuid(topic: 7)
+    static let thSoundID = uuid(topic: 15)
+    static let minimalPairsID = uuid(topic: 16)
+    static let silentLettersID = uuid(topic: 17)
 
     static let all: [Topic] = [tenses, irregularVerbs, articles, movieQuotes, airport, cafe, vowelReading,
                                hotel, doctor, shopping, city, timePrepositions, quantifiers, comparatives,

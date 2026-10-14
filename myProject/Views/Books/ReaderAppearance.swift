@@ -116,6 +116,21 @@ enum ReaderPageTurn: String, CaseIterable, Identifiable {
     }
 }
 
+/// Подсветка правил чтения в тексте книги
+enum ReaderPhonics: String, CaseIterable, Identifiable {
+    case off, tricky, all
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .off: return "Выкл"
+        case .tricky: return "Сложное"
+        case .all: return "Все правила"
+        }
+    }
+}
+
 /// Ключи настроек и разбор своих цветов (хранятся строкой «r,g,b»)
 enum ReaderSettings {
     static let themeKey = "reader_theme"
@@ -124,6 +139,7 @@ enum ReaderSettings {
     static let spacingKey = "reader_spacing"
     static let layoutKey = "reader_layout"
     static let pageTurnKey = "reader_page_turn"
+    static let phonicsKey = "reader_phonics"
     static let customTextKey = "reader_custom_text"
     static let customBackgroundKey = "reader_custom_background"
 
@@ -152,6 +168,7 @@ struct ReaderStyle: Equatable {
     let spacing: ReaderSpacing
     var layout: ReaderLayout = .pages
     var pageTurn: ReaderPageTurn = .slide
+    var phonics: ReaderPhonics = .off
     let customText: Color
     let customBackground: Color
 
@@ -166,6 +183,7 @@ struct ReaderStyle: Equatable {
             spacing: defaults.string(forKey: ReaderSettings.spacingKey).flatMap(ReaderSpacing.init(rawValue:)) ?? .normal,
             layout: defaults.string(forKey: ReaderSettings.layoutKey).flatMap(ReaderLayout.init(rawValue:)) ?? .pages,
             pageTurn: defaults.string(forKey: ReaderSettings.pageTurnKey).flatMap(ReaderPageTurn.init(rawValue:)) ?? .slide,
+            phonics: defaults.string(forKey: ReaderSettings.phonicsKey).flatMap(ReaderPhonics.init(rawValue:)) ?? .off,
             customText: ReaderSettings.color(from: defaults.string(forKey: ReaderSettings.customTextKey) ?? "", fallback: .black),
             customBackground: ReaderSettings.color(from: defaults.string(forKey: ReaderSettings.customBackgroundKey) ?? "", fallback: .white))
     }
@@ -206,6 +224,7 @@ struct ReaderAppearanceSheet: View {
     @AppStorage(ReaderSettings.spacingKey) private var spacing = ReaderSpacing.normal
     @AppStorage(ReaderSettings.layoutKey) private var layout = ReaderLayout.pages
     @AppStorage(ReaderSettings.pageTurnKey) private var pageTurn = ReaderPageTurn.slide
+    @AppStorage(ReaderSettings.phonicsKey) private var phonics = ReaderPhonics.off
     @AppStorage(ReaderSettings.customTextKey) private var customTextRaw = ""
     @AppStorage(ReaderSettings.customBackgroundKey) private var customBackgroundRaw = ""
 
@@ -239,6 +258,19 @@ struct ReaderAppearanceSheet: View {
                             ForEach(ReaderPageTurn.allCases) { Text($0.title).tag($0) }
                         }
                         .pickerStyle(.segmented)
+                    }
+
+                    section("Правила чтения")
+                    Picker("Правила чтения", selection: $phonics) {
+                        ForEach(ReaderPhonics.allCases) { Text($0.title).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    if phonics == .off {
+                        Text("Подсветка сочетаний букв, которые читаются по особым правилам. Нажмите на слово — карточка покажет, как его читать.")
+                            .scaledFont(size: 13)
+                            .foregroundColor(.gray)
+                    } else {
+                        PhonicsLegend(all: phonics == .all)
                     }
 
                     section("Тема")

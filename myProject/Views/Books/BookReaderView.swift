@@ -73,7 +73,7 @@ struct BookReaderView: View {
                     onNext: { go(to: chapterIndex + 1) }
                 )
                 .equatable()
-                .id(chapterIndex)
+                .id("\(chapterIndex)-\(style.phonics.rawValue)")
             } else if let linkedParagraphs {
                 ReaderChapterText(
                     chapterID: chapterIndex,
@@ -93,7 +93,7 @@ struct BookReaderView: View {
                     chapterNavigation
                 }
                 .equatable()
-                .id(chapterIndex)
+                .id("\(chapterIndex)-\(style.phonics.rawValue)")
             } else {
                 Spacer()
                 ProgressView()
@@ -116,7 +116,7 @@ struct BookReaderView: View {
         }
         .onDisappear { speech.stop() }
         // Глава готовится, когда главы загружены и при каждой смене главы
-        .task(id: "\(chapters.count)-\(chapterIndex)") { await prepareChapter() }
+        .task(id: "\(chapters.count)-\(chapterIndex)-\(style.phonics.rawValue)") { await prepareChapter() }
         .sheet(item: $tappedWord) { tapped in
             WordLookupView(tapped: tapped, bookTitle: book.title)
                 .presentationDetents([.medium, .large])
@@ -276,13 +276,19 @@ struct BookReaderView: View {
         book.lastOpenedAt = Date()
     }
 
-    /// Ссылки на слова для всей главы — в фоне, один раз
+    /// Ссылки на слова для всей главы — в фоне, один раз; с подсветкой правил чтения, если она включена
     private func prepareChapter() async {
         guard let chapter else { return }
+        // Глава собирается заново и при смене подсветки — открываем её там же, где читали
+        if chapterStarts.indices.contains(chapterIndex) {
+            startParagraph = min(max(book.position - chapterStarts[chapterIndex], 0), max(chapter.paragraphs.count - 1, 0))
+        }
         linkedParagraphs = nil
         let paragraphs = chapter.paragraphs
+        let phonics: Bool? = style.phonics == .off ? nil : style.phonics == .all
         linkedParagraphs = await Task.detached(priority: .userInitiated) {
-            paragraphs.enumerated().map { Self.linked($1, paragraph: $0) }
+            var cache: [String: ReadingRules.Highlight?] = [:]
+            return paragraphs.enumerated().map { Self.linked($1, paragraph: $0, phonics: phonics, cache: &cache) }
         }.value
         speech.load(paragraphs: paragraphs, chapterTitle: chapter.title, bookTitle: book.title)
         if continuesReading {
@@ -340,8 +346,10 @@ struct BookReaderView: View {
         return result
     }
 
-    /// Абзац, где каждое английское слово — ссылка на себя
-    nonisolated static func linked(_ text: String, paragraph: Int) -> AttributedString {
+    /// Абзац, где каждое английское слово — ссылка на себя.
+    /// phonics: nil — без подсветки, false — сложные сочетания, true — все правила; cache — разбор слов главы
+    nonisolated static func linked(_ text: String, paragraph: Int, phonics: Bool? = nil,
+                                   cache: inout [String: ReadingRules.Highlight?]) -> AttributedString {
         let ns = text as NSString
         guard let regex = try? NSRegularExpression(pattern: "[A-Za-z]+(?:['’-][A-Za-z]+)*") else { return AttributedString(text) }
         var result = AttributedString()
@@ -353,6 +361,9 @@ struct BookReaderView: View {
             }
             var word = AttributedString(ns.substring(with: range))
             word.link = URL(string: "\(wordScheme)://w/\(paragraph)/\(range.location)/\(range.length)")
+            if let phonics {
+                decorate(&word, ns.substring(with: range), all: phonics, cache: &cache)
+            }
             result += word
             last = range.location + range.length
         }
@@ -360,6 +371,43 @@ struct BookReaderView: View {
             result += AttributedString(ns.substring(from: last))
         }
         return result
+    }
+}
+
+extension BookReaderView {
+    /// Подсветка правил чтения в слове: сочетания — цветным фоном, немые буквы — бледными, исключение — пунктиром.
+    /// Слова через дефис разбираются по частям
+    nonisolated static func decorate(_ word: inout AttributedString, _ text: String, all: Bool,
+                                     cache: inout [String: ReadingRules.Highlight?]) {
+        var offset = 0
+        for part in text.split(separator: "-", omittingEmptySubsequences: false) {
+            let piece = String(part)
+            defer { offset += (piece as NSString).length + 1 }
+            let key = piece.lowercased() + (all ? "|all" : "")
+            let highlight: ReadingRules.Highlight?
+            if let cached = cache[key] {
+                highlight = cached
+            } else {
+                highlight = ReadingRules.highlight(piece, all: all)
+                cache[key] = highlight
+            }
+            guard let highlight else { continue }
+            func range(_ local: NSRange) -> Range<AttributedString.Index>? {
+                Range(NSRange(location: local.location + offset, length: local.length), in: word)
+            }
+            for span in highlight.spans {
+                guard let target = range(span.range) else { continue }
+                let color = span.irregular ? PhonicsKind.exceptionColor : span.kind.color
+                word[target].backgroundColor = color.opacity(span.irregular ? 0.18 : 0.22)
+            }
+            for silent in highlight.silent {
+                guard let target = range(silent) else { continue }
+                word[target].foregroundColor = Color.gray.opacity(0.75)
+            }
+            if highlight.isException, let target = range(NSRange(location: 0, length: (piece as NSString).length)) {
+                word[target].underlineStyle = Text.LineStyle(pattern: .dot, color: PhonicsKind.exceptionColor)
+            }
+        }
     }
 }
 

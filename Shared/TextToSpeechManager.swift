@@ -76,7 +76,8 @@ final class TextToSpeechManager: NSObject {
         }
     }
 
-    func speak(_ text: String) {
+    /// slow — медленнее обычного, чтобы расслышать звуки слова
+    func speak(_ text: String, slow: Bool = false) {
         // Если синтезатор уже говорит, останавливаем его перед новым словом
         if synthesizer.isSpeaking {
             synthesizer.stopSpeaking(at: .immediate)
@@ -88,7 +89,9 @@ final class TextToSpeechManager: NSObject {
             try? AVAudioSession.sharedInstance().setActive(true)
             Task { @MainActor in
                 guard current == self.request else { return }
-                self.synthesizer.speak(self.utterance(text))
+                let utterance = self.utterance(text)
+                if slow { utterance.rate = max(0.15, utterance.rate * 0.55) }
+                self.synthesizer.speak(utterance)
             }
         }
     }
