@@ -56,6 +56,8 @@ struct DictionaryView: View {
     @State private var isShowingAddCategoryAlert = false
     @State private var newCategoryName = ""
     @State private var wordToEdit: Word?
+    /// Нажали на строку — карточка слова
+    @State private var wordToShow: Word?
     @State private var isShowingSearch = false
     @State private var isShowingScan = false
     @State private var listToRename: WordList?
@@ -228,6 +230,8 @@ struct DictionaryView: View {
                                         WordRowCard(word: word) {
                                             wordToEdit = word
                                         }
+                                        .contentShape(Rectangle())
+                                        .onTapGesture { wordToShow = word }
                                         .onAppear {
                                             if word.id == filteredWords.last?.id { loadMoreWords() }
                                         }
@@ -330,6 +334,10 @@ struct DictionaryView: View {
         // Правка могла сменить тему или написание — сохраняем, список перечитается
         .sheet(item: $wordToEdit, onDismiss: { try? modelContext.save() }) { word in
             EditWordView(word: word)
+        }
+        .sheet(item: $wordToShow, onDismiss: { try? modelContext.save() }) { word in
+            WordDetailView(word: word)
+                .appThemedColorScheme()
         }
         .sheet(isPresented: $isShowingSearch, onDismiss: { try? modelContext.save() }) {
             WordSearchView()
