@@ -22,6 +22,8 @@ struct QuizView: View {
     @State private var sessionWords: [Word] = []
     @State private var currentIndex = 0
     @State private var options: [String] = []
+    /// Другие значения того же написания — для «to» у глагола и чтобы не попасть в обманки
+    @State private var homographs: [Word] = []
     
     @State private var selectedOption: String? = nil
     @State private var showResult = false
@@ -41,7 +43,7 @@ struct QuizView: View {
     
     private var currentQuestion: String {
         guard let word = currentWord else { return "" }
-        return translationMode == "en_ru" ? word.english : word.russian
+        return translationMode == "en_ru" ? word.prompt(ambiguous: !homographs.isEmpty) : word.russian
     }
     
     private var currentCorrectAnswerString: String {
@@ -131,6 +133,9 @@ struct QuizView: View {
                                 .foregroundColor(.orange)
                         }
                         PartOfSpeechBadge(word: word)
+                    }
+                    if translationMode == "en_ru" {
+                        ExampleFormHint(word: word)
                     }
                     
                     VStack(spacing: 12) {
@@ -236,8 +241,11 @@ struct QuizView: View {
         showResult = false
         
         let correctAnswer = translationMode == "en_ru" ? word.russian : word.english
+        homographs = Homographs.others(of: word, in: modelContext)
+        // Перевод другого значения того же слова — тоже верный ответ, обманкой его не даём
+        let also = translationMode == "en_ru" ? homographs.map(\.russian) : []
         
-        let wrongAnswers = distractors.randomWrongAnswers(3, excluding: correctAnswer) {
+        let wrongAnswers = distractors.randomWrongAnswers(3, excluding: correctAnswer, also: also) {
             translationMode == "en_ru" ? $0.russian : $0.english
         }
         options = ([correctAnswer] + wrongAnswers).shuffled()

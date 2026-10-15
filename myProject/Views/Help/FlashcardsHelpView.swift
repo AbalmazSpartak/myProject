@@ -10,6 +10,7 @@ struct FlashcardsHelpView: View {
                 }
 
                 HelpCard(title: "Как заниматься", icon: "list.number", color: .blue) {
+                    HelpBullet("Одно написание — разные слова (speed: «скорость» и «мчаться»): глагол показан с to — «to speed», под словом — часть речи и форма из примера («в примере: speeding»).")
                     HelpStep(number: 1, text: "Посмотрите на слово и постарайтесь вспомнить перевод — лучше вслух.")
                     HelpStep(number: 2, text: "Нажмите «Показать ответ» и сверьтесь.")
                     HelpStep(number: 3, text: "Честно оцените, насколько легко было вспомнить.")

@@ -68,7 +68,7 @@ struct RaceGameView<Manager: RaceTransport>: View {
                 typingArea(word)
             } else if let word = currentWord, !raceEnded {
                 VStack(spacing: 16) {
-                    Text(word.english)
+                    Text(word.display ?? word.english)
                         .scaledFont(size: 32, weight: .semibold, design: .serif)
                     
                     VStack(spacing: 10) {

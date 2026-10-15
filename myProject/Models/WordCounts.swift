@@ -63,9 +63,10 @@ struct WordCounts {
 
 extension Array where Element == Word {
     /// Неправильные варианты ответа: несколько случайных слов вместо перемешивания всей базы на каждый вопрос
-    func randomWrongAnswers(_ count: Int, excluding correct: String, answer: (Word) -> String) -> [String] {
+    /// also — ещё ответы, которые нельзя давать обманкой (переводы другого значения того же слова)
+    func randomWrongAnswers(_ count: Int, excluding correct: String, also: [String] = [], answer: (Word) -> String) -> [String] {
         var result: [String] = []
-        var seen: Set<String> = [correct.lowercased()]
+        var seen: Set<String> = Set(([correct] + also).map { $0.lowercased() })
         var attempts = 0
         // Попыток с запасом: часть случайных слов совпадёт с уже выбранными
         while result.count < count, attempts < count * 20, let word = randomElement() {

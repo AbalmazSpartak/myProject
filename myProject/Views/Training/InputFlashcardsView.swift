@@ -23,6 +23,10 @@ struct InputFlashcardsView: View {
     @State private var userInput = ""
     @State private var showResult = false
     @State private var isCorrect = false
+    /// Другие значения того же написания (speed сущ. / гл.)
+    @State private var homographs: [Word] = []
+    /// Ответ подошёл к другому значению — не ошибка, но поясняем
+    @State private var homographNote: String?
     @State private var correctCount = 0
     @State private var totalAnswered = 0
     @AppStorage(SessionLength.key) private var sessionLength = SessionLength.defaultValue
@@ -40,7 +44,7 @@ struct InputFlashcardsView: View {
     
     private var currentQuestion: String {
         guard let word = currentWord else { return "" }
-        return translationMode == "en_ru" ? word.english : word.russian
+        return translationMode == "en_ru" ? word.prompt(ambiguous: !homographs.isEmpty) : word.russian
     }
     
     private var currentCorrectAnswerString: String {
@@ -131,6 +135,9 @@ struct InputFlashcardsView: View {
                             }
                             PartOfSpeechBadge(word: word)
                         }
+                        if translationMode == "en_ru" {
+                            ExampleFormHint(word: word)
+                        }
                     }
                     .padding(.top, 24)
                     
@@ -169,13 +176,21 @@ struct InputFlashcardsView: View {
                     if showResult {
                         VStack(spacing: 10) {
                             HStack(spacing: 8) {
-                                Image(systemName: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                Image(systemName: homographNote != nil ? "checkmark.circle" : isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
                                     .scaledFont(size: 22)
                                 
-                                Text(isCorrect ? "Правильно!" : "Неверно")
+                                Text(homographNote != nil ? "Почти!" : isCorrect ? "Правильно!" : "Неверно")
                                     .scaledFont(size: 18, weight: .bold, design: .rounded)
                             }
-                            .foregroundColor(isCorrect ? .green : .red)
+                            .foregroundColor(homographNote != nil ? .orange : isCorrect ? .green : .red)
+                            
+                            if let homographNote {
+                                Text(homographNote)
+                                    .scaledFont(size: 14)
+                                    .foregroundColor(.brandDark)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 12)
+                            }
                             
                             if !isCorrect {
                                 VStack(spacing: 4) {
@@ -298,6 +313,8 @@ struct InputFlashcardsView: View {
         userInput = ""
         showResult = false
         isCorrect = false
+        homographNote = nil
+        homographs = currentWord.map { Homographs.others(of: $0, in: modelContext) } ?? []
         
         Task {
             try? await Task.sleep(for: .seconds(0.1))
@@ -310,6 +327,12 @@ struct InputFlashcardsView: View {
         
         let targetAnswer = currentCorrectAnswerString
         isCorrect = validateInput(userInput, target: targetAnswer)
+        // Перевод другого значения того же слова (скорость для глагола speed) — не ошибка
+        if !isCorrect, translationMode == "en_ru",
+           let other = homographs.first(where: { validateInput(userInput, target: $0.russian) }) {
+            isCorrect = true
+            homographNote = Homographs.note(answered: other, expected: word)
+        }
         
         if isCorrect {
             correctCount += 1

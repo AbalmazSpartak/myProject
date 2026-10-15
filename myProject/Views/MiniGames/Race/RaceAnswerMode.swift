@@ -26,7 +26,7 @@ enum RaceAnswerMode: String, CaseIterable, Identifiable, Codable {
 
     /// Что показываем в гонке
     func prompt(for word: RaceWordPayload) -> String {
-        self == .typeEnglish ? RaceAnswerCheck.mainTranslation(word.correctAnswer) : word.english
+        self == .typeEnglish ? RaceAnswerCheck.mainTranslation(word.correctAnswer) : word.display ?? word.english
     }
 
     /// Подходит ли набранное: регистр, ё/е, пробелы и пояснения в скобках не важны; у перевода — любой из вариантов
@@ -39,7 +39,7 @@ enum RaceAnswerMode: String, CaseIterable, Identifiable, Codable {
         case .typeEnglish:
             return answer == RaceAnswerCheck.normalized(word.english)
         case .typeRussian:
-            return RaceAnswerCheck.variants(word.correctAnswer).contains(answer)
+            return ([word.correctAnswer] + (word.also ?? [])).contains { RaceAnswerCheck.variants($0).contains(answer) }
         }
     }
 

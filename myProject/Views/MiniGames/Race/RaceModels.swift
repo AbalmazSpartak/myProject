@@ -5,6 +5,10 @@ struct RaceWordPayload: Codable, Equatable, Identifiable {
     let english: String
     let options: [String]
     let correctAnswer: String
+    /// Как показать слово: глагол, у которого есть другое значение с тем же написанием, — с to (to speed)
+    var display: String? = nil
+    /// Переводы другого значения того же слова — в наборе по-русски тоже верны
+    var also: [String]? = nil
 }
 
 // Простой конверт вместо Codable-enum с ассоциированными значениями —
@@ -45,8 +49,13 @@ enum RaceWordGenerator {
         
         for word in pool.prefix(wordCount) {
             let correctAnswer = word.russian
-            let options = [correctAnswer] + pool.randomWrongAnswers(2, excluding: correctAnswer) { $0.russian }
-            generated.append(RaceWordPayload(english: word.english, options: options.shuffled(), correctAnswer: correctAnswer))
+            // speed (сущ.) и speed (гл.): перевод другого значения обманкой не даём, а набранный — засчитываем
+            let others = pool.filter { $0.english.caseInsensitiveCompare(word.english) == .orderedSame && $0.russian != correctAnswer }
+            let also = others.map(\.russian)
+            let options = [correctAnswer] + pool.randomWrongAnswers(2, excluding: correctAnswer, also: also) { $0.russian }
+            generated.append(RaceWordPayload(english: word.english, options: options.shuffled(), correctAnswer: correctAnswer,
+                                             display: others.isEmpty ? nil : word.prompt(ambiguous: true),
+                                             also: also.isEmpty ? nil : also))
         }
         return generated
     }

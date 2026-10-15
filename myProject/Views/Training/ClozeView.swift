@@ -113,11 +113,14 @@ struct ClozeView: View {
                 Text(word.russian)
                     .scaledFont(size: 18, weight: .semibold, design: .rounded)
                     .foregroundColor(.brandDark)
-                if !word.partOfSpeech.isEmpty {
-                    Text(word.partOfSpeech)
-                        .scaledFont(size: 13, weight: .medium, design: .rounded)
-                        .italic()
+                PartOfSpeechBadge(word: word)
+                // Само слово не подсказываем — только что в пропуске оно в изменённой форме
+                if result == nil, word.exampleForm != nil {
+                    Text("В пропуске — изменённая форма слова (-s, -ed, -ing…). Словарная форма тоже засчитается.")
+                        .scaledFont(size: 13)
                         .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 16)
                 }
             }
 

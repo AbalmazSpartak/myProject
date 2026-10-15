@@ -21,6 +21,8 @@ struct FlashcardsView: View {
     @State private var sessionWords: [Word] = []
     @State private var currentIndex = 0
     @State private var isAnswerRevealed = false
+    /// Другие значения того же написания — глагол тогда показывается с to
+    @State private var homographs: [Word] = []
     
     @State private var reviewedCount = 0
     @AppStorage(SessionLength.key) private var sessionLength = SessionLength.defaultValue
@@ -38,7 +40,7 @@ struct FlashcardsView: View {
     
     private var currentQuestion: String {
         guard let word = currentWord else { return "" }
-        return translationMode == "en_ru" ? word.english : word.russian
+        return translationMode == "en_ru" ? word.prompt(ambiguous: !homographs.isEmpty) : word.russian
     }
     
     private var currentAnswer: String {
@@ -132,8 +134,14 @@ struct FlashcardsView: View {
                             }
                             PartOfSpeechBadge(word: word)
                         }
+                        if translationMode == "en_ru" {
+                            ExampleFormHint(word: word)
+                        }
                     }
                     .padding(.top, 28)
+                    .onChange(of: word.persistentModelID, initial: true) {
+                        homographs = Homographs.others(of: word, in: modelContext)
+                    }
                     
                     Divider()
                         .padding(.horizontal, 20)

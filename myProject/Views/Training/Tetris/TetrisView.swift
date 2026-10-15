@@ -36,6 +36,8 @@ struct TetrisView: View {
     @State private var isGameOver: Bool = false
     @State private var isPaused: Bool = false
     @State private var currentWord: Word?
+    /// Другие значения того же написания — глагол показываем с to, их переводы не даём обманкой
+    @State private var homographs: [Word] = []
     @State private var currentOptions: [String] = []
     @State private var selectedAnswer: String? = nil
     /// «Подумать»: фигура стоит, пока не выбран перевод
@@ -82,7 +84,7 @@ struct TetrisView: View {
                 if let word = currentWord {
                     VStack(spacing: 8) {
                         HStack {
-                            Text(word.english)
+                            Text(word.prompt(ambiguous: !homographs.isEmpty))
                                 .scaledFont(size: 18, weight: .bold, design: .rounded)
                                 .foregroundColor(.brandDark)
                             
@@ -588,7 +590,8 @@ struct TetrisView: View {
     }
     private func generateOptions(for word: Word) {
         let correctAnswer = word.russian
-        let wrongAnswers = distractors.randomWrongAnswers(2, excluding: correctAnswer) { $0.russian }
+        homographs = Homographs.others(of: word, in: modelContext)
+        let wrongAnswers = distractors.randomWrongAnswers(2, excluding: correctAnswer, also: homographs.map(\.russian)) { $0.russian }
         currentOptions = ([correctAnswer] + wrongAnswers).shuffled()
     }
 
