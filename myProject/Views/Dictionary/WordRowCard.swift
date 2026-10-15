@@ -28,6 +28,15 @@ struct WordRowCard: View {
                             .background(Color.indigo.opacity(0.12))
                             .cornerRadius(6)
                     }
+
+                    // Откуда слово: официальный список Oxford 3000/5000 или наше дополнение
+                    if !word.isCustom, !word.tags.isEmpty {
+                        let isOxford = word.tags == StudyScope.oxfordTag
+                        Text(isOxford ? "Oxford" : "доп.")
+                            .scaledFont(size: 11, weight: .semibold, design: .rounded)
+                            .foregroundColor(isOxford ? .teal : .gray)
+                            .accessibilityLabel(isOxford ? "Из списка Oxford" : "Дополнительное слово, не из списка Oxford")
+                    }
                 }
                 
                 Text(word.russian)

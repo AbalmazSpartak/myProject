@@ -1,0 +1,49 @@
+Word,PoS,Level,Translation,Example,Type,Issue,Suggestion,Status
+because,conj.,A1,потому что,I am late <b>because</b> of the traffic.,пример,"В примере «because of the traffic» — это предлог because of, а не союз",I am late *because* the bus was slow.,ожидает проверки
+born,v.,A1,рожденный,I was <b>born</b> in July.,перевод,"«рожденный» — причастие, а не глагол",родиться (be born),ожидает проверки
+check,n.,A2,чек,"Can I have the <b>check</b>, please?",перевод,В примере «Can I have the check» — это счёт в ресторане (амер.),"счёт (в ресторане), чек",ожидает проверки
+turn,n.,A1,поворот,It is your <b>turn</b> to play.,перевод,"В примере «your turn to play» — очередь, а не поворот",очередь; поворот,ожидает проверки
+which,det.,A1,который,<b>Which</b> dress do you prefer?,перевод,"«Which dress do you prefer?» — какой, а не который","какой, который",ожидает проверки
+us,pron.,A1,нам,Join <b>us</b> for dinner.,перевод,«Join us» — нас/к нам; только «нам» неполно,"нас, нам",ожидает проверки
+right,adj.,A1,"правый, верный",Turn <b>right</b> at the corner.,пример,"«Turn right» — наречие, а не прилагательное",You are *right*. / my *right* hand,ожидает проверки
+right,adv.,A1,прямо,Go <b>right</b> ahead.,перевод,Нет основного значения «направо»,"направо; прямо, сразу",ожидает проверки
+save,v.,A2,"копить, экономить",I want to <b>save</b> money for a trip.,перевод,Нет основного значения «спасать» (и «сохранять» файл),"спасать; копить, экономить; сохранять",ожидает проверки
+section,n.,A1,секция,Look in the sports <b>section</b>.,перевод,"«sports section» — раздел (газеты, магазина), а не секция","раздел, отдел, секция",ожидает проверки
+sorry,adj.,A1,сожалеющий,I am <b>sorry</b> for being late.,перевод,"«сожалеющий» — книжно; в «I am sorry» это «извините, жаль»","извиняющийся; I'm sorry — извините, мне жаль",ожидает проверки
+speaker,n.,A2,динамик,Connect the phone to the bluetooth <b>speaker</b>.,перевод,"Основное значение A2 — говорящий/носитель языка, не только динамик","говорящий, оратор; динамик",ожидает проверки
+point,n.,A1,"суть, мысль",He made an important <b>point</b>.,перевод,"Нет основных значений «точка, пункт, очко»","точка, пункт; суть, смысл; очко",ожидает проверки
+need,v.,A1,нуждаться,I <b>need</b> some help.,перевод,«нуждаться» — книжно; в примере «I need some help» = мне нужна помощь,нуждаться; (мне) нужно,ожидает проверки
+off,adv.,A1,выключенный,Turn <b>off</b> the lights.,перевод,"«выключенный» — прилагательное; у наречия off основное «прочь, с, выключено»","выключено; прочь, с (снять)",ожидает проверки
+out,adv.,A1,снаружи,He walked <b>out</b> of the room.,перевод,"В примере «walked out of the room» — наружу, а не «снаружи»","наружу, вне, снаружи",ожидает проверки
+late,adj.,A1,поздний,Sorry I am <b>late</b>.,перевод,«Sorry I am late» — опоздавший; «поздний» не подходит к примеру,поздний; опоздавший (be late — опаздывать),ожидает проверки
+me,pron.,A1,мне,"Give <b>me</b> the book, please.",перевод,Только «мне» неполно: «Call me» = меня,"меня, мне",ожидает проверки
+few,det.,A1,мало,I have a <b>few</b> friends here.,перевод,"В примере «a few friends» — несколько, а «мало» — для few без a",мало; a few — несколько,ожидает проверки
+fine,adj.,A1,прекрасный,"I am <b>fine</b>, thank you.",перевод,"«I am fine» — в порядке, хорошо; «прекрасный» не подходит к примеру","хорошо, в порядке; прекрасный",ожидает проверки
+foot,n.,A1,нога,My right <b>foot</b> hurts.,перевод,«нога» совпадает с leg; foot — ступня,"ступня, нога (ниже щиколотки)",ожидает проверки
+tie,v.,A2,"завязывать, галстук",Learn how to <b>tie</b> a shoelace.,перевод,«галстук» — существительное в переводе глагола,"завязывать, связывать",ожидает проверки
+shall,modal v.,A2,"должен, следует",<b>Shall</b> we go for a walk outside?,перевод,«Shall we go…?» — давай…?/может…?; «должен» вводит в заблуждение,"(в вопросах) давай…?, может…?; (книжн.) буду",ожидает проверки
+straight,adj.,A2,прямой,Walk <b>straight</b> ahead for two blocks.,пример,"«Walk straight ahead» — наречие, а не прилагательное",She has long *straight* hair.,ожидает проверки
+strike,v.,B2,ударять,Workers decided to <b>strike</b> for higher pay.,перевод,"В примере «Workers decided to strike for higher pay» — бастовать, а не ударять",бастовать; ударять,ожидает проверки
+aged,adj.,B1,в возрасте,She cares for an <b>aged</b> relative at home.,перевод,В примере «an aged relative» — пожилой; «в возрасте» подходит к «aged 20»,пожилой; в возрасте (aged 20 — двадцати лет),ожидает проверки
+requirement,n.,B2,требование,Meeting entry <b>requirement</b> standards is mandatory.,пример,Пример неестественный: «Meeting entry requirement standards is mandatory»,You must meet every entry *requirement*.,ожидает проверки
+live,adj.,B1,прямой (эфир),They watched the <b>live</b> broadcast of the match.,перевод,Только «прямой (эфир)»; основное — живой,живой; прямой (эфир),ожидает проверки
+heaven,n.,B2,небо,Stars shone brightly in the clear <b>heaven</b>.,перевод,"heaven — рай, небеса; «небо» и пример «clear heaven» неестественны","рай, небеса; пример: She believes in *heaven*.",ожидает проверки
+capture,v.,B2,запечатлевать,The camera <b>captured</b> a stunning sunrise.,перевод,"Нет основного значения «захватывать, ловить»","захватывать, ловить; запечатлевать",ожидает проверки
+credit,n.,A2,заслуга,She took full <b>credit</b> for the project success.,перевод,Нет основного значения «кредит» (buy on credit),кредит; заслуга,ожидает проверки
+besides,prep.,B2,"кроме того, помимо","<b>Besides</b> working here, she studies law.",перевод,"«кроме того» — наречие; у предлога — помимо, кроме","помимо, кроме",ожидает проверки
+sentence,n.,A1,приговор,The judge pronounced a strict <b>sentence</b>.,уровень,Значение «приговор» стоит на A1 (уровень унаследован от «предложение»); это B2-лексика,уровень B2,ожидает проверки
+statement,n.,A1,выписка (из банка),The bank issues a monthly <b>statement</b>.,уровень,Значение «выписка (из банка)» на A1 — уровень унаследован от «заявление»,уровень B1,ожидает проверки
+bill,n.,A1,законопроект,Parliament passed a new environmental <b>bill</b>.,уровень,Значение «законопроект» на A1 — уровень унаследован от «счёт»,уровень B2,ожидает проверки
+solid,adj.,B1,"надёжный, прочный",The team built a <b>solid</b> foundation for growth.,перевод,Нет основного значения «твёрдый»,"твёрдый; прочный, надёжный",ожидает проверки
+rate,n.,A2,ставка,Interest <b>rate</b>s remained stable over the summer.,перевод,"Только «ставка»; основное — уровень, темп, показатель","уровень, темп; ставка",ожидает проверки
+exclude,v.,B2,исключать,The price does not <b>exclude</b> local taxes.,пример,«The price does not exclude local taxes» — двойное отрицание путает,The price *excludes* delivery.,ожидает проверки
+fellow,adj.,B2,"товарищ, коллега (о людях)",She thanked her <b>fellow</b> students.,перевод,У прилагательного перевод существительным («товарищ»),"такой же, со-; fellow students — однокурсники",ожидает проверки
+assistant,adj.,A2,"помощник, заместитель (о должности)",He is an <b>assistant</b> manager.,перевод,У прилагательного перевод существительным («помощник»),"помощник-, заместитель-; assistant manager — заместитель управляющего",ожидает проверки
+forward,adj.,B2,передний; направленный вперёд,The seats face <b>forward</b>.,пример,"«The seats face forward» — наречие, а не прилагательное",Sit in the *forward* part of the boat. / a *forward* step,ожидает проверки
+goodness,n.,B2,доброта,"My <b>goodness</b>, you've grown!",пример,"Перевод «доброта», а в примере «My goodness!» = «Боже мой!»",доброта; (my) goodness! — боже мой!,ожидает проверки
+spokesman,n.,B2,,,нет в базе,"Есть в Oxford 5000 (B2), в базе отсутствует","добавить: представитель, пресс-секретарь (мужчина)",ожидает проверки
+spokeswoman,n.,B2,,,нет в базе,"Есть в Oxford 5000 (B2), в базе отсутствует","добавить: представительница, пресс-секретарь (женщина)",ожидает проверки
+tonne,n.,B2,,,нет в базе,Есть в Oxford 5000 (B2) — британская метрическая тонна; в базе только ton,добавить или указать в ton: тонна (tonne — брит. написание),ожидает проверки
+uniform,adj.,B2,"единообразный, одинаковый",The buildings share a <b>uniform</b> architectural style.,тег Oxford,"Помечено Oxford, но в официальном списке этой части речи нет (у Oxford: uniform n.)",перевести тег в Extra,ожидает проверки
+second,adj.,A2,второй,Our apartment is on the <b>second</b> floor.,тег Oxford,"Помечено Oxford, но в официальном списке этой части речи нет (у Oxford: second det./adv./number)","проверить, не дубль ли строки num. «второй»",ожидает проверки
+other,det.,A2,другой,Do you have any <b>other</b> questions regarding this?,тег Oxford,"Помечено Oxford, но в официальном списке этой части речи нет (у Oxford: other adj./pron.)","оставить (det. — та же роль, что adj. в Oxford)",ожидает проверки

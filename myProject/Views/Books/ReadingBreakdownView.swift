@@ -18,27 +18,26 @@ extension PhonicsKind {
     nonisolated static let exceptionColor = Color.red
 }
 
-/// Легенда цветов подсветки — в шторке «Оформление»
+/// Легенда цветов подсветки с галочками — в шторке «Оформление»: что подсвечивать в книге
 struct PhonicsLegend: View {
-    let all: Bool
-
-    private var kinds: [PhonicsKind] {
-        all ? [.vowelTeam, .magicE, .rVowel, .consonantPair, .ending] : [.vowelTeam, .magicE, .rVowel]
-    }
+    @Binding var selection: Set<PhonicsOption>
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(kinds, id: \.self) { kind in
-                row(swatch: Text(kind.example.components(separatedBy: ",").first ?? "")
-                        .padding(.horizontal, 4)
-                        .background(kind.color.opacity(0.28))
-                        .cornerRadius(4),
-                    title: kind.title, detail: kind.example)
+        VStack(alignment: .leading, spacing: 10) {
+            ForEach(PhonicsOption.allCases) { option in
+                Button {
+                    if selection.contains(option) { selection.remove(option) } else { selection.insert(option) }
+                } label: {
+                    row(option)
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(selection.contains(option) ? .isSelected : [])
             }
-            row(swatch: Text("k").foregroundColor(.gray.opacity(0.55)) + Text("nife"),
-                title: "Немые буквы", detail: "бледные — не читаются: knife, write, light")
-            row(swatch: Text("one").underline(pattern: .dot, color: PhonicsKind.exceptionColor),
-                title: "Исключение", detail: "читается не по правилу; красная подсветка — где именно")
+            HStack(spacing: 8) {
+                preset("Только сложное", PhonicsOption.tricky)
+                preset("Все", Set(PhonicsOption.allCases))
+            }
+            .padding(.top, 2)
             Text("Нажмите на слово — карточка покажет, как его читать, и объяснит каждое сочетание.")
                 .scaledFont(size: 13)
                 .foregroundColor(.gray)
@@ -48,21 +47,68 @@ struct PhonicsLegend: View {
         .cornerRadius(14)
     }
 
-    private func row<Swatch: View>(swatch: Swatch, title: String, detail: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
-            swatch
+    private func row(_ option: PhonicsOption) -> some View {
+        let isOn = selection.contains(option)
+        return HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Image(systemName: isOn ? "checkmark.square.fill" : "square")
+                .scaledFont(size: 20)
+                .foregroundColor(isOn ? .brown : .gray.opacity(0.6))
+            swatch(option)
                 .scaledFont(size: 16, weight: .semibold, design: .serif)
                 .foregroundColor(.brandDark)
                 .frame(minWidth: 64, alignment: .leading)
+                .opacity(isOn ? 1 : 0.45)
             VStack(alignment: .leading, spacing: 1) {
-                Text(title)
+                Text(title(option))
                     .scaledFont(size: 14, weight: .semibold)
                     .foregroundColor(.brandDark)
-                Text(detail)
+                Text(detail(option))
                     .scaledFont(size: 12)
                     .foregroundColor(.gray)
             }
+            Spacer(minLength: 0)
         }
+        .contentShape(Rectangle())
+    }
+
+    @ViewBuilder
+    private func swatch(_ option: PhonicsOption) -> some View {
+        switch option {
+        case .silent:
+            Text("k").foregroundColor(.gray.opacity(0.55)) + Text("nife")
+        case .exception:
+            Text("one").underline(pattern: .dot, color: PhonicsKind.exceptionColor)
+        default:
+            let kind = PhonicsKind(rawValue: option.rawValue) ?? .plain
+            Text(kind.example.components(separatedBy: ",").first ?? "")
+                .padding(.horizontal, 4)
+                .background(kind.color.opacity(0.28))
+                .cornerRadius(4)
+        }
+    }
+
+    private func title(_ option: PhonicsOption) -> String {
+        switch option {
+        case .silent: return "Немые буквы"
+        case .exception: return "Исключения"
+        default: return PhonicsKind(rawValue: option.rawValue)?.title ?? ""
+        }
+    }
+
+    private func detail(_ option: PhonicsOption) -> String {
+        switch option {
+        case .silent: return "бледные — не читаются: knife, write, light"
+        case .exception: return "читается не по правилу; красная подсветка — где именно"
+        default: return PhonicsKind(rawValue: option.rawValue)?.example ?? ""
+        }
+    }
+
+    private func preset(_ title: String, _ options: Set<PhonicsOption>) -> some View {
+        Button(title) { selection = options }
+            .scaledFont(size: 14, weight: .semibold)
+            .buttonStyle(.bordered)
+            .tint(.brown)
+            .disabled(selection == options)
     }
 }
 

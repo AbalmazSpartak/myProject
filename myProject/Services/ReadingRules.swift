@@ -68,6 +68,27 @@ nonisolated struct GraphemeRule: Sendable {
     var unstressed = false
 }
 
+/// Что подсвечивать в книге — галочки в «Оформлении»
+nonisolated enum PhonicsOption: String, CaseIterable, Sendable, Identifiable {
+    case vowelTeam, magicE, rVowel, consonantPair, ending, silent, exception
+
+    var id: String { rawValue }
+
+    /// «Сложное»: без сочетаний согласных и окончаний — они почти всегда читаются по правилу
+    static let tricky: Set<PhonicsOption> = [.vowelTeam, .magicE, .rVowel, .silent, .exception]
+
+    /// Набор в строку для настроек и обратно; "none" — ничего не выбрано
+    static func raw(_ options: Set<PhonicsOption>) -> String {
+        options.isEmpty ? "none" : allCases.filter(options.contains).map(\.rawValue).joined(separator: ",")
+    }
+
+    static func options(from raw: String) -> Set<PhonicsOption>? {
+        if raw == "none" { return [] }
+        let parsed = Set(raw.split(separator: ",").compactMap { PhonicsOption(rawValue: String($0)) })
+        return parsed.isEmpty ? nil : parsed
+    }
+}
+
 /// Кусок слова после разбора
 nonisolated struct PhonicsChunk: Sendable, Identifiable {
     let id: Int
@@ -644,8 +665,8 @@ nonisolated enum ReadingRules {
         var isException = false
     }
 
-    /// level: tricky — гласные, немые буквы и исключения; all — ещё согласные и окончания
-    static func highlight(_ word: String, all: Bool) -> Highlight? {
+    /// Подсветить только выбранное в «Оформлении»
+    static func highlight(_ word: String, options: Set<PhonicsOption>) -> Highlight? {
         guard let reading = reading(for: word) else { return nil }
         // Номер буквы (без апострофов) → место в строке
         var offsets: [Int] = []
@@ -660,21 +681,20 @@ nonisolated enum ReadingRules {
         // В сокращениях (didn't, I'll) звук без буквы — от апострофа, это не исключение
         let contraction = word.contains("'") || word.contains("’")
         let exceptions = !reading.isGuess && !contraction
-        result.isException = reading.isException && exceptions
+        let showsExceptions = options.contains(.exception)
+        result.isException = reading.isException && exceptions && showsExceptions
         for chunk in reading.chunks {
-            let irregular = chunk.irregular && exceptions
-            let shown: Bool
-            switch chunk.kind {
-            case .vowelTeam, .magicE, .rVowel: shown = true
-            case .consonantPair, .ending: shown = all || irregular
-            case .silent, .plain: shown = irregular
-            }
-            if shown {
+            let irregular = chunk.irregular && exceptions && showsExceptions
+            // Немые буквы — бледным цветом, а не фоном
+            let kindShown = chunk.kind != .silent && (PhonicsOption(rawValue: chunk.kind.rawValue).map(options.contains) ?? false)
+            if irregular || kindShown {
                 let start = offsets[chunk.range.lowerBound]
                 let end = offsets[chunk.range.upperBound - 1] + 1
                 result.spans.append((NSRange(location: start, length: end - start), chunk.kind, irregular))
             }
-            for index in chunk.silent where index < offsets.count {
+            // Немая e в make — часть правила «немая e», остальные немые — по своей галочке
+            let silentShown = options.contains(.silent) || (chunk.kind == .magicE && kindShown)
+            for index in chunk.silent where index < offsets.count && silentShown {
                 result.silent.append(NSRange(location: offsets[index], length: 1))
             }
         }

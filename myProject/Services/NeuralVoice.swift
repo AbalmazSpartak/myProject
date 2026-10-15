@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import NaturalLanguage
 import Observation
 import SherpaOnnx
 
@@ -52,7 +53,14 @@ final class NeuralVoice {
 
     private(set) var phase: Phase = .notDownloaded
     private var downloadTask: Task<Void, Never>?
-    private var player: AVAudioPlayer?
+    private let audioEngine = AVAudioEngine()
+    private let playerNode = AVAudioPlayerNode()
+    private var isEngineReady = false
+    /// Номер воспроизведения: после stop() старые куски не считаются
+    private var playback = 0
+    /// Сколько кусков ещё в очереди плеера
+    private var scheduled = 0
+    private static let format = AVAudioFormat(standardFormatWithSampleRate: Double(NeuralVoiceEngine.sampleRate), channels: 1)!
     private let engine = NeuralVoiceEngine()
     private var speakTask: Task<Void, Never>?
     private var pendingKey: String?
@@ -163,8 +171,9 @@ final class NeuralVoice {
     // MARK: - Речь
 
     /// Сказать текст нейросетевым голосом; false — голос недоступен, говорит системный.
-    /// Фраза готовится 0,5–4 с: пока готовится, повторное нажатие на неё ничего не запускает заново,
-    /// а нажатие на другую отменяет ещё не начатые — очередь не копится
+    /// Длинный текст режется на куски по предложениям и запятым: первый звучит почти сразу,
+    /// следующий готовится, пока звучит предыдущий. Пока фраза готовится, повторное нажатие на неё
+    /// ничего не запускает заново, а нажатие на другую отменяет старую — очередь не копится
     @discardableResult
     func speak(_ text: String, slow: Bool = false) -> Bool {
         guard isActive else { return false }
@@ -173,25 +182,34 @@ final class NeuralVoice {
         let key = "\(voice)|\(speed)|\(text)"
         if pendingKey == key { return true }
         stop()
-        if let samples = cache[key] {
-            do { try play(samples) } catch { TextToSpeechManager.shared.speakWithSystemVoice(text, slow: slow) }
-            return true
-        }
+        let parts = Self.split(text)
+        guard !parts.isEmpty else { return true }
         pendingKey = key
         isPreparing = true
         let folder = Self.modelFolder
         speakTask = Task {
+            var index = 0
             do {
-                let samples = try await engine.generate(text, voice: voice, speed: speed, folder: folder)
-                try Task.checkCancellation()
-                remember(samples, for: key)
+                while index < parts.count {
+                    let partKey = "\(voice)|\(speed)|\(parts[index])"
+                    let samples: [Float]
+                    if let cached = cache[partKey] {
+                        samples = cached
+                    } else {
+                        samples = try await engine.generate(parts[index], voice: voice, speed: speed, folder: folder)
+                        remember(samples, for: partKey)
+                    }
+                    try Task.checkCancellation()
+                    try schedule(samples)
+                    isPreparing = false
+                    index += 1
+                }
                 finish(key)
-                try play(samples)
             } catch is CancellationError {
             } catch {
-                // Не справился — тот же текст системным голосом
+                // Не справился — недосказанное системным голосом
                 finish(key)
-                TextToSpeechManager.shared.speakWithSystemVoice(text, slow: slow)
+                TextToSpeechManager.shared.speakWithSystemVoice(parts[index...].joined(separator: " "), slow: slow)
             }
         }
         return true
@@ -202,8 +220,45 @@ final class NeuralVoice {
         speakTask = nil
         pendingKey = nil
         isPreparing = false
-        player?.stop()
-        player = nil
+        playback += 1
+        scheduled = 0
+        if isEngineReady { playerNode.stop() }
+    }
+
+    /// Предложения; длинные (больше 10 слов) — ещё и по запятым, кусками не короче 4 слов
+    nonisolated static func split(_ text: String) -> [String] {
+        var sentences: [String] = []
+        let tokenizer = NLTokenizer(unit: .sentence)
+        tokenizer.string = text
+        tokenizer.enumerateTokens(in: text.startIndex..<text.endIndex) { range, _ in
+            let sentence = text[range].trimmingCharacters(in: .whitespacesAndNewlines)
+            if !sentence.isEmpty { sentences.append(sentence) }
+            return true
+        }
+        func words(_ string: String) -> Int { string.split(whereSeparator: \.isWhitespace).count }
+        var parts: [String] = []
+        for sentence in sentences {
+            guard words(sentence) > 10 else {
+                parts.append(sentence)
+                continue
+            }
+            var current = ""
+            for character in sentence {
+                current.append(character)
+                if ",;:—".contains(character), words(current) >= 4 {
+                    parts.append(current.trimmingCharacters(in: .whitespaces))
+                    current = ""
+                }
+            }
+            let rest = current.trimmingCharacters(in: .whitespaces)
+            if rest.isEmpty { continue }
+            if words(rest) < 3, let last = parts.popLast() {
+                parts.append(last + " " + rest)
+            } else {
+                parts.append(rest)
+            }
+        }
+        return parts
     }
 
     /// Загрузить модель заранее — первая фраза не ждёт 2–3 с загрузки
@@ -226,40 +281,48 @@ final class NeuralVoice {
         if cacheOrder.count > 40 { cache[cacheOrder.removeFirst()] = nil }
     }
 
-    private func play(_ samples: [Float]) throws {
-        let data = Self.wav(samples, sampleRate: NeuralVoiceEngine.sampleRate)
-        try AVAudioSession.sharedInstance().setActive(true)
-        let player = try AVAudioPlayer(data: data)
-        player.prepareToPlay()
-        player.play()
-        self.player = player
+    // MARK: - Воспроизведение
+
+    /// Куски ставятся в очередь плеера друг за другом — без пауз между ними
+    private func schedule(_ samples: [Float]) throws {
+        if !isEngineReady {
+            audioEngine.attach(playerNode)
+            audioEngine.connect(playerNode, to: audioEngine.mainMixerNode, format: Self.format)
+            isEngineReady = true
+        }
+        if !audioEngine.isRunning {
+            try AVAudioSession.sharedInstance().setActive(true)
+            try audioEngine.start()
+        }
+        guard !samples.isEmpty,
+              let buffer = AVAudioPCMBuffer(pcmFormat: Self.format, frameCapacity: AVAudioFrameCount(samples.count)),
+              let channel = buffer.floatChannelData?[0] else { return }
+        buffer.frameLength = buffer.frameCapacity
+        samples.withUnsafeBufferPointer { channel.update(from: $0.baseAddress!, count: samples.count) }
+        scheduled += 1
+        let current = playback
+        playerNode.scheduleBuffer(buffer) { [weak self] in
+            Task { @MainActor in self?.bufferFinished(current) }
+        }
+        if !playerNode.isPlaying { playerNode.play() }
     }
 
-    /// PCM 16 бит, моно — WAV в памяти для AVAudioPlayer
-    private nonisolated static func wav(_ samples: [Float], sampleRate: Int) -> Data {
-        var pcm = Data(capacity: samples.count * 2)
-        for sample in samples {
-            var value = Int16(max(-1, min(1, sample)) * Float(Int16.max)).littleEndian
-            withUnsafeBytes(of: &value) { pcm.append(contentsOf: $0) }
+    /// Всё сказано — через секунду тишины выключаем звук, и музыка возвращается к прежней громкости.
+    /// Сессию не трогаем, если её взяла запись голоса («Произнеси») или читалка читает вслух
+    private func bufferFinished(_ current: Int) {
+        guard current == playback else { return }
+        scheduled -= 1
+        guard scheduled == 0, pendingKey == nil else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self, current == self.playback, self.scheduled == 0, self.pendingKey == nil else { return }
+                self.audioEngine.stop()
+                let session = AVAudioSession.sharedInstance()
+                guard session.category == .playback, !TextToSpeechManager.keepsSessionActive,
+                      !TextToSpeechManager.shared.isSpeaking else { return }
+                try? session.setActive(false, options: .notifyOthersOnDeactivation)
+            }
         }
-        var header = Data()
-        func append<T>(_ value: T) {
-            var little = value
-            withUnsafeBytes(of: &little) { header.append(contentsOf: $0) }
-        }
-        header.append(contentsOf: Array("RIFF".utf8))
-        append(UInt32(36 + pcm.count).littleEndian)
-        header.append(contentsOf: Array("WAVEfmt ".utf8))
-        append(UInt32(16).littleEndian)
-        append(UInt16(1).littleEndian)
-        append(UInt16(1).littleEndian)
-        append(UInt32(sampleRate).littleEndian)
-        append(UInt32(sampleRate * 2).littleEndian)
-        append(UInt16(2).littleEndian)
-        append(UInt16(16).littleEndian)
-        header.append(contentsOf: Array("data".utf8))
-        append(UInt32(pcm.count).littleEndian)
-        return header + pcm
     }
 }
 

@@ -16,6 +16,7 @@ struct StudyDictionariesView: View {
     }
 
     private var builtInWords: [Word] { allWords.filter { !$0.isCustom } }
+    private var oxfordCount: Int { builtInWords.filter { $0.tags == StudyScope.oxfordTag }.count }
 
     var body: some View {
         Form {
@@ -28,6 +29,21 @@ struct StudyDictionariesView: View {
                 } footer: {
                     Text("Слово попадает в тренировки, если отмечены его уровень, часть речи и тема. Например, уровень A1 и только «Глаголы» — это глаголы A1.")
                 }
+
+                Section {
+                    Toggle(isOn: $scope.oxfordOnly) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Только Oxford 5000")
+                            Text("\(oxfordCount) из \(builtInWords.count) слов")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .tint(.teal)
+                } footer: {
+                    Text("Oxford 3000 и 5000 — официальные списки самых нужных слов английского от A1 до C1. Без галочки в тренировки входят и наши дополнения: фразовые глаголы, устойчивые выражения и предметы для фото-режима.")
+                }
+                .disabled(!scope.enabledLists.isEmpty)
 
                 if !lists.isEmpty {
                     Section {

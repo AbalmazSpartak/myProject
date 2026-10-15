@@ -1,4 +1,5 @@
 @preconcurrency import AVFoundation
+import UIKit
 
 /// Настройки озвучки (Профиль → ⚙️ → «Озвучка»)
 enum SpeechSettings {
@@ -62,6 +63,23 @@ final class TextToSpeechManager: NSObject {
         Self.sessionQueue.async {
             try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])
         }
+        #if !WIDGET_EXTENSION
+        // Свернули приложение — озвучка слова или предложения замолкает (книга вслух — своя, она играет и в фоне)
+        NotificationCenter.default.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { _ in
+            MainActor.assumeIsolated { TextToSpeechManager.shared.stop() }
+        }
+        #endif
+    }
+
+    var isSpeaking: Bool { synthesizer.isSpeaking }
+
+    /// Замолчать: и системный голос, и нейросетевой
+    func stop() {
+        request += 1
+        if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
+        #if !WIDGET_EXTENSION
+        NeuralVoice.shared.stop()
+        #endif
     }
 
     /// Заранее найти голос — первое слово после запуска не ждёт его. Поиск занимает ~0,2 с — в фоне, не на главном потоке

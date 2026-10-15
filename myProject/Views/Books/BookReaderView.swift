@@ -73,7 +73,7 @@ struct BookReaderView: View {
                     onNext: { go(to: chapterIndex + 1) }
                 )
                 .equatable()
-                .id("\(chapterIndex)-\(style.phonics.rawValue)")
+                .id("\(chapterIndex)-\(style.phonicsID)")
             } else if let linkedParagraphs {
                 ReaderChapterText(
                     chapterID: chapterIndex,
@@ -93,7 +93,7 @@ struct BookReaderView: View {
                     chapterNavigation
                 }
                 .equatable()
-                .id("\(chapterIndex)-\(style.phonics.rawValue)")
+                .id("\(chapterIndex)-\(style.phonicsID)")
             } else {
                 Spacer()
                 ProgressView()
@@ -116,7 +116,7 @@ struct BookReaderView: View {
         }
         .onDisappear { speech.stop() }
         // Глава готовится, когда главы загружены и при каждой смене главы
-        .task(id: "\(chapters.count)-\(chapterIndex)-\(style.phonics.rawValue)") { await prepareChapter() }
+        .task(id: "\(chapters.count)-\(chapterIndex)-\(style.phonicsID)") { await prepareChapter() }
         .sheet(item: $tappedWord) { tapped in
             WordLookupView(tapped: tapped, bookTitle: book.title)
                 .presentationDetents([.medium, .large])
@@ -285,7 +285,7 @@ struct BookReaderView: View {
         }
         linkedParagraphs = nil
         let paragraphs = chapter.paragraphs
-        let phonics: Bool? = style.phonics == .off ? nil : style.phonics == .all
+        let phonics = style.phonics
         linkedParagraphs = await Task.detached(priority: .userInitiated) {
             var cache: [String: ReadingRules.Highlight?] = [:]
             return paragraphs.enumerated().map { Self.linked($1, paragraph: $0, phonics: phonics, cache: &cache) }
@@ -347,8 +347,8 @@ struct BookReaderView: View {
     }
 
     /// Абзац, где каждое английское слово — ссылка на себя.
-    /// phonics: nil — без подсветки, false — сложные сочетания, true — все правила; cache — разбор слов главы
-    nonisolated static func linked(_ text: String, paragraph: Int, phonics: Bool? = nil,
+    /// phonics: nil — без подсветки, иначе что подсвечивать; cache — разбор слов главы
+    nonisolated static func linked(_ text: String, paragraph: Int, phonics: Set<PhonicsOption>? = nil,
                                    cache: inout [String: ReadingRules.Highlight?]) -> AttributedString {
         let ns = text as NSString
         guard let regex = try? NSRegularExpression(pattern: "[A-Za-z]+(?:['’-][A-Za-z]+)*") else { return AttributedString(text) }
@@ -362,7 +362,7 @@ struct BookReaderView: View {
             var word = AttributedString(ns.substring(with: range))
             word.link = URL(string: "\(wordScheme)://w/\(paragraph)/\(range.location)/\(range.length)")
             if let phonics {
-                decorate(&word, ns.substring(with: range), all: phonics, cache: &cache)
+                decorate(&word, ns.substring(with: range), options: phonics, cache: &cache)
             }
             result += word
             last = range.location + range.length
@@ -377,18 +377,19 @@ struct BookReaderView: View {
 extension BookReaderView {
     /// Подсветка правил чтения в слове: сочетания — цветным фоном, немые буквы — бледными, исключение — пунктиром.
     /// Слова через дефис разбираются по частям
-    nonisolated static func decorate(_ word: inout AttributedString, _ text: String, all: Bool,
+    nonisolated static func decorate(_ word: inout AttributedString, _ text: String, options: Set<PhonicsOption>,
                                      cache: inout [String: ReadingRules.Highlight?]) {
         var offset = 0
         for part in text.split(separator: "-", omittingEmptySubsequences: false) {
             let piece = String(part)
             defer { offset += (piece as NSString).length + 1 }
-            let key = piece.lowercased() + (all ? "|all" : "")
+            // Кэш — на одну главу с одними галочками
+            let key = piece.lowercased()
             let highlight: ReadingRules.Highlight?
             if let cached = cache[key] {
                 highlight = cached
             } else {
-                highlight = ReadingRules.highlight(piece, all: all)
+                highlight = ReadingRules.highlight(piece, options: options)
                 cache[key] = highlight
             }
             guard let highlight else { continue }

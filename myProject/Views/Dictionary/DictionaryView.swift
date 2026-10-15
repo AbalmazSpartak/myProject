@@ -6,6 +6,10 @@ enum DictionaryFilter: Hashable {
     case category(Category)
     case list(WordList)
     case mistakes
+    /// Встроенные слова из списков Oxford 3000/5000; level — один уровень или все
+    case oxford(level: String?)
+    /// Встроенные слова не из Oxford: фразовые глаголы, выражения, предметы
+    case extra
 }
 
 struct DictionaryView: View {
@@ -92,6 +96,16 @@ struct DictionaryView: View {
             predicate = #Predicate { word in word.lists.contains { $0.id == listID } }
         case .mistakes:
             predicate = #Predicate { $0.isMistake }
+        case .oxford(let level):
+            let oxford = StudyScope.oxfordTag
+            if let level {
+                predicate = #Predicate { !$0.isCustom && $0.tags == oxford && $0.cefrLevel == level }
+            } else {
+                predicate = #Predicate { !$0.isCustom && $0.tags == oxford }
+            }
+        case .extra:
+            let oxford = StudyScope.oxfordTag
+            predicate = #Predicate { !$0.isCustom && $0.tags != oxford }
         }
         let limit = keepingLoaded ? max(Self.pageSize, filteredWords.count) : Self.pageSize
         pagePredicate = predicate
@@ -168,6 +182,10 @@ struct DictionaryView: View {
             return list.name
         case .mistakes:
             return "⚠️ Слова с ошибками (\(mistakeCount))"
+        case .oxford(let level):
+            return level.map { "Oxford 5000 · \($0)" } ?? "Oxford 5000"
+        case .extra:
+            return "Дополнения"
         }
     }
     
@@ -188,8 +206,11 @@ struct DictionaryView: View {
                                 ListPhotosStrip(list: list)
                                     .padding(.top, 4)
                             }
-                            addWordCard
-                                .padding(.top, 4)
+                            // Встроенные словари только для чтения — добавлять в них нечего
+                            if !isBuiltInDictionary {
+                                addWordCard
+                                    .padding(.top, 4)
+                            }
                             
                             if filteredWords.isEmpty {
                                 VStack(spacing: 12) {
@@ -406,6 +427,9 @@ struct DictionaryView: View {
                             }
                             Divider().padding(.horizontal, 16)
                             
+                            builtInRows
+                            Divider().padding(.horizontal, 16)
+
                             if !lists.isEmpty {
                                 myListsRows
                                 Divider().padding(.horizontal, 16)
@@ -467,6 +491,7 @@ struct DictionaryView: View {
         switch filter {
         case .mistakes: return "exclamationmark.triangle.fill"
         case .list: return "text.book.closed.fill"
+        case .oxford, .extra: return "books.vertical.fill"
         default: return "folder.fill"
         }
     }
@@ -476,6 +501,67 @@ struct DictionaryView: View {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
         guard trimmed.count > limit else { return trimmed }
         return trimmed.prefix(limit).trimmingCharacters(in: .whitespaces) + "..."
+    }
+
+    /// Встроенные словари основной базы: Oxford 5000 (с уровнями) и наши дополнения. Не удаляются и не переименовываются
+    private var builtInRows: some View {
+        VStack(spacing: 0) {
+            builtInRow(.oxford(level: nil), title: "Oxford 5000", count: builtInCount(.oxford(level: nil)))
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(CEFRLevel.allCases.map(\.rawValue).filter { builtInCount(.oxford(level: $0)) > 0 }, id: \.self) { level in
+                        let item = DictionaryFilter.oxford(level: level)
+                        Button { selectFilterAndClose(item) } label: {
+                            Text("\(level) · \(builtInCount(item).formatted())")
+                                .scaledFont(size: 13, weight: .semibold)
+                                .foregroundColor(filter == item ? .white : .brandDark)
+                                .padding(.horizontal, 10).padding(.vertical, 6)
+                                .background(filter == item ? Color.orange : Color.brandBackground)
+                                .cornerRadius(10)
+                        }
+                    }
+                }
+                .padding(.horizontal, 16).padding(.bottom, 6)
+            }
+            builtInRow(.extra, title: "Дополнения", count: builtInCount(.extra))
+        }
+    }
+
+    private func builtInRow(_ item: DictionaryFilter, title: String, count: Int) -> some View {
+        let isSelected = filter == item
+        return Button(action: { selectFilterAndClose(item) }) {
+            HStack(spacing: 8) {
+                Image(systemName: "books.vertical.fill")
+                    .scaledFont(size: 14)
+                    .foregroundColor(.indigo)
+                Text("\(title) (\(count.formatted()))")
+                    .scaledFont(size: 16, weight: isSelected ? .bold : .semibold)
+                    .foregroundColor(isSelected ? .orange : .brandDark)
+                Spacer()
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .scaledFont(size: 14, weight: .bold)
+                        .foregroundColor(.orange)
+                }
+            }
+            .padding(.horizontal, 16).padding(.vertical, 12)
+        }
+    }
+
+    /// Счётчики встроенных словарей — запомненные запросы «сколько»
+    private func builtInCount(_ item: DictionaryFilter) -> Int {
+        let oxford = StudyScope.oxfordTag
+        switch item {
+        case .oxford(let level?):
+            return StudyWords.cachedCount("словарь|oxford|\(level)",
+                                          #Predicate<Word> { !$0.isCustom && $0.tags == oxford && $0.cefrLevel == level }, in: modelContext)
+        case .oxford(nil):
+            return StudyWords.cachedCount("словарь|oxford", #Predicate<Word> { !$0.isCustom && $0.tags == oxford }, in: modelContext)
+        case .extra:
+            return StudyWords.cachedCount("словарь|extra", #Predicate<Word> { !$0.isCustom && $0.tags != oxford }, in: modelContext)
+        default:
+            return 0
+        }
     }
 
     /// Свои словари (например, из скана текста) — над темами; долгое нажатие: переименовать или удалить
@@ -533,6 +619,13 @@ struct DictionaryView: View {
         if filter == .list(source) { filter = .list(target) }
         modelContext.delete(source)
         try? modelContext.save()
+    }
+
+    private var isBuiltInDictionary: Bool {
+        switch filter {
+        case .oxford, .extra: return true
+        default: return false
+        }
     }
 
     private func selectFilterAndClose(_ selectedFilter: DictionaryFilter) {

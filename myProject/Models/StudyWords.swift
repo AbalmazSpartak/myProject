@@ -20,12 +20,15 @@ enum StudyWords {
         let topics = Array(scope.disabledTopics)
         // Слово без темы относится к теме "" — её тоже можно выключить
         let noTopicDisabled = scope.disabledTopics.contains("")
+        let oxfordOnly = scope.oxfordOnly
+        let oxford = StudyScope.oxfordTag
         return #Predicate<Word> { word in
             word.isCustom
                 ? includeCustom
                 : !levels.contains(word.cefrLevel)
                     && !tags.contains(word.partOfSpeech)
                     && (word.category.flatMap { topics.contains($0.name) } ?? noTopicDisabled) == false
+                    && (!oxfordOnly || word.tags == oxford)
         }
     }
 
@@ -101,6 +104,7 @@ enum StudyWords {
          scope.disabledPartsOfSpeech.sorted().joined(separator: ","),
          scope.disabledTopics.sorted().joined(separator: ","),
          scope.includeCustomWords ? "свои" : "",
+         scope.oxfordOnly ? "oxford" : "",
          scope.enabledLists.map(\.uuidString).sorted().joined(separator: ",")].joined(separator: "|")
     }
 

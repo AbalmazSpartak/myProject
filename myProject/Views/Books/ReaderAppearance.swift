@@ -116,21 +116,6 @@ enum ReaderPageTurn: String, CaseIterable, Identifiable {
     }
 }
 
-/// Подсветка правил чтения в тексте книги
-enum ReaderPhonics: String, CaseIterable, Identifiable {
-    case off, tricky, all
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .off: return "Выкл"
-        case .tricky: return "Сложное"
-        case .all: return "Все правила"
-        }
-    }
-}
-
 /// Ключи настроек и разбор своих цветов (хранятся строкой «r,g,b»)
 enum ReaderSettings {
     static let themeKey = "reader_theme"
@@ -139,7 +124,14 @@ enum ReaderSettings {
     static let spacingKey = "reader_spacing"
     static let layoutKey = "reader_layout"
     static let pageTurnKey = "reader_page_turn"
+    /// Подсветка правил чтения: "off" — выключена; иначе включена (раньше были режимы "tricky" и "all")
     static let phonicsKey = "reader_phonics"
+    /// Какие правила подсвечивать — галочки; пусто — как было в режиме («Все правила» → все, иначе «Сложное»)
+    static let phonicsRulesKey = "reader_phonics_rules"
+
+    static func phonicsOptions(mode: String, rules: String) -> Set<PhonicsOption> {
+        PhonicsOption.options(from: rules) ?? (mode == "all" ? Set(PhonicsOption.allCases) : PhonicsOption.tricky)
+    }
     static let customTextKey = "reader_custom_text"
     static let customBackgroundKey = "reader_custom_background"
 
@@ -168,7 +160,8 @@ struct ReaderStyle: Equatable {
     let spacing: ReaderSpacing
     var layout: ReaderLayout = .pages
     var pageTurn: ReaderPageTurn = .slide
-    var phonics: ReaderPhonics = .off
+    /// nil — подсветка выключена
+    var phonics: Set<PhonicsOption>?
     let customText: Color
     let customBackground: Color
 
@@ -183,10 +176,19 @@ struct ReaderStyle: Equatable {
             spacing: defaults.string(forKey: ReaderSettings.spacingKey).flatMap(ReaderSpacing.init(rawValue:)) ?? .normal,
             layout: defaults.string(forKey: ReaderSettings.layoutKey).flatMap(ReaderLayout.init(rawValue:)) ?? .pages,
             pageTurn: defaults.string(forKey: ReaderSettings.pageTurnKey).flatMap(ReaderPageTurn.init(rawValue:)) ?? .slide,
-            phonics: defaults.string(forKey: ReaderSettings.phonicsKey).flatMap(ReaderPhonics.init(rawValue:)) ?? .off,
+            phonics: Self.phonics(defaults),
             customText: ReaderSettings.color(from: defaults.string(forKey: ReaderSettings.customTextKey) ?? "", fallback: .black),
             customBackground: ReaderSettings.color(from: defaults.string(forKey: ReaderSettings.customBackgroundKey) ?? "", fallback: .white))
     }
+
+    private static func phonics(_ defaults: UserDefaults) -> Set<PhonicsOption>? {
+        let mode = defaults.string(forKey: ReaderSettings.phonicsKey) ?? "off"
+        guard mode != "off" else { return nil }
+        return ReaderSettings.phonicsOptions(mode: mode, rules: defaults.string(forKey: ReaderSettings.phonicsRulesKey) ?? "")
+    }
+
+    /// Для перерисовки главы: меняется вместе с галочками
+    var phonicsID: String { phonics.map(PhonicsOption.raw) ?? "off" }
 
     var background: Color {
         switch theme {
@@ -224,7 +226,8 @@ struct ReaderAppearanceSheet: View {
     @AppStorage(ReaderSettings.spacingKey) private var spacing = ReaderSpacing.normal
     @AppStorage(ReaderSettings.layoutKey) private var layout = ReaderLayout.pages
     @AppStorage(ReaderSettings.pageTurnKey) private var pageTurn = ReaderPageTurn.slide
-    @AppStorage(ReaderSettings.phonicsKey) private var phonics = ReaderPhonics.off
+    @AppStorage(ReaderSettings.phonicsKey) private var phonicsMode = "off"
+    @AppStorage(ReaderSettings.phonicsRulesKey) private var phonicsRules = ""
     @AppStorage(ReaderSettings.customTextKey) private var customTextRaw = ""
     @AppStorage(ReaderSettings.customBackgroundKey) private var customBackgroundRaw = ""
 
@@ -232,6 +235,22 @@ struct ReaderAppearanceSheet: View {
         ReaderStyle(theme: theme, fontSize: fontSize, font: font, spacing: spacing,
                     customText: ReaderSettings.color(from: customTextRaw, fallback: .black),
                     customBackground: ReaderSettings.color(from: customBackgroundRaw, fallback: .white))
+    }
+
+    private var phonicsOn: Binding<Bool> {
+        Binding(get: { phonicsMode != "off" }, set: { isOn in
+            // Галочки запоминаются до смены режима — выключили, включили, и всё как было
+            // (у старого режима «Все правила» своих галочек ещё нет — берём их из режима)
+            if PhonicsOption.options(from: phonicsRules) == nil {
+                phonicsRules = PhonicsOption.raw(ReaderSettings.phonicsOptions(mode: phonicsMode, rules: phonicsRules))
+            }
+            phonicsMode = isOn ? "on" : "off"
+        })
+    }
+
+    private var phonicsSelection: Binding<Set<PhonicsOption>> {
+        Binding(get: { ReaderSettings.phonicsOptions(mode: phonicsMode, rules: phonicsRules) },
+                set: { phonicsRules = PhonicsOption.raw($0) })
     }
 
     private var customText: Binding<Color> {
@@ -261,16 +280,15 @@ struct ReaderAppearanceSheet: View {
                     }
 
                     section("Правила чтения")
-                    Picker("Правила чтения", selection: $phonics) {
-                        ForEach(ReaderPhonics.allCases) { Text($0.title).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-                    if phonics == .off {
+                    Toggle("Подсветка правил", isOn: phonicsOn)
+                        .scaledFont(size: 16, weight: .semibold)
+                        .tint(.brown)
+                    if phonicsMode == "off" {
                         Text("Подсветка сочетаний букв, которые читаются по особым правилам. Нажмите на слово — карточка покажет, как его читать.")
                             .scaledFont(size: 13)
                             .foregroundColor(.gray)
                     } else {
-                        PhonicsLegend(all: phonics == .all)
+                        PhonicsLegend(selection: phonicsSelection)
                     }
 
                     section("Тема")

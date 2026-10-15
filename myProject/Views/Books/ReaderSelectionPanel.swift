@@ -2,9 +2,11 @@ import SwiftUI
 import SwiftData
 @preconcurrency import Translation
 
-/// Панель под выделенным текстом: перевод встроенным переводчиком iOS, озвучка, копирование, «В словарь» книги
+/// Панель под выделенным текстом: слово — перевод встроенным переводчиком iOS; фраза — в Google Переводчик
+/// (переводчик iOS переводит литературные фразы почти дословно); озвучка, копирование, «В словарь» книги
 struct ReaderSelectionPanel: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.openURL) private var openURL
 
     let text: String
     let bookTitle: String
@@ -16,6 +18,21 @@ struct ReaderSelectionPanel: View {
     @State private var failed = false
     @State private var isAdded = false
     @State private var copied = false
+    /// Фраза в словарь: перевод вписывает сам читатель (например, из Google Переводчика)
+    @State private var isEnteringTranslation = false
+    @State private var manualTranslation = ""
+    @FocusState private var isTranslationFocused: Bool
+
+    private var isSingleWord: Bool {
+        text.trimmingCharacters(in: .whitespacesAndNewlines).split(whereSeparator: \.isWhitespace).count == 1
+    }
+
+    /// Перевод для словаря: у слова — от переводчика iOS, у фразы — вписанный
+    private var dictionaryTranslation: String? {
+        if let translation { return translation }
+        let typed = manualTranslation.trimmingCharacters(in: .whitespacesAndNewlines)
+        return typed.isEmpty ? nil : typed
+    }
 
     /// Фразу — в словарь; целый абзац там ни к чему
     private var fitsDictionary: Bool { text.split(separator: " ").count <= 12 }
@@ -50,13 +67,37 @@ struct ReaderSelectionPanel: View {
                     .foregroundColor(.gray)
             }
 
+            if isEnteringTranslation {
+                HStack(spacing: 8) {
+                    TextField("Перевод фразы", text: $manualTranslation)
+                        .scaledFont(size: 15)
+                        .focused($isTranslationFocused)
+                        .submitLabel(.done)
+                        .onSubmit(add)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                        .background(Color.brandBackground)
+                        .cornerRadius(10)
+                    Button("Добавить", action: add)
+                        .scaledFont(size: 15, weight: .semibold)
+                        .tint(.brown)
+                        .disabled(dictionaryTranslation == nil)
+                }
+            }
+
             HStack(spacing: 8) {
-                action(translation == nil ? "Перевести" : "Готово", icon: "character.bubble", disabled: translation != nil || isTranslating) {
-                    if config == nil {
-                        config = TranslationSession.Configuration(source: Locale.Language(identifier: "en"),
-                                                                  target: Locale.Language(identifier: "ru"))
-                    } else {
-                        config?.invalidate()
+                if isSingleWord {
+                    action(translation == nil ? "Перевести" : "Готово", icon: "character.bubble", disabled: translation != nil || isTranslating) {
+                        if config == nil {
+                            config = TranslationSession.Configuration(source: Locale.Language(identifier: "en"),
+                                                                      target: Locale.Language(identifier: "ru"))
+                        } else {
+                            config?.invalidate()
+                        }
+                    }
+                } else {
+                    action("Google", icon: "globe") {
+                        if let url = Self.googleTranslateURL(text) { openURL(url) }
                     }
                 }
                 action("Озвучить", icon: "speaker.wave.2") {
@@ -68,7 +109,14 @@ struct ReaderSelectionPanel: View {
                 }
                 if fitsDictionary {
                     action(isAdded ? "В словаре" : "В словарь", icon: isAdded ? "checkmark.circle.fill" : "plus.circle",
-                           disabled: isAdded || translation == nil, action: add)
+                           disabled: isAdded || (isSingleWord && translation == nil)) {
+                        if dictionaryTranslation != nil {
+                            add()
+                        } else {
+                            isEnteringTranslation = true
+                            isTranslationFocused = true
+                        }
+                    }
                 }
             }
         }
@@ -90,7 +138,21 @@ struct ReaderSelectionPanel: View {
             failed = false
             isAdded = false
             copied = false
+            isEnteringTranslation = false
+            manualTranslation = ""
         }
+    }
+
+    /// Google Переводчик с уже вставленным текстом: приложение, если стоит, иначе сайт
+    static func googleTranslateURL(_ text: String) -> URL? {
+        var components = URLComponents(string: "https://translate.google.com/")
+        components?.queryItems = [
+            URLQueryItem(name: "sl", value: "en"),
+            URLQueryItem(name: "tl", value: "ru"),
+            URLQueryItem(name: "text", value: text.trimmingCharacters(in: .whitespacesAndNewlines)),
+            URLQueryItem(name: "op", value: "translate"),
+        ]
+        return components?.url
     }
 
     private func action(_ title: String, icon: String, disabled: Bool = false, action: @escaping () -> Void) -> some View {
@@ -116,7 +178,7 @@ struct ReaderSelectionPanel: View {
 
     /// Фраза — своим словом в словаре книги, с переводом; учится в тренировках, как слова
     private func add() {
-        guard let translation else { return }
+        guard let translation = dictionaryTranslation else { return }
         let list = WordList.named(bookTitle, context: modelContext)
         let phrase = text.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
         let word = Word(english: phrase, russian: translation.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters)),
@@ -125,6 +187,7 @@ struct ReaderSelectionPanel: View {
         word.lists.append(list)
         try? modelContext.save()
         isAdded = true
+        isEnteringTranslation = false
         UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
 }

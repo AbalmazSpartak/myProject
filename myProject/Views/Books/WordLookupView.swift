@@ -2,9 +2,10 @@ import SwiftUI
 import SwiftData
 @preconcurrency import Translation
 
-/// Карточка слова из книги: словарная форма, перевод (из базы или переводчиком iOS), предложение и «В словарь книги»
+/// Карточка слова из книги: словарная форма, перевод (из базы или переводчиком iOS), предложение (перевод — в Google) и «В словарь книги»
 struct WordLookupView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.openURL) private var openURL
     @Query private var lists: [WordList]
 
     let tapped: TappedWord
@@ -15,8 +16,6 @@ struct WordLookupView: View {
     /// Это слово в основной базе — перевод и уровень оттуда
     @State private var baseWord: Word?
     @State private var translation = ""
-    @State private var sentenceTranslation: String?
-    @State private var wantsSentence = false
     @State private var config: TranslationSession.Configuration?
     @State private var isTranslating = false
     @State private var translationFailed = false
@@ -161,19 +160,12 @@ struct WordLookupView: View {
             Text(Word.attributedExample(exampleWithBold))
                 .scaledFont(size: 16, design: .serif)
                 .foregroundColor(.brandDark)
-            if let sentenceTranslation {
-                Text(sentenceTranslation)
-                    .scaledFont(size: 15)
-                    .foregroundColor(.gray)
-            } else {
-                Button {
-                    wantsSentence = true
-                    requestTranslation()
-                } label: {
-                    Label("Перевести предложение", systemImage: "character.bubble")
-                        .scaledFont(size: 15, weight: .semibold)
-                }
-                .disabled(wantsSentence && isTranslating)
+            // Предложение — в Google Переводчик: переводчик iOS переводит литературный текст почти дословно
+            Button {
+                if let url = ReaderSelectionPanel.googleTranslateURL(tapped.sentence) { openURL(url) }
+            } label: {
+                Label("Перевести предложение в Google", systemImage: "globe")
+                    .scaledFont(size: 15, weight: .semibold)
             }
             Button {
                 TextToSpeechManager.shared.speak(tapped.sentence)
@@ -253,9 +245,6 @@ struct WordLookupView: View {
             }
             if let contextEnglish, contextRussian == nil {
                 contextRussian = Self.cleaned(try await session.translate(contextEnglish).targetText)
-            }
-            if wantsSentence, sentenceTranslation == nil {
-                sentenceTranslation = try await session.translate(tapped.sentence).targetText
             }
         } catch {
             translationFailed = true

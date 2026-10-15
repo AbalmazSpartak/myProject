@@ -14,6 +14,8 @@ struct StudyScope: Equatable {
     var disabledPartsOfSpeech: Set<String> = []
     var disabledTopics: Set<String> = []
     var includeCustomWords = true
+    /// Только слова из официальных списков Oxford 3000/5000 (тег «Oxford»), без добавленных нами (тег «Extra»)
+    var oxfordOnly = false
     /// Отмеченные свои словари (WordList.id). Если есть хоть один — учим только их слова, остальные фильтры не действуют
     var enabledLists: Set<UUID> = []
 
@@ -25,6 +27,7 @@ struct StudyScope: Equatable {
         }
         // Свои слова пользователя управляются одной галочкой «Мои слова»
         if word.isCustom { return includeCustomWords }
+        if oxfordOnly, word.tags != Self.oxfordTag { return false }
         if dimension != .level, disabledLevels.contains(word.cefrLevel) { return false }
         if dimension != .partOfSpeech, disabledPartsOfSpeech.contains(Self.partOfSpeechGroup(of: word)) { return false }
         if dimension != .topic, disabledTopics.contains(Self.topic(of: word)) { return false }
@@ -33,7 +36,11 @@ struct StudyScope: Equatable {
 
     var isEverythingEnabled: Bool {
         disabledLevels.isEmpty && disabledPartsOfSpeech.isEmpty && disabledTopics.isEmpty && includeCustomWords && enabledLists.isEmpty
+            && !oxfordOnly
     }
+
+    /// Тег слов из списков Oxford в words.csv; остальные встроенные слова — «Extra»
+    static let oxfordTag = "Oxford"
 
     // MARK: - Группы
 
@@ -77,6 +84,7 @@ extension StudyScope: RawRepresentable {
         var disabledTopics: [String]
         var includeCustomWords: Bool
         var enabledLists: [UUID]?   // необязательное — старые сохранённые настройки без него
+        var oxfordOnly: Bool?
     }
 
     init?(rawValue: String) {
@@ -84,13 +92,13 @@ extension StudyScope: RawRepresentable {
               let stored = try? JSONDecoder().decode(Stored.self, from: data) else {
             return nil
         }
-        self.init(
-            disabledLevels: Set(stored.disabledLevels),
-            disabledPartsOfSpeech: Set(stored.disabledPartsOfSpeech),
-            disabledTopics: Set(stored.disabledTopics),
-            includeCustomWords: stored.includeCustomWords,
-            enabledLists: Set(stored.enabledLists ?? [])
-        )
+        self.init()
+        disabledLevels = Set(stored.disabledLevels)
+        disabledPartsOfSpeech = Set(stored.disabledPartsOfSpeech)
+        disabledTopics = Set(stored.disabledTopics)
+        includeCustomWords = stored.includeCustomWords
+        enabledLists = Set(stored.enabledLists ?? [])
+        oxfordOnly = stored.oxfordOnly ?? false
     }
 
     var rawValue: String {
@@ -99,7 +107,8 @@ extension StudyScope: RawRepresentable {
             disabledPartsOfSpeech: disabledPartsOfSpeech.sorted(),
             disabledTopics: disabledTopics.sorted(),
             includeCustomWords: includeCustomWords,
-            enabledLists: enabledLists.sorted { $0.uuidString < $1.uuidString }
+            enabledLists: enabledLists.sorted { $0.uuidString < $1.uuidString },
+            oxfordOnly: oxfordOnly
         )
         guard let data = try? JSONEncoder().encode(stored) else { return "" }
         return String(decoding: data, as: UTF8.self)
