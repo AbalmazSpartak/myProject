@@ -11,7 +11,13 @@ full_code.txt
 .DS_Store
 # Xcode файлы пользователя
 *.xcuserstate
-*.xcworkspace/
+*.xcworkspace/*
+# …кроме Package.resolved: точные версии библиотек (sherpa-onnx и др.) — на любом Mac собирается то же самое
+!*.xcworkspace/xcshareddata/
+*.xcworkspace/xcshareddata/*
+!*.xcworkspace/xcshareddata/swiftpm/
+*.xcworkspace/xcshareddata/swiftpm/*
+!*.xcworkspace/xcshareddata/swiftpm/Package.resolved
 xcuserdata/
 
 # Cloudflare wrangler
