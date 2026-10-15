@@ -10,24 +10,52 @@ struct SpeakTrainingView: View {
     @AppStorage("speak_source") private var source = Source.learning
 
     enum Source: String, CaseIterable, Identifiable {
-        case learning, all, mistakes
+        case saved, learning, all, mistakes
 
         var id: String { rawValue }
 
         var title: String {
             switch self {
+            case .saved: return "Отложенные"
             case .learning: return "Изучаемые"
-            case .all: return "Все слова"
+            case .all: return "Все"
             case .mistakes: return "Ошибки"
             }
         }
     }
 
+    /// Слово для тренировки: из словаря или из «Отложенных» (слово из книги может быть не в словаре)
+    private struct PracticeItem: Identifiable {
+        let id: String
+        let english: String
+        let transcription: String
+        let russian: String
+
+        init(_ word: Word) {
+            id = word.english.lowercased()
+            english = word.english
+            transcription = word.transcription
+            russian = word.russian
+        }
+
+        init(_ entry: PronunciationQueue.Entry) {
+            id = entry.english.lowercased()
+            english = entry.english
+            transcription = entry.transcription
+            russian = entry.russian
+        }
+
+        var displayTranscription: String {
+            let bare = Word.bareTranscription(transcription)
+            return bare.isEmpty ? "" : "/\(bare)/"
+        }
+    }
+
     private enum Phase { case setup, practice, summary }
 
-    /// Ответ по слову: получилось ли с первой попытки и сколько было попыток
+    /// Ответ по слову: получилось ли с первой попытки и получилось ли вообще
     private struct Outcome {
-        let word: Word
+        let item: PracticeItem
         var firstTry: Bool
         var passed: Bool
     }
@@ -35,7 +63,7 @@ struct SpeakTrainingView: View {
     static let sessionLength = 10
 
     @State private var phase = Phase.setup
-    @State private var words: [Word] = []
+    @State private var words: [PracticeItem] = []
     @State private var index = 0
     @State private var outcomes: [Outcome] = []
     @State private var attempts = 0
@@ -44,7 +72,7 @@ struct SpeakTrainingView: View {
     @State private var checker = SpeechChecker()
     @State private var emptyMessage: String?
 
-    private var word: Word? { words.indices.contains(index) ? words[index] : nil }
+    private var word: PracticeItem? { words.indices.contains(index) ? words[index] : nil }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -106,6 +134,12 @@ struct SpeakTrainingView: View {
                     ForEach(Source.allCases) { Text($0.title).tag($0) }
                 }
                 .pickerStyle(.segmented)
+                if source == .saved {
+                    Text(savedHint)
+                        .scaledFont(size: 13)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                }
 
                 if let emptyMessage {
                     Text(emptyMessage)
@@ -133,21 +167,35 @@ struct SpeakTrainingView: View {
         }
     }
 
+    private var savedHint: String {
+        let count = PronunciationQueue.entries().count
+        return count == 0
+            ? "Отложенных слов нет. Добавить: в читалке нажмите на слово → «В тренировку произношения»."
+            : "Отложено слов: \(count). Слово, сказанное верно с первой попытки, уходит из списка."
+    }
+
     private func begin() {
         let inScope = StudyWords.scope(studyScope)
-        let picked: [Word]
+        let picked: [PracticeItem]
         switch source {
+        case .saved:
+            picked = PronunciationQueue.entries().shuffled().prefix(Self.sessionLength).map(PracticeItem.init)
         case .learning:
             picked = StudyWords.random(StudyWords.all(inScope, #Predicate<Word> { $0.reps > 0 }), limit: Self.sessionLength, in: modelContext)
+                .map(PracticeItem.init)
         case .all:
-            picked = StudyWords.random(inScope, limit: Self.sessionLength, in: modelContext)
+            picked = StudyWords.random(inScope, limit: Self.sessionLength, in: modelContext).map(PracticeItem.init)
         case .mistakes:
             picked = StudyWords.random(StudyWords.all(inScope, #Predicate<Word> { $0.isMistake }), limit: Self.sessionLength, in: modelContext)
+                .map(PracticeItem.init)
         }
         guard !picked.isEmpty else {
-            emptyMessage = source == .learning
-                ? "Пока нет слов, которые вы уже учите. Выберите «Все слова»."
-                : source == .mistakes ? "Ошибок нет — выберите другие слова." : "В словаре нет слов."
+            switch source {
+            case .saved: emptyMessage = "Отложенных слов нет — выберите другие слова."
+            case .learning: emptyMessage = "Пока нет слов, которые вы уже учите. Выберите «Все»."
+            case .mistakes: emptyMessage = "Ошибок нет — выберите другие слова."
+            case .all: emptyMessage = "В словаре нет слов."
+            }
             return
         }
         emptyMessage = nil
@@ -218,7 +266,7 @@ struct SpeakTrainingView: View {
     }
 
     /// Большая кнопка: нажать — слушаем; во время записи нажать ещё раз — хватит
-    private func micButton(for word: Word) -> some View {
+    private func micButton(for word: PracticeItem) -> some View {
         let listening = checker.phase == .listening
         return VStack(spacing: 10) {
             Button {
@@ -256,20 +304,22 @@ struct SpeakTrainingView: View {
         }
     }
 
-    private func check(_ heard: String, word: Word) {
+    private func check(_ heard: String, word: PracticeItem) {
         attempts += 1
         let ok = SpeechChecker.matches(heard, word.english)
         passed = ok
         UINotificationFeedbackGenerator().notificationOccurred(ok ? .success : .warning)
-        if let position = outcomes.firstIndex(where: { $0.word.persistentModelID == word.persistentModelID }) {
+        if let position = outcomes.firstIndex(where: { $0.item.id == word.id }) {
             outcomes[position].passed = outcomes[position].passed || ok
         } else {
-            outcomes.append(Outcome(word: word, firstTry: ok, passed: ok))
+            outcomes.append(Outcome(item: word, firstTry: ok, passed: ok))
         }
+        // Отложенное слово получилось сразу — из списка
+        if ok, attempts == 1, source == .saved { PronunciationQueue.remove(word.english) }
     }
 
     @ViewBuilder
-    private func resultBlock(for word: Word) -> some View {
+    private func resultBlock(for word: PracticeItem) -> some View {
         if checker.isDenied {
             VStack(spacing: 10) {
                 Text("Нужен доступ к микрофону и распознаванию речи.")
@@ -303,7 +353,8 @@ struct SpeakTrainingView: View {
                             .multilineTextAlignment(.center)
                     }
                     // Подсказка, как читается слово, — из «Правил чтения»
-                    ReadingBreakdownView(word: word.english, lemma: "", transcription: word.transcription)
+                    ReadingBreakdownView(word: word.english, lemma: "", transcription: word.transcription,
+                                         showsPracticeButton: false)
                 }
 
                 HStack(spacing: 12) {
@@ -358,22 +409,22 @@ struct SpeakTrainingView: View {
                     .foregroundColor(.brandDark)
 
                 VStack(spacing: 8) {
-                    ForEach(outcomes, id: \.word.persistentModelID) { outcome in
+                    ForEach(outcomes, id: \.item.id) { outcome in
                         HStack {
                             Image(systemName: outcome.firstTry ? "checkmark.circle.fill" : outcome.passed ? "arrow.uturn.right.circle.fill" : "xmark.circle.fill")
                                 .foregroundColor(outcome.firstTry ? .green : outcome.passed ? .orange : .red)
-                            Text(outcome.word.english)
+                            Text(outcome.item.english)
                                 .scaledFont(size: 17, weight: .semibold, design: .serif)
                                 .foregroundColor(.brandDark)
                             Spacer()
                             Button {
-                                TextToSpeechManager.shared.speak(outcome.word.english)
+                                TextToSpeechManager.shared.speak(outcome.item.english)
                             } label: {
                                 Image(systemName: "speaker.wave.2.fill")
                                     .foregroundColor(.brown)
                             }
                             .buttonStyle(.plain)
-                            .accessibilityLabel("Послушать \(outcome.word.english)")
+                            .accessibilityLabel("Послушать \(outcome.item.english)")
                         }
                         .padding(12)
                         .background(Color.cardBackground)

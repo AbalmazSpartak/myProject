@@ -75,9 +75,14 @@ struct ReadingBreakdownView: View {
     let lemma: String
     /// Транскрипция из основной базы, если слово там есть
     let transcription: String?
+    /// Перевод — для списка «Отложенные» в «Произнеси»
+    var translation = ""
+    /// Кнопка «В тренировку произношения»; в самой тренировке не нужна
+    var showsPracticeButton = true
 
     @State private var reading: WordReading?
     @State private var topic: CommunityTopic?
+    @State private var isQueued = false
 
     var body: some View {
         Group {
@@ -99,10 +104,34 @@ struct ReadingBreakdownView: View {
         } else {
             reading = ReadingRules.reading(for: lemma) ?? tapped
         }
+        isQueued = reading.map { PronunciationQueue.contains($0.word) } ?? false
+    }
+
+    /// Слово — в список «Отложенные» тренировки «Произнеси»
+    @ViewBuilder
+    private func practiceButton(_ reading: WordReading) -> some View {
+        if showsPracticeButton {
+            Button {
+                let sounds = transcription.flatMap { $0.isEmpty ? nil : $0 } ?? (reading.isGuess ? "" : ReadingRules.ipa(reading.phones))
+                PronunciationQueue.add(reading.word, russian: translation, transcription: sounds)
+                isQueued = true
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+            } label: {
+                Label(isQueued ? "В тренировке «Произнеси»" : "В тренировку произношения",
+                      systemImage: isQueued ? "checkmark.circle.fill" : "mic.badge.plus")
+                    .scaledFont(size: 14, weight: .semibold)
+            }
+            .tint(isQueued ? .green : .orange)
+            .disabled(isQueued)
+        }
     }
 
     private func content(_ reading: WordReading) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
+        let exception = exceptionInfo(reading)
+        return VStack(alignment: .leading, spacing: 14) {
+            if let exception {
+                exceptionBanner(exception, reading: reading)
+            }
             HStack(alignment: .firstTextBaseline) {
                 Text("Как читать")
                     .scaledFont(size: 17, weight: .semibold)
@@ -127,7 +156,7 @@ struct ReadingBreakdownView: View {
                 }
             }
 
-            notes(reading)
+            notes(reading, skipping: exception?.text)
 
             if reading.isGuess {
                 Text("Слова нет в словаре произношения — разбор по общим правилам, звучание может отличаться. Послушайте озвучку.")
@@ -136,6 +165,11 @@ struct ReadingBreakdownView: View {
             }
 
             topicLinks(reading)
+
+            // У исключения кнопка — в плашке сверху
+            if exception == nil {
+                practiceButton(reading)
+            }
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -193,8 +227,72 @@ struct ReadingBreakdownView: View {
         }
     }
 
-    /// Правила для особых сочетаний и пояснения к слову целиком
-    private func notes(_ reading: WordReading) -> some View {
+    // MARK: - Исключение
+
+    /// Коротко, в чём слово нарушает правило, и урок именно про этот случай
+    private struct ExceptionInfo {
+        let text: String
+        let lesson: (id: UUID, title: String)
+    }
+
+    private func exceptionInfo(_ reading: WordReading) -> ExceptionInfo? {
+        let contraction = reading.word.contains("'") || reading.word.contains("’")
+        guard reading.isException, !reading.isGuess, !contraction,
+              let chunk = reading.chunks.first(where: \.irregular) else { return nil }
+        let key = reading.word.lowercased().filter { $0.isASCII && $0.isLetter }
+        let text: String
+        if let curated = ReadingNotes.words[key] {
+            text = curated
+        } else {
+            var line = chunk.phones.isEmpty
+                ? "\(chunk.letters) здесь не читается"
+                : "\(chunk.letters) здесь читается как «\(ReadingRules.russian(chunk.phones))»"
+            let said = ReadingRules.russian(chunk.phones.map(ReadingRules.base))
+            if let usual = ReadingRules.usualReading(of: chunk.letters), usual != said {
+                line += ", хотя обычно — «\(usual)»"
+            }
+            if let examples = chunk.examples, examples.lowercased() != key { line += ". Так же: \(examples)" }
+            text = line + "."
+        }
+        return ExceptionInfo(text: text, lesson: lesson(for: chunk))
+    }
+
+    /// Урок по типу ошибки: немые буквы, th — свои темы, остальное — «Слова-исключения»
+    private func lesson(for chunk: PhonicsChunk) -> (id: UUID, title: String) {
+        if chunk.origin == nil, chunk.phones.isEmpty || chunk.kind == .silent {
+            return (BuiltInTopics.silentLettersID, "Немые буквы")
+        }
+        if chunk.letters == "th" { return (BuiltInTopics.thSoundID, "Звук th") }
+        return (BuiltInTopics.readingExceptionsID, "Слова-исключения")
+    }
+
+    private func exceptionBanner(_ info: ExceptionInfo, reading: WordReading) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundColor(PhonicsKind.exceptionColor)
+                (Text("Исключение: ").bold() + Text(info.text))
+                    .scaledFont(size: 14)
+                    .foregroundColor(.brandDark)
+            }
+            Button {
+                openTopic(info.lesson.id)
+            } label: {
+                Label("Урок: «\(info.lesson.title)»", systemImage: "book.pages")
+                    .scaledFont(size: 14, weight: .semibold)
+            }
+            .tint(.brown)
+            practiceButton(reading)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(PhonicsKind.exceptionColor.opacity(0.08))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(PhonicsKind.exceptionColor.opacity(0.35), lineWidth: 1))
+        .cornerRadius(12)
+    }
+
+    /// Правила для особых сочетаний и пояснения к слову целиком; skipping — уже показано в плашке исключения
+    private func notes(_ reading: WordReading, skipping shown: String? = nil) -> some View {
         let explained = reading.chunks.filter { $0.kind != .plain || $0.irregular || !$0.silent.isEmpty }
         return VStack(alignment: .leading, spacing: 8) {
             ForEach(explained) { chunk in
@@ -218,7 +316,7 @@ struct ReadingBreakdownView: View {
                     }
                 }
             }
-            ForEach(reading.notes, id: \.self) { note in
+            ForEach(reading.notes.filter { $0 != shown }, id: \.self) { note in
                 Label {
                     Text(note)
                         .scaledFont(size: 14)
@@ -259,6 +357,7 @@ struct ReadingBreakdownView: View {
             result.append((BuiltInTopics.vowelReadingID, "Как читаются гласные"))
         }
         if reading.chunks.contains(where: { $0.letters == "th" }) { result.append((BuiltInTopics.thSoundID, "Звук th")) }
+        if reading.isException, !reading.isGuess { result.append((BuiltInTopics.readingExceptionsID, "Слова-исключения")) }
         if reading.phones.contains(where: { ["IY1", "IH1", "UW1", "UH1"].contains($0) }) {
             result.append((BuiltInTopics.minimalPairsID, "Долгие и краткие звуки"))
         }

@@ -129,11 +129,12 @@ enum BuiltInTopics {
     static let thSoundID = uuid(topic: 15)
     static let minimalPairsID = uuid(topic: 16)
     static let silentLettersID = uuid(topic: 17)
+    static let readingExceptionsID = uuid(topic: 24)
 
     static let all: [Topic] = [tenses, irregularVerbs, articles, movieQuotes, airport, cafe, vowelReading,
                                hotel, doctor, shopping, city, timePrepositions, quantifiers, comparatives,
                                thSound, minimalPairs, silentLetters, fantasyPhrases, seriesPhrases, musicWords, songSlang,
-                               idioms, textingSlang]
+                               idioms, textingSlang, readingExceptions]
 
     static let pronunciationSection = "Произношение"
 
@@ -651,6 +652,74 @@ enum BuiltInTopics {
             speech("know, write, climb, hour, walk, night.", caption: "Немые буквы"),
         ]),
         words: [("knife", "нож"), ("knee", "колено"), ("climb", "карабкаться"), ("honest", "честный"), ("daughter", "дочь")]
+    )
+
+    private static let readingExceptions = Topic(
+        number: 24,
+        section: pronunciationSection,
+        title: "Слова-исключения: почему так читается",
+        blocks: blocks(24, [
+            text("Английское написание складывалось тысячу лет: звуки менялись, а буквы оставались прежними. Ещё тысячи слов пришли из французского, латыни и греческого со своим написанием. Поэтому у правил чтения есть исключения. Хорошая новость: большинство из них — несколько повторяющихся групп."),
+            heading("Немая e, которая «не работает»"),
+            text("Обычно e на конце делает гласную длинной: make, time, home. В нескольких очень частых словах — нет:"),
+            table([
+                ["Слово", "Как читается"],
+                ["have", "«хэв», а не «хэйв»"],
+                ["give, live", "«гив», «лив»"],
+                ["love, come, some, done", "o как «а»: «лав», «кам», «сам», «дан»"],
+                ["gone", "«гон»"],
+            ], labels: true),
+            heading("Пары гласных с другим звуком"),
+            table([
+                ["Сочетание", "Обычно → иногда"],
+                ["ea", "«и:» (sea, eat)\n→ «э» (*head, bread*), «эй» (*great, break*)"],
+                ["oo", "«у:» (moon)\n→ «у» (*book, good*), «а» (*blood*)"],
+                ["ou", "«ау» (out)\n→ «а» (*young, touch*), «у:» (*soup, group*)"],
+                ["ai", "«эй» (rain)\n→ «э» (*said, again*)"],
+            ], labels: true),
+            heading("ough — каждый раз по-своему"),
+            table([
+                ["Слово", "Звук"],
+                ["though", "«оу»"],
+                ["through", "«у:»"],
+                ["tough, enough", "«аф»"],
+                ["thought, bought", "«о:»"],
+                ["cough", "«оф»"],
+            ], labels: true),
+            text("Здесь правило не поможет: чтение ough запоминают вместе со словом."),
+            heading("Слова из французского"),
+            table([
+                ["Признак", "Примеры"],
+                ["ch = «ш»", "*chef, machine*"],
+                ["-et = «эй», t немая", "*ballet, buffet*"],
+                ["i = «и:»", "*machine, police*"],
+                ["g = «ж»", "*garage, beige, genre*"],
+                ["-que = «к»", "*unique, technique*"],
+                ["h немая", "*hour, honest*"],
+            ], labels: true),
+            heading("Слова из греческого"),
+            table([
+                ["Признак", "Примеры"],
+                ["ch = «к»", "*school, chorus, character*"],
+                ["ph = «ф»", "*phone, photo*"],
+                ["y = «и»", "*gym, myth, system*"],
+                ["ps-, pn- — p немая", "*psychology, pneumonia*"],
+                ["rh — h немая", "*rhythm, rhyme*"],
+            ], labels: true),
+            heading("Единственные в своём роде"),
+            table([
+                ["Слово", "Как читается"],
+                ["one, once", "«уан», «уанс»"],
+                ["two", "«ту:», w немая"],
+                ["women", "«ви́мин»"],
+                ["colonel", "«кё:нл»"],
+                ["island", "«а́йлэнд», s немая"],
+                ["Wednesday", "«вэ́нздэй»"],
+            ], labels: true),
+            text("В читалке включите «Aa» → «Правила чтения»: такие слова подчёркнуты пунктиром, а карточка слова покажет, какая часть читается не по правилу и почему."),
+            speech("have, love, head, great, though, through, chef, school, one, women.", caption: "Слова-исключения"),
+        ]),
+        words: [("though", "хотя"), ("through", "через"), ("enough", "достаточно"), ("women", "женщины"), ("island", "остров")]
     )
 
     // MARK: - Кино

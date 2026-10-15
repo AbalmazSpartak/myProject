@@ -103,14 +103,14 @@ nonisolated enum ReadingRules {
 
     /// Правила по первой букве; внутри — длинные сочетания раньше коротких
     static let rules: [Character: [GraphemeRule]] = {
-        var table: [Character: [GraphemeRule]] = [:]
-        for rule in all {
-            table[rule.letters.first!, default: []].append(rule)
+        // Длинные сочетания раньше коротких; при равной длине — в порядке таблицы (основное чтение первым)
+        var table: [Character: [(index: Int, rule: GraphemeRule)]] = [:]
+        for (index, rule) in all.enumerated() {
+            table[rule.letters.first!, default: []].append((index, rule))
         }
-        for key in table.keys {
-            table[key]!.sort { $0.letters.count > $1.letters.count }
+        return table.mapValues { entries in
+            entries.sorted { ($0.rule.letters.count, -$0.index) > ($1.rule.letters.count, -$1.index) }.map(\.rule)
         }
-        return table
     }()
 
     private static func r(_ letters: String, _ phones: String, _ kind: PhonicsKind, _ typical: Bool, _ note: String,
@@ -572,6 +572,22 @@ nonisolated enum ReadingRules {
         }
         return notes
     }
+
+    /// Как сочетание читается обычно — по основному правилу, звуком по-русски; nil — правила нет
+    static func usualReading(of letters: String) -> String? {
+        if let vowel = usualVowel[letters] { return vowel }
+        guard let first = letters.first,
+              let rule = rules[first]?.first(where: { $0.letters == letters && $0.typical && !$0.phones.isEmpty && !$0.unstressed })
+        else { return nil }
+        // Звуки правила — без ударения; показываем полное звучание гласных, без знака ударения
+        let stressed = rule.phones.map { russianSound[$0] != nil && "AEIOU".contains($0.first!) ? $0 + "1" : $0 }
+        return russian(stressed).replacingOccurrences(of: "\u{301}", with: "")
+    }
+
+    /// Одиночная гласная читается двумя основными способами: в закрытом и в открытом слоге
+    private static let usualVowel: [String: String] = [
+        "a": "э / эй", "e": "э / и:", "i": "и / ай", "o": "о / оу", "u": "а / ю:", "y": "и / ай",
+    ]
 
     // MARK: - Звуки по-русски и в транскрипции
 
