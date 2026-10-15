@@ -85,9 +85,13 @@ struct ReadingBreakdownView: View {
     @State private var isQueued = false
 
     var body: some View {
-        Group {
+        // Пустой Group на экране не появляется — и .task у него не срабатывал: разбор не показывался никогда.
+        // Невидимая заглушка, пока разбора нет
+        VStack(spacing: 0) {
             if let reading {
                 content(reading)
+            } else {
+                Color.clear.frame(height: 1)
             }
         }
         .task(id: word + "|" + lemma) { analyze() }

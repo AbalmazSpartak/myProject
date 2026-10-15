@@ -66,6 +66,9 @@ final class TextToSpeechManager: NSObject {
 
     /// Заранее найти голос — первое слово после запуска не ждёт его. Поиск занимает ~0,2 с — в фоне, не на главном потоке
     func prepare() {
+        #if !WIDGET_EXTENSION
+        NeuralVoice.shared.warmUp()
+        #endif
         let (accent, identifier) = Self.currentVoiceSetting
         let key = "\(accent)|\(identifier)"
         Task.detached(priority: .utility) {
@@ -76,8 +79,20 @@ final class TextToSpeechManager: NSObject {
         }
     }
 
-    /// slow — медленнее обычного, чтобы расслышать звуки слова
+    /// slow — медленнее обычного, чтобы расслышать звуки слова.
+    /// Скачан и включён нейросетевой голос — говорит он, иначе системный
     func speak(_ text: String, slow: Bool = false) {
+        #if !WIDGET_EXTENSION
+        if NeuralVoice.shared.speak(text, slow: slow) {
+            if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
+            return
+        }
+        #endif
+        speakWithSystemVoice(text, slow: slow)
+    }
+
+    /// Системный голос iOS — и запасной, когда нейросетевой не справился
+    func speakWithSystemVoice(_ text: String, slow: Bool = false) {
         // Если синтезатор уже говорит, останавливаем его перед новым словом
         if synthesizer.isSpeaking {
             synthesizer.stopSpeaking(at: .immediate)

@@ -20,6 +20,10 @@ struct WordLookupView: View {
     @State private var config: TranslationSession.Configuration?
     @State private var isTranslating = false
     @State private var translationFailed = false
+    /// Apple Intelligence: значение в этом предложении — по-английски от модели и по-русски от переводчика
+    @State private var contextEnglish: String?
+    @State private var contextRussian: String?
+    @State private var isFindingContext = false
 
     private var bookList: WordList? {
         let name = bookTitle.trimmingCharacters(in: .whitespaces)
@@ -37,6 +41,9 @@ struct WordLookupView: View {
                 ReadingBreakdownView(word: tapped.word, lemma: lemma, transcription: baseWord?.transcription,
                                      translation: baseWord?.russian ?? translation)
                 translationBlock
+                if isFindingContext || contextEnglish != nil {
+                    contextBlock
+                }
                 sentenceBlock
                 addButton
             }
@@ -108,6 +115,47 @@ struct WordLookupView: View {
         .cornerRadius(14)
     }
 
+    /// «В этом предложении» — только где есть Apple Intelligence (iPhone 15 Pro и новее)
+    private var contextBlock: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Text("В этом предложении")
+                Spacer()
+                Label("Apple Intelligence", systemImage: "apple.intelligence")
+                    .labelStyle(.titleAndIcon)
+            }
+            .scaledFont(size: 12, weight: .semibold)
+            .foregroundColor(.gray)
+            if let contextEnglish {
+                if let contextRussian {
+                    Text(contextRussian)
+                        .scaledFont(size: 18, design: .serif)
+                        .foregroundColor(.brandDark)
+                }
+                Text(contextEnglish)
+                    .scaledFont(size: 15, design: .serif)
+                    .italic()
+                    .foregroundColor(.gray)
+                if baseWord == nil, let contextRussian, contextRussian != translation {
+                    Button("Взять этот перевод") { translation = contextRussian }
+                        .scaledFont(size: 14, weight: .semibold)
+                        .tint(.brown)
+                }
+            } else {
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text("Смотрю значение…")
+                        .scaledFont(size: 15)
+                        .foregroundColor(.gray)
+                }
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.cardBackground)
+        .cornerRadius(14)
+    }
+
     private var sentenceBlock: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(Word.attributedExample(exampleWithBold))
@@ -171,6 +219,18 @@ struct WordLookupView: View {
         }
         baseWord = matches.first { $0.partOfSpeech == found.partOfSpeech } ?? matches.first
         if baseWord == nil { requestTranslation() }
+        findContextMeaning()
+    }
+
+    private func findContextMeaning() {
+        guard ContextMeaning.isAvailable else { return }
+        isFindingContext = true
+        Task {
+            defer { isFindingContext = false }
+            guard let meaning = try? await ContextMeaning.meaning(of: tapped.word, in: tapped.sentence) else { return }
+            contextEnglish = meaning
+            requestTranslation()
+        }
     }
 
     private func requestTranslation() {
@@ -190,6 +250,9 @@ struct WordLookupView: View {
                 // Глагол — с «to», иначе переводчик часто выдаёт существительное
                 let source = partOfSpeech == "v." ? "to \(lemma)" : lemma
                 translation = Self.cleaned(try await session.translate(source).targetText)
+            }
+            if let contextEnglish, contextRussian == nil {
+                contextRussian = Self.cleaned(try await session.translate(contextEnglish).targetText)
             }
             if wantsSentence, sentenceTranslation == nil {
                 sentenceTranslation = try await session.translate(tapped.sentence).targetText

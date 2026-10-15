@@ -414,6 +414,8 @@ nonisolated enum ReadingRules {
         case .notStart: if i == 0 { return false }
         case .any: break
         }
+        // -ed — окончание, только если перед ним не e: в speed, need, feed это ee + d, а не окончание
+        if rule.kind == .ending, rule.letters == "ed", i > 0, chars[i - 1] == "e" { return false }
         if let before = rule.before {
             guard i + n < chars.count, before.contains(chars[i + n]) else { return false }
         }

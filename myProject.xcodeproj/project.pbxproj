@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		A1000000000000000000AA21 /* WordWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A1000000000000000000AA01 /* WordWidget.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B2000000000000000000BB03 /* sherpa-onnx in Frameworks */ = {isa = PBXBuildFile; productRef = B2000000000000000000BB02 /* sherpa-onnx */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -82,6 +83,7 @@
 		000000000000000130000000 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				B2000000000000000000BB03 /* sherpa-onnx in Frameworks */,
 			);
 		};
 		A1000000000000000000AA15 /* Frameworks */ = {
@@ -125,6 +127,9 @@
 				A1000000000000000000AA02 /* Shared */,
 			);
 			name = myProject;
+			packageProductDependencies = (
+				B2000000000000000000BB02 /* sherpa-onnx */,
+			);
 			productName = MyApp;
 			productReference = C8CC0B5B306B4BEE00E8C3A6 /* myProject.app */;
 			productType = "com.apple.product-type.application";
@@ -175,6 +180,9 @@
 			);
 			mainGroup = 000000000000000000000001;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B2000000000000000000BB01 /* XCRemoteSwiftPackageReference "sherpa-onnx" */,
+			);
 			preferredProjectObjectVersion = 90;
 			productRefGroup = 000000000000000000000001;
 			projectDirPath = "";
@@ -371,6 +379,11 @@
 				INFOPLIST_KEY_CFBundleDisplayName = WordLearner;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Камера нужна, чтобы распознать английский текст и добавить из него слова в словарь, а также перенести таблицу с фото в тему.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Приложению нужен доступ к локальной сети, чтобы находить других игроков для гонки слов.";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lbz2",
+				);
+				SWIFT_OBJC_BRIDGING_HEADER = "myProject/myProject-Bridging-Header.h";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Микрофон нужен, чтобы записать голос в тему сообщества и проверить произношение в тренировке «Произнеси».";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Распознавание речи проверяет, как вы произносите английские слова в тренировке «Произнеси».";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -419,6 +432,11 @@
 				INFOPLIST_KEY_CFBundleDisplayName = WordLearner;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Камера нужна, чтобы распознать английский текст и добавить из него слова в словарь, а также перенести таблицу с фото в тему.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Приложению нужен доступ к локальной сети, чтобы находить других игроков для гонки слов.";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lbz2",
+				);
+				SWIFT_OBJC_BRIDGING_HEADER = "myProject/myProject-Bridging-Header.h";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Микрофон нужен, чтобы записать голос в тему сообщества и проверить произношение в тренировке «Произнеси».";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Распознавание речи проверяет, как вы произносите английские слова в тренировке «Произнеси».";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -458,6 +476,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 8S9F222M7F;
 				GENERATE_INFOPLIST_FILE = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "WIDGET_EXTENSION $(inherited)";
 				INFOPLIST_FILE = WordWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Повторение";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
@@ -490,6 +509,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 8S9F222M7F;
 				GENERATE_INFOPLIST_FILE = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "WIDGET_EXTENSION $(inherited)";
 				INFOPLIST_FILE = WordWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Повторение";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
@@ -542,6 +562,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B2000000000000000000BB01 /* XCRemoteSwiftPackageReference "sherpa-onnx" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/k2-fsa/sherpa-onnx";
+			requirement = {
+				kind = exactVersion;
+				version = 1.13.8;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B2000000000000000000BB02 /* sherpa-onnx */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B2000000000000000000BB01 /* XCRemoteSwiftPackageReference "sherpa-onnx" */;
+			productName = "sherpa-onnx";
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 000000000000000000000000 /* Project object */;
 }

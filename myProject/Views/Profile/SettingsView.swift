@@ -19,6 +19,11 @@ struct SettingsView: View {
     @AppStorage(SpeechSettings.voiceKey) private var speechVoice = ""
     @AppStorage(SpeechSettings.rateKey) private var speechRate = SpeechSettings.defaultRate
     @AppStorage(SpeechSettings.autoSpeakKey) private var autoSpeak = false
+    @AppStorage(NeuralVoice.enabledKey) private var neuralVoiceEnabled = false
+
+    private var neuralVoiceSummary: String {
+        NeuralVoice.isInstalled ? (neuralVoiceEnabled ? "включён" : "выключен") : "не скачан"
+    }
     @AppStorage(DailyReminder.enabledKey) private var reminderEnabled = false
     @AppStorage(DailyReminder.timeKey) private var reminderTime = DailyReminder.defaultTime
     /// Пользователь запретил уведомления — подсказываем, где их включить
@@ -143,6 +148,12 @@ struct SettingsView: View {
                             VoicePickerView()
                         } label: {
                             LabeledContent("Голос", value: VoiceSummary.current(accent: speechAccent, voiceID: speechVoice))
+                        }
+
+                        NavigationLink {
+                            NeuralVoiceSettingsView()
+                        } label: {
+                            LabeledContent("Нейросетевой голос", value: neuralVoiceSummary)
                         }
 
                         VStack(alignment: .leading, spacing: 4) {
