@@ -129,18 +129,36 @@ enum MenuPalette {
     }
 }
 
-/// Что показывать на «Обзоре» (Настройки → «Обзор»): раздел «Фокуса дня», плитки «Быстрого доступа»,
+/// Что показывать на «Обзоре» (Настройки → «Обзор»): разделы «Фокуса дня» (карусель до трёх), плитки «Быстрого доступа»,
 /// видны ли «Слово дня» и «Ваши подборки»
 struct OverviewLayout: Equatable {
     static let storageKey = "overview_layout"
+    static let maxFocus = 3
 
+    /// Первая карточка «Фокуса дня»
     var focus: MenuSection
+    /// Ещё карточки карусели — до двух
+    var focusExtra: [MenuSection] = []
     var quickAccess: [MenuSection]
     var showsWordOfDay: Bool
     var showsCollections: Bool
 
-    static let standard = OverviewLayout(focus: .flashcards, quickAccess: [.inputCards, .quiz, .tetris, .cloze],
+    static let standardFocusExtra: [MenuSection] = [.flashcards, .schulte]
+
+    /// По умолчанию в середине карусели — интервальное повторение: при запуске видна средняя карточка
+    static let standard = OverviewLayout(focus: .speak, focusExtra: standardFocusExtra,
+                                         quickAccess: [.inputCards, .quiz, .tetris, .cloze],
                                          showsWordOfDay: true, showsCollections: true)
+
+    /// Все карточки карусели по порядку; запись раскладывает обратно в focus и focusExtra
+    var focusSections: [MenuSection] {
+        get { [focus] + focusExtra.filter { $0 != focus } }
+        set {
+            guard let first = newValue.first else { return }
+            focus = first
+            focusExtra = Array(newValue.dropFirst().prefix(Self.maxFocus - 1))
+        }
+    }
 
     /// Разделы, которые можно поставить на «Обзор»: всё, кроме вкладок внизу
     static let choices = MenuSection.allCases.filter { !$0.isTab }
@@ -150,6 +168,8 @@ struct OverviewLayout: Equatable {
 extension OverviewLayout: RawRepresentable {
     private struct Stored: Codable {
         var focus: String
+        /// nil — раскладка сохранена до карусели
+        var focusExtra: [String]?
         var quickAccess: [String]
         var showsWordOfDay: Bool
         var showsCollections: Bool
@@ -161,15 +181,26 @@ extension OverviewLayout: RawRepresentable {
               let stored = try? JSONDecoder().decode(Stored.self, from: data) else {
             return nil
         }
-        let focus = MenuSection(rawValue: stored.focus).flatMap { Self.choices.contains($0) ? $0 : nil }
-        self.init(focus: focus ?? Self.standard.focus,
+        let saved = MenuSection(rawValue: stored.focus).flatMap { Self.choices.contains($0) ? $0 : nil } ?? .flashcards
+        var sections: [MenuSection]
+        if let extra = stored.focusExtra {
+            sections = [saved] + extra.compactMap(MenuSection.init(rawValue:)).filter(Self.choices.contains)
+        } else {
+            // Раскладка до карусели: прежний раздел — в середину, по бокам «Произнеси» и Таблицы Шульте
+            let sides = [MenuSection.speak, .schulte].filter { $0 != saved }
+            sections = sides.count == 2 ? [sides[0], saved, sides[1]] : [saved] + sides
+        }
+        var unique: [MenuSection] = []
+        for section in sections where !unique.contains(section) { unique.append(section) }
+        self.init(focus: unique[0],
+                  focusExtra: Array(unique.dropFirst().prefix(Self.maxFocus - 1)),
                   quickAccess: stored.quickAccess.compactMap(MenuSection.init(rawValue:)).filter(Self.choices.contains),
                   showsWordOfDay: stored.showsWordOfDay,
                   showsCollections: stored.showsCollections)
     }
 
     var rawValue: String {
-        let stored = Stored(focus: focus.rawValue, quickAccess: quickAccess.map(\.rawValue),
+        let stored = Stored(focus: focus.rawValue, focusExtra: focusExtra.map(\.rawValue), quickAccess: quickAccess.map(\.rawValue),
                             showsWordOfDay: showsWordOfDay, showsCollections: showsCollections)
         guard let data = try? JSONEncoder().encode(stored) else { return "" }
         return String(decoding: data, as: UTF8.self)

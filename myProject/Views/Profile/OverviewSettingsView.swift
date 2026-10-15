@@ -15,16 +15,33 @@ struct OverviewSettingsView: View {
         List {
             Group {
                 Section {
-                    Picker("Раздел", selection: $layout.focus) {
-                        ForEach(OverviewLayout.choices, id: \.self) { section in
-                            Label(section == .flashcards ? "Интервальное повторение" : section.title, systemImage: section.icon)
-                                .tag(section)
+                    ForEach(layout.focusSections, id: \.self) { section in
+                        focusRow(section)
+                    }
+                    .onMove { layout.focusSections.move(fromOffsets: $0, toOffset: $1) }
+                    .onDelete { offsets in
+                        guard layout.focusSections.count > 1 else { return }
+                        layout.focusSections.remove(atOffsets: offsets)
+                    }
+                    .deleteDisabled(layout.focusSections.count == 1)
+
+                    if layout.focusSections.count < OverviewLayout.maxFocus {
+                        Menu {
+                            ForEach(OverviewLayout.choices.filter { !layout.focusSections.contains($0) }, id: \.self) { section in
+                                Button {
+                                    withAnimation { layout.focusSections.append(section) }
+                                } label: {
+                                    Label(focusTitle(section), systemImage: section.icon)
+                                }
+                            }
+                        } label: {
+                            Label("Добавить в карусель", systemImage: "plus.circle.fill")
                         }
                     }
                 } header: {
                     Text("Фокус дня")
                 } footer: {
-                    Text("Большая карточка вверху «Обзора» с кнопкой запуска. «Интервальное повторение» — «Карточки для запоминания»: слова, которым пора на повторение, и новые по дневной норме.")
+                    Text("Большие карточки вверху «Обзора» — листаются свайпом, до трёх. При запуске видна средняя карточка, остальные — свайпом в стороны. Порядок — перетаскиванием, убрать — «−» (одна карточка остаётся всегда). «Интервальное повторение» — «Карточки для запоминания»: слова, которым пора на повторение, и новые по дневной норме.")
                 }
 
                 Section {
@@ -85,7 +102,20 @@ struct OverviewSettingsView: View {
             Button("Отмена", role: .cancel) {}
             Button("Вернуть", role: .destructive) { layout = .standard }
         } message: {
-            Text("«Фокус дня» — интервальное повторение, в «Быстром доступе» — Карточки ввода, Викторина, Тетрис слов и Слово в контексте; «Слово дня» и «Ваши подборки» снова видны.")
+            Text("«Фокус дня» — «Произнеси», интервальное повторение (в середине) и Таблицы Шульте, в «Быстром доступе» — Карточки ввода, Викторина, Тетрис слов и Слово в контексте; «Слово дня» и «Ваши подборки» снова видны.")
+        }
+    }
+
+    private func focusTitle(_ section: MenuSection) -> String {
+        section == .flashcards ? "Интервальное повторение" : section.title
+    }
+
+    private func focusRow(_ section: MenuSection) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: section.icon)
+                .foregroundColor(section.color)
+                .frame(width: 24)
+            Text(focusTitle(section))
         }
     }
 

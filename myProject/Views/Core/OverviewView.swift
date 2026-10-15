@@ -18,6 +18,8 @@ struct OverviewView: View {
     @State private var streak = 0
     @State private var introducedToday = 0
     @State private var dueCount = 0
+    /// Какая карточка «Фокуса дня» видна; при запуске — средняя
+    @State private var focusPage: Int?
 
     let open: (ActiveScreen) -> Void
     /// Нажатие на шапку — экран «Профиль»
@@ -29,9 +31,7 @@ struct OverviewView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
-                FocusCard(section: layout.focus, dueCount: dueCount, introducedToday: introducedToday,
-                          dailyLimit: dailyLimit) { open(layout.focus.screen) }
-                    .padding(.horizontal, 20)
+                focusCarousel
 
                 if layout.showsWordOfDay, let wordOfDay {
                     block("Слово дня") { WordOfDayRow(word: wordOfDay) }
@@ -65,7 +65,7 @@ struct OverviewView: View {
             // Серия, норма и слова к повторению меняются в тренировках — пересчитываем при каждом возвращении на «Обзор»
             streak = DailyStreak.current()
             introducedToday = DailyNewWords.introducedToday
-            if layout.focus == .flashcards {
+            if layout.focusSections.contains(.flashcards) {
                 dueCount = StudyWords.count(StudyWords.all(StudyWords.scope(studyScope), StudyWords.isDue(now: Date())),
                                             in: modelContext)
             }
@@ -73,6 +73,53 @@ struct OverviewView: View {
             if wordOfDay == nil, layout.showsWordOfDay {
                 wordOfDay = WordOfDay.recent(days: 1, from: modelContext.fetchAllWords()).first
             }
+        }
+    }
+
+    // MARK: - Фокус дня
+
+    /// Карусель до трёх карточек: листается свайпом, соседняя чуть видна, под ней — точки
+    @ViewBuilder
+    private var focusCarousel: some View {
+        let sections = layout.focusSections
+        if sections.count == 1, let section = sections.first {
+            focusCard(section)
+                .padding(.horizontal, 20)
+        } else {
+            VStack(spacing: 10) {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(Array(sections.enumerated()), id: \.offset) { index, section in
+                            // Карточки одной высоты — по самой высокой, содержимое по центру
+                            focusCard(section)
+                                .containerRelativeFrame(.horizontal)
+                                .id(index)
+                        }
+                    }
+                    .scrollTargetLayout()
+                }
+                .scrollTargetBehavior(.viewAligned)
+                .contentMargins(.horizontal, 20, for: .scrollContent)
+                .scrollPosition(id: $focusPage)
+                .onAppear {
+                    if focusPage == nil { focusPage = sections.count / 2 }
+                }
+
+                HStack(spacing: 7) {
+                    ForEach(sections.indices, id: \.self) { index in
+                        Circle()
+                            .fill(index == (focusPage ?? 0) ? Color.orange : Color.gray.opacity(0.3))
+                            .frame(width: 7, height: 7)
+                    }
+                }
+                .accessibilityHidden(true)
+            }
+        }
+    }
+
+    private func focusCard(_ section: MenuSection) -> some View {
+        FocusCard(section: section, dueCount: dueCount, introducedToday: introducedToday, dailyLimit: dailyLimit) {
+            open(section.screen)
         }
     }
 
@@ -254,8 +301,8 @@ private struct FocusCard: View {
             }
             .buttonStyle(.plain)
 
-            // Без лимита новых слов норму показать не из чего
-            if dailyLimit > 0 {
+            // Норма новых слов — только у интервального повторения; без лимита показать не из чего
+            if isSpacedRepetition, dailyLimit > 0 {
                 VStack(alignment: .leading, spacing: 6) {
                     ProgressView(value: Double(min(introducedToday, dailyLimit)), total: Double(dailyLimit))
                         .tint(.orange)
@@ -265,6 +312,7 @@ private struct FocusCard: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .padding(18)
         .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
