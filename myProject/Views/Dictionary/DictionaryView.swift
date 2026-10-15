@@ -217,12 +217,16 @@ struct DictionaryView: View {
                         .padding(.horizontal, 16)
                         .padding(.bottom, 20)
                     }
+                    // Прокрутка списка тоже убирает клавиатуру
+                    .scrollDismissesKeyboard(.immediately)
                 } else {
                     Spacer()
                 }
             }
             .contentShape(Rectangle())
             .onTapGesture {
+                // Нажатие мимо полей и кнопок — клавиатура прячется
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                 if isDropdownExpanded {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                         isDropdownExpanded = false
