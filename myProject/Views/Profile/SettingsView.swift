@@ -11,6 +11,8 @@ struct SettingsView: View {
     @AppStorage("translation_mode") private var translationMode: String = "en_ru"
     @AppStorage("show_word_images") private var showWordImages: Bool = true
     @AppStorage(DictionarySignals.enabledKey) private var improveDictionary = true
+    @AppStorage(CloudContext.enabledKey) private var aiHints = false
+    @AppStorage(CloudContext.qualityKey) private var aiHintsQuality = CloudContext.Quality.normal.rawValue
     @AppStorage(Haptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
     @AppStorage(OverviewLayout.storageKey) private var overviewLayout = OverviewLayout.standard
@@ -135,7 +137,23 @@ struct SettingsView: View {
                             LabeledContent("Словари", value: studyScope.isEverythingEnabled ? "Все" : "Выбранные")
                         }
                     }
-                
+
+                    Section {
+                        Toggle("ИИ-подсказки", isOn: $aiHints)
+                        if aiHints {
+                            Picker("Подсказка", selection: $aiHintsQuality) {
+                                ForEach(CloudContext.Quality.allCases, id: \.self) { quality in
+                                    Text(quality.title).tag(quality.rawValue)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                        }
+                    } footer: {
+                        Text(aiHints
+                             ? "Кнопка «Значение в этом предложении» в карточке слова в читалке. Слово и предложение уходят на сервер WordLearner (ИИ Claude), без имени и почты. Обычная — быстрая; более точная — точнее подбирает значение и тратит 3 подсказки из дневного запаса вместо одной. Где есть Apple Intelligence, значение показывается сразу и бесплатно."
+                             : "Перевод слова именно в этом предложении — в карточке слова в читалке.")
+                    }
+
                     // Озвучка
                     Section(header: Text("Озвучка"), footer: Text("При переводе с русского на английский слово звучит после ответа, чтобы не подсказывать.")) {
                         Picker("Акцент", selection: $speechAccent) {

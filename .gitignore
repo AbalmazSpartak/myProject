@@ -23,3 +23,6 @@ xcuserdata/
 # Cloudflare wrangler
 server/**/.wrangler/
 server/**/node_modules/
+
+# Секреты для локального wrangler dev
+server/**/.dev.vars

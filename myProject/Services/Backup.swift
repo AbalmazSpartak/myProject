@@ -143,7 +143,7 @@ enum Backup {
         "app_theme", "translation_mode", "show_word_images", Haptics.enabledKey, OverviewLayout.storageKey, PolyglotProgress.storageKey, RaceBotLevel.storageKey, RaceWordSource.storageKey, RaceAnswerMode.storageKey,
         ReaderSettings.themeKey, ReaderSettings.fontSizeKey, ReaderSettings.fontKey, ReaderSettings.spacingKey,
         ReaderSettings.customTextKey, ReaderSettings.customBackgroundKey, "scan_select_learning",
-        DailyReminder.enabledKey, DailyReminder.timeKey,
+        DailyReminder.enabledKey, DailyReminder.timeKey, CloudContext.enabledKey, CloudContext.qualityKey,
         SpeechSettings.accentKey, SpeechSettings.rateKey, SpeechSettings.autoSpeakKey, SpeechSettings.voiceKey,
         DailyNewWords.limitKey, "new_words_day", "new_words_count", SessionLength.key, StudyScope.storageKey,
     ] + RaceGhost.allKeys

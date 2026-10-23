@@ -19,10 +19,15 @@ struct WordLookupView: View {
     @State private var config: TranslationSession.Configuration?
     @State private var isTranslating = false
     @State private var translationFailed = false
-    /// Apple Intelligence: значение в этом предложении — по-английски от модели и по-русски от переводчика
+    /// Значение в этом предложении: Apple Intelligence (по-английски от модели, по-русски от переводчика)
+    /// или, где его нет, ИИ-подсказка с сервера (сразу оба)
     @State private var contextEnglish: String?
     @State private var contextRussian: String?
     @State private var isFindingContext = false
+    @State private var contextFromCloud = false
+    /// ИИ-подсказка не пришла: запас на сегодня кончился или нет сети
+    @State private var cloudMessage: String?
+    @AppStorage(CloudContext.enabledKey) private var aiHints = false
 
     private var bookList: WordList? {
         let name = bookTitle.trimmingCharacters(in: .whitespaces)
@@ -42,6 +47,8 @@ struct WordLookupView: View {
                 translationBlock
                 if isFindingContext || contextEnglish != nil {
                     contextBlock
+                } else if aiHints {
+                    cloudButton
                 }
                 sentenceBlock
                 addButton
@@ -114,14 +121,19 @@ struct WordLookupView: View {
         .cornerRadius(14)
     }
 
-    /// «В этом предложении» — только где есть Apple Intelligence (iPhone 15 Pro и новее)
+    /// «В этом предложении» — Apple Intelligence (iPhone 15 Pro и новее) или ИИ-подсказка с сервера, если она включена
     private var contextBlock: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
                 Text("В этом предложении")
                 Spacer()
-                Label("Apple Intelligence", systemImage: "apple.intelligence")
-                    .labelStyle(.titleAndIcon)
+                if contextFromCloud {
+                    Label("ИИ-подсказка", systemImage: "sparkles")
+                        .labelStyle(.titleAndIcon)
+                } else {
+                    Label("Apple Intelligence", systemImage: "apple.intelligence")
+                        .labelStyle(.titleAndIcon)
+                }
             }
             .scaledFont(size: 12, weight: .semibold)
             .foregroundColor(.gray)
@@ -153,6 +165,22 @@ struct WordLookupView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.cardBackground)
         .cornerRadius(14)
+    }
+
+    /// ИИ-подсказка с сервера — только по нажатию: каждая тратит дневной запас
+    private var cloudButton: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Button(action: askCloud) {
+                Label("Значение в этом предложении", systemImage: "sparkles")
+                    .scaledFont(size: 15, weight: .semibold)
+            }
+            .tint(.brown)
+            if let cloudMessage {
+                Text(cloudMessage)
+                    .scaledFont(size: 13)
+                    .foregroundColor(.gray)
+            }
+        }
     }
 
     private var sentenceBlock: some View {
@@ -214,6 +242,7 @@ struct WordLookupView: View {
         findContextMeaning()
     }
 
+    /// Apple Intelligence — сразу (бесплатно, без сети); где его нет или он не ответил — кнопка ИИ-подсказки
     private func findContextMeaning() {
         guard ContextMeaning.isAvailable else { return }
         isFindingContext = true
@@ -222,6 +251,24 @@ struct WordLookupView: View {
             guard let meaning = try? await ContextMeaning.meaning(of: tapped.word, in: tapped.sentence) else { return }
             contextEnglish = meaning
             requestTranslation()
+        }
+    }
+
+    private func askCloud() {
+        cloudMessage = nil
+        contextFromCloud = true
+        isFindingContext = true
+        Task {
+            defer { isFindingContext = false }
+            switch await CloudContext.meaning(of: tapped.word, in: tapped.sentence) {
+            case .meaning(let meaning):
+                contextRussian = meaning.ru
+                contextEnglish = meaning.en
+            case .limit:
+                cloudMessage = "На сегодня ИИ-подсказки закончились, завтра снова будут. Обычный перевод работает как всегда."
+            case .failed:
+                cloudMessage = "Не получилось — проверьте интернет и попробуйте ещё раз."
+            }
         }
     }
 

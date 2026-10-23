@@ -1,0 +1,16 @@
+name = "wordlearner-ai"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Секреты (wrangler secret put): ANTHROPIC_API_KEY — ключ Claude, ADMIN_KEY — для GET /stats
+[vars]
+MONTHLY_BUDGET_USD = "5"
+
+[[durable_objects.bindings]]
+name = "STORE"
+class_name = "Store"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Store"]
