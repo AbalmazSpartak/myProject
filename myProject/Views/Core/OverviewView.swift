@@ -273,21 +273,22 @@ private struct FocusCard: View {
     private var isSpacedRepetition: Bool { section == .flashcards }
 
     var body: some View {
+        // Строки у всех карточек карусели на одних и тех же местах, как у «Интервального повторения»:
+        // промежутки по 14, название и подпись — в одну строку (подпись не влезла — «…»), место под норму новых слов есть у всех
         VStack(alignment: .leading, spacing: 14) {
             Label("Фокус дня".uppercased(), systemImage: "sparkles")
                 .scaledFont(size: 14, weight: .bold)
                 .foregroundColor(.orange)
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text(isSpacedRepetition ? "Интервальное повторение" : section.title)
-                    .scaledFont(size: 24, weight: .semibold, design: .serif)
-                    .foregroundColor(.brandDark)
-                Text(subtitle)
-                    .scaledFont(size: 15)
-                    .foregroundColor(.gray)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
+            Text(isSpacedRepetition ? "Интервальное повторение" : section.title)
+                .scaledFont(size: 24, weight: .semibold, design: .serif)
+                .foregroundColor(.brandDark)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            Text(subtitle)
+                .scaledFont(size: 15)
+                .foregroundColor(.gray)
+                .lineLimit(1)
+                .truncationMode(.tail)
             Button {
                 Haptics.tap()
                 action()
@@ -300,21 +301,24 @@ private struct FocusCard: View {
                     .background(Color.orange, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .buttonStyle(.plain)
-
-            // Норма новых слов — только у интервального повторения; без лимита показать не из чего
-            if isSpacedRepetition, dailyLimit > 0 {
-                VStack(alignment: .leading, spacing: 6) {
-                    ProgressView(value: Double(min(introducedToday, dailyLimit)), total: Double(dailyLimit))
-                        .tint(.orange)
-                    Text("Новые слова сегодня: \(introducedToday) из \(dailyLimit)")
-                        .scaledFont(size: 13)
-                        .foregroundColor(.gray)
-                }
-            }
+            // Норма новых слов — только у интервального повторения; у остальных на её месте пусто
+            newWordsProgress
+                .opacity(isSpacedRepetition && dailyLimit > 0 ? 1 : 0)
+                .accessibilityHidden(!(isSpacedRepetition && dailyLimit > 0))
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(18)
         .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+    }
+
+    private var newWordsProgress: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ProgressView(value: Double(min(introducedToday, max(dailyLimit, 1))), total: Double(max(dailyLimit, 1)))
+                .tint(.orange)
+            Text("Новые слова сегодня: \(introducedToday) из \(dailyLimit)")
+                .scaledFont(size: 13)
+                .foregroundColor(.gray)
+        }
     }
 
     private var subtitle: String {
