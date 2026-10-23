@@ -178,6 +178,8 @@ struct ReaderPagedText: View, Equatable {
     @State private var selectionLayout: ReaderPageLayout?
     /// Что сейчас тянет палец: продолжение долгого нажатия или одна из «ручек»
     @State private var dragMode: DragMode?
+    /// Где палец, пока выделяют, — над ним лупа
+    @State private var fingerLocation: CGPoint?
 
     private enum DragMode { case extend, start, end }
 
@@ -229,6 +231,8 @@ struct ReaderPagedText: View, Equatable {
         }
         .tint(textColor)
         .environment(\.openURL, OpenURLAction { url in
+            // Ссылки на слова — читалке; остальные (Google Переводчик из панели выделения) — системе
+            guard url.scheme == BookReaderView.wordScheme else { return .systemAction }
             onTap(url)
             return .handled
         })
@@ -251,16 +255,50 @@ struct ReaderPagedText: View, Equatable {
         } else if index == pages.count {
             edgePage("Следующая глава ›")
         } else if let segments = pages[safe: index] {
-            pageView(segments, page: index)
-                .overlay(alignment: .topLeading) { handles(page: index) }
-                .padding(.horizontal, Self.horizontalPadding)
-                .padding(.top, Self.topPadding)
+            pageBody(segments, page: index)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .background(background)
+                .overlay(alignment: .topLeading) {
+                    if let fingerLocation, selection?.page == index {
+                        GeometryReader { proxy in
+                            lens(segments, page: index, at: fingerLocation, pageSize: proxy.size)
+                        }
+                        .allowsHitTesting(false)
+                    }
+                }
                 .contentShape(Rectangle())
                 // Вместе со свайпом, а не вместо: сдвиг пальца — листание свайпом
                 .simultaneousGesture(pressGesture(page: index, width: width, textWidth: textWidth))
         }
+    }
+
+    /// Текст страницы с выделением и «ручками», с полями — и на странице, и в лупе
+    private func pageBody(_ segments: [ReaderPaginator.Segment], page index: Int) -> some View {
+        pageView(segments, page: index)
+            .overlay(alignment: .topLeading) { handles(page: index) }
+            .padding(.horizontal, Self.horizontalPadding)
+            .padding(.top, Self.topPadding)
+    }
+
+    private static let lensSize = CGSize(width: 130, height: 44)
+    private static let lensScale: CGFloat = 1.5
+
+    /// Лупа, как в iOS: увеличенный кусок страницы под пальцем — над пальцем, у верхнего края — под ним
+    private func lens(_ segments: [ReaderPaginator.Segment], page index: Int, at point: CGPoint, pageSize: CGSize) -> some View {
+        let size = Self.lensSize, scale = Self.lensScale
+        let lift: CGFloat = 62
+        let centerY = point.y - lift < size.height / 2 + 4 ? point.y + lift : point.y - lift
+        let centerX = min(max(point.x, size.width / 2 + 4), pageSize.width - size.width / 2 - 4)
+        return pageBody(segments, page: index)
+            .frame(width: pageSize.width, height: pageSize.height, alignment: .topLeading)
+            .background(background)
+            .scaleEffect(scale, anchor: .topLeading)
+            .offset(x: size.width / 2 - point.x * scale, y: size.height / 2 - point.y * scale)
+            .frame(width: size.width, height: size.height, alignment: .topLeading)
+            .clipShape(Capsule())
+            .overlay(Capsule().stroke(textColor.opacity(0.15), lineWidth: 0.5))
+            .shadow(color: .black.opacity(0.2), radius: 8, y: 3)
+            .offset(x: centerX - size.width / 2, y: centerY - size.height / 2)
     }
 
     private func pageView(_ segments: [ReaderPaginator.Segment], page index: Int) -> some View {
@@ -337,13 +375,17 @@ struct ReaderPagedText: View, Equatable {
                     }
                 }
                 if hypot(value.translation.width, value.translation.height) > 10 { press?.moved = true }
-                if dragMode != nil { moveSelection(to: value.location) }
+                if dragMode != nil {
+                    fingerLocation = value.location
+                    moveSelection(to: value.location)
+                }
             }
             .onEnded { value in
                 longPress?.cancel()
                 defer {
                     press = nil
                     dragMode = nil
+                    fingerLocation = nil
                 }
                 guard let current = press else { return }
                 if current.long {
@@ -398,6 +440,7 @@ struct ReaderPagedText: View, Equatable {
         selectionLayout = layout
         selection = (index, word, word)
         dragMode = .extend
+        fingerLocation = location
     }
 
     /// Протягивание: выделение до слова под пальцем — от слова, с которого начали, или от неподвижного края

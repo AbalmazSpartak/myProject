@@ -37,7 +37,7 @@ struct BookReaderView: View {
     @State private var continuesReading = false
     @AppStorage(ReaderSpeech.speedKey) private var speechSpeed = 1.0
 
-    nonisolated private static let wordScheme = "wlword"
+    nonisolated static let wordScheme = "wlword"
 
     private var chapter: BookChapter? {
         chapters.indices.contains(chapterIndex) ? chapters[chapterIndex] : nil
@@ -473,6 +473,8 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
         // Слова — ссылки: цвет обычного текста, нажатие открывает перевод
         .tint(textColor)
         .environment(\.openURL, OpenURLAction { url in
+            // Ссылки на слова — читалке; остальные (Google Переводчик из панели выделения) — системе
+            guard url.scheme == BookReaderView.wordScheme else { return .systemAction }
             onTap(url)
             return .handled
         })
