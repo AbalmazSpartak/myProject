@@ -31,8 +31,24 @@ struct ContentView: View {
     
     @State private var activeScreen: ActiveScreen?
     @State private var selectedTab = 0
+    @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
+    @AppStorage(AppMode.chosenKey) private var modeChosen = false
 
     var body: some View {
+        Group {
+            switch mode {
+            case .learning: learningTabs
+            // «Чтение» — сразу библиотека, без вкладок, тренировок и игр
+            case .reading: NavigationStack { BooksView(isHome: true) }
+            }
+        }
+        .fullScreenCover(isPresented: Binding(get: { !modeChosen }, set: { _ in })) {
+            ModeChoiceView()
+                .appThemedColorScheme()
+        }
+    }
+
+    private var learningTabs: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
                 // «Сообщество» с «Обзора» — вкладка, а не вторая копия поверх «Обзора»: у него своя история переходов

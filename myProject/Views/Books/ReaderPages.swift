@@ -162,6 +162,8 @@ struct ReaderPagedText: View, Equatable {
     let speech: ReaderSpeech
     /// Для «В словарь» в панели выделения
     let bookTitle: String
+    /// Язык книги: перевод и «В словарь» — только в английской
+    let language: String
     let onVisible: (Int) -> Void
     let onTap: (URL) -> Void
     let onPrevious: () -> Void
@@ -194,6 +196,7 @@ struct ReaderPagedText: View, Equatable {
         lhs.chapterID == rhs.chapterID && lhs.paragraphs.count == rhs.paragraphs.count && lhs.readerFont == rhs.readerFont
             && lhs.fontSize == rhs.fontSize && lhs.textColor == rhs.textColor && lhs.lineSpacing == rhs.lineSpacing
             && lhs.curl == rhs.curl && lhs.animated == rhs.animated && lhs.background == rhs.background && lhs.bookTitle == rhs.bookTitle
+            && lhs.language == rhs.language
     }
 
     var body: some View {
@@ -218,7 +221,7 @@ struct ReaderPagedText: View, Equatable {
                         .allowsHitTesting(false)
                     // Палец отпустили — панель с выделенным: перевод, озвучка, копирование, в словарь
                     if let selection, press == nil, let layout = selectionLayout {
-                        ReaderSelectionPanel(text: layout.string(selection.range), bookTitle: bookTitle) { clearSelection() }
+                        ReaderSelectionPanel(text: layout.string(selection.range), bookTitle: bookTitle, language: language) { clearSelection() }
                             .padding(.horizontal, 12)
                             .padding(.bottom, 8)
                             .transition(.move(edge: .bottom).combined(with: .opacity))

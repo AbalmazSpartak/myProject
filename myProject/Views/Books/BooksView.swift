@@ -7,6 +7,9 @@ struct BooksView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Book.addedAt, order: .reverse) private var books: [Book]
+    @Query private var profiles: [UserProfile]
+    /// Главный экран режима «Чтение»: вместо «‹ Обзор» — Настройки
+    var isHome = false
 
     @State private var openedBook: Book?
     @State private var isImporting = false
@@ -14,6 +17,7 @@ struct BooksView: View {
     @State private var isParsing = false
     @State private var errorMessage: String?
     @State private var bookToDelete: Book?
+    @State private var isShowingSettings = false
 
     private let columns = [GridItem(.adaptive(minimum: 150), spacing: 16)]
 
@@ -56,6 +60,10 @@ struct BooksView: View {
                 Task { await importBook(url) }
             }
         }
+        .sheet(isPresented: $isShowingSettings) {
+            SettingsView(profile: profiles.first ?? UserProfile.ensureSingle(in: modelContext))
+                .appThemedColorScheme()
+        }
         .sheet(isPresented: $isShowingCatalog) {
             GutenbergCatalogView()
                 .appThemedColorScheme()
@@ -80,13 +88,22 @@ struct BooksView: View {
 
     private var header: some View {
         HStack {
-            Button(action: { dismiss() }) {
-                HStack(spacing: 4) {
-                    Image(systemName: "chevron.left")
-                    Text("Обзор")
+            if isHome {
+                Button { isShowingSettings = true } label: {
+                    Image(systemName: "gearshape.fill")
+                        .scaledFont(size: 20)
+                        .foregroundColor(.brandDark)
                 }
-                .scaledFont(size: 17, weight: .semibold)
-                .foregroundColor(.brandDark)
+                .accessibilityLabel("Настройки")
+            } else {
+                Button(action: { dismiss() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                        Text("Обзор")
+                    }
+                    .scaledFont(size: 17, weight: .semibold)
+                    .foregroundColor(.brandDark)
+                }
             }
             Spacer()
             HStack(spacing: 16) {
@@ -97,7 +114,7 @@ struct BooksView: View {
         .padding(.horizontal, 16)
         .padding(.top, 8)
         .overlay {
-            Text("Книги")
+            Text(isHome ? "Библиотека" : "Книги")
                 .scaledFont(size: 20, weight: .bold)
                 .foregroundColor(.brandDark)
                 .padding(.top, 8)
@@ -130,7 +147,9 @@ struct BooksView: View {
             Text("Здесь будут ваши книги")
                 .scaledFont(size: 24, weight: .semibold, design: .serif)
                 .foregroundColor(.brandDark)
-            Text("Читайте на английском: нажмите на слово — увидите перевод и сможете добавить его в словарь книги.")
+            Text(isHome
+                 ? "Нажмите на слово — увидите толкование, а в английской книге — перевод."
+                 : "Читайте на английском: нажмите на слово — увидите перевод и сможете добавить его в словарь книги.")
                 .scaledFont(size: 16)
                 .foregroundColor(.gray)
                 .multilineTextAlignment(.center)

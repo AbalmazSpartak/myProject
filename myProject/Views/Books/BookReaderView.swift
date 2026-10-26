@@ -25,6 +25,10 @@ struct BookReaderView: View {
     /// разбор на каждой перерисовке давал рывки при прокрутке
     @State private var linkedParagraphs: [AttributedString]?
     @State private var tappedWord: TappedWord?
+    /// Не английская книга: нажатие на слово — толкование из словаря iPhone
+    @State private var definedWord: DefinedWord?
+    /// Язык книги — определяется при открытии
+    @State private var language = BookLanguage.english
     @State private var isShowingContents = false
     @State private var isShowingDictionary = false
     @State private var isShowingAppearance = false
@@ -38,6 +42,8 @@ struct BookReaderView: View {
     @AppStorage(ReaderSpeech.speedKey) private var speechSpeed = 1.0
 
     nonisolated static let wordScheme = "wlword"
+
+    private var isEnglish: Bool { language == BookLanguage.english }
 
     private var chapter: BookChapter? {
         chapters.indices.contains(chapterIndex) ? chapters[chapterIndex] : nil
@@ -64,6 +70,7 @@ struct BookReaderView: View {
                     background: style.background,
                     speech: speech,
                     bookTitle: book.title,
+                    language: language,
                     onVisible: { paragraph in
                         guard chapterStarts.indices.contains(chapterIndex) else { return }
                         book.position = chapterStarts[chapterIndex] + paragraph
@@ -122,6 +129,10 @@ struct BookReaderView: View {
                 .presentationDetents([.medium, .large])
                 .appThemedColorScheme()
         }
+        .sheet(item: $definedWord) { defined in
+            SystemDefinitionView(term: defined.term)
+                .ignoresSafeArea()
+        }
         .sheet(isPresented: $isShowingContents) { contents }
         .sheet(isPresented: $isShowingAppearance, onDismiss: { style = .current() }) {
             ReaderAppearanceSheet()
@@ -171,8 +182,10 @@ struct BookReaderView: View {
                 Button { isShowingContents = true } label: {
                     Label("Оглавление", systemImage: "list.bullet")
                 }
-                Button { isShowingDictionary = true } label: {
-                    Label("Словарь из книги", systemImage: "text.book.closed")
+                if isEnglish {
+                    Button { isShowingDictionary = true } label: {
+                        Label("Словарь из книги", systemImage: "text.book.closed")
+                    }
                 }
                 Button { isShowingAppearance = true } label: {
                     Label("Оформление", systemImage: "textformat.size")
@@ -265,6 +278,8 @@ struct BookReaderView: View {
     private func open() {
         guard chapters.isEmpty else { return }
         chapters = book.chapters
+        language = BookLanguage.detect(chapters)
+        speech.language = isEnglish ? nil : language
         var start = 0
         chapterStarts = chapters.map { chapter in
             defer { start += chapter.paragraphs.count }
@@ -285,10 +300,14 @@ struct BookReaderView: View {
         }
         linkedParagraphs = nil
         let paragraphs = chapter.paragraphs
-        let phonics = style.phonics
+        // Правила чтения — английские: в книге на другом языке не подсвечиваем
+        let english = isEnglish
+        let phonics = english ? style.phonics : nil
         linkedParagraphs = await Task.detached(priority: .userInitiated) {
             var cache: [String: ReadingRules.Highlight?] = [:]
-            return paragraphs.enumerated().map { Self.linked($1, paragraph: $0, phonics: phonics, cache: &cache) }
+            return paragraphs.enumerated().map {
+                Self.linked($1, paragraph: $0, english: english, phonics: phonics, cache: &cache)
+            }
         }.value
         speech.load(paragraphs: paragraphs, chapterTitle: chapter.title, bookTitle: book.title)
         if continuesReading {
@@ -332,6 +351,10 @@ struct BookReaderView: View {
         let offset = paragraph.distance(from: sentenceRange.lowerBound, to: range.lowerBound)
         let start = sentence.index(sentence.startIndex, offsetBy: offset)
         let end = sentence.index(start, offsetBy: paragraph.distance(from: range.lowerBound, to: range.upperBound))
+        guard isEnglish else {
+            definedWord = DefinedWord(term: String(paragraph[range]))
+            return
+        }
         tappedWord = TappedWord(word: String(paragraph[range]), sentence: sentence, range: start..<end)
     }
 
@@ -346,12 +369,13 @@ struct BookReaderView: View {
         return result
     }
 
-    /// Абзац, где каждое английское слово — ссылка на себя.
+    /// Абзац, где каждое слово — ссылка на себя: в английской книге — английские слова, в другой — слова любых букв.
     /// phonics: nil — без подсветки, иначе что подсвечивать; cache — разбор слов главы
-    nonisolated static func linked(_ text: String, paragraph: Int, phonics: Set<PhonicsOption>? = nil,
+    nonisolated static func linked(_ text: String, paragraph: Int, english: Bool = true, phonics: Set<PhonicsOption>? = nil,
                                    cache: inout [String: ReadingRules.Highlight?]) -> AttributedString {
         let ns = text as NSString
-        guard let regex = try? NSRegularExpression(pattern: "[A-Za-z]+(?:['’-][A-Za-z]+)*") else { return AttributedString(text) }
+        let pattern = english ? "[A-Za-z]+(?:['’-][A-Za-z]+)*" : "\\p{L}+(?:['’-]\\p{L}+)*"
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return AttributedString(text) }
         var result = AttributedString()
         var last = 0
         for match in regex.matches(in: text, range: NSRange(location: 0, length: ns.length)) {

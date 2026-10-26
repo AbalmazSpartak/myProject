@@ -13,6 +13,7 @@ struct SettingsView: View {
     @AppStorage(DictionarySignals.enabledKey) private var improveDictionary = true
     @AppStorage(CloudContext.enabledKey) private var aiHints = false
     @AppStorage(CloudContext.qualityKey) private var aiHintsQuality = CloudContext.Quality.normal.rawValue
+    @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
     @AppStorage(Haptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
     @AppStorage(OverviewLayout.storageKey) private var overviewLayout = OverviewLayout.standard
@@ -90,6 +91,19 @@ struct SettingsView: View {
                             .autocorrectionDisabled()
                     }
                 
+                    Section {
+                        Picker("Режим", selection: $mode) {
+                            ForEach(AppMode.allCases, id: \.self) { Text($0.title).tag($0) }
+                        }
+                        .pickerStyle(.segmented)
+                    } header: {
+                        Text("Режим")
+                    } footer: {
+                        Text(mode == .learning
+                             ? "Слова, повторения, тренировки, игры и книги."
+                             : "Только библиотека и читалка. Слова и прогресс сохраняются — вернуть «Изучение» можно в любой момент.")
+                    }
+
                     // Оформление — сразу после личных данных: тема и вид «Обзора»
                     Section(header: Text("Оформление")) {
                         Picker("Тема оформления", selection: $selectedTheme) {
@@ -99,42 +113,46 @@ struct SettingsView: View {
                         }
                         .pickerStyle(.segmented)
 
-                        NavigationLink {
-                            OverviewSettingsView()
-                        } label: {
-                            LabeledContent("Обзор", value: overviewLayout == .standard ? "Стандартный" : "Настроен")
+                        if mode == .learning {
+                            NavigationLink {
+                                OverviewSettingsView()
+                            } label: {
+                                LabeledContent("Обзор", value: overviewLayout == .standard ? "Стандартный" : "Настроен")
+                            }
                         }
                     }
 
                     // Обучение
-                    Section(header: Text("Обучение"), footer: Text("Новые слова в «На повторение» идут от простых к сложным, счётчик обнуляется в полночь. После подхода можно продолжить или вернуться в меню.")) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Направление перевода")
-                                .scaledFont(size: 14)
-                                .foregroundColor(.gray)
-                        
-                            Picker("Направление перевода", selection: $translationMode) {
-                                Text("Англ ➔ Рус").tag("en_ru")
-                                Text("Рус ➔ Англ").tag("ru_en")
+                    if mode == .learning {
+                        Section(header: Text("Обучение"), footer: Text("Новые слова в «На повторение» идут от простых к сложным, счётчик обнуляется в полночь. После подхода можно продолжить или вернуться в меню.")) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Направление перевода")
+                                    .scaledFont(size: 14)
+                                    .foregroundColor(.gray)
+                            
+                                Picker("Направление перевода", selection: $translationMode) {
+                                    Text("Англ ➔ Рус").tag("en_ru")
+                                    Text("Рус ➔ Англ").tag("ru_en")
+                                }
+                                .pickerStyle(.segmented)
                             }
-                            .pickerStyle(.segmented)
-                        }
-                        .padding(.vertical, 4)
+                            .padding(.vertical, 4)
 
-                        Toggle("Картинки к словам", isOn: $showWordImages)
+                            Toggle("Картинки к словам", isOn: $showWordImages)
 
-                        Toggle("Вибрация", isOn: $hapticsEnabled)
+                            Toggle("Вибрация", isOn: $hapticsEnabled)
 
-                        Picker("Слов за подход", selection: $sessionLength) {
-                            ForEach(SessionLength.options, id: \.self) { length in
-                                Text(length == 0 ? "Все" : "\(length)").tag(length)
+                            Picker("Слов за подход", selection: $sessionLength) {
+                                ForEach(SessionLength.options, id: \.self) { length in
+                                    Text(length == 0 ? "Все" : "\(length)").tag(length)
+                                }
                             }
-                        }
 
-                        NavigationLink {
-                            StudyDictionariesView()
-                        } label: {
-                            LabeledContent("Словари", value: studyScope.isEverythingEnabled ? "Все" : "Выбранные")
+                            NavigationLink {
+                                StudyDictionariesView()
+                            } label: {
+                                LabeledContent("Словари", value: studyScope.isEverythingEnabled ? "Все" : "Выбранные")
+                            }
                         }
                     }
 

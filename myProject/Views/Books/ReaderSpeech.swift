@@ -19,6 +19,8 @@ final class ReaderSpeech: NSObject {
 
     /// Глава кончилась — читалка открывает следующую и вызывает start
     @ObservationIgnored var onChapterEnd: (() -> Void)?
+    /// Язык книги не английский — голос этого языка; nil — английский голос из «Озвучки»
+    @ObservationIgnored var language: String?
 
     @ObservationIgnored private let synthesizer = AVSpeechSynthesizer()
     @ObservationIgnored private var paragraphs: [String] = []
@@ -85,9 +87,13 @@ final class ReaderSpeech: NSObject {
         paragraph = index
         word = nil
         let utterance = AVSpeechUtterance(string: paragraphs[index])
-        let accent = UserDefaults.standard.string(forKey: SpeechSettings.accentKey) ?? SpeechSettings.defaultAccent
-        let identifier = UserDefaults.standard.string(forKey: SpeechSettings.voiceKey) ?? ""
-        utterance.voice = SpeechSettings.resolveVoice(accent: accent, identifier: identifier)
+        if let language {
+            utterance.voice = SpeechSettings.bestVoice(language: language)
+        } else {
+            let accent = UserDefaults.standard.string(forKey: SpeechSettings.accentKey) ?? SpeechSettings.defaultAccent
+            let identifier = UserDefaults.standard.string(forKey: SpeechSettings.voiceKey) ?? ""
+            utterance.voice = SpeechSettings.resolveVoice(accent: accent, identifier: identifier)
+        }
         let base = UserDefaults.standard.object(forKey: SpeechSettings.rateKey) as? Double ?? SpeechSettings.defaultRate
         let speed = UserDefaults.standard.object(forKey: Self.speedKey) as? Double ?? 1
         utterance.rate = Float(min(max(base * speed, Double(AVSpeechUtteranceMinimumSpeechRate)), 0.65))

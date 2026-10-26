@@ -140,7 +140,7 @@ enum Backup {
     /// Настройки приложения, которые входят в копию. Служебные (хэш словаря, версии картинок) — нет:
     /// после восстановления приложение пересчитает их само
     private static let settingsKeys = [
-        "app_theme", "translation_mode", "show_word_images", Haptics.enabledKey, OverviewLayout.storageKey, PolyglotProgress.storageKey, RaceBotLevel.storageKey, RaceWordSource.storageKey, RaceAnswerMode.storageKey,
+        "app_theme", AppMode.storageKey, "translation_mode", "show_word_images", Haptics.enabledKey, OverviewLayout.storageKey, PolyglotProgress.storageKey, RaceBotLevel.storageKey, RaceWordSource.storageKey, RaceAnswerMode.storageKey,
         ReaderSettings.themeKey, ReaderSettings.fontSizeKey, ReaderSettings.fontKey, ReaderSettings.spacingKey,
         ReaderSettings.customTextKey, ReaderSettings.customBackgroundKey, "scan_select_learning",
         DailyReminder.enabledKey, DailyReminder.timeKey, CloudContext.enabledKey, CloudContext.qualityKey,

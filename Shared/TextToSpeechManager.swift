@@ -31,6 +31,14 @@ enum SpeechSettings {
         if let best = list.first, best.quality != .default { return best }
         return AVSpeechSynthesisVoice(language: accent)
     }
+
+    /// Лучший скачанный голос языка («ru», «de»…) — для книг не на английском
+    nonisolated static func bestVoice(language: String) -> AVSpeechSynthesisVoice? {
+        AVSpeechSynthesisVoice.speechVoices()
+            .filter { $0.language.hasPrefix(language) && !$0.voiceTraits.contains(.isNoveltyVoice) && !$0.voiceTraits.contains(.isPersonalVoice) }
+            .max { $0.quality.rawValue < $1.quality.rawValue }
+            ?? AVSpeechSynthesisVoice(language: language)
+    }
 }
 
 /// Озвучка слов. Музыку пользователя не останавливает: на время речи приглушает и потом возвращает громкость

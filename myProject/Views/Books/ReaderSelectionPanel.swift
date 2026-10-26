@@ -10,6 +10,7 @@ struct ReaderSelectionPanel: View {
 
     let text: String
     let bookTitle: String
+    var language = BookLanguage.english
     let onClose: () -> Void
 
     @State private var translation: String?
@@ -17,6 +18,7 @@ struct ReaderSelectionPanel: View {
     @State private var isTranslating = false
     @State private var failed = false
     @State private var isAdded = false
+    @State private var definedWord: DefinedWord?
     @State private var copied = false
     /// Фраза в словарь: перевод вписывает сам читатель (например, из Google Переводчика)
     @State private var isEnteringTranslation = false
@@ -36,6 +38,7 @@ struct ReaderSelectionPanel: View {
 
     /// Фразу — в словарь; целый абзац там ни к чему
     private var fitsDictionary: Bool { text.split(separator: " ").count <= 12 }
+    private var isEnglish: Bool { language == BookLanguage.english }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -86,7 +89,14 @@ struct ReaderSelectionPanel: View {
             }
 
             HStack(spacing: 8) {
-                if isSingleWord {
+                if !isEnglish {
+                    // Книга не на английском: перевода на русский нет — толкование из словаря iPhone
+                    if isSingleWord {
+                        action("Толкование", icon: "character.book.closed") {
+                            definedWord = DefinedWord(term: text.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters)))
+                        }
+                    }
+                } else if isSingleWord {
                     action(translation == nil ? "Перевести" : "Готово", icon: "character.bubble", disabled: translation != nil || isTranslating) {
                         if config == nil {
                             config = TranslationSession.Configuration(source: Locale.Language(identifier: "en"),
@@ -101,13 +111,17 @@ struct ReaderSelectionPanel: View {
                     }
                 }
                 action("Озвучить", icon: "speaker.wave.2") {
-                    TextToSpeechManager.shared.speak(text)
+                    if isEnglish {
+                        TextToSpeechManager.shared.speak(text)
+                    } else if let voice = SpeechSettings.bestVoice(language: language) {
+                        TextToSpeechManager.shared.preview(text, voice: voice)
+                    }
                 }
                 action(copied ? "Скопировано" : "Копировать", icon: "doc.on.doc") {
                     UIPasteboard.general.string = text
                     copied = true
                 }
-                if fitsDictionary {
+                if isEnglish && fitsDictionary {
                     action(isAdded ? "В словаре" : "В словарь", icon: isAdded ? "checkmark.circle.fill" : "plus.circle",
                            disabled: isAdded || (isSingleWord && translation == nil)) {
                         if dictionaryTranslation != nil {
@@ -124,6 +138,10 @@ struct ReaderSelectionPanel: View {
         .background(Color.cardBackground)
         .cornerRadius(18)
         .shadow(color: .black.opacity(0.15), radius: 12, y: 4)
+        .sheet(item: $definedWord) { defined in
+            SystemDefinitionView(term: defined.term)
+                .ignoresSafeArea()
+        }
         .translationTask(config) { session in
             isTranslating = true
             defer { isTranslating = false }
