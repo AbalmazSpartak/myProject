@@ -14,6 +14,16 @@ struct SettingsView: View {
     @AppStorage(CloudContext.enabledKey) private var aiHints = false
     @AppStorage(CloudContext.qualityKey) private var aiHintsQuality = CloudContext.Quality.normal.rawValue
     @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
+    @AppStorage(AppMode.askKey) private var asksMode = false
+
+    /// Третий вариант «Спрашивать» — режим остаётся прежним, а при запуске появляется выбор
+    private var modeChoice: Binding<String> {
+        Binding(get: { asksMode ? "ask" : mode.rawValue },
+                set: { value in
+                    asksMode = value == "ask"
+                    if let chosen = AppMode(rawValue: value) { mode = chosen }
+                })
+    }
     @AppStorage(Haptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
     @AppStorage(OverviewLayout.storageKey) private var overviewLayout = OverviewLayout.standard
@@ -92,14 +102,17 @@ struct SettingsView: View {
                     }
                 
                     Section {
-                        Picker("Режим", selection: $mode) {
-                            ForEach(AppMode.allCases, id: \.self) { Text($0.title).tag($0) }
+                        Picker("Режим", selection: modeChoice) {
+                            ForEach(AppMode.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
+                            Text("Спрашивать").tag("ask")
                         }
                         .pickerStyle(.segmented)
                     } header: {
                         Text("Режим")
                     } footer: {
-                        Text(mode == .learning
+                        Text(asksMode
+                             ? "При каждом запуске приложение спросит, что открыть: изучение слов или читалку."
+                             : mode == .learning
                              ? "Слова, повторения, тренировки, игры и книги."
                              : "Только библиотека и читалка. Слова и прогресс сохраняются — вернуть «Изучение» можно в любой момент.")
                     }

@@ -9,6 +9,8 @@ enum AppMode: String, CaseIterable {
     static let storageKey = "app_mode"
     /// Вопрос о режиме уже задан
     static let chosenKey = "app_mode_chosen"
+    /// Спрашивать режим при каждом запуске
+    static let askKey = "app_mode_ask"
 
     var title: String {
         switch self {

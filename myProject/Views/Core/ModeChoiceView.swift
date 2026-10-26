@@ -4,6 +4,8 @@ import SwiftUI
 struct ModeChoiceView: View {
     @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
     @AppStorage(AppMode.chosenKey) private var chosen = false
+    /// Выбор сделан — закрыть экран (при «Спрашивать» он показывается на каждом запуске)
+    var onChoose: () -> Void = {}
 
     var body: some View {
         VStack(spacing: 20) {
@@ -21,6 +23,8 @@ struct ModeChoiceView: View {
                    text: "Слова, повторения, тренировки, игры и книги с переводом по нажатию.")
             option(.reading, icon: "books.vertical.fill",
                    text: "Только библиотека и читалка: книги на английском и русском, толкование слов.")
+            // Снизу места вдвое больше — выбор стоит выше середины экрана
+            Spacer()
             Spacer()
         }
         .padding(.horizontal, 24)
@@ -34,6 +38,7 @@ struct ModeChoiceView: View {
             Haptics.tap()
             mode = option
             chosen = true
+            onChoose()
         } label: {
             HStack(spacing: 16) {
                 Image(systemName: icon)

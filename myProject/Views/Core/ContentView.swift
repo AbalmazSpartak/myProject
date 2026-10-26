@@ -33,6 +33,8 @@ struct ContentView: View {
     @State private var selectedTab = 0
     @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
     @AppStorage(AppMode.chosenKey) private var modeChosen = false
+    /// «Спрашивать при запуске» — читается один раз: включили в Настройках — спросит со следующего запуска
+    @State private var asksOnLaunch = UserDefaults.standard.bool(forKey: AppMode.askKey)
 
     var body: some View {
         Group {
@@ -42,8 +44,8 @@ struct ContentView: View {
             case .reading: NavigationStack { BooksView(isHome: true) }
             }
         }
-        .fullScreenCover(isPresented: Binding(get: { !modeChosen }, set: { _ in })) {
-            ModeChoiceView()
+        .fullScreenCover(isPresented: Binding(get: { !modeChosen || asksOnLaunch }, set: { _ in })) {
+            ModeChoiceView { asksOnLaunch = false }
                 .appThemedColorScheme()
         }
     }
