@@ -188,7 +188,7 @@ struct BooksView: View {
     }
 }
 
-/// Обложка, название, автор и сколько прочитано
+/// Обложка, автор и сколько прочитано
 private struct BookCard: View {
     let book: Book
     let action: () -> Void
@@ -201,11 +201,7 @@ private struct BookCard: View {
                     .frame(maxWidth: .infinity)
                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                     .shadow(color: .black.opacity(0.12), radius: 6, x: 0, y: 3)
-                Text(book.title)
-                    .scaledFont(size: 15, weight: .semibold, design: .serif)
-                    .foregroundColor(.brandDark)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
+                // Название — на обложке, под ней только автор
                 if !book.author.isEmpty {
                     Text(book.author)
                         .scaledFont(size: 13)
