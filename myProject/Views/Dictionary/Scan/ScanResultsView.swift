@@ -58,6 +58,12 @@ struct ScanResultsView: View {
     @State private var translationState = TranslationState.idle
     /// Сколько новых слов уже переведено — для больших файлов переводим частями
     @State private var translatedCount = 0
+    /// Новые слова, которых нет в словаре проверки орфографии iOS: диалект, обрывки, редкие имена — без галочки и без автоперевода
+    @State private var unknown: Set<String> = []
+    /// Перевод под вопросом: несуществующее русское слово, транслит, латиница — без галочки, в разделе «Проверьте перевод»
+    @State private var doubtful: Set<String> = []
+    /// Сколько новых слов отдано переводчику — для прогресса (сами разделы за время перевода меняются)
+    @State private var translationTotal = 0
     /// «Отмечать слова, которые уже учу» — запоминается для следующих сканов
     @AppStorage(Self.selectLearningKey) private var selectLearning = false
     private static let selectLearningKey = "scan_select_learning"
@@ -89,7 +95,29 @@ struct ScanResultsView: View {
     }
 
     private var newWords: [ScanCandidate] {
-        candidates.filter { $0.existing == nil }
+        candidates.filter { $0.existing == nil && !unknown.contains($0.id) && !doubtful.contains($0.id) }
+    }
+
+    private var doubtfulWords: [ScanCandidate] {
+        candidates.filter { $0.existing == nil && doubtful.contains($0.id) }
+    }
+
+    private var unknownWords: [ScanCandidate] {
+        candidates.filter { $0.existing == nil && unknown.contains($0.id) }
+    }
+
+    /// Слова, которых нет в словаре iOS ни в американском, ни в британском написании
+    private static func notInDictionary(_ candidates: [ScanCandidate]) -> Set<String> {
+        let checker = UITextChecker()
+        let languages = ["en_US", "en_GB"].filter(UITextChecker.availableLanguages.contains)
+        guard !languages.isEmpty else { return [] }
+        return Set(candidates.filter { candidate in
+            let word = candidate.extracted.lemma
+            let range = NSRange(location: 0, length: (word as NSString).length)
+            return languages.allSatisfy { language in
+                checker.rangeOfMisspelledWord(in: word, range: range, startingAt: 0, wrap: false, language: language).location != NSNotFound
+            }
+        }.map(\.id))
     }
 
     /// Фразовые глаголы и выражения из базы, найденные в тексте целиком
@@ -104,7 +132,7 @@ struct ScanResultsView: View {
     }
 
     private var missingTranslations: Int {
-        newWords.filter { selected.contains($0.id) && translation(for: $0).isEmpty }.count
+        candidates.filter { $0.existing == nil && selected.contains($0.id) && translation(for: $0).isEmpty }.count
     }
 
     /// Из файла слов тысячи — без перевода они просто не сохраняются, а не держат кнопку
@@ -132,6 +160,12 @@ struct ScanResultsView: View {
                         if photo != nil {
                             Text("Фото сохранится в словаре — его видно над словами.")
                         }
+                    }
+                }
+                // Перевод тысяч слов из книги — до минуты; видно сразу, а не в подписи под всем списком
+                if translationState == .translating {
+                    Section {
+                        translationProgress
                     }
                 }
                 if candidates.contains(where: Self.isLearning) {
@@ -164,6 +198,24 @@ struct ScanResultsView: View {
                         Text(newWordsFooter)
                     }
                 }
+                if !doubtfulWords.isEmpty {
+                    Section {
+                        ForEach(doubtfulWords) { newWordRow($0) }
+                    } header: {
+                        sectionHeader("Проверьте перевод", items: doubtfulWords)
+                    } footer: {
+                        Text("Переводчик выдал несуществующее слово, транслит или латиницу — галочки сняты. Исправьте перевод, и слово отметится.")
+                    }
+                }
+                if !unknownWords.isEmpty {
+                    Section {
+                        ForEach(unknownWords) { newWordRow($0) }
+                    } header: {
+                        sectionHeader("Не найдены в словаре", items: unknownWords)
+                    } footer: {
+                        Text("Диалект, обрывки слов, редкие имена и опечатки — переводчик их не знает, поэтому они не отмечены. Нужное слово отметьте и впишите перевод сами.")
+                    }
+                }
                 if !knownWords.isEmpty {
                     Section {
                         ForEach(knownWords) { knownWordRow($0) }
@@ -184,15 +236,27 @@ struct ScanResultsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button("Сохранить (\(selected.count))", action: save)
-                    .bold()
-                    .disabled(!canSave)
+                if translationState == .translating {
+                    HStack(spacing: 6) {
+                        ProgressView()
+                        Text("Перевожу…")
+                            .foregroundColor(.gray)
+                    }
+                } else {
+                    Button("Сохранить (\(selected.count))", action: save)
+                        .bold()
+                        .disabled(!canSave)
+                }
             }
         }
         .translationTask(translationConfig) { session in
             await translate(with: session)
         }
         .onAppear {
+            if translationConfig == nil {
+                unknown = Self.notInDictionary(candidates.filter { $0.existing == nil })
+                selected.subtract(unknown)
+            }
             if !newWords.isEmpty, translationConfig == nil {
                 translationConfig = TranslationSession.Configuration(
                     source: Locale.Language(identifier: "en"),
@@ -218,10 +282,31 @@ struct ScanResultsView: View {
         }
     }
 
+    private var translationProgress: some View {
+        let total = translationTotal
+        return VStack(alignment: .leading, spacing: 8) {
+            Text(total > Self.translationChunk
+                 ? "Перевожу новые слова: \(translatedCount.formatted()) из \(total.formatted())"
+                 : "Перевожу новые слова…")
+                .scaledFont(size: 15, weight: .semibold)
+                .foregroundColor(.brandDark)
+            if total > Self.translationChunk {
+                ProgressView(value: Double(translatedCount), total: Double(total))
+                    .tint(.teal)
+            } else {
+                ProgressView()
+            }
+            Text("Сохранить можно будет, когда закончу.")
+                .scaledFont(size: 13)
+                .foregroundColor(.gray)
+        }
+        .padding(.vertical, 4)
+    }
+
     private var newWordsFooter: String {
         switch translationState {
         case .translating:
-            let total = newWords.count
+            let total = translationTotal
             return total > Self.translationChunk
                 ? "Перевожу встроенным переводчиком iOS… \(translatedCount) из \(total)"
                 : "Перевожу встроенным переводчиком iOS…"
@@ -312,7 +397,11 @@ struct ScanResultsView: View {
     }
 
     private func translationBinding(for candidate: ScanCandidate) -> Binding<String> {
-        Binding(get: { translations[candidate.id] ?? "" }, set: { translations[candidate.id] = $0 })
+        Binding(get: { translations[candidate.id] ?? "" }, set: {
+            translations[candidate.id] = $0
+            // Исправили сомнительный перевод — слово нужно
+            if doubtful.contains(candidate.id) { selected.insert(candidate.id) }
+        })
     }
 
     private func translate(with session: TranslationSession) async {
@@ -322,15 +411,40 @@ struct ScanResultsView: View {
             let word = candidate.extracted
             return (id: candidate.id, text: word.partOfSpeech == "v." ? "to \(word.lemma)" : word.lemma)
         }
+        translationTotal = sources.count
         translatedCount = 0
         do {
             // Частями: тысячи слов из файла — с прогрессом, и экран не ждёт всё разом
             for start in stride(from: 0, to: sources.count, by: Self.translationChunk) {
                 let chunk = Array(sources[start..<min(start + Self.translationChunk, sources.count)])
                 let responses = try await session.translations(from: Self.translationRequests(chunk))
+                var retry: [(id: String, text: String)] = []
+                var firstTry: [String: String] = [:]
                 for response in responses {
                     guard let id = response.clientIdentifier, (translations[id] ?? "").isEmpty else { continue }
-                    translations[id] = Self.cleanedTranslation(response.targetText)
+                    let translated = Self.cleanedTranslation(response.targetText)
+                    if Self.isUsable(translated, source: response.sourceText) {
+                        translations[id] = translated
+                    } else if response.sourceText.hasPrefix("to ") {
+                        // «to mighty» → «к могуществу», «to fetch» → «зарать»: глагол переводим ещё раз, без «to»
+                        firstTry[id] = translated
+                        retry.append((id: id, text: String(response.sourceText.dropFirst(3))))
+                    } else {
+                        markDoubtful(id, translation: translated)
+                    }
+                }
+                if !retry.isEmpty {
+                    for response in try await session.translations(from: Self.translationRequests(retry)) {
+                        guard let id = response.clientIdentifier else { continue }
+                        let translated = Self.cleanedTranslation(response.targetText)
+                        if Self.isUsable(translated, source: response.sourceText) {
+                            translations[id] = translated
+                        } else {
+                            // Оба перевода плохие — показываем тот, где хотя бы слова настоящие
+                            let first = firstTry[id] ?? ""
+                            markDoubtful(id, translation: Self.looksBroken(translated) && !Self.looksBroken(first) ? first : translated)
+                        }
+                    }
                 }
                 translatedCount = start + chunk.count
             }
@@ -342,19 +456,57 @@ struct ScanResultsView: View {
 
     private static let translationChunk = 200
 
+    private func markDoubtful(_ id: String, translation: String) {
+        translations[id] = translation
+        doubtful.insert(id)
+        selected.remove(id)
+    }
+
+    /// Проверка орфографии русского — находит «переводы» из несуществующих слов: «зарать», «уныливый», «галут»
+    private static let russianChecker = UITextChecker()
+    private static let russianLanguage = UITextChecker.availableLanguages.first { $0.hasPrefix("ru") }
+
+    /// Перевода по сути нет: латиница («jist») или слово, которого нет в русском языке (транслит, выдуманное)
+    private static func looksBroken(_ translation: String) -> Bool {
+        guard translation.range(of: "[а-яё]", options: [.regularExpression, .caseInsensitive]) != nil else { return true }
+        guard let language = russianLanguage else { return false }
+        let range = NSRange(location: 0, length: (translation as NSString).length)
+        return russianChecker.rangeOfMisspelledWord(in: translation, range: range, startingAt: 0, wrap: false, language: language).location != NSNotFound
+    }
+
+    private static func isUsable(_ translation: String, source: String) -> Bool {
+        guard !looksBroken(translation) else { return false }
+        return !(source.hasPrefix("to ") && startsWithPreposition(translation))
+    }
+
     /// Запросы собираем вне главного потока: так Swift 6 разрешает передать их в переводчик
     nonisolated private static func translationRequests(_ sources: [(id: String, text: String)]) -> [TranslationSession.Request] {
         sources.map { TranslationSession.Request(sourceText: $0.text, clientIdentifier: $0.id) }
     }
 
     /// «Маяк.» → «маяк», «чтобы бежать» → «бежать»
+    private static let prepositions: Set<String> = ["к", "ко", "в", "во", "на", "до", "для", "с", "со"]
+
+    /// Перевод глагола начался с предлога — значит, «to» перевелось как «к», и слово не глагол
+    private static func startsWithPreposition(_ translation: String) -> Bool {
+        guard let first = translation.split(separator: " ").first, translation.contains(" ") else { return false }
+        return prepositions.contains(first.lowercased())
+    }
+
+    /// Скобки по краям — часть перевода: «(сплавной) плот», а не «сплавной) плот»
+    private static let trimmedPunctuation = CharacterSet.whitespacesAndNewlines
+        .union(CharacterSet.punctuationCharacters.subtracting(CharacterSet(charactersIn: "()")))
+
     static func cleanedTranslation(_ raw: String) -> String {
-        var text = raw.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
+        var text = raw.trimmingCharacters(in: trimmedPunctuation)
         if text.lowercased().hasPrefix("чтобы ") {
             text = String(text.dropFirst("чтобы ".count))
         }
-        guard let first = text.first, text.dropFirst().contains(where: \.isLowercase) || text.count == 1 else { return text }
-        return first.lowercased() + text.dropFirst()
+        // Первая буква — строчная, и после скобки: «(сплавной) плот»; аббревиатуры (США) не трогаем
+        guard let index = text.firstIndex(where: \.isLetter) else { return text }
+        let rest = text[text.index(after: index)...]
+        guard rest.contains(where: \.isLowercase) || rest.isEmpty else { return text }
+        return text[..<index] + text[index].lowercased() + rest
     }
 
     // MARK: - Сохранение

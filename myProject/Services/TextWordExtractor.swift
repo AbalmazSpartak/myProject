@@ -10,7 +10,7 @@ nonisolated struct ExtractedWord: Identifiable, Hashable, Sendable {
     /// n., v., adj., adv. — как в мастер-базе
     let partOfSpeech: String
     /// Предложение из текста, где слово выделено <b>…</b> — готовый пример для карточки
-    let example: String
+    var example: String
     var count: Int
 
     var id: String { lemma }
@@ -33,6 +33,10 @@ nonisolated enum TextWordExtractor {
     private static let names: Set<NLTag> = [.personalName, .placeName, .organizationName]
     /// Вспомогательные слова, которые теггер считает глаголами и наречиями, — учить их из текста незачем
     private static let skipped: Set<String> = ["be", "have", "do", "not"]
+    /// Оскорбительные слова — в словарь для учёбы не берём (в старых книгах встречаются часто)
+    private static let offensive: Set<String> = [
+        "nigger", "nigga", "injun", "faggot", "fag", "kike", "chink", "spic", "wetback", "gook", "tranny", "dyke", "retard"
+    ]
     private static let maxExampleLength = 220
 
     /// Убирает следы распознавания: перенос со знаком «-» в конце строки, переводы строк, двойные пробелы
@@ -62,6 +66,12 @@ nonisolated enum TextWordExtractor {
         var found: [String: ExtractedWord] = [:]
         var firstSeen: [String: String.Index] = [:]
         var consumed = Set<String.Index>()
+        /// Слово хоть раз написано со строчной — это не имя
+        var seenLowercase = Set<String>()
+        /// Слово с заглавной не в начале предложения — похоже на имя (Mary, Huck), если строчной так и не встретится
+        var seenCapitalized = Set<String>()
+        /// У слова уже нормальный пример — дальше не ищем
+        var goodExample = Set<String>()
 
         if !phrases.isEmpty {
             let textTokens = Self.tokens(of: text, sentences: sentences)
@@ -86,6 +96,8 @@ nonisolated enum TextWordExtractor {
         tagger.enumerateTags(in: text.startIndex..<text.endIndex, unit: .word, scheme: .nameTypeOrLexicalClass, options: options) { tag, range in
             guard let tag, !names.contains(tag), !consumed.contains(range.lowerBound) else { return true }
             var range = range
+            // Обрывки сокращений и диалекта: ain't → «ai», ’ll → «ll», islan’ → «islan»
+            if contraction(at: range, in: text) == nil, isContractionPiece(range, in: text) { return true }
             let lemma: String
             let pos: String
             if let contraction = contraction(at: range, in: text) {
@@ -95,28 +107,52 @@ nonisolated enum TextWordExtractor {
                 pos = "modal v."
             } else {
                 guard let lexical = partsOfSpeech[tag], isWordLike(String(text[range])) else { return true }
-                let lemmaTag = tagger.tag(at: range.lowerBound, unit: .word, scheme: .lemma).0
-                lemma = correctedLemma(String(text[range])) ?? (lemmaTag?.rawValue ?? String(text[range])).lowercased()
-                pos = lexical
-                guard isWordLike(lemma), !skipped.contains(lemma) else { return true }
+                if let dialect = withoutDialectPrefix(String(text[range])) {
+                    // a-going → go: «a-» в диалекте смысла не добавляет, в примере слово остаётся как в книге
+                    let base = Self.lemma(of: dialect, at: dialect.startIndex..<dialect.endIndex, in: dialect)
+                    lemma = base.lemma
+                    pos = dialect.lowercased().hasSuffix("ing") ? "v." : (base.partOfSpeech.isEmpty ? lexical : base.partOfSpeech)
+                } else {
+                    let lemmaTag = tagger.tag(at: range.lowerBound, unit: .word, scheme: .lemma).0
+                    lemma = correctedLemma(String(text[range])) ?? (lemmaTag?.rawValue ?? String(text[range])).lowercased()
+                    pos = lexical
+                }
+                guard isWordLike(lemma), !skipped.contains(lemma), !offensive.contains(lemma),
+                      !dialectFunctionWords.contains(lemma) else { return true }
             }
             let surface = String(text[range])
 
+            while sentenceIndex < sentences.count, sentences[sentenceIndex].upperBound <= range.lowerBound {
+                sentenceIndex += 1
+            }
+            let sentence = sentenceIndex < sentences.count && sentences[sentenceIndex].contains(range.lowerBound)
+                ? sentences[sentenceIndex] : range
+
+            if surface.first?.isLowercase == true {
+                seenLowercase.insert(lemma)
+            } else if text[sentence.lowerBound..<range.lowerBound].contains(where: \.isLetter) {
+                seenCapitalized.insert(lemma)
+            }
+
             if found[lemma] != nil {
                 found[lemma]?.count += 1
-            } else {
-                while sentenceIndex < sentences.count, sentences[sentenceIndex].upperBound <= range.lowerBound {
-                    sentenceIndex += 1
+                // Первое появление бывает в оглавлении или заголовке — меняем пример на обычное предложение
+                if !goodExample.contains(lemma), isGoodExample(text[sentence]) {
+                    found[lemma]?.example = example(in: text, sentence: sentence, word: range)
+                    goodExample.insert(lemma)
                 }
-                let sentence = sentenceIndex < sentences.count && sentences[sentenceIndex].contains(range.lowerBound)
-                    ? sentences[sentenceIndex] : range
+            } else {
                 found[lemma] = ExtractedWord(lemma: lemma, surface: surface, partOfSpeech: pos,
                                              example: example(in: text, sentence: sentence, word: range), count: 1)
                 firstSeen[lemma] = range.lowerBound
+                if isGoodExample(text[sentence]) { goodExample.insert(lemma) }
             }
             return true
         }
-        return found.values.sorted { firstSeen[$0.lemma]! < firstSeen[$1.lemma]! }
+        // Имена, которые теггер не узнал: всегда с заглавной, хоть раз — посреди предложения
+        return found.values
+            .filter { $0.isPhrase || seenLowercase.contains($0.lemma) || !seenCapitalized.contains($0.lemma) }
+            .sorted { firstSeen[$0.lemma]! < firstSeen[$1.lemma]! }
     }
 
     // MARK: - Выражения
@@ -268,8 +304,31 @@ nonisolated enum TextWordExtractor {
         return Double(letters.filter(\.isUppercase).count) >= Double(letters.count) * 0.8
     }
 
+    /// Диалект и просторечие старых книг → обычное слово: у него в базе проверенный перевод, а пример остаётся из книги.
+    /// Только формы, которые обычными словами не бывают: jest («шутка»), kin («родня»), tuck не трогаем
+    private static let dialectForms = [
+        "knowed": "know", "catched": "catch", "throwed": "throw", "clumb": "climb", "drownded": "drown",
+        "drawed": "draw", "growed": "grow", "blowed": "blow", "hearn": "hear", "ketch": "catch", "git": "get",
+        "agin": "again", "yit": "yet", "jist": "just", "jis": "just", "ole": "old", "mos": "most",
+        "afeard": "afraid", "afeared": "afraid", "hoss": "horse", "gal": "girl", "holt": "hold", "las": "last",
+        "resk": "risk", "forgit": "forget", "pison": "poison", "cretur": "creature", "critter": "creature",
+        "widder": "widow", "yaller": "yellow", "tobacker": "tobacco", "ruther": "rather", "druther": "rather",
+        "fust": "first", "considable": "considerable", "considerble": "considerable", "generly": "generally",
+        "skasely": "scarcely", "govment": "government", "somewheres": "somewhere", "nowheres": "nowhere",
+        "anywheres": "anywhere", "everywheres": "everywhere", "anyways": "anyway", "fotch": "fetch",
+        "shet": "shut", "riz": "rise", "gwyne": "go", "gwine": "go", "obleeged": "oblige", "varmint": "vermin",
+        "deef": "deaf", "wisht": "wish", "dasn": "dare"
+    ]
+
+    /// Диалектные служебные слова (de — the, dat — that, en — and): обычные служебные слова из текста не берутся — и эти тоже
+    private static let dialectFunctionWords: Set<String> = [
+        "de", "dat", "dem", "dey", "dis", "dese", "en", "wid", "ef", "yo", "uz", "wuz", "mo", "dah", "heah", "ther",
+        "fer", "sich", "nuther", "arter", "acrost", "behine", "bekase", "kase", "sumfn", "nuffn", "haint"
+    ]
+
     private static func correctedLemma(_ surface: String) -> String? {
-        lemmaCorrections[surface.lowercased()]
+        let key = surface.lowercased()
+        return lemmaCorrections[key] ?? dialectForms[key]
     }
 
     /// Обрывки сокращений, на которые теггер режет «can't», «won't», «shan't», и слово, которым они станут
@@ -303,6 +362,48 @@ nonisolated enum TextWordExtractor {
         let allowed = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-")
         guard token.unicodeScalars.allSatisfy(allowed.contains) else { return false }
         return token != token.uppercased()
+    }
+
+    /// Диалектное «a-» перед словом (a-going, a-telling) — слово без него; aboard, asleep пишутся слитно и не трогаются
+    private static func withoutDialectPrefix(_ word: String) -> String? {
+        guard word.count > 4, word.lowercased().hasPrefix("a-") else { return nil }
+        return String(word.dropFirst(2))
+    }
+
+    /// Кусок сокращения или диалектного слова: сразу за ним n't / ’t, апостроф без буквы после (islan’, doan’),
+    /// или апостроф прямо перед ним (’ll, ’uz, ’bout). Притяжательные dog’s и boys’ — слово целое
+    private static func isContractionPiece(_ range: Range<String.Index>, in text: String) -> Bool {
+        let apostrophes: Set<Character> = ["'", "’"]
+        let after = text[range.upperBound...]
+        if let first = after.first {
+            if first == "n" || first == "N" {
+                let rest = after.dropFirst()
+                if let mark = rest.first, apostrophes.contains(mark), rest.dropFirst().first.map({ $0 == "t" || $0 == "T" }) == true { return true }
+            }
+            if apostrophes.contains(first) {
+                let next = after.dropFirst().first
+                if next == "t" || next == "T" { return true }
+                // boys’ room — притяжательное множественного, а не обрывок
+                let plural = text[range].last.map { $0 == "s" || $0 == "S" } ?? false
+                if !plural, next.map({ !$0.isLetter }) ?? true { return true }
+            }
+        }
+        if range.lowerBound > text.startIndex {
+            let before = text[text.index(before: range.lowerBound)]
+            // ’ — апостроф; прямой ' бывает и кавычкой: его считаем только у коротких обрывков
+            if before == "’" || (before == "'" && text[range].count <= 3) { return true }
+        }
+        return false
+    }
+
+    /// Обычное предложение для примера: 5–40 слов, не строка оглавления («Chapter.—Title.—Title.»)
+    /// и не заголовок, где почти все слова с заглавной
+    private static func isGoodExample(_ sentence: Substring) -> Bool {
+        if sentence.contains(".—") || sentence.contains(".–") { return false }
+        let words = sentence.split(whereSeparator: { $0.isWhitespace })
+        guard (5...40).contains(words.count) else { return false }
+        let capitalized = words.filter { $0.first(where: \.isLetter)?.isUppercase == true }.count
+        return Double(capitalized) <= Double(words.count) * 0.4
     }
 
     /// Предложение с выделенным словом; слишком длинное обрезается вокруг слова
