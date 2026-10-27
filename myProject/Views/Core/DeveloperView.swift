@@ -25,6 +25,12 @@ struct DeveloperView: View {
                         Toggle("Изобразить «без подписки»", isOn: $simulateNoSubscription)
                     }
 
+                    Section(footer: Text("Свои словари (из книг, сканов): новые слова с автопереводом отдельно от слов базы, правка и выгрузка в CSV.")) {
+                        NavigationLink("Проверка перевода словарей") {
+                            TranslationReviewView()
+                        }
+                    }
+
                     Section("Статус базы") {
                         LabeledContent("Слов всего", value: "\(allWords.count)")
                         LabeledContent("Категорий", value: "\(categories.count)")
