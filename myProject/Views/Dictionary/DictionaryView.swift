@@ -62,6 +62,8 @@ struct DictionaryView: View {
     @State private var isShowingScan = false
     @State private var listToRename: WordList?
     @State private var listToDelete: WordList?
+    /// Идёт удаление словаря — в словаре из книги тысячи слов, это заметное время
+    @State private var isDeletingList = false
     @State private var listName = ""
     @State private var listMerge: ListMerge?
 
@@ -327,6 +329,13 @@ struct DictionaryView: View {
             }
         } message: {
             Text("Новые слова, добавленные только в этот словарь, тоже удалятся. Слова из основной базы останутся в своих темах.")
+        }
+        .overlay {
+            if isDeletingList {
+                ProgressView("Удаляю словарь…")
+                    .padding(20)
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+            }
         }
         .sheet(isPresented: $isShowingManageCategories) {
             ManageCategoriesView()
@@ -605,13 +614,21 @@ struct DictionaryView: View {
 
     /// Удаляет словарь и свои слова, которые были только в нём; встроенные слова остаются в своих темах
     private func delete(_ list: WordList) {
-        for word in list.words where word.isCustom && word.category == nil && word.lists.count == 1 {
-            modelContext.delete(word)
+        isDeletingList = true
+        Task {
+            // Сначала кадр с «Удаляю словарь…», потом работа на главном потоке
+            try? await Task.sleep(for: .milliseconds(50))
+            let onlyHere = list.words.filter { $0.isCustom && $0.category == nil && $0.lists.count == 1 }
+            // Отвязываем все слова разом: при удалении по одному каждое перестраивало список слов словаря,
+            // и словарь из книги (тысячи слов) вешал приложение
+            list.words = []
+            for word in onlyHere { modelContext.delete(word) }
+            studyScope.enabledLists.remove(list.id)
+            if filter == .list(list) { filter = .general }
+            modelContext.delete(list)
+            try? modelContext.save()
+            isDeletingList = false
         }
-        studyScope.enabledLists.remove(list.id)
-        if filter == .list(list) { filter = .general }
-        modelContext.delete(list)
-        try? modelContext.save()
     }
 
     /// Переносит слова в другой свой словарь (без повторов) и удаляет исходный; сами слова не удаляются
