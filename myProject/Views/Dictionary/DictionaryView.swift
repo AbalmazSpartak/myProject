@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+@preconcurrency import Translation
 
 enum DictionaryFilter: Hashable {
     case general
@@ -78,6 +79,10 @@ struct DictionaryView: View {
     @State private var newRussian = ""
     @State private var newExample = ""
     @State private var newLevel: String = "A1"
+    /// Кнопка «Перевести» у нового слова — тот же переводчик и те же проверки, что у слов из книг
+    @State private var newTranslationConfig: TranslationSession.Configuration?
+    @State private var isTranslatingNew = false
+    @State private var newTranslationNote: String?
     
     private func reloadWords() {
         mistakeCount = (try? modelContext.fetchCount(FetchDescriptor<Word>(predicate: #Predicate { $0.isMistake }))) ?? 0
@@ -275,7 +280,10 @@ struct DictionaryView: View {
         .onChange(of: isDropdownExpanded) { _, expanded in
             if expanded { reloadCategoryCounts() }
         }
-        .onChange(of: newEnglish) { _, _ in refreshExistingMatches() }
+        .onChange(of: newEnglish) { _, _ in
+            refreshExistingMatches()
+            newTranslationNote = nil
+        }
         // Любое сохранение (правка, скан, удаление темы со словами) — перечитываем, чтобы не показать удалённые слова.
         // Не на экране — не перечитываем: тренировки сохраняют каждый ответ. Вернутся на «Словарь» — onAppear перечитает
         .onReceive(NotificationCenter.default.publisher(for: ModelContext.didSave)) { notification in
@@ -667,7 +675,16 @@ struct DictionaryView: View {
                 existingMatchesCard
             }
             customTextField(placeholder: "Транскрипция (необязательно)", text: $newTranscription)
-            customTextField(placeholder: "Перевод на русский", text: $newRussian)
+            HStack(spacing: 10) {
+                customTextField(placeholder: "Перевод на русский", text: $newRussian)
+                translateNewWordButton
+            }
+            if let newTranslationNote {
+                Text(newTranslationNote)
+                    .scaledFont(size: 13)
+                    .foregroundColor(.orange)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
             customTextField(placeholder: "Пример фразы (необязательно)", text: $newExample)
             
             Picker("Уровень", selection: $newLevel) {
@@ -696,6 +713,54 @@ struct DictionaryView: View {
         .background(Color.cardBackground)
         .cornerRadius(20)
         .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
+        .translationTask(newTranslationConfig) { session in
+            await translateNewWord(with: session)
+        }
+    }
+
+    private var translateNewWordButton: some View {
+        Button {
+            newTranslationNote = nil
+            if newTranslationConfig == nil {
+                newTranslationConfig = TranslationSession.Configuration(source: Locale.Language(identifier: "en"),
+                                                                        target: Locale.Language(identifier: "ru"))
+            } else {
+                newTranslationConfig?.invalidate()
+            }
+        } label: {
+            Group {
+                if isTranslatingNew {
+                    ProgressView()
+                } else {
+                    Image(systemName: "character.bubble")
+                        .scaledFont(size: 20, weight: .semibold)
+                }
+            }
+            .foregroundColor(.orange)
+            .frame(width: 48, height: 48)
+            .background(Color.orange.opacity(0.12))
+            .cornerRadius(12)
+        }
+        .disabled(newEnglish.trimmingCharacters(in: .whitespaces).isEmpty || isTranslatingNew)
+        .accessibilityLabel("Перевести")
+    }
+
+    private func translateNewWord(with session: TranslationSession) async {
+        let word = newEnglish.trimmingCharacters(in: .whitespaces)
+        guard !word.isEmpty else { return }
+        isTranslatingNew = true
+        defer { isTranslatingNew = false }
+        do {
+            let result = try await WordTranslator.translate(word, session: session)
+            newRussian = result.text
+            if result.doubtful {
+                newTranslationNote = result.text.isEmpty
+                    ? "Подходящего перевода нет — впишите свой."
+                    : "Перевод под вопросом — проверьте."
+            }
+        } catch {
+            newTranslationNote = "Переводчик недоступен — проверьте, скачан ли русский язык в настройках iPhone «Перевод»."
+        }
     }
     
     private var canAddNewWord: Bool {
@@ -811,6 +876,7 @@ struct DictionaryView: View {
         newTranscription = ""
         newRussian = ""
         newExample = ""
+        newTranslationNote = nil
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }

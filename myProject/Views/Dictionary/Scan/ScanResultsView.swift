@@ -204,7 +204,7 @@ struct ScanResultsView: View {
                     } header: {
                         sectionHeader("Проверьте перевод", items: doubtfulWords)
                     } footer: {
-                        Text("Переводчик выдал несуществующее слово, транслит или латиницу — галочки сняты. Исправьте перевод, и слово отметится.")
+                        Text("Переводчик выдал несуществующее слово, транслит, латиницу или грубость (её не показываем) — галочки сняты. Исправьте перевод, и слово отметится.")
                     }
                 }
                 if !unknownWords.isEmpty {
@@ -406,10 +406,9 @@ struct ScanResultsView: View {
 
     private func translate(with session: TranslationSession) async {
         translationState = .translating
-        // Глагол переводим с «to», иначе переводчик часто выдаёт существительное (run → «бег»)
         let sources = newWords.map { candidate in
             let word = candidate.extracted
-            return (id: candidate.id, text: word.partOfSpeech == "v." ? "to \(word.lemma)" : word.lemma)
+            return (id: candidate.id, text: WordTranslator.source(for: word.lemma, partOfSpeech: word.partOfSpeech))
         }
         translationTotal = sources.count
         translatedCount = 0
@@ -422,13 +421,13 @@ struct ScanResultsView: View {
                 var firstTry: [String: String] = [:]
                 for response in responses {
                     guard let id = response.clientIdentifier, (translations[id] ?? "").isEmpty else { continue }
-                    let translated = Self.cleanedTranslation(response.targetText)
-                    if Self.isUsable(translated, source: response.sourceText) {
+                    let translated = WordTranslator.cleaned(response.targetText)
+                    if WordTranslator.isUsable(translated, source: response.sourceText) {
                         translations[id] = translated
-                    } else if response.sourceText.hasPrefix("to ") {
+                    } else if let second = WordTranslator.retrySource(for: response.sourceText) {
                         // «to mighty» → «к могуществу», «to fetch» → «зарать»: глагол переводим ещё раз, без «to»
                         firstTry[id] = translated
-                        retry.append((id: id, text: String(response.sourceText.dropFirst(3))))
+                        retry.append((id: id, text: second))
                     } else {
                         markDoubtful(id, translation: translated)
                     }
@@ -436,13 +435,14 @@ struct ScanResultsView: View {
                 if !retry.isEmpty {
                     for response in try await session.translations(from: Self.translationRequests(retry)) {
                         guard let id = response.clientIdentifier else { continue }
-                        let translated = Self.cleanedTranslation(response.targetText)
-                        if Self.isUsable(translated, source: response.sourceText) {
+                        let translated = WordTranslator.cleaned(response.targetText)
+                        if WordTranslator.isUsable(translated, source: response.sourceText) {
                             translations[id] = translated
                         } else {
                             // Оба перевода плохие — показываем тот, где хотя бы слова настоящие
                             let first = firstTry[id] ?? ""
-                            markDoubtful(id, translation: Self.looksBroken(translated) && !Self.looksBroken(first) ? first : translated)
+                            let broken = WordTranslator.looksBroken(translated) && !WordTranslator.looksBroken(first)
+                            markDoubtful(id, translation: broken ? first : translated)
                         }
                     }
                 }
@@ -456,57 +456,16 @@ struct ScanResultsView: View {
 
     private static let translationChunk = 200
 
+    /// Грубый перевод не показываем: поле пустое, перевод впишут сами
     private func markDoubtful(_ id: String, translation: String) {
-        translations[id] = translation
+        translations[id] = WordTranslator.shown(translation)
         doubtful.insert(id)
         selected.remove(id)
-    }
-
-    /// Проверка орфографии русского — находит «переводы» из несуществующих слов: «зарать», «уныливый», «галут»
-    private static let russianChecker = UITextChecker()
-    private static let russianLanguage = UITextChecker.availableLanguages.first { $0.hasPrefix("ru") }
-
-    /// Перевода по сути нет: латиница («jist») или слово, которого нет в русском языке (транслит, выдуманное)
-    private static func looksBroken(_ translation: String) -> Bool {
-        guard translation.range(of: "[а-яё]", options: [.regularExpression, .caseInsensitive]) != nil else { return true }
-        guard let language = russianLanguage else { return false }
-        let range = NSRange(location: 0, length: (translation as NSString).length)
-        return russianChecker.rangeOfMisspelledWord(in: translation, range: range, startingAt: 0, wrap: false, language: language).location != NSNotFound
-    }
-
-    private static func isUsable(_ translation: String, source: String) -> Bool {
-        guard !looksBroken(translation) else { return false }
-        return !(source.hasPrefix("to ") && startsWithPreposition(translation))
     }
 
     /// Запросы собираем вне главного потока: так Swift 6 разрешает передать их в переводчик
     nonisolated private static func translationRequests(_ sources: [(id: String, text: String)]) -> [TranslationSession.Request] {
         sources.map { TranslationSession.Request(sourceText: $0.text, clientIdentifier: $0.id) }
-    }
-
-    /// «Маяк.» → «маяк», «чтобы бежать» → «бежать»
-    private static let prepositions: Set<String> = ["к", "ко", "в", "во", "на", "до", "для", "с", "со"]
-
-    /// Перевод глагола начался с предлога — значит, «to» перевелось как «к», и слово не глагол
-    private static func startsWithPreposition(_ translation: String) -> Bool {
-        guard let first = translation.split(separator: " ").first, translation.contains(" ") else { return false }
-        return prepositions.contains(first.lowercased())
-    }
-
-    /// Скобки по краям — часть перевода: «(сплавной) плот», а не «сплавной) плот»
-    private static let trimmedPunctuation = CharacterSet.whitespacesAndNewlines
-        .union(CharacterSet.punctuationCharacters.subtracting(CharacterSet(charactersIn: "()")))
-
-    static func cleanedTranslation(_ raw: String) -> String {
-        var text = raw.trimmingCharacters(in: trimmedPunctuation)
-        if text.lowercased().hasPrefix("чтобы ") {
-            text = String(text.dropFirst("чтобы ".count))
-        }
-        // Первая буква — строчная, и после скобки: «(сплавной) плот»; аббревиатуры (США) не трогаем
-        guard let index = text.firstIndex(where: \.isLetter) else { return text }
-        let rest = text[text.index(after: index)...]
-        guard rest.contains(where: \.isLowercase) || rest.isEmpty else { return text }
-        return text[..<index] + text[index].lowercased() + rest
     }
 
     // MARK: - Сохранение

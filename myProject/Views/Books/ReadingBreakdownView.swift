@@ -18,6 +18,11 @@ extension PhonicsKind {
     nonisolated static let exceptionColor = Color.red
 }
 
+extension ColloquialRule {
+    /// Разговорные формы — пунктиром под словом: фон занят правилами чтения
+    nonisolated static let color = Color.indigo
+}
+
 /// Легенда цветов подсветки с галочками — в шторке «Оформление»: что подсвечивать в книге
 struct PhonicsLegend: View {
     @Binding var selection: Set<PhonicsOption>
@@ -78,6 +83,8 @@ struct PhonicsLegend: View {
             Text("k").foregroundColor(.gray.opacity(0.55)) + Text("nife")
         case .exception:
             Text("one").underline(pattern: .dot, color: PhonicsKind.exceptionColor)
+        case .colloquial:
+            Text("knowed").underline(pattern: .dash, color: ColloquialRule.color)
         default:
             let kind = PhonicsKind(rawValue: option.rawValue) ?? .plain
             Text(kind.example.components(separatedBy: ",").first ?? "")
@@ -91,6 +98,7 @@ struct PhonicsLegend: View {
         switch option {
         case .silent: return "Немые буквы"
         case .exception: return "Исключения"
+        case .colloquial: return "Разговорные формы"
         default: return PhonicsKind(rawValue: option.rawValue)?.title ?? ""
         }
     }
@@ -99,6 +107,7 @@ struct PhonicsLegend: View {
         switch option {
         case .silent: return "бледные — не читаются: knife, write, light"
         case .exception: return "читается не по правилу; красная подсветка — где именно"
+        case .colloquial: return "диалект старых книг: knowed = knew, a-going, de = the, ain’t"
         default: return PhonicsKind(rawValue: option.rawValue)?.example ?? ""
         }
     }

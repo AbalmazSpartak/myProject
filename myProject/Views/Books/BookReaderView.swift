@@ -32,6 +32,11 @@ struct BookReaderView: View {
     @State private var isShowingContents = false
     @State private var isShowingDictionary = false
     @State private var isShowingAppearance = false
+    @State private var isShowingSearch = false
+    /// Запрос поиска остаётся до закрытия книги — снова открыли поиск, а там прежние результаты
+    @State private var searchQuery = ""
+    /// Место, найденное поиском, — подсвечено несколько секунд
+    @State private var mark = ReaderMark()
 
     /// Оформление — снимок настроек: обновляется после шторки «Оформление»
     @State private var style = ReaderStyle.current()
@@ -69,6 +74,7 @@ struct BookReaderView: View {
                     animated: style.pageTurn != .instant,
                     background: style.background,
                     speech: speech,
+                    mark: mark,
                     bookTitle: book.title,
                     language: language,
                     onVisible: { paragraph in
@@ -90,6 +96,7 @@ struct BookReaderView: View {
                     lineSpacing: style.fontSize * style.spacing.factor,
                     startParagraph: startParagraph,
                     speech: speech,
+                    mark: mark,
                     onVisible: { paragraph in
                         // Место чтения — прямо в книгу: у читалки нет состояния, которое менялось бы при прокрутке
                         guard chapterStarts.indices.contains(chapterIndex) else { return }
@@ -134,6 +141,10 @@ struct BookReaderView: View {
                 .ignoresSafeArea()
         }
         .sheet(isPresented: $isShowingContents) { contents }
+        .sheet(isPresented: $isShowingSearch) {
+            BookSearchView(chapters: chapters, query: $searchQuery, onSelect: jump)
+                .appThemedColorScheme()
+        }
         .sheet(isPresented: $isShowingAppearance, onDismiss: { style = .current() }) {
             ReaderAppearanceSheet()
                 .presentationDetents([.medium, .large])
@@ -172,6 +183,12 @@ struct BookReaderView: View {
                     .foregroundColor(style.text)
             }
             .accessibilityLabel(speech.isPlaying ? "Пауза" : "Читать вслух")
+            Button { isShowingSearch = true } label: {
+                Image(systemName: "magnifyingglass")
+                    .scaledFont(size: 19, weight: .semibold)
+                    .foregroundColor(style.text)
+            }
+            .accessibilityLabel("Поиск по книге")
             Button { isShowingAppearance = true } label: {
                 Text("Aa")
                     .font(.system(size: 19, weight: .semibold, design: .serif))
@@ -181,6 +198,9 @@ struct BookReaderView: View {
             Menu {
                 Button { isShowingContents = true } label: {
                     Label("Оглавление", systemImage: "list.bullet")
+                }
+                Button { isShowingSearch = true } label: {
+                    Label("Поиск по книге", systemImage: "magnifyingglass")
                 }
                 if isEnglish {
                     Button { isShowingDictionary = true } label: {
@@ -332,9 +352,22 @@ struct BookReaderView: View {
     private func go(to index: Int, atEnd: Bool = false) {
         guard chapters.indices.contains(index) else { return }
         speech.stop()
+        mark.clear()
         startParagraph = atEnd ? max(chapters[index].paragraphs.count - 1, 0) : 0
         chapterIndex = index
         book.position = chapterStarts[index] + startParagraph
+    }
+
+    /// Переход к найденному: другая глава открывается на этом абзаце, в открытой — прокрутка или листание к месту
+    private func jump(to result: BookSearchResult) {
+        guard chapters.indices.contains(result.chapter), chapterStarts.indices.contains(result.chapter) else { return }
+        speech.stop()
+        mark.show(paragraph: result.paragraph, range: result.range)
+        book.position = chapterStarts[result.chapter] + result.paragraph
+        if result.chapter != chapterIndex {
+            startParagraph = result.paragraph
+            chapterIndex = result.chapter
+        }
     }
 
     /// wlword://w/<абзац>/<начало>/<длина> — в UTF-16, как NSRange
@@ -376,6 +409,9 @@ struct BookReaderView: View {
         let ns = text as NSString
         let pattern = english ? "[A-Za-z]+(?:['’-][A-Za-z]+)*" : "\\p{L}+(?:['’-]\\p{L}+)*"
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return AttributedString(text) }
+        let showsColloquial = english && phonics?.contains(.colloquial) == true
+        // Кавычки ‘…’ в абзаце — ’ после слова скорее закрывает цитату, чем глотает звук
+        let singleQuotes = showsColloquial && text.contains("‘")
         var result = AttributedString()
         var last = 0
         for match in regex.matches(in: text, range: NSRange(location: 0, length: ns.length)) {
@@ -387,6 +423,14 @@ struct BookReaderView: View {
             word.link = URL(string: "\(wordScheme)://w/\(paragraph)/\(range.location)/\(range.length)")
             if let phonics {
                 decorate(&word, ns.substring(with: range), options: phonics, cache: &cache)
+            }
+            if showsColloquial {
+                let before = range.location > 0 ? ns.substring(with: NSRange(location: range.location - 1, length: 1)).first : nil
+                let end = NSMaxRange(range)
+                let after = ns.substring(with: NSRange(location: end, length: min(2, ns.length - end)))
+                if ColloquialForms.form(ns.substring(with: range), before: before, after: after, singleQuotes: singleQuotes) != nil {
+                    word.underlineStyle = Text.LineStyle(pattern: .dash, color: ColloquialRule.color)
+                }
             }
             result += word
             last = range.location + range.length
@@ -446,6 +490,7 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
     let lineSpacing: CGFloat
     let startParagraph: Int
     let speech: ReaderSpeech
+    let mark: ReaderMark
     let onVisible: (Int) -> Void
     let onTap: (URL) -> Void
     @ViewBuilder let navigation: () -> Navigation
@@ -464,7 +509,7 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
                 LazyVStack(alignment: .leading, spacing: 14) {
                     ForEach(paragraphs.indices, id: \.self) { index in
                         ReaderParagraph(index: index, text: paragraphs[index], font: font, textColor: textColor,
-                                        lineSpacing: lineSpacing, speech: speech)
+                                        lineSpacing: lineSpacing, speech: speech, mark: mark)
                             .id(index)
                     }
                     navigation()
@@ -486,6 +531,11 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
             .onChange(of: speech.paragraph) { _, paragraph in
                 guard let paragraph, speech.isPlaying else { return }
                 withAnimation(.easeInOut(duration: 0.4)) { proxy.scrollTo(paragraph, anchor: UnitPoint(x: 0, y: 0.15)) }
+            }
+            // Найденное поиском в этой же главе — прокручиваем к нему
+            .onChange(of: mark.jump) { _, _ in
+                guard let paragraph = mark.paragraph else { return }
+                withAnimation(.easeInOut(duration: 0.4)) { proxy.scrollTo(paragraph, anchor: UnitPoint(x: 0, y: 0.3)) }
             }
             .task {
                 // Прокрутка к месту — после того как глава отрисовалась
@@ -514,10 +564,12 @@ private struct ReaderParagraph: View {
     let textColor: Color
     let lineSpacing: CGFloat
     let speech: ReaderSpeech
+    let mark: ReaderMark
 
     var body: some View {
         let isReading = speech.paragraph == index
-        Text(isReading ? highlighted : text)
+        let isMarked = mark.paragraph == index
+        Text(isReading || isMarked ? highlighted : text)
             .font(font)
             .foregroundColor(textColor)
             .lineSpacing(lineSpacing)
@@ -533,8 +585,11 @@ private struct ReaderParagraph: View {
 
     private var highlighted: AttributedString {
         var result = text
-        if let word = speech.word, let range = Range(word, in: result) {
+        if speech.paragraph == index, let word = speech.word, let range = Range(word, in: result) {
             result[range].backgroundColor = Color.yellow.opacity(0.45)
+        }
+        if mark.paragraph == index, let found = mark.range, let range = Range(found, in: result) {
+            result[range].backgroundColor = ReaderMark.color
         }
         return result
     }

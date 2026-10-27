@@ -71,6 +71,8 @@ nonisolated struct GraphemeRule: Sendable {
 /// Что подсвечивать в книге — галочки в «Оформлении»
 nonisolated enum PhonicsOption: String, CaseIterable, Sendable, Identifiable {
     case vowelTeam, magicE, rVowel, consonantPair, ending, silent, exception
+    /// Разговорные формы старых книг: knowed, a-going, de, ain’t (ColloquialForms)
+    case colloquial
 
     var id: String { rawValue }
 

@@ -130,11 +130,13 @@ enum BuiltInTopics {
     static let minimalPairsID = uuid(topic: 16)
     static let silentLettersID = uuid(topic: 17)
     static let readingExceptionsID = uuid(topic: 24)
+    /// Урок о разговорных формах старых книг — на него ведёт плашка в карточке слова читалки
+    static let colloquialID = uuid(topic: 25)
 
     static let all: [Topic] = [tenses, irregularVerbs, articles, movieQuotes, airport, cafe, vowelReading,
                                hotel, doctor, shopping, city, timePrepositions, quantifiers, comparatives,
                                thSound, minimalPairs, silentLetters, fantasyPhrases, seriesPhrases, musicWords, songSlang,
-                               idioms, textingSlang, readingExceptions]
+                               idioms, textingSlang, readingExceptions, colloquialEnglish]
 
     static let pronunciationSection = "Произношение"
 
@@ -652,6 +654,88 @@ enum BuiltInTopics {
             speech("know, write, climb, hour, walk, night.", caption: "Немые буквы"),
         ]),
         words: [("knife", "нож"), ("knee", "колено"), ("climb", "карабкаться"), ("honest", "честный"), ("daughter", "дочь")]
+    )
+
+    private static let colloquialEnglish = Topic(
+        number: 25,
+        section: grammarSection,
+        title: "Разговорный английский в старых книгах",
+        blocks: blocks(25, [
+            text("В классике XIX века — у Марка Твена, Диккенса, Стивенсона — герои часто говорят «как слышится»: с ошибками, диалектом, проглоченными звуками. Писатель делает это нарочно: по речи видно, кто человек и откуда. В словаре таких слов нет, но почти все они — знакомые слова в другой одежде. Шесть правил помогут их узнавать."),
+            heading("1. «a-» перед -ing"),
+            text("Старое on/at превратилось в приставку **a-**. Смысла она не меняет — просто так говорили в деревне: **a-going** = going, **a-telling** = telling."),
+            table([
+                ["В книге", "Обычно", "Перевод"],
+                ["he was *a-going* to start", "he was going to start", "он собирался начать"],
+                ["*a-whooping* and *a-yelling*", "whooping and yelling", "с криками и воплями"],
+            ]),
+            heading("2. Неправильные глаголы «по правилу»"),
+            text("Рассказчик без образования добавляет -ed ко всем глаголам, даже к неправильным. Отбросьте -ed — получится знакомый глагол."),
+            table([
+                ["В книге", "Правильно", "Глагол"],
+                ["knowed", "knew", "know — знать"],
+                ["catched", "caught", "catch — ловить"],
+                ["throwed", "threw", "throw — бросать"],
+                ["growed", "grew", "grow — расти"],
+                ["blowed", "blew", "blow — дуть"],
+                ["drawed", "drew", "draw — тянуть, рисовать"],
+            ]),
+            text("Бывает и своя форма или лишний слог: **clumb** = climbed (залез), **drownded** = drowned (утонул), **hearn** = heard (слышал)."),
+            text("*I knowed mighty well that a drownded man don’t float on his back.* — Я точно знал, что утопленник не плавает на спине."),
+            heading("3. Проглоченные звуки"),
+            text("Апостроф стоит там, где звук не произнесли. Чаще всего пропадает g в -ing и начало короткого слова."),
+            table([
+                ["В книге", "Полностью"],
+                ["goin’, nothin’, somethin’", "going, nothing, something"],
+                ["’em", "them"],
+                ["’bout", "about"],
+                ["’way, ’long", "away, along"],
+                ["o’", "of"],
+                ["’spose", "suppose"],
+                ["islan’", "island"],
+            ], labels: true),
+            heading("4. Просторечные отрицания"),
+            text("**ain’t** — универсальное «не»: am not, isn’t, aren’t, haven’t, hasn’t. **hain’t** — то же, чаще haven’t. **warn’t** = wasn’t. Часто с двойным отрицанием, хотя в литературном английском «не» в предложении одно:"),
+            table([
+                ["В книге", "Литературно", "Перевод"],
+                ["he *hain’t* got no family", "he hasn’t got any family", "у него нет никакой семьи"],
+                ["I *ain’t* afraid", "I’m not afraid", "я не боюсь"],
+                ["it *warn’t* no use", "it was no use", "толку не было"],
+            ]),
+            heading("5. Как говорит герой"),
+            text("Речь Джима в «Гекльберри Финне» записана так, как звучит: th → d, окончания пропадают. Прочитайте вслух — и слово узнается."),
+            table([
+                ["В книге", "Обычно"],
+                ["de, dat, dem, dey, dis", "the, that, them, they, this"],
+                ["wid", "with"],
+                ["en", "and"],
+                ["gwyne", "going"],
+                ["wuz, uz", "was"],
+                ["sah", "sir"],
+            ], labels: true),
+            text("*Well, I know what I’s gwyne to do.* — Ну, я знаю, что буду делать."),
+            heading("6. Искажённые слова"),
+            text("Знакомое слово, записанное по-деревенски. Узнаётся по звучанию:"),
+            table([
+                ["В книге", "Обычно"],
+                ["agin", "again — снова"],
+                ["yit", "yet — ещё"],
+                ["jist", "just — просто, только что"],
+                ["git", "get — получать"],
+                ["ketch", "catch — ловить"],
+                ["afeard", "afraid — боящийся"],
+                ["hoss", "horse — лошадь"],
+                ["critter", "creature — существо"],
+                ["widder", "widow — вдова"],
+                ["yaller", "yellow — жёлтый"],
+                ["ruther", "rather — скорее"],
+                ["sich", "such — такой"],
+            ], labels: true),
+            speech("I knowed it was him. He was a-going down to the river, and he hain't got no family.", caption: "Как это звучит"),
+            text("В читалке: «Aa» → «Подсветка правил» → «Разговорные формы». Такие слова будут подчёркнуты пунктиром, а нажатие на слово покажет обычную форму и перевод."),
+        ]),
+        words: [("knew", "знал"), ("caught", "поймал"), ("threw", "бросил"), ("again", "снова"), ("afraid", "боящийся"),
+                ("creature", "существо"), ("widow", "вдова"), ("rather", "скорее")]
     )
 
     private static let readingExceptions = Topic(

@@ -118,7 +118,7 @@ nonisolated enum TextWordExtractor {
                     pos = lexical
                 }
                 guard isWordLike(lemma), !skipped.contains(lemma), !offensive.contains(lemma),
-                      !dialectFunctionWords.contains(lemma) else { return true }
+                      !ColloquialForms.isFunctionWord(lemma) else { return true }
             }
             let surface = String(text[range])
 
@@ -282,6 +282,11 @@ nonisolated enum TextWordExtractor {
     /// Словарная форма и часть речи слова, на которое нажали в тексте: «ran» в предложении → «run», «v.»
     static func lemma(of word: String, at range: Range<String.Index>, in sentence: String) -> (lemma: String, partOfSpeech: String) {
         if let contraction = contractionLemma(word) { return (contraction, "modal v.") }
+        // a-going → go
+        if let dialect = withoutDialectPrefix(word) {
+            let base = lemma(of: dialect, at: dialect.startIndex..<dialect.endIndex, in: dialect)
+            return (base.lemma, dialect.lowercased().hasSuffix("ing") ? "v." : base.partOfSpeech)
+        }
         let tagger = NLTagger(tagSchemes: [.lexicalClass, .lemma])
         tagger.string = sentence
         tagger.setLanguage(.english, range: sentence.startIndex..<sentence.endIndex)
@@ -304,31 +309,10 @@ nonisolated enum TextWordExtractor {
         return Double(letters.filter(\.isUppercase).count) >= Double(letters.count) * 0.8
     }
 
-    /// Диалект и просторечие старых книг → обычное слово: у него в базе проверенный перевод, а пример остаётся из книги.
-    /// Только формы, которые обычными словами не бывают: jest («шутка»), kin («родня»), tuck не трогаем
-    private static let dialectForms = [
-        "knowed": "know", "catched": "catch", "throwed": "throw", "clumb": "climb", "drownded": "drown",
-        "drawed": "draw", "growed": "grow", "blowed": "blow", "hearn": "hear", "ketch": "catch", "git": "get",
-        "agin": "again", "yit": "yet", "jist": "just", "jis": "just", "ole": "old", "mos": "most",
-        "afeard": "afraid", "afeared": "afraid", "hoss": "horse", "gal": "girl", "holt": "hold", "las": "last",
-        "resk": "risk", "forgit": "forget", "pison": "poison", "cretur": "creature", "critter": "creature",
-        "widder": "widow", "yaller": "yellow", "tobacker": "tobacco", "ruther": "rather", "druther": "rather",
-        "fust": "first", "considable": "considerable", "considerble": "considerable", "generly": "generally",
-        "skasely": "scarcely", "govment": "government", "somewheres": "somewhere", "nowheres": "nowhere",
-        "anywheres": "anywhere", "everywheres": "everywhere", "anyways": "anyway", "fotch": "fetch",
-        "shet": "shut", "riz": "rise", "gwyne": "go", "gwine": "go", "obleeged": "oblige", "varmint": "vermin",
-        "deef": "deaf", "wisht": "wish", "dasn": "dare"
-    ]
-
-    /// Диалектные служебные слова (de — the, dat — that, en — and): обычные служебные слова из текста не берутся — и эти тоже
-    private static let dialectFunctionWords: Set<String> = [
-        "de", "dat", "dem", "dey", "dis", "dese", "en", "wid", "ef", "yo", "uz", "wuz", "mo", "dah", "heah", "ther",
-        "fer", "sich", "nuther", "arter", "acrost", "behine", "bekase", "kase", "sumfn", "nuffn", "haint"
-    ]
-
+    /// Неверная форма теггера или разговорная форма старой книги (knowed → know, agin → again — см. ColloquialForms)
     private static func correctedLemma(_ surface: String) -> String? {
         let key = surface.lowercased()
-        return lemmaCorrections[key] ?? dialectForms[key]
+        return lemmaCorrections[key] ?? ColloquialForms.lemma(of: key)
     }
 
     /// Обрывки сокращений, на которые теггер режет «can't», «won't», «shan't», и слово, которым они станут

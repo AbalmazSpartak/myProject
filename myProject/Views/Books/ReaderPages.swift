@@ -160,6 +160,7 @@ struct ReaderPagedText: View, Equatable {
     let animated: Bool
     let background: Color
     let speech: ReaderSpeech
+    let mark: ReaderMark
     /// Для «В словарь» в панели выделения
     let bookTitle: String
     /// Язык книги: перевод и «В словарь» — только в английской
@@ -248,6 +249,21 @@ struct ReaderPagedText: View, Equatable {
         // Чтение вслух листает само: читаемое слово ушло на следующую страницу — перелистываем
         .onChange(of: speech.paragraph) { _, _ in followSpeech() }
         .onChange(of: speech.word) { _, _ in followSpeech() }
+        // Найденное поиском в этой же главе — листаем на его страницу
+        .onChange(of: mark.jump) { _, _ in
+            guard let target = markedPage(), target != page else { return }
+            clearSelection()
+            page = target
+        }
+    }
+
+    /// Страница с найденным словом: абзац и место слова в нём
+    private func markedPage() -> Int? {
+        guard let paragraph = mark.paragraph else { return nil }
+        let location = mark.range?.location ?? 0
+        return pages.firstIndex { segments in
+            segments.contains { $0.paragraph == paragraph && location >= $0.range.location && location < NSMaxRange($0.range) }
+        }
     }
 
     /// Страница целиком: -1 и pages.count — переходы в соседние главы
@@ -308,7 +324,7 @@ struct ReaderPagedText: View, Equatable {
         VStack(alignment: .leading, spacing: ReaderPaginator.paragraphSpacing) {
             ForEach(Array(segments.enumerated()), id: \.element) { number, segment in
                 ReaderPageSegment(segment: segment, text: paragraphs[segment.paragraph], font: readerFont.font(size: fontSize),
-                                  textColor: textColor, lineSpacing: lineSpacing, speech: speech,
+                                  textColor: textColor, lineSpacing: lineSpacing, speech: speech, mark: mark,
                                   selected: selectedPart(page: index, segment: number))
             }
         }
@@ -511,8 +527,14 @@ struct ReaderPagedText: View, Equatable {
         }.value
         guard !result.isEmpty else { return }
         let keep = pages.isEmpty ? startParagraph : (pages[safe: page]?.first?.paragraph ?? startParagraph)
+        let opening = pages.isEmpty
         pages = result
-        page = result.firstIndex { $0.contains { $0.paragraph == keep } } ?? 0
+        // Глава открыта поиском — сразу страница с найденным словом, а не начало абзаца
+        if opening, mark.paragraph == startParagraph, let target = markedPage() {
+            page = target
+        } else {
+            page = result.firstIndex { $0.contains { $0.paragraph == keep } } ?? 0
+        }
     }
 
     private func followSpeech() {
@@ -537,12 +559,13 @@ private struct ReaderPageSegment: View {
     let textColor: Color
     let lineSpacing: CGFloat
     let speech: ReaderSpeech
+    let mark: ReaderMark
     /// Выделенное долгим нажатием — в символах этого куска
     let selected: NSRange?
 
     var body: some View {
         let isReading = speech.paragraph == segment.paragraph
-        Text(slice(highlighting: isReading))
+        Text(slice(highlighting: isReading, marked: mark.paragraph == segment.paragraph ? mark.range : nil))
             .font(font)
             .foregroundColor(textColor)
             .lineSpacing(lineSpacing)
@@ -556,7 +579,7 @@ private struct ReaderPageSegment: View {
             }
     }
 
-    private func slice(highlighting: Bool) -> AttributedString {
+    private func slice(highlighting: Bool, marked: NSRange?) -> AttributedString {
         guard let range = Range(segment.range, in: text) else { return text }
         var result = AttributedString(text[range])
         // Нажатия на страницах разбирает сама страница — ссылки у слов не нужны
@@ -568,6 +591,12 @@ private struct ReaderPageSegment: View {
             let local = NSRange(location: word.location - segment.range.location, length: word.length)
             if local.location >= 0, NSMaxRange(local) <= segment.range.length, let wordRange = Range(local, in: result) {
                 result[wordRange].backgroundColor = Color.yellow.opacity(0.45)
+            }
+        }
+        if let marked {
+            let local = NSRange(location: marked.location - segment.range.location, length: marked.length)
+            if local.location >= 0, NSMaxRange(local) <= segment.range.length, let markRange = Range(local, in: result) {
+                result[markRange].backgroundColor = ReaderMark.color
             }
         }
         return result

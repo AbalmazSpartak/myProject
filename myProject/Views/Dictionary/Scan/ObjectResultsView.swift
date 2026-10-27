@@ -170,7 +170,7 @@ struct ObjectResultsView: View {
         guard let responses = try? await session.translations(from: requests) else { return }
         for response in responses {
             guard let id = response.clientIdentifier, (translations[id] ?? "").isEmpty else { continue }
-            translations[id] = ScanResultsView.cleanedTranslation(response.targetText)
+            translations[id] = WordTranslator.cleaned(response.targetText)
         }
     }
 

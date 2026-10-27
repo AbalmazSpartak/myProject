@@ -19,6 +19,8 @@ struct WordLookupView: View {
     @State private var config: TranslationSession.Configuration?
     @State private var isTranslating = false
     @State private var translationFailed = false
+    /// Переводчик выдал несуществующее слово, транслит или грубость — просим проверить
+    @State private var translationDoubtful = false
     /// Значение в этом предложении: Apple Intelligence (по-английски от модели, по-русски от переводчика)
     /// или, где его нет, ИИ-подсказка с сервера (сразу оба)
     @State private var contextEnglish: String?
@@ -28,6 +30,9 @@ struct WordLookupView: View {
     /// ИИ-подсказка не пришла: запас на сегодня кончился или нет сети
     @State private var cloudMessage: String?
     @AppStorage(CloudContext.enabledKey) private var aiHints = false
+    /// Разговорная форма старой книги (knowed, a-going, de) — плашка с обычной формой и урок
+    @State private var colloquial: ColloquialForm?
+    @State private var lesson: CommunityTopic?
 
     private var bookList: WordList? {
         let name = bookTitle.trimmingCharacters(in: .whitespaces)
@@ -42,6 +47,9 @@ struct WordLookupView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 wordHeader
+                if let colloquial {
+                    colloquialBanner(colloquial)
+                }
                 ReadingBreakdownView(word: tapped.word, lemma: lemma, transcription: baseWord?.transcription,
                                      translation: baseWord?.russian ?? translation)
                 translationBlock
@@ -60,6 +68,55 @@ struct WordLookupView: View {
         .translationTask(config) { session in
             await translate(with: session)
         }
+        .sheet(item: $lesson) { topic in
+            TopicView(topic: topic, backTitle: "Слово")
+                .appThemedColorScheme()
+        }
+    }
+
+    // MARK: - Разговорная форма
+
+    private func colloquialBanner(_ form: ColloquialForm) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Image(systemName: "text.bubble.fill")
+                    .foregroundColor(ColloquialRule.color)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Разговорная форма · \(form.rule.title)")
+                        .scaledFont(size: 12, weight: .semibold)
+                        .foregroundColor(.gray)
+                    (Text(tapped.word) + Text(" = ") + Text(form.standard).bold() + Text(form.note.map { " (\($0))" } ?? ""))
+                        .scaledFont(size: 15)
+                        .foregroundColor(.brandDark)
+                }
+            }
+            Button(action: openLesson) {
+                Label("Урок: «Разговорный английский в старых книгах»", systemImage: "book.pages")
+                    .scaledFont(size: 14, weight: .semibold)
+                    .multilineTextAlignment(.leading)
+            }
+            .tint(.brown)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(ColloquialRule.color.opacity(0.08))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(ColloquialRule.color.opacity(0.3), lineWidth: 1))
+        .cornerRadius(12)
+    }
+
+    private func openLesson() {
+        let id = BuiltInTopics.colloquialID
+        var descriptor = FetchDescriptor<CommunityTopic>(predicate: #Predicate { $0.id == id })
+        descriptor.fetchLimit = 1
+        lesson = try? modelContext.fetch(descriptor).first
+    }
+
+    /// Форма по слову и знакам вокруг него в предложении: апостроф показывает проглоченный звук (goin’, ’em)
+    private static func colloquialForm(_ tapped: TappedWord) -> ColloquialForm? {
+        let sentence = tapped.sentence
+        let before = tapped.range.lowerBound > sentence.startIndex ? sentence[sentence.index(before: tapped.range.lowerBound)] : nil
+        let after = String(sentence[tapped.range.upperBound...].prefix(2))
+        return ColloquialForms.form(tapped.word, before: before, after: after, singleQuotes: sentence.contains("‘"))
     }
 
     // MARK: - Слово
@@ -107,7 +164,8 @@ struct WordLookupView: View {
                     .scaledFont(size: 20, design: .serif)
                     .foregroundColor(.brandDark)
             } else {
-                Text(isTranslating ? "Перевожу…" : (translationFailed ? "Переводчик недоступен — впишите перевод" : "Перевод"))
+                Text(isTranslating ? "Перевожу…" : translationFailed ? "Переводчик недоступен — впишите перевод"
+                     : translationDoubtful ? "Перевод под вопросом — проверьте" : "Перевод")
                     .scaledFont(size: 12, weight: .semibold)
                     .foregroundColor(.gray)
                 TextField("перевод", text: $translation)
@@ -230,7 +288,14 @@ struct WordLookupView: View {
 
     private func prepare() {
         guard lemma.isEmpty else { return }
-        let found = TextWordExtractor.lemma(of: tapped.word, at: tapped.range, in: tapped.sentence)
+        colloquial = Self.colloquialForm(tapped)
+        var found = TextWordExtractor.lemma(of: tapped.word, at: tapped.range, in: tapped.sentence)
+        // de → the, goin’ → going → go: перевод — у обычного слова
+        if let colloquial, colloquial.lemma == nil, colloquial.rule != .aPrefix,
+           colloquial.standard.allSatisfy({ $0.isLetter }) {
+            let standard = colloquial.standard
+            found = TextWordExtractor.lemma(of: standard, at: standard.startIndex..<standard.endIndex, in: standard)
+        }
         lemma = found.lemma
         partOfSpeech = found.partOfSpeech
         let matches = modelContext.fetchAllWords().filter {
@@ -286,24 +351,16 @@ struct WordLookupView: View {
         defer { isTranslating = false }
         do {
             if baseWord == nil, translation.isEmpty {
-                // Глагол — с «to», иначе переводчик часто выдаёт существительное
-                let source = partOfSpeech == "v." ? "to \(lemma)" : lemma
-                translation = Self.cleaned(try await session.translate(source).targetText)
+                let result = try await WordTranslator.translate(lemma, partOfSpeech: partOfSpeech, session: session)
+                translation = result.text
+                translationDoubtful = result.doubtful
             }
             if let contextEnglish, contextRussian == nil {
-                contextRussian = Self.cleaned(try await session.translate(contextEnglish).targetText)
+                contextRussian = WordTranslator.cleaned(try await session.translate(contextEnglish).targetText)
             }
         } catch {
             translationFailed = true
         }
-    }
-
-    /// «Маяк.» → «маяк», «чтобы бежать» → «бежать»
-    private static func cleaned(_ raw: String) -> String {
-        var text = raw.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
-        if text.lowercased().hasPrefix("чтобы ") { text = String(text.dropFirst("чтобы ".count)) }
-        guard let first = text.first, text.dropFirst().contains(where: \.isLowercase) || text.count == 1 else { return text }
-        return first.lowercased() + text.dropFirst()
     }
 
     // MARK: - В словарь
