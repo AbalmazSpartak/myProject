@@ -6,7 +6,7 @@ import Foundation
 enum CloudContext {
     static let enabledKey = "ai_hints_enabled"
     static let qualityKey = "ai_hints_quality"
-    static let baseURL = URL(string: "https://wordlearner-ai.abalmazspartak.workers.dev")!
+    nonisolated static let baseURL = URL(string: "https://wordlearner-ai.abalmazspartak.workers.dev")!
 
     static var isEnabled: Bool { UserDefaults.standard.bool(forKey: enabledKey) }
 

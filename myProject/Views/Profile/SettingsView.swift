@@ -13,6 +13,7 @@ struct SettingsView: View {
     @AppStorage(DictionarySignals.enabledKey) private var improveDictionary = true
     @AppStorage(CloudContext.enabledKey) private var aiHints = false
     @AppStorage(CloudContext.qualityKey) private var aiHintsQuality = CloudContext.Quality.normal.rawValue
+    @AppStorage(BookWordsAI.choiceKey) private var bookWordsTranslator = ""
     @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
     @AppStorage(AppMode.askKey) private var asksMode = false
 
@@ -183,6 +184,16 @@ struct SettingsView: View {
                         Text(aiHints
                              ? "Кнопка «Значение в этом предложении» в карточке слова в читалке. Слово и предложение уходят на сервер WordLearner (ИИ Claude), без имени и почты. Обычная — быстрая; более точная — точнее подбирает значение и тратит 3 подсказки из дневного запаса вместо одной. Где есть Apple Intelligence, значение показывается сразу и бесплатно."
                              : "Перевод слова именно в этом предложении — в карточке слова в читалке.")
+                    }
+
+                    Section {
+                        Picker("Слова из книг", selection: $bookWordsTranslator) {
+                            Text("Спрашивать").tag("")
+                            Text("ИИ").tag("ai")
+                            Text("Встроенный").tag("apple")
+                        }
+                    } footer: {
+                        Text("Перевод новых слов, когда словарь создаётся из книги или файла. ИИ переводит в значении из предложения и понимает диалект; нужен интернет, слово и предложение уходят на сервер WordLearner без имени и почты.")
                     }
 
                     // Озвучка

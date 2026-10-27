@@ -37,7 +37,8 @@ enum ScanMatcher {
     }
 }
 
-/// Шаг 3: выбрать слова для нового словаря. Новым словам перевод подставляет встроенный переводчик iOS
+/// Шаг 3: выбрать слова для нового словаря. Новым словам перевод подставляет ИИ по предложению из текста
+/// (BookWordsAI) или встроенный переводчик iOS — что выбрал пользователь; не переведённое ИИ — встроенным
 struct ScanResultsView: View {
     let candidates: [ScanCandidate]
     /// Слова из файла: словарь называется по файлу и запоминает частоту — новые слова учатся первыми, от частых
@@ -64,6 +65,16 @@ struct ScanResultsView: View {
     @State private var doubtful: Set<String> = []
     /// Сколько новых слов отдано переводчику — для прогресса (сами разделы за время перевода меняются)
     @State private var translationTotal = 0
+    /// Как переводить новые слова: "ai", "apple" или "" — спросить при первом словаре
+    @AppStorage(BookWordsAI.choiceKey) private var translatorChoice = ""
+    @State private var isChoosingTranslator = false
+    @State private var hasStarted = false
+    /// Ответ ИИ по слову: словарная форма, часть речи, пояснение к значению
+    @State private var aiEntries: [String: BookWordsAI.Entry] = [:]
+    /// ИИ узнал в «новом» слове слово базы (britches → breeches): у него проверенный перевод и прогресс
+    @State private var aiBase: [String: Word] = [:]
+    /// Запас ИИ кончился или нет сети — остальное перевёл встроенный переводчик
+    @State private var aiProblem: BookWordsAI.Problem?
     /// «Отмечать слова, которые уже учу» — запоминается для следующих сканов
     @AppStorage(Self.selectLearningKey) private var selectLearning = false
     private static let selectLearningKey = "scan_select_learning"
@@ -94,16 +105,21 @@ struct ScanResultsView: View {
         candidate.existing.map { $0.state != .new } ?? false
     }
 
+    /// Слово базы: найденное сразу или узнанное ИИ
+    private func base(_ candidate: ScanCandidate) -> Word? {
+        candidate.existing ?? aiBase[candidate.id]
+    }
+
     private var newWords: [ScanCandidate] {
-        candidates.filter { $0.existing == nil && !unknown.contains($0.id) && !doubtful.contains($0.id) }
+        candidates.filter { base($0) == nil && !unknown.contains($0.id) && !doubtful.contains($0.id) }
     }
 
     private var doubtfulWords: [ScanCandidate] {
-        candidates.filter { $0.existing == nil && doubtful.contains($0.id) }
+        candidates.filter { base($0) == nil && doubtful.contains($0.id) }
     }
 
     private var unknownWords: [ScanCandidate] {
-        candidates.filter { $0.existing == nil && unknown.contains($0.id) }
+        candidates.filter { base($0) == nil && unknown.contains($0.id) }
     }
 
     /// Слова, которых нет в словаре iOS ни в американском, ни в британском написании
@@ -122,17 +138,17 @@ struct ScanResultsView: View {
 
     /// Фразовые глаголы и выражения из базы, найденные в тексте целиком
     private var phrases: [ScanCandidate] {
-        candidates.filter { $0.existing != nil && $0.extracted.isPhrase }
+        candidates.filter { base($0) != nil && $0.extracted.isPhrase }
     }
 
     /// Сложные слова сверху; из файла — самые частые
     private var knownWords: [ScanCandidate] {
-        let known = candidates.filter { $0.existing != nil && !$0.extracted.isPhrase }
+        let known = candidates.filter { base($0) != nil && !$0.extracted.isPhrase }
         return fileName == nil ? known.sorted { levelRank($0) > levelRank($1) } : known
     }
 
     private var missingTranslations: Int {
-        candidates.filter { $0.existing == nil && selected.contains($0.id) && translation(for: $0).isEmpty }.count
+        candidates.filter { base($0) == nil && selected.contains($0.id) && translation(for: $0).isEmpty }.count
     }
 
     /// Из файла слов тысячи — без перевода они просто не сохраняются, а не держат кнопку
@@ -213,7 +229,9 @@ struct ScanResultsView: View {
                     } header: {
                         sectionHeader("Не найдены в словаре", items: unknownWords)
                     } footer: {
-                        Text("Диалект, обрывки слов, редкие имена и опечатки — переводчик их не знает, поэтому они не отмечены. Нужное слово отметьте и впишите перевод сами.")
+                        Text(aiEntries.isEmpty
+                             ? "Диалект, обрывки слов, редкие имена и опечатки — переводчик их не знает, поэтому они не отмечены. Нужное слово отметьте и впишите перевод сами."
+                             : "Имена, обрывки слов и служебные слова — учить их отдельно незачем, поэтому они не отмечены.")
                     }
                 }
                 if !knownWords.isEmpty {
@@ -253,16 +271,29 @@ struct ScanResultsView: View {
             await translate(with: session)
         }
         .onAppear {
-            if translationConfig == nil {
-                unknown = Self.notInDictionary(candidates.filter { $0.existing == nil })
-                selected.subtract(unknown)
+            guard !hasStarted else { return }
+            hasStarted = true
+            unknown = Self.notInDictionary(candidates.filter { $0.existing == nil })
+            selected.subtract(unknown)
+            guard candidates.contains(where: { $0.existing == nil }) else { return }
+            switch translatorChoice {
+            case "ai": Task { await translateWithAI() }
+            case "apple": startAppleTranslation()
+            default: isChoosingTranslator = true
             }
-            if !newWords.isEmpty, translationConfig == nil {
-                translationConfig = TranslationSession.Configuration(
-                    source: Locale.Language(identifier: "en"),
-                    target: Locale.Language(identifier: "ru")
-                )
+        }
+        .confirmationDialog("Как перевести новые слова?", isPresented: $isChoosingTranslator, titleVisibility: .visible) {
+            Button("ИИ — точнее, по предложению") {
+                translatorChoice = "ai"
+                Task { await translateWithAI() }
             }
+            Button("Встроенный переводчик iOS") {
+                translatorChoice = "apple"
+                startAppleTranslation()
+            }
+            Button("Не сейчас", role: .cancel) { startAppleTranslation() }
+        } message: {
+            Text("ИИ переводит слово в значении из предложения и понимает диалект: на проверке 97% верно, у встроенного — 69%. Нужен интернет: слово и предложение уйдут на сервер WordLearner, без имени и почты. Выбор запомнится, поменять можно в Настройках.")
         }
     }
 
@@ -307,9 +338,7 @@ struct ScanResultsView: View {
         switch translationState {
         case .translating:
             let total = translationTotal
-            return total > Self.translationChunk
-                ? "Перевожу встроенным переводчиком iOS… \(translatedCount) из \(total)"
-                : "Перевожу встроенным переводчиком iOS…"
+            return total > Self.translationChunk ? "Перевожу… \(translatedCount) из \(total)" : "Перевожу…"
         case .failed:
             return fileName == nil
                 ? "Переводчик недоступен — введите перевод вручную или снимите галочку."
@@ -320,18 +349,31 @@ struct ScanResultsView: View {
                     ? "Введите перевод для отмеченных слов или снимите галочку."
                     : "Без перевода: \(missingTranslations) — такие слова не сохранятся, впишите перевод, если нужны."
             }
-            return "Перевод автоматический, без учёта контекста — проверьте его. Пример взят из вашего текста."
+            switch aiProblem {
+            case .limit:
+                return "Дневной запас ИИ-перевода закончился — остальные слова перевёл встроенный переводчик, проверьте их. Пример взят из вашего текста."
+            case .failed:
+                return "ИИ был недоступен — часть слов перевёл встроенный переводчик, проверьте их. Пример взят из вашего текста."
+            case nil:
+                return aiEntries.isEmpty
+                    ? "Перевод автоматический, без учёта контекста — проверьте его. Пример взят из вашего текста."
+                    : "Перевод ИИ — в значении из предложения (✦). Пример взят из вашего текста."
+            }
         }
     }
 
     private func newWordRow(_ candidate: ScanCandidate) -> some View {
         let word = candidate.extracted
+        let entry = aiEntries[candidate.id]
         return HStack(alignment: .top, spacing: 12) {
             checkbox(for: candidate)
             VStack(alignment: .leading, spacing: 4) {
-                titleLine(english: word.lemma, partOfSpeech: word.partOfSpeech, count: word.count)
+                titleLine(english: entry?.lemma ?? word.lemma, partOfSpeech: entry?.pos ?? word.partOfSpeech, count: word.count)
                 TextField(translationState == .translating ? "переводится…" : "перевод", text: translationBinding(for: candidate))
                     .foregroundStyle(.secondary)
+                if let entry {
+                    aiCaption(entry, surface: word.surface)
+                }
                 Text(Word.attributedExample(word.example))
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -340,15 +382,30 @@ struct ScanResultsView: View {
         }
     }
 
+    /// ✦ — перевёл ИИ; «в тексте: britches», если словарная форма другая; пояснение к значению
+    private func aiCaption(_ entry: BookWordsAI.Entry, surface: String) -> some View {
+        var parts: [String] = []
+        if entry.lemma.caseInsensitiveCompare(surface) != .orderedSame { parts.append("в тексте: \(surface)") }
+        if !entry.note.isEmpty { parts.append(entry.note) }
+        return Text("✦ " + (parts.isEmpty ? "ИИ" : parts.joined(separator: " · ")))
+            .font(.caption)
+            .foregroundStyle(.indigo)
+    }
+
     /// showsExample — пример из текста: у выражений по нему видно, в том ли значении оно стоит
     private func knownWordRow(_ candidate: ScanCandidate, showsExample: Bool = false) -> some View {
-        let word = candidate.existing!
+        let word = base(candidate)!
         return HStack(alignment: .top, spacing: 12) {
             checkbox(for: candidate)
             VStack(alignment: .leading, spacing: 4) {
                 titleLine(english: word.english, partOfSpeech: word.partOfSpeech, count: candidate.extracted.count)
                 Text(word.russian)
                     .foregroundStyle(.secondary)
+                if aiBase[candidate.id] != nil {
+                    Text("✦ в тексте: \(candidate.extracted.surface) — ИИ узнал слово базы")
+                        .font(.caption)
+                        .foregroundStyle(.indigo)
+                }
                 if showsExample {
                     Text(Word.attributedExample(candidate.extracted.example))
                         .font(.caption)
@@ -404,9 +461,71 @@ struct ScanResultsView: View {
         })
     }
 
+    /// Новые слова — ИИ по предложению из текста; что ИИ не перевёл (сеть, запас) — встроенным переводчиком
+    private func translateWithAI() async {
+        translationState = .translating
+        let targets = candidates.filter { $0.existing == nil }
+        translationTotal = targets.count
+        translatedCount = 0
+        let items = targets.map { candidate in
+            let word = candidate.extracted
+            return (id: candidate.id, item: BookWordsAI.Item(word: word.lemma, pos: word.partOfSpeech, sentence: word.example))
+        }
+        let result = await BookWordsAI.translate(items) { translatedCount = $0 }
+        aiProblem = result.problem
+        let byEnglish = Dictionary(grouping: modelContext.fetchAllWords()) { $0.english.lowercased() }
+        for candidate in targets {
+            guard let entry = result.entries[candidate.id] else { continue }
+            aiEntries[candidate.id] = entry
+            let ru = WordTranslator.cleaned(entry.ru)
+            guard entry.isStudyWord else {
+                // Имя, обрывок, служебное слово — без галочки
+                translations[candidate.id] = WordTranslator.shown(ru)
+                unknown.insert(candidate.id)
+                selected.remove(candidate.id)
+                continue
+            }
+            let lemma = entry.lemma.lowercased()
+            if lemma != candidate.extracted.lemma.lowercased(), let matches = byEnglish[lemma] {
+                // britches → breeches: слово базы — с проверенным переводом и своим прогрессом
+                let word = matches.first { $0.partOfSpeech == entry.pos } ?? matches[0]
+                aiBase[candidate.id] = word
+                unknown.remove(candidate.id)
+                if selectLearning || word.state == .new { selected.insert(candidate.id) } else { selected.remove(candidate.id) }
+                continue
+            }
+            // Слово не из словаря проверки орфографии, но ИИ его знает — значит, нужное
+            if unknown.remove(candidate.id) != nil { selected.insert(candidate.id) }
+            if WordTranslator.isRude(ru) {
+                markDoubtful(candidate.id, translation: ru)
+            } else {
+                translations[candidate.id] = ru
+            }
+        }
+        if newWords.contains(where: { translation(for: $0).isEmpty }) {
+            startAppleTranslation()
+        } else {
+            translationState = .done
+        }
+    }
+
+    private func startAppleTranslation() {
+        guard newWords.contains(where: { translation(for: $0).isEmpty }) else {
+            translationState = .done
+            return
+        }
+        if translationConfig == nil {
+            translationConfig = TranslationSession.Configuration(source: Locale.Language(identifier: "en"),
+                                                                 target: Locale.Language(identifier: "ru"))
+        } else {
+            translationConfig?.invalidate()
+        }
+    }
+
     private func translate(with session: TranslationSession) async {
         translationState = .translating
-        let sources = newWords.map { candidate in
+        // Только то, что ещё без перевода: остальное уже перевёл ИИ
+        let sources = newWords.filter { translation(for: $0).isEmpty }.map { candidate in
             let word = candidate.extracted
             return (id: candidate.id, text: WordTranslator.source(for: word.lemma, partOfSpeech: word.partOfSpeech))
         }
@@ -471,7 +590,7 @@ struct ScanResultsView: View {
     // MARK: - Сохранение
 
     private func levelRank(_ candidate: ScanCandidate) -> Int {
-        CEFRLevel.allCases.firstIndex { $0.rawValue == candidate.existing?.cefrLevel } ?? 0
+        CEFRLevel.allCases.firstIndex { $0.rawValue == base(candidate)?.cefrLevel } ?? 0
     }
 
     /// Словарь с таким же названием (без учёта регистра) — новые слова добавляются в него, а не во второй такой же
@@ -489,29 +608,35 @@ struct ScanResultsView: View {
             modelContext.insert(list)
         }
         if let photo { list.addPhoto(photo) }
+        /// Новые слова этого сохранения: ИИ мог свести две формы к одной словарной (fagged, fag) — второй раз не создаём
+        var savedNew = Set<String>()
         for candidate in candidates where selected.contains(candidate.id) {
+            let baseWord = base(candidate)
+            let entry = aiEntries[candidate.id]
+            let aiLemma = entry?.lemma.trimmingCharacters(in: .whitespaces) ?? ""
+            let english = aiLemma.isEmpty ? candidate.extracted.lemma : aiLemma
             // Из файла — запоминаем частоту: новые слова словаря учатся первыми, от частых
             if fileName != nil {
-                let key = candidate.existing.map(WordList.frequencyKey) ?? candidate.extracted.lemma.lowercased()
-                if candidate.existing != nil || !translation(for: candidate).isEmpty {
+                let key = baseWord.map(WordList.frequencyKey) ?? english.lowercased()
+                if baseWord != nil || !translation(for: candidate).isEmpty {
                     list.frequencies[key] = max(list.frequencies[key] ?? 0, candidate.extracted.count)
                 }
             }
-            if let word = candidate.existing {
+            if let word = baseWord {
                 // Слово уже в этом словаре — второй раз не добавляем
                 if !word.lists.contains(where: { $0.id == list.id }) {
                     word.lists.append(list)
                 }
             } else {
                 // Из файла слово без перевода не сохраняем — пустую карточку не выучить
-                guard !translation(for: candidate).isEmpty else { continue }
+                guard !translation(for: candidate).isEmpty, savedNew.insert(english.lowercased()).inserted else { continue }
                 let item = candidate.extracted
                 let word = Word(
-                    english: item.lemma,
+                    english: english,
                     russian: translation(for: candidate),
                     example: item.example,
                     cefrLevel: newWordLevel,
-                    partOfSpeech: item.partOfSpeech,
+                    partOfSpeech: entry?.pos ?? item.partOfSpeech,
                     isCustom: true
                 )
                 modelContext.insert(word)
