@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UniformTypeIdentifiers
 
 /// Слово, на которое нажали в книге, и предложение вокруг него
 struct TappedWord: Identifiable {
@@ -13,6 +14,7 @@ struct TappedWord: Identifiable {
 /// Читалка: глава прокручивается, нажатие на слово — перевод; место чтения запоминается
 struct BookReaderView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     @Bindable var book: Book
 
     @State private var chapters: [BookChapter] = []
@@ -37,6 +39,22 @@ struct BookReaderView: View {
     @State private var searchQuery = ""
     /// Место, найденное поиском, — подсвечено несколько секунд
     @State private var mark = ReaderMark()
+
+    /// Перевод книги, добавленный пользователем: абзацы подряд и какие из них под каким абзацем книги
+    @State private var translationParagraphs: [String] = []
+    @State private var alignment: BookAlignment?
+    /// Перевод абзацев открытой главы; nil — у абзаца своего перевода нет
+    @State private var chapterTranslations: [String?] = []
+    /// Перевод заменили — глава собирается заново
+    @State private var translationVersion = 0
+    @AppStorage(ReaderSettings.parallelKey) private var showsParallel = true
+    @State private var isImportingTranslation = false
+    @State private var isAligning = false
+    @State private var translationError: String?
+    @State private var isConfirmingTranslationRemoval = false
+    @State private var isShowingPageTranslation = false
+    /// Абзацы открытой страницы — для «Перевод страницы»; в объекте, а не в @State: листание не перерисовывает читалку
+    @State private var pageParagraphs = PageParagraphs()
 
     /// Оформление — снимок настроек: обновляется после шторки «Оформление»
     @State private var style = ReaderStyle.current()
@@ -81,6 +99,7 @@ struct BookReaderView: View {
                         guard chapterStarts.indices.contains(chapterIndex) else { return }
                         book.position = chapterStarts[chapterIndex] + paragraph
                     },
+                    onPageParagraphs: { pageParagraphs.range = $0 },
                     onTap: handleTap,
                     onPrevious: { go(to: chapterIndex - 1, atEnd: true) },
                     onNext: { go(to: chapterIndex + 1) }
@@ -97,6 +116,9 @@ struct BookReaderView: View {
                     startParagraph: startParagraph,
                     speech: speech,
                     mark: mark,
+                    translations: showsParallel ? chapterTranslations : [],
+                    translationFont: style.font.font(size: style.fontSize * 0.86),
+                    onShiftTranslation: shiftTranslation,
                     onVisible: { paragraph in
                         // Место чтения — прямо в книгу: у читалки нет состояния, которое менялось бы при прокрутке
                         guard chapterStarts.indices.contains(chapterIndex) else { return }
@@ -107,7 +129,7 @@ struct BookReaderView: View {
                     chapterNavigation
                 }
                 .equatable()
-                .id("\(chapterIndex)-\(style.phonicsID)")
+                .id("\(chapterIndex)-\(style.phonicsID)-\(showsParallel)-\(translationVersion)")
             } else {
                 Spacer()
                 ProgressView()
@@ -154,6 +176,34 @@ struct BookReaderView: View {
             BookDictionaryView(book: book)
                 .appThemedColorScheme()
         }
+        .sheet(isPresented: $isShowingPageTranslation) {
+            PageTranslationView(items: pageTranslationItems, onShift: shiftTranslation)
+                .presentationDetents([.medium, .large])
+                .appThemedColorScheme()
+        }
+        .fileImporter(isPresented: $isImportingTranslation, allowedContentTypes: UTType.bookFiles) { result in
+            if case .success(let url) = result {
+                Task { await importTranslation(url) }
+            }
+        }
+        .overlay {
+            if isAligning {
+                ProgressView("Сопоставляю перевод…")
+                    .padding(20)
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+            }
+        }
+        .alert("Не получилось", isPresented: Binding(get: { translationError != nil }, set: { if !$0 { translationError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(translationError ?? "")
+        }
+        .alert("Убрать перевод?", isPresented: $isConfirmingTranslationRemoval) {
+            Button("Отмена", role: .cancel) {}
+            Button("Убрать", role: .destructive, action: removeTranslation)
+        } message: {
+            Text("Книга останется, исчезнет только перевод. Его можно добавить снова.")
+        }
     }
 
     // MARK: - Шапка
@@ -189,6 +239,14 @@ struct BookReaderView: View {
                     .foregroundColor(style.text)
             }
             .accessibilityLabel("Поиск по книге")
+            if alignment != nil {
+                Button(action: showTranslation) {
+                    Image(systemName: "translate")
+                        .scaledFont(size: 19, weight: .semibold)
+                        .foregroundColor(style.text)
+                }
+                .accessibilityLabel(style.layout == .pages ? "Перевод страницы" : "Параллельный перевод")
+            }
             Button { isShowingAppearance = true } label: {
                 Text("Aa")
                     .font(.system(size: 19, weight: .semibold, design: .serif))
@@ -210,6 +268,7 @@ struct BookReaderView: View {
                 Button { isShowingAppearance = true } label: {
                     Label("Оформление", systemImage: "textformat.size")
                 }
+                translationMenu
                 Picker(selection: $speechSpeed) {
                     ForEach(ReaderSpeech.speeds, id: \.self) { speed in
                         Text(speed == 1 ? "Обычная" : "\(speed.formatted(.number.locale(Locale(identifier: "ru_RU"))))×").tag(speed)
@@ -227,6 +286,31 @@ struct BookReaderView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
+    }
+
+    @ViewBuilder
+    private var translationMenu: some View {
+        if alignment != nil {
+            if style.layout == .pages {
+                Button { isShowingPageTranslation = true } label: {
+                    Label("Перевод страницы", systemImage: "translate")
+                }
+            } else {
+                Toggle(isOn: $showsParallel) {
+                    Label("Перевод под абзацами", systemImage: "translate")
+                }
+            }
+            Button { isImportingTranslation = true } label: {
+                Label("Заменить перевод…", systemImage: "arrow.triangle.2.circlepath")
+            }
+            Button(role: .destructive) { isConfirmingTranslationRemoval = true } label: {
+                Label("Убрать перевод", systemImage: "trash")
+            }
+        } else {
+            Button { isImportingTranslation = true } label: {
+                Label("Добавить перевод книги…", systemImage: "doc.badge.plus")
+            }
+        }
     }
 
     // MARK: - Текст главы
@@ -305,6 +389,7 @@ struct BookReaderView: View {
             defer { start += chapter.paragraphs.count }
             return start
         }
+        loadTranslation()
         let position = book.position
         chapterIndex = chapterStarts.lastIndex { $0 <= position } ?? 0
         startParagraph = position - (chapterStarts.indices.contains(chapterIndex) ? chapterStarts[chapterIndex] : 0)
@@ -319,6 +404,8 @@ struct BookReaderView: View {
             startParagraph = min(max(book.position - chapterStarts[chapterIndex], 0), max(chapter.paragraphs.count - 1, 0))
         }
         linkedParagraphs = nil
+        updateChapterTranslations()
+        pageParagraphs.range = nil
         let paragraphs = chapter.paragraphs
         // Правила чтения — английские: в книге на другом языке не подсвечиваем
         let english = isEnglish
@@ -346,6 +433,87 @@ struct BookReaderView: View {
             let top = min(max(book.position - chapterStarts[chapterIndex], 0), max(chapter.paragraphs.count - 1, 0))
             speech.start(from: top)
         }
+    }
+
+    // MARK: - Перевод книги
+
+    private func loadTranslation() {
+        translationParagraphs = ParallelText.flatten(book.translationChapters)
+        alignment = book.alignment
+    }
+
+    private func updateChapterTranslations() {
+        chapterTranslations = alignment.map {
+            ParallelText.paragraphs(chapter: chapterIndex, alignment: $0, translation: translationParagraphs)
+        } ?? []
+    }
+
+    /// Прокрутка — перевод под абзацами включается и выключается; страницы — шторка с переводом открытой страницы
+    private func showTranslation() {
+        if style.layout == .pages {
+            isShowingPageTranslation = true
+        } else {
+            showsParallel.toggle()
+        }
+    }
+
+    /// Абзацы открытой страницы с переводом; до первого листания — несколько абзацев от места чтения
+    private var pageTranslationItems: [PageTranslationView.Item] {
+        guard let chapter, chapterStarts.indices.contains(chapterIndex) else { return [] }
+        let top = min(max(book.position - chapterStarts[chapterIndex], 0), max(chapter.paragraphs.count - 1, 0))
+        let range = pageParagraphs.range ?? top...min(top + 2, chapter.paragraphs.count - 1)
+        return range.filter(chapter.paragraphs.indices.contains).map { index in
+            PageTranslationView.Item(id: index, original: chapter.paragraphs[index],
+                                     translation: chapterTranslations.indices.contains(index) ? chapterTranslations[index] : nil)
+        }
+    }
+
+    /// Файл перевода из «Файлов»: тот же разбор, что у книг; язык должен отличаться от языка книги
+    private func importTranslation(_ url: URL) async {
+        isAligning = true
+        defer { isAligning = false }
+        guard let parsed = try? await Task.detached(priority: .userInitiated, operation: { try BookParser.parse(url) }).value else {
+            translationError = "Не получилось открыть файл. Подходят .epub без защиты, .fb2 и .txt."
+            return
+        }
+        let translation = parsed.chapters
+        guard BookLanguage.detect(translation) != language else {
+            translationError = "Похоже, это не перевод: язык файла тот же, что у книги."
+            return
+        }
+        let original = chapters
+        // Английская книга и русский перевод — пары абзацев ищутся и по словарю базы, не только по длине
+        let lexiconURL = isEnglish && BookLanguage.detect(translation) == "ru" ? Bundle.main.url(forResource: "words", withExtension: "csv") : nil
+        let aligned = await Task.detached(priority: .userInitiated) {
+            ParallelText.align(original, translation: translation, lexicon: lexiconURL.flatMap(AlignmentLexicon.load))
+        }.value
+        book.translationData = try? JSONEncoder().encode(translation)
+        book.alignmentData = try? JSONEncoder().encode(aligned)
+        try? modelContext.save()
+        loadTranslation()
+        updateChapterTranslations()
+        showsParallel = true
+        translationVersion += 1
+    }
+
+    /// «Сдвинуть перевод» с этого абзаца до конца главы: +1 — здесь следующий абзац перевода, −1 — предыдущий
+    private func shiftTranslation(from paragraph: Int, by delta: Int) {
+        guard let alignment else { return }
+        let shifted = ParallelText.shift(alignment, chapter: chapterIndex, from: paragraph, by: delta,
+                                         translationCount: translationParagraphs.count)
+        book.alignmentData = try? JSONEncoder().encode(shifted)
+        try? modelContext.save()
+        self.alignment = shifted
+        updateChapterTranslations()
+        translationVersion += 1
+    }
+
+    private func removeTranslation() {
+        book.setTranslation(nil)
+        try? modelContext.save()
+        loadTranslation()
+        updateChapterTranslations()
+        translationVersion += 1
     }
 
     /// atEnd — листают назад с первой страницы: предыдущая глава открывается на последней странице
@@ -491,6 +659,10 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
     let startParagraph: Int
     let speech: ReaderSpeech
     let mark: ReaderMark
+    /// Перевод под абзацами; пусто — не показывать
+    let translations: [String?]
+    let translationFont: Font
+    let onShiftTranslation: (Int, Int) -> Void
     let onVisible: (Int) -> Void
     let onTap: (URL) -> Void
     @ViewBuilder let navigation: () -> Navigation
@@ -501,6 +673,7 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.chapterID == rhs.chapterID && lhs.paragraphs.count == rhs.paragraphs.count
             && lhs.font == rhs.font && lhs.textColor == rhs.textColor && lhs.lineSpacing == rhs.lineSpacing
+            && lhs.translations.count == rhs.translations.count
     }
 
     var body: some View {
@@ -509,7 +682,10 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
                 LazyVStack(alignment: .leading, spacing: 14) {
                     ForEach(paragraphs.indices, id: \.self) { index in
                         ReaderParagraph(index: index, text: paragraphs[index], font: font, textColor: textColor,
-                                        lineSpacing: lineSpacing, speech: speech, mark: mark)
+                                        lineSpacing: lineSpacing, speech: speech, mark: mark,
+                                        translation: translations.indices.contains(index) ? translations[index] : nil,
+                                        translationFont: translationFont,
+                                        onShiftTranslation: { onShiftTranslation(index, $0) })
                             .id(index)
                     }
                     navigation()
@@ -565,22 +741,38 @@ private struct ReaderParagraph: View {
     let lineSpacing: CGFloat
     let speech: ReaderSpeech
     let mark: ReaderMark
+    /// Абзац перевода — под оригиналом, мельче и бледнее
+    let translation: String?
+    let translationFont: Font
+    /// Перевод не тот — сдвинуть с этого абзаца до конца главы
+    let onShiftTranslation: (Int) -> Void
 
     var body: some View {
         let isReading = speech.paragraph == index
         let isMarked = mark.paragraph == index
-        Text(isReading || isMarked ? highlighted : text)
-            .font(font)
-            .foregroundColor(textColor)
-            .lineSpacing(lineSpacing)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background {
-                if isReading {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(textColor.opacity(0.06))
-                        .padding(-8)
+        VStack(alignment: .leading, spacing: 8) {
+            Text(isReading || isMarked ? highlighted : text)
+                .font(font)
+                .foregroundColor(textColor)
+                .lineSpacing(lineSpacing)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background {
+                    if isReading {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(textColor.opacity(0.06))
+                            .padding(-8)
+                    }
                 }
+            if let translation {
+                Text(translation)
+                    .font(translationFont)
+                    .foregroundColor(textColor.opacity(0.55))
+                    .lineSpacing(lineSpacing * 0.8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+                    .contextMenu { ShiftTranslationMenu(onShift: onShiftTranslation) }
             }
+        }
     }
 
     private var highlighted: AttributedString {
@@ -598,4 +790,81 @@ private struct ReaderParagraph: View {
 /// Какие абзацы сейчас на экране. Класс без наблюдения: запись не вызывает перерисовку
 private final class VisibleParagraphs {
     var ids: [Int] = []
+}
+
+/// Перевод встал не напротив своего абзаца — сдвинуть с этого места до конца главы
+struct ShiftTranslationMenu: View {
+    let onShift: (Int) -> Void
+
+    var body: some View {
+        Section("Перевод не тот? Сдвиг до конца главы") {
+            Button { onShift(1) } label: {
+                Label("Здесь следующий абзац перевода", systemImage: "arrow.down")
+            }
+            Button { onShift(-1) } label: {
+                Label("Здесь предыдущий абзац перевода", systemImage: "arrow.up")
+            }
+        }
+    }
+}
+
+/// Абзацы открытой страницы (режим страниц) — для «Перевод страницы». Класс без наблюдения: листание не перерисовывает читалку
+final class PageParagraphs {
+    var range: ClosedRange<Int>?
+}
+
+/// «Перевод страницы»: абзацы открытой страницы и их перевод
+struct PageTranslationView: View {
+    struct Item: Identifiable {
+        let id: Int
+        let original: String
+        let translation: String?
+    }
+
+    let items: [Item]
+    /// Абзац книги и сдвиг: +1 — здесь следующий абзац перевода, −1 — предыдущий
+    let onShift: (Int, Int) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    ForEach(items) { item in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(item.original)
+                                .scaledFont(size: 14, design: .serif)
+                                .foregroundColor(.gray)
+                            HStack(alignment: .top) {
+                                Text(item.translation ?? "В переводе этот абзац объединён с соседним.")
+                                    .scaledFont(size: 17, design: .serif)
+                                    .foregroundColor(item.translation == nil ? .gray : .brandDark)
+                                    .italic(item.translation == nil)
+                                Spacer(minLength: 4)
+                                if item.translation != nil {
+                                    Menu {
+                                        ShiftTranslationMenu { onShift(item.id, $0) }
+                                    } label: {
+                                        Image(systemName: "arrow.up.arrow.down.circle")
+                                            .scaledFont(size: 18)
+                                            .foregroundColor(.gray)
+                                    }
+                                    .accessibilityLabel("Сдвинуть перевод")
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(20)
+            }
+            .background(Color.brandBackground.ignoresSafeArea())
+            .navigationTitle("Перевод страницы")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Готово") { dismiss() }
+                }
+            }
+        }
+    }
 }

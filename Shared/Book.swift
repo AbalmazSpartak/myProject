@@ -17,6 +17,10 @@ final class Book {
     var paragraphCount: Int
     /// Где остановились: номер абзаца от начала книги
     var position: Int = 0
+    /// Перевод книги, добавленный пользователем: главы — JSON массива BookChapter
+    @Attribute(.externalStorage) var translationData: Data?
+    /// Какие абзацы перевода стоят под каждым абзацем книги — JSON BookAlignment
+    @Attribute(.externalStorage) var alignmentData: Data?
 
     init(_ parsed: ParsedBook, gutenbergID: Int? = nil) {
         title = parsed.title

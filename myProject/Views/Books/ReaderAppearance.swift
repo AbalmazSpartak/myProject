@@ -125,6 +125,8 @@ enum ReaderSettings {
     static let layoutKey = "reader_layout"
     static let pageTurnKey = "reader_page_turn"
     /// Подсветка правил чтения: "off" — выключена; иначе включена (раньше были режимы "tricky" и "all")
+    /// Перевод под абзацами (книга с добавленным переводом, режим прокрутки)
+    static let parallelKey = "reader_parallel"
     static let phonicsKey = "reader_phonics"
     /// Какие правила подсвечивать — галочки; пусто — как было в режиме («Все правила» → все, иначе «Сложное»)
     static let phonicsRulesKey = "reader_phonics_rules"

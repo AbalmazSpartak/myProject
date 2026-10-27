@@ -55,7 +55,7 @@ struct BooksView: View {
             BookReaderView(book: book)
                 .toolbar(.hidden, for: .navigationBar)
         }
-        .fileImporter(isPresented: $isImporting, allowedContentTypes: [.epub, .plainText]) { result in
+        .fileImporter(isPresented: $isImporting, allowedContentTypes: UTType.bookFiles) { result in
             if case .success(let url) = result {
                 Task { await importBook(url) }
             }
@@ -183,7 +183,7 @@ struct BooksView: View {
             try? modelContext.save()
             openedBook = book
         } catch {
-            errorMessage = "Не получилось открыть книгу. Подходят .epub без защиты (например, не из Apple Books) и .txt."
+            errorMessage = "Не получилось открыть книгу. Подходят .epub без защиты (например, не из Apple Books), .fb2 и .txt."
         }
     }
 }

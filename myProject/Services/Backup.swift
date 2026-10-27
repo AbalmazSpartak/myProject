@@ -112,6 +112,9 @@ nonisolated struct BackupFile: Codable, Sendable {
         var cover: Data?
         var chaptersData: Data
         var position: Int
+        /// Перевод книги и сопоставление абзацев — в копиях до перевода их нет
+        var translationData: Data?
+        var alignmentData: Data?
     }
 
     /// Что в копии — для подтверждения перед восстановлением
@@ -194,7 +197,8 @@ enum Backup {
         let books = includeMedia ? ((try? context.fetch(FetchDescriptor<Book>())) ?? []).map { book in
             BackupFile.BookRecord(id: book.id, title: book.title, author: book.author, addedAt: book.addedAt,
                                   lastOpenedAt: book.lastOpenedAt, gutenbergID: book.gutenbergID, cover: book.coverData,
-                                  chaptersData: book.chaptersData, position: book.position)
+                                  chaptersData: book.chaptersData, position: book.position,
+                                  translationData: book.translationData, alignmentData: book.alignmentData)
         } : []
         return BackupFile(includesMedia: includeMedia, words: words, lists: lists, categories: categories, profile: profile,
                           topics: topics, topicRatings: topicRatings, topicComments: topicComments, books: books,
@@ -371,6 +375,8 @@ enum Backup {
             book.addedAt = record.addedAt
             book.lastOpenedAt = record.lastOpenedAt
             book.position = record.position
+            book.translationData = record.translationData
+            book.alignmentData = record.alignmentData
             context.insert(book)
         }
 

@@ -166,6 +166,8 @@ struct ReaderPagedText: View, Equatable {
     /// Язык книги: перевод и «В словарь» — только в английской
     let language: String
     let onVisible: (Int) -> Void
+    /// Абзацы открытой страницы — для «Перевод страницы»
+    let onPageParagraphs: (ClosedRange<Int>) -> Void
     let onTap: (URL) -> Void
     let onPrevious: () -> Void
     let onNext: () -> Void
@@ -245,6 +247,7 @@ struct ReaderPagedText: View, Equatable {
             if page == -1 { onPrevious(); return }
             if page == pages.count, hasNext { onNext(); return }
             if let first = pages[safe: page]?.first?.paragraph { onVisible(first) }
+            reportPageParagraphs()
         }
         // Чтение вслух листает само: читаемое слово ушло на следующую страницу — перелистываем
         .onChange(of: speech.paragraph) { _, _ in followSpeech() }
@@ -255,6 +258,11 @@ struct ReaderPagedText: View, Equatable {
             clearSelection()
             page = target
         }
+    }
+
+    private func reportPageParagraphs() {
+        guard let segments = pages[safe: page], let first = segments.first?.paragraph, let last = segments.last?.paragraph else { return }
+        onPageParagraphs(first...last)
     }
 
     /// Страница с найденным словом: абзац и место слова в нём
@@ -529,6 +537,7 @@ struct ReaderPagedText: View, Equatable {
         let keep = pages.isEmpty ? startParagraph : (pages[safe: page]?.first?.paragraph ?? startParagraph)
         let opening = pages.isEmpty
         pages = result
+        defer { reportPageParagraphs() }
         // Глава открыта поиском — сразу страница с найденным словом, а не начало абзаца
         if opening, mark.paragraph == startParagraph, let target = markedPage() {
             page = target
