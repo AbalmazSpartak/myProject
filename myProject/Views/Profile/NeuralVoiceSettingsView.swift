@@ -1,11 +1,10 @@
 import SwiftUI
 
 /// Настройки → «Озвучка» → «Нейросетевой голос»: скачать модель, включить, выбрать голос, послушать, удалить;
-/// книги вслух этим голосом и лёгкие голоса Piper для английских и русских книг
+/// лёгкие голоса Piper для английских и русских книг; переключатель «Читать книги этим голосом» — в Настройках
 struct NeuralVoiceSettingsView: View {
     @AppStorage(NeuralVoice.enabledKey) private var isEnabled = false
     @AppStorage(NeuralVoice.voiceKey) private var voiceID = 1
-    @AppStorage(NeuralVoice.booksKey) private var readsBooks = true
     @State private var voice = NeuralVoice.shared
     @State private var kokoroML = KokoroML.shared
     @AppStorage(KokoroML.preloadKey) private var preloadKokoro = true
@@ -26,14 +25,6 @@ struct NeuralVoiceSettingsView: View {
 
                 piperSection(language: "ru", choice: $russianChoice, header: "Русские книги",
                              footer: "Голос Piper для чтения русских книг вслух, мужской, без интернета. Скачивается отдельно (\(NeuralVoice.piperDownloadSize)); при скачивании другого голоса прежний удаляется.")
-
-                if voice.phase == .ready || kokoroML.isReady || voice.piperPhase("en") == .ready || voice.piperPhase("ru") == .ready {
-                    Section {
-                        Toggle("Читать книги этим голосом", isOn: $readsBooks)
-                    } footer: {
-                        Text("Английские книги читает Kokoro, если устройство успевает, иначе Piper; русские — Piper. Подсвечивается всё предложение: время отдельных слов нейросеть не отдаёт. Заряда тратится больше, чем с системным голосом.")
-                    }
-                }
 
                 if voice.phase == .ready {
                     Section {

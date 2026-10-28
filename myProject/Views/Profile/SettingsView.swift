@@ -34,9 +34,17 @@ struct SettingsView: View {
     @AppStorage(SpeechSettings.rateKey) private var speechRate = SpeechSettings.defaultRate
     @AppStorage(SpeechSettings.autoSpeakKey) private var autoSpeak = false
     @AppStorage(NeuralVoice.enabledKey) private var neuralVoiceEnabled = false
+    @AppStorage(NeuralVoice.booksKey) private var neuralReadsBooks = true
+    @State private var neuralVoice = NeuralVoice.shared
+    @State private var kokoroML = KokoroML.shared
 
     private var neuralVoiceSummary: String {
         NeuralVoice.isInstalled ? (neuralVoiceEnabled ? "включён" : "выключен") : "не скачан"
+    }
+    /// Скачан хоть один нейроголос — Kokoro (процессор или нейроядро) или Piper
+    private var hasNeuralVoice: Bool {
+        neuralVoice.phase == .ready || kokoroML.isReady
+            || neuralVoice.piperPhase("en") == .ready || neuralVoice.piperPhase("ru") == .ready
     }
     @AppStorage(DailyReminder.enabledKey) private var reminderEnabled = false
     @AppStorage(DailyReminder.timeKey) private var reminderTime = DailyReminder.defaultTime
@@ -120,12 +128,6 @@ struct SettingsView: View {
                 LabeledContent("Голос", value: VoiceSummary.current(accent: speechAccent, voiceID: speechVoice))
             }
 
-            NavigationLink {
-                NeuralVoiceSettingsView()
-            } label: {
-                LabeledContent("Нейросетевой голос", value: neuralVoiceSummary)
-            }
-
             VStack(alignment: .leading, spacing: 4) {
                 Text("Скорость речи")
                 Slider(value: $speechRate, in: SpeechSettings.rateRange) {
@@ -147,6 +149,29 @@ struct SettingsView: View {
             } label: {
                 Label("Прослушать", systemImage: "speaker.wave.2.fill")
             }
+        }
+    }
+
+    /// Нейроголос: экран со скачиванием и выбором голосов, а «Читать книги этим голосом» — здесь, на виду
+    @ViewBuilder
+    private var neuralSection: some View {
+        Section {
+            NavigationLink {
+                NeuralVoiceSettingsView()
+            } label: {
+                LabeledContent("Нейросетевой голос", value: neuralVoiceSummary)
+            }
+
+            Toggle("Читать книги этим голосом", isOn: $neuralReadsBooks)
+
+            if neuralReadsBooks && !hasNeuralVoice {
+                Label("Чтобы заработало, откройте «Нейросетевой голос» и скачайте голос. Пока его нет, книги читает обычный голос iPhone.",
+                      systemImage: "info.circle")
+                    .scaledFont(size: 14)
+                    .foregroundColor(.orange)
+            }
+        } footer: {
+            Text("Включено — книги читает нейросетевой голос (Kokoro или Piper), если он скачан. Выключено — обычный голос iPhone с акцентом, голосом и скоростью из «Озвучки». Нейроголос тратит больше заряда.")
         }
     }
 
@@ -199,12 +224,14 @@ struct SettingsView: View {
                     if mode == .learning {
                         personalSection
                         voiceSection
+                        neuralSection
                         modeSection
                         appearanceSection
                     } else {
                         appearanceSection
                         modeSection
                         voiceSection
+                        neuralSection
                     }
 
                     // Обучение
