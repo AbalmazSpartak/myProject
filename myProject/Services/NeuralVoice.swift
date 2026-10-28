@@ -45,6 +45,11 @@ final class NeuralVoice {
         Voice(id: 10, name: "Lewis", accent: "брит.", female: false),
     ]
 
+    /// Голоса Kokoro выбранного акцента ("en-GB" — британские, иначе американские)
+    static func voices(accent: String) -> [Voice] {
+        voices.filter { $0.accent == (accent == "en-GB" ? "брит." : "амер.") }
+    }
+
     /// Лёгкие голоса Piper для книг — только со свободной лицензией: CC0 или общественное достояние
     /// (у «Ирины» лицензия записи неизвестна; «Руслан», hfc и Ryan — только некоммерческие)
     enum PiperVoice: String, CaseIterable, Identifiable, Sendable {
@@ -441,7 +446,8 @@ final class NeuralVoice {
     /// ничего не запускает заново, а нажатие на другую отменяет старую — очередь не копится
     @discardableResult
     func speak(_ text: String, slow: Bool = false) -> Bool {
-        guard isActive else { return false }
+        // Выбрали системный голос в «Озвучке» — слова говорит он, даже если Kokoro скачан
+        guard isActive, !SpeechSettings.forcesSystemVoice else { return false }
         let voice = selectedVoice
         // Скорость из «Озвучки» (0,75…1,25); «медленно» — ещё на 30% тише
         let speed = Float(SpeechSettings.neuralSpeedFactor * (slow ? 0.7 : 1.0))

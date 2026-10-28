@@ -31,6 +31,7 @@ struct SettingsView: View {
     @AppStorage(SessionLength.key) private var sessionLength = SessionLength.defaultValue
     @AppStorage(SpeechSettings.accentKey) private var speechAccent = SpeechSettings.defaultAccent
     @AppStorage(SpeechSettings.voiceKey) private var speechVoice = ""
+    @AppStorage(NeuralVoice.voiceKey) private var neuralVoiceID = 1
     @AppStorage(SpeechSettings.rateKey) private var speechRate = SpeechSettings.defaultRate
     @AppStorage(SpeechSettings.autoSpeakKey) private var autoSpeak = false
     @AppStorage(NeuralVoice.booksKey) private var neuralReadsBooks = true
@@ -116,13 +117,18 @@ struct SettingsView: View {
     @ViewBuilder
     private var voiceSection: some View {
         Section(header: Text("Озвучка"), footer: Text(mode == .learning
-                                                      ? "При переводе с русского на английский слово звучит после ответа, чтобы не подсказывать. Если скачан нейросетевой голос Kokoro, слова озвучивает он (голос выбирается на его экране), а акцент и голос выше — для обычного голоса."
+                                                      ? "При переводе с русского на английский слово звучит после ответа, чтобы не подсказывать. В списке «Голос» — нейросетевые голоса Kokoro (если скачан) и системные: слова говорит тот, что отмечен. Акцент сразу меняет список."
                                                       : "Акцент, голос и скорость — для английских книг. Книги на других языках читает голос своего языка.")) {
             Picker("Акцент", selection: $speechAccent) {
                 Text("Американский").tag("en-US")
                 Text("Британский").tag("en-GB")
             }
             .pickerStyle(.segmented)
+            // Голос Kokoro другого акцента не подходит — берём первый голос нового акцента
+            .onChange(of: speechAccent) { _, accent in
+                let list = NeuralVoice.voices(accent: accent)
+                if !list.contains(where: { $0.id == neuralVoiceID }), let first = list.first { neuralVoiceID = first.id }
+            }
 
             NavigationLink {
                 VoicePickerView()

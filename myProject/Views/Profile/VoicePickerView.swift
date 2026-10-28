@@ -6,6 +6,9 @@ import AVFoundation
 struct VoicePickerView: View {
     @AppStorage(SpeechSettings.accentKey) private var accent = SpeechSettings.defaultAccent
     @AppStorage(SpeechSettings.voiceKey) private var voiceID = ""
+    @AppStorage(SpeechSettings.wordsEngineKey) private var wordsEngine = ""
+    @AppStorage(NeuralVoice.voiceKey) private var neuralID = 1
+    @State private var neuralVoice = NeuralVoice.shared
     @State private var voices: [AVSpeechSynthesisVoice] = []
 
     private static let sample = "Hello! This is how English words will sound."
@@ -17,18 +20,44 @@ struct VoicePickerView: View {
             .filter { !$0.voices.isEmpty }
     }
 
+    /// Слова сейчас говорит Kokoro: он скачан, и системный голос не выбран
+    private var neuralOn: Bool { neuralVoice.phase == .ready && wordsEngine != "system" }
+
     var body: some View {
         List {
             Group {
+                if neuralVoice.phase == .ready {
+                    Section {
+                        ForEach(NeuralVoice.voices(accent: accent)) { item in
+                            Button {
+                                wordsEngine = ""
+                                neuralID = item.id
+                                TextToSpeechManager.shared.speak(Self.sample)
+                            } label: {
+                                row(title: item.name, subtitle: item.female ? "женский" : "мужской",
+                                    isSelected: neuralOn && neuralID == item.id)
+                            }
+                        }
+                    } header: {
+                        Text("Нейросетевые · Kokoro")
+                    } footer: {
+                        Text("Звучат живее системных, работают без интернета. Акцент выбирается в «Озвучке».")
+                    }
+                }
+
                 Section {
                     Button {
+                        wordsEngine = "system"
                         voiceID = ""
                         if let voice = SpeechSettings.resolveVoice(accent: accent, identifier: "") {
                             TextToSpeechManager.shared.preview(Self.sample, voice: voice)
                         }
                     } label: {
-                        row(title: "Автоматически", subtitle: autoSubtitle, isSelected: voiceID.isEmpty || !voices.contains { $0.identifier == voiceID })
+                        row(title: "Автоматически", subtitle: autoSubtitle,
+                            isSelected: !neuralOn && (voiceID.isEmpty || !voices.contains { $0.identifier == voiceID }))
                     }
+                } header: {
+                    if neuralVoice.phase == .ready { Text("Системные") }
                 } footer: {
                     Text("Приложение само берёт лучший скачанный голос для выбранного акцента.")
                 }
@@ -37,10 +66,11 @@ struct VoicePickerView: View {
                     Section(group.title) {
                         ForEach(group.voices, id: \.identifier) { voice in
                             Button {
+                                wordsEngine = "system"
                                 voiceID = voice.identifier
                                 TextToSpeechManager.shared.preview(Self.sample, voice: voice)
                             } label: {
-                                row(title: voice.name, subtitle: nil, isSelected: voiceID == voice.identifier)
+                                row(title: voice.name, subtitle: nil, isSelected: !neuralOn && voiceID == voice.identifier)
                             }
                         }
                     }
@@ -111,6 +141,12 @@ struct VoicePickerView: View {
 /// Название выбранного голоса для строки в «Озвучке»
 enum VoiceSummary {
     static func current(accent: String, voiceID: String) -> String {
+        // Слова говорит Kokoro — в строке его голос
+        let defaults = UserDefaults.standard
+        if NeuralVoice.shared.phase == .ready, defaults.string(forKey: SpeechSettings.wordsEngineKey) != "system",
+           let neural = NeuralVoice.voices.first(where: { $0.id == (defaults.object(forKey: NeuralVoice.voiceKey) as? Int ?? 1) }) {
+            return neural.name
+        }
         let voice = SpeechSettings.resolveVoice(accent: accent, identifier: voiceID)
         let chosen = SpeechSettings.voices(for: accent).contains { $0.identifier == voiceID }
         guard let voice else { return "Авто" }

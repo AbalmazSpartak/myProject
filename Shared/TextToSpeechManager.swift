@@ -28,6 +28,12 @@ enum SpeechSettings {
     static let autoSpeakKey = "speech_auto"
     /// Выбранный голос (identifier); пусто — автоматически лучший скачанный для акцента
     static let voiceKey = "speech_voice"
+    /// Чем озвучивать слова: пусто — Kokoro, если скачан, иначе системный; "system" — выбрали системный голос в списке «Голос»
+    static let wordsEngineKey = "speech_words_engine"
+
+    static var forcesSystemVoice: Bool {
+        UserDefaults.standard.string(forKey: wordsEngineKey) == "system"
+    }
 
     /// Голоса акцента: премиум и улучшенные первыми, внутри — по имени.
     /// Без «забавных» (Bells, Bad News…) и личного голоса — его Apple сторонним приложениям не даёт

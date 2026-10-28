@@ -4,6 +4,7 @@ import SwiftUI
 /// лёгкие голоса Piper для английских и русских книг; переключатель «Читать книги этим голосом» — в Настройках
 struct NeuralVoiceSettingsView: View {
     @AppStorage(NeuralVoice.voiceKey) private var voiceID = 1
+    @AppStorage(SpeechSettings.wordsEngineKey) private var wordsEngine = ""
     @State private var voice = NeuralVoice.shared
     @State private var kokoroML = KokoroML.shared
     @AppStorage(KokoroML.preloadKey) private var preloadKokoro = true
@@ -84,6 +85,8 @@ struct NeuralVoiceSettingsView: View {
             }
         }
         .onAppear { voice.warmUp() }
+        // Выбрали голос Kokoro — слова снова говорит он, а не системный
+        .onChange(of: voiceID) { _, _ in wordsEngine = "" }
         .alert("Удалить голос?", isPresented: Binding(get: { piperToRemove != nil }, set: { if !$0 { piperToRemove = nil } })) {
             Button("Отмена", role: .cancel) {}
             Button("Удалить", role: .destructive) {
