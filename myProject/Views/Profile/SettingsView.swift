@@ -37,8 +37,11 @@ struct SettingsView: View {
     @State private var neuralVoice = NeuralVoice.shared
     @State private var kokoroML = KokoroML.shared
 
+    /// Что видно у строки «Нейросетевой голос»: слова озвучивает скачанный Kokoro; книги — Kokoro на нейроядре или Piper, если включено «Читать книги этим голосом»
     private var neuralVoiceSummary: String {
-        NeuralVoice.isInstalled ? "скачан" : "не скачан"
+        let readsBooks = neuralReadsBooks && (kokoroML.isReady || neuralVoice.piperPhase("en") == .ready || neuralVoice.piperPhase("ru") == .ready)
+        if neuralVoice.phase == .ready || readsBooks { return "используется" }
+        return hasNeuralVoice ? "не используется" : "не скачан"
     }
     /// Скачан хоть один нейроголос — Kokoro (процессор или нейроядро) или Piper
     private var hasNeuralVoice: Bool {
