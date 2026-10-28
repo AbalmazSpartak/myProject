@@ -25,8 +25,9 @@ struct NeuralVoiceSettingsView: View {
                 piperSection(language: "ru", choice: $russianChoice, header: "Русские книги",
                              footer: "Голос Piper для чтения русских книг вслух, мужской, без интернета. Скачивается отдельно (\(NeuralVoice.piperDownloadSize)); при скачивании другого голоса прежний удаляется.")
 
-                if voice.phase == .ready {
-                    Section {
+                // Один раздел: выбор голоса, прослушать, «Голос скачан» (или скачать), удалить
+                Section {
+                    if voice.phase == .ready {
                         Picker("Голос", selection: $voiceID) {
                             ForEach(NeuralVoice.voices) { item in
                                 Text(item.title).tag(item.id)
@@ -49,21 +50,15 @@ struct NeuralVoiceSettingsView: View {
                         if voice.kokoroTooSlow {
                             Button("Проверить скорость снова") { voice.resetKokoroCheck() }
                         }
-                    } footer: {
-                        Text(voice.kokoroTooSlow
-                             ? "На этом устройстве Kokoro не успевает читать книги без пауз — их читает голос Piper (если скачан) или системный. Слова Kokoro озвучивает как раньше."
-                             : "Фраза готовится от полусекунды до нескольких секунд — на новых iPhone быстрее; уже сказанные слова повторяются сразу.")
                     }
-
-                    Section {
+                    status
+                    if voice.phase == .ready {
                         Button("Удалить голос", role: .destructive) { isConfirmingRemove = true }
                     }
-                }
-
-                Section {
-                    status
+                } header: {
+                    Text("Голос Kokoro")
                 } footer: {
-                    Text("Голос Kokoro звучит живее системного и работает без интернета. Скачивается один раз (\(NeuralVoice.downloadSize)), в резервную копию iCloud не попадает. Пока голос не скачан или выключен — говорит системный.")
+                    Text(kokoroFooter)
                 }
 
                 if KokoroML.isSupported {
@@ -102,6 +97,15 @@ struct NeuralVoiceSettingsView: View {
         } message: {
             Text("Освободится \(NeuralVoice.downloadSize). Озвучка станет системной, голос можно скачать снова.")
         }
+    }
+
+    private var kokoroFooter: String {
+        let about = "Голос Kokoro звучит живее системного и работает без интернета. Скачивается один раз (\(NeuralVoice.downloadSize)), в резервную копию iCloud не попадает. Пока голос не скачан или выключен — говорит системный."
+        guard voice.phase == .ready else { return about }
+        let state = voice.kokoroTooSlow
+            ? "На этом устройстве Kokoro не успевает читать книги без пауз — их читает голос Piper (если скачан) или системный. Слова Kokoro озвучивает как раньше."
+            : "Фраза готовится от полусекунды до нескольких секунд — на новых iPhone быстрее; уже сказанные слова повторяются сразу."
+        return state + "\n\n" + about
     }
 
     @ViewBuilder
