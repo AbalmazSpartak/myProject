@@ -129,7 +129,7 @@ final class NeuralVoice {
     static let downloadSize = "~100 МБ, на iPhone ~150 МБ"
     static let piperDownloadSize = "~67 МБ, на iPhone ~75 МБ"
     /// Для кнопки «Скачать»: одно число вместо двух
-    static let piperDownloadSizeShort = "около 75 МБ"
+    static let piperDownloadSizeShort = "~75 МБ"
 
     private nonisolated static let archiveURL = URL(string: "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-int8-en-v0_19.tar.bz2")!
     private nonisolated static let folderName = "kokoro-int8-en-v0_19"
