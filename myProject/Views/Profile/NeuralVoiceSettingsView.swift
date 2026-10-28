@@ -20,10 +20,10 @@ struct NeuralVoiceSettingsView: View {
         List {
             Group {
                 piperSection(language: "en", choice: $englishChoice, header: "Английские книги",
-                             footer: "Лёгкий голос Piper: читает без пауз даже там, где Kokoro не успевает (iPhone 12, iPad Air 4 и старше). Без интернета, свободная лицензия. Скачивается отдельно (\(NeuralVoice.piperDownloadSize)); при скачивании другого голоса прежний удаляется. Скачали — английские книги читает он; вернуть Kokoro можно здесь же.")
+                             footer: "Лёгкий голос Piper читает без пауз и без интернета. Скачивается отдельно (\(NeuralVoice.piperDownloadSize)).")
 
                 piperSection(language: "ru", choice: $russianChoice, header: "Русские книги",
-                             footer: "Голос Piper для чтения русских книг вслух, мужской, без интернета. Скачивается отдельно (\(NeuralVoice.piperDownloadSize)); при скачивании другого голоса прежний удаляется.")
+                             footer: "Голос Piper для русских книг, без интернета. Скачивается отдельно (\(NeuralVoice.piperDownloadSize)).")
 
                 // Один раздел: выбор голоса, прослушать, удалить — или «Скачать голос», пока не скачан
                 Section {
@@ -67,7 +67,7 @@ struct NeuralVoiceSettingsView: View {
                     } header: {
                         Text("Kokoro на нейроядре — для книг")
                     } footer: {
-                        Text("Тот же голос Kokoro (выбор голоса — выше), но на нейроядре iPhone: читает английские книги без пауз даже на iPhone 12, подсвечивается каждое слово. Скачивается отдельно (\(KokoroML.downloadSize)); в память загружается около 25 секунд — при открытии английской книги, а с «Загружать при запуске» в режиме «Чтение» — сразу при запуске приложения, если последняя книга английская. В памяти занимает ~700 МБ; через 10 минут без чтения выгружается.")
+                        Text("Английские книги без пауз, подсвечивается каждое слово. Скачивается отдельно (\(KokoroML.downloadSize)).")
                     }
                 }
             }
@@ -76,6 +76,11 @@ struct NeuralVoiceSettingsView: View {
         .brandListBackground()
         .navigationTitle("Нейросетевой голос")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                HelpButton(topic: .neuralVoice)
+            }
+        }
         .onAppear { voice.warmUp() }
         .alert("Удалить голос?", isPresented: Binding(get: { piperToRemove != nil }, set: { if !$0 { piperToRemove = nil } })) {
             Button("Отмена", role: .cancel) {}
@@ -100,12 +105,9 @@ struct NeuralVoiceSettingsView: View {
     }
 
     private var kokoroFooter: String {
-        let about = "Голос Kokoro звучит живее системного и работает без интернета. Скачивается один раз (\(NeuralVoice.downloadSize)), в резервную копию iCloud не попадает. Пока голос не скачан или выключен — говорит системный."
-        guard voice.phase == .ready else { return about }
-        let state = voice.kokoroTooSlow
-            ? "На этом устройстве Kokoro не успевает читать книги без пауз — их читает голос Piper (если скачан) или системный. Слова Kokoro озвучивает как раньше."
-            : "Фраза готовится от полусекунды до нескольких секунд — на новых iPhone быстрее; уже сказанные слова повторяются сразу."
-        return state + "\n\n" + about
+        let about = "Звучит живее системного, работает без интернета. Скачивается один раз (\(NeuralVoice.downloadSize))."
+        guard voice.phase == .ready, voice.kokoroTooSlow else { return about }
+        return "На этом устройстве Kokoro не успевает читать книги без пауз — их читает Piper (если скачан) или системный голос.\n\n" + about
     }
 
     @ViewBuilder
