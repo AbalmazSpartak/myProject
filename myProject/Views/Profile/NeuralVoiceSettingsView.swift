@@ -20,10 +20,10 @@ struct NeuralVoiceSettingsView: View {
         List {
             Group {
                 piperSection(language: "en", choice: $englishChoice, header: "Английские книги",
-                             footer: "Лёгкий голос Piper читает без пауз и без интернета. Скачивается отдельно (\(NeuralVoice.piperDownloadSize)).")
+                             footer: "Лёгкий голос Piper")
 
                 piperSection(language: "ru", choice: $russianChoice, header: "Русские книги",
-                             footer: "Голос Piper для русских книг, без интернета. Скачивается отдельно (\(NeuralVoice.piperDownloadSize)).")
+                             footer: "Лёгкий голос Piper")
 
                 // Один раздел: выбор голоса, прослушать, удалить — или «Скачать голос», пока не скачан
                 Section {
@@ -215,7 +215,7 @@ struct NeuralVoiceSettingsView: View {
             Button {
                 voice.downloadPiper(choice)
             } label: {
-                Label("Скачать «\(choice.title)» (\(NeuralVoice.piperDownloadSize))", systemImage: "arrow.down.circle.fill")
+                Label("Скачать «\(choice.title)» (\(NeuralVoice.piperDownloadSizeShort))", systemImage: "arrow.down.circle.fill")
             }
             .disabled(voice.isDownloading)
         }
