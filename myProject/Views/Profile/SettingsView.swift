@@ -46,139 +46,165 @@ struct SettingsView: View {
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var isChoosingAvatar = false
     
+    /// Имя и фото — только в «Изучении»
+    @ViewBuilder
+    private var personalSection: some View {
+        Section(header: Text("Личные данные")) {
+            HStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(Color.teal.opacity(0.15))
+                        .frame(width: 60, height: 60)
+                
+                    if let data = profile.avatarData, let uiImage = UIImage(data: data) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 60, height: 60)
+                            .clipShape(Circle())
+                    } else {
+                        Image(systemName: "person.fill")
+                            .scaledFont(size: 30)
+                            .foregroundColor(.teal)
+                    }
+                }
+            
+                VStack(alignment: .leading, spacing: 6) {
+                    // Подпись PhotosPicker — Sendable-замыкание: профиль читаем заранее
+                    let photoButtonTitle = profile.avatarData == nil ? "Загрузить фото" : "Изменить фото"
+                    PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                        Text(photoButtonTitle)
+                            .scaledFont(size: 15, weight: .semibold)
+                            .foregroundColor(.teal)
+                    }
+                    .buttonStyle(.borderless)
+
+                    Button("Выбрать аватарку") { isChoosingAvatar = true }
+                        .scaledFont(size: 15, weight: .semibold)
+                        .foregroundColor(.teal)
+                        .buttonStyle(.borderless)
+                
+                    if profile.avatarData != nil {
+                        Button("Удалить фото", role: .destructive) {
+                            profile.avatarData = nil
+                            selectedPhotoItem = nil
+                        }
+                        .scaledFont(size: 13)
+                        .buttonStyle(.borderless)
+                    }
+                }
+            }
+            .padding(.vertical, 4)
+        
+            TextField("Ваше имя", text: $profile.name)
+                .autocorrectionDisabled()
+        }
+    
+    }
+
+    /// Озвучка
+    @ViewBuilder
+    private var voiceSection: some View {
+        Section(header: Text("Озвучка"), footer: Text(mode == .learning
+                                                      ? "При переводе с русского на английский слово звучит после ответа, чтобы не подсказывать."
+                                                      : "Акцент, голос и скорость — для английских книг. Книги на других языках читает голос своего языка.")) {
+            Picker("Акцент", selection: $speechAccent) {
+                Text("Американский").tag("en-US")
+                Text("Британский").tag("en-GB")
+            }
+            .pickerStyle(.segmented)
+
+            NavigationLink {
+                VoicePickerView()
+            } label: {
+                LabeledContent("Голос", value: VoiceSummary.current(accent: speechAccent, voiceID: speechVoice))
+            }
+
+            NavigationLink {
+                NeuralVoiceSettingsView()
+            } label: {
+                LabeledContent("Нейросетевой голос", value: neuralVoiceSummary)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Скорость речи")
+                Slider(value: $speechRate, in: SpeechSettings.rateRange) {
+                    Text("Скорость речи")
+                } minimumValueLabel: {
+                    Image(systemName: "tortoise.fill").foregroundColor(.gray)
+                } maximumValueLabel: {
+                    Image(systemName: "hare.fill").foregroundColor(.gray)
+                }
+            }
+            .padding(.vertical, 4)
+
+            if mode == .learning {
+                Toggle("Озвучивать слово сразу", isOn: $autoSpeak)
+            }
+
+            Button {
+                TextToSpeechManager.shared.speak("Hello! This is how English words will sound.")
+            } label: {
+                Label("Прослушать", systemImage: "speaker.wave.2.fill")
+            }
+        }
+    }
+
+    /// Выбор режима приложения
+    @ViewBuilder
+    private var modeSection: some View {
+        Section {
+            Picker("Режим", selection: modeChoice) {
+                ForEach(AppMode.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
+                Text("Спрашивать").tag("ask")
+            }
+            .pickerStyle(.segmented)
+        } header: {
+            Text("Режим")
+        } footer: {
+            Text(asksMode
+                 ? "При каждом запуске приложение спросит, что открыть: изучение слов или читалку."
+                 : mode == .learning
+                 ? "Слова, повторения, тренировки, игры и книги."
+                 : "Только библиотека и читалка. Слова и прогресс сохраняются — вернуть «Изучение» можно в любой момент.")
+        }
+    }
+
+    /// Тема и вид «Обзора»
+    @ViewBuilder
+    private var appearanceSection: some View {
+        Section(header: Text("Оформление")) {
+            Picker("Тема оформления", selection: $selectedTheme) {
+                Text("Системная").tag("system")
+                Text("Светлая").tag("light")
+                Text("Тёмная").tag("dark")
+            }
+            .pickerStyle(.segmented)
+
+            if mode == .learning {
+                NavigationLink {
+                    OverviewSettingsView()
+                } label: {
+                    LabeledContent("Обзор", value: overviewLayout == .standard ? "Стандартный" : "Настроен")
+                }
+            }
+        }
+    }
+
     var body: some View {
         NavigationStack {
             Form {
                 Group {
-                    // Личные данные
-                    Section(header: Text("Личные данные")) {
-                        HStack(spacing: 16) {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.teal.opacity(0.15))
-                                    .frame(width: 60, height: 60)
-                            
-                                if let data = profile.avatarData, let uiImage = UIImage(data: data) {
-                                    Image(uiImage: uiImage)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 60, height: 60)
-                                        .clipShape(Circle())
-                                } else {
-                                    Image(systemName: "person.fill")
-                                        .scaledFont(size: 30)
-                                        .foregroundColor(.teal)
-                                }
-                            }
-                        
-                            VStack(alignment: .leading, spacing: 6) {
-                                // Подпись PhotosPicker — Sendable-замыкание: профиль читаем заранее
-                                let photoButtonTitle = profile.avatarData == nil ? "Загрузить фото" : "Изменить фото"
-                                PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                                    Text(photoButtonTitle)
-                                        .scaledFont(size: 15, weight: .semibold)
-                                        .foregroundColor(.teal)
-                                }
-                                .buttonStyle(.borderless)
-
-                                Button("Выбрать аватарку") { isChoosingAvatar = true }
-                                    .scaledFont(size: 15, weight: .semibold)
-                                    .foregroundColor(.teal)
-                                    .buttonStyle(.borderless)
-                            
-                                if profile.avatarData != nil {
-                                    Button("Удалить фото", role: .destructive) {
-                                        profile.avatarData = nil
-                                        selectedPhotoItem = nil
-                                    }
-                                    .scaledFont(size: 13)
-                                    .buttonStyle(.borderless)
-                                }
-                            }
-                        }
-                        .padding(.vertical, 4)
-                    
-                        TextField("Ваше имя", text: $profile.name)
-                            .autocorrectionDisabled()
-                    }
-                
-                    // Озвучка
-                    Section(header: Text("Озвучка"), footer: Text(mode == .learning
-                                                                  ? "При переводе с русского на английский слово звучит после ответа, чтобы не подсказывать."
-                                                                  : "Акцент, голос и скорость — для английских книг. Книги на других языках читает голос своего языка.")) {
-                        Picker("Акцент", selection: $speechAccent) {
-                            Text("Американский").tag("en-US")
-                            Text("Британский").tag("en-GB")
-                        }
-                        .pickerStyle(.segmented)
-
-                        NavigationLink {
-                            VoicePickerView()
-                        } label: {
-                            LabeledContent("Голос", value: VoiceSummary.current(accent: speechAccent, voiceID: speechVoice))
-                        }
-
-                        NavigationLink {
-                            NeuralVoiceSettingsView()
-                        } label: {
-                            LabeledContent("Нейросетевой голос", value: neuralVoiceSummary)
-                        }
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Скорость речи")
-                            Slider(value: $speechRate, in: SpeechSettings.rateRange) {
-                                Text("Скорость речи")
-                            } minimumValueLabel: {
-                                Image(systemName: "tortoise.fill").foregroundColor(.gray)
-                            } maximumValueLabel: {
-                                Image(systemName: "hare.fill").foregroundColor(.gray)
-                            }
-                        }
-                        .padding(.vertical, 4)
-
-                        if mode == .learning {
-                            Toggle("Озвучивать слово сразу", isOn: $autoSpeak)
-                        }
-
-                        Button {
-                            TextToSpeechManager.shared.speak("Hello! This is how English words will sound.")
-                        } label: {
-                            Label("Прослушать", systemImage: "speaker.wave.2.fill")
-                        }
-                    }
-
-                    Section {
-                        Picker("Режим", selection: modeChoice) {
-                            ForEach(AppMode.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
-                            Text("Спрашивать").tag("ask")
-                        }
-                        .pickerStyle(.segmented)
-                    } header: {
-                        Text("Режим")
-                    } footer: {
-                        Text(asksMode
-                             ? "При каждом запуске приложение спросит, что открыть: изучение слов или читалку."
-                             : mode == .learning
-                             ? "Слова, повторения, тренировки, игры и книги."
-                             : "Только библиотека и читалка. Слова и прогресс сохраняются — вернуть «Изучение» можно в любой момент.")
-                    }
-
-                    // Оформление — сразу после личных данных: тема и вид «Обзора»
-                    Section(header: Text("Оформление")) {
-                        Picker("Тема оформления", selection: $selectedTheme) {
-                            Text("Системная").tag("system")
-                            Text("Светлая").tag("light")
-                            Text("Тёмная").tag("dark")
-                        }
-                        .pickerStyle(.segmented)
-
-                        if mode == .learning {
-                            NavigationLink {
-                                OverviewSettingsView()
-                            } label: {
-                                LabeledContent("Обзор", value: overviewLayout == .standard ? "Стандартный" : "Настроен")
-                            }
-                        }
+                    // В каждом режиме свой порядок: «Изучение» — личное и озвучка, «Чтение» — оформление и режим сверху
+                    if mode == .learning {
+                        personalSection
+                        voiceSection
+                        modeSection
+                        appearanceSection
+                    } else {
+                        appearanceSection
+                        modeSection
+                        voiceSection
                     }
 
                     // Обучение
