@@ -555,7 +555,8 @@ final class NeuralVoice {
     func warmUp() {
         guard isActive else { return }
         let folder = Self.modelFolder
-        Task { try? await engine.warmUp(folder) }
+        let speaker = selectedVoice
+        Task { try? await engine.warmUp(folder, speaker: speaker) }
     }
 
     private func finish(_ key: String) {
@@ -635,6 +636,8 @@ actor NeuralVoiceEngine {
     private var tts: SherpaOnnxOfflineTtsWrapper?
     /// Какая модель в памяти: другая — выгружаем и загружаем нужную
     private var loaded: Model?
+    /// С каким языком espeak загружен Kokoro: британские голоса — «en-gb», иначе произношение выходит американским и с искажениями
+    private var loadedLang = ""
     private var unloadTask: Task<Void, Never>?
 
     func generate(_ text: String, voice: Int, speed: Float, folder: URL) throws -> [Float] {
@@ -646,7 +649,7 @@ actor NeuralVoiceEngine {
         try Task.checkCancellation()
         let clean = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !clean.isEmpty else { return Audio(samples: [], sampleRate: Self.sampleRate) }
-        let tts = try load(model)
+        let tts = try load(model, lang: Self.lang(for: model, speaker: speaker))
         let generated = tts.generate(text: clean, sid: speaker, speed: speed)
         scheduleUnload()
         let samples = generated.samples
@@ -654,9 +657,15 @@ actor NeuralVoiceEngine {
         return Audio(samples: samples, sampleRate: Int(generated.sampleRate))
     }
 
-    func warmUp(_ folder: URL) throws {
-        _ = try load(.kokoro(folder))
+    func warmUp(_ folder: URL, speaker: Int) throws {
+        _ = try load(.kokoro(folder), lang: Self.lang(for: .kokoro(folder), speaker: speaker))
         scheduleUnload()
+    }
+
+    /// Голоса Kokoro 7–10 (Emma, Isabella, George, Lewis) — британские
+    nonisolated static func lang(for model: Model, speaker: Int) -> String {
+        guard case .kokoro = model else { return "" }
+        return speaker >= 7 ? "en-gb" : "en-us"
     }
 
     func unload() {
@@ -665,8 +674,8 @@ actor NeuralVoiceEngine {
         loaded = nil
     }
 
-    private func load(_ model: Model) throws -> SherpaOnnxOfflineTtsWrapper {
-        if let tts, loaded == model { return tts }
+    private func load(_ model: Model, lang: String = "") throws -> SherpaOnnxOfflineTtsWrapper {
+        if let tts, loaded == model, loadedLang == lang { return tts }
         tts = nil
         loaded = nil
         // Замер на A14: 4 потока быстрее всего (2 — на 10% медленнее, 3 — ещё медленнее: поток уходит на экономное ядро)
@@ -683,7 +692,7 @@ actor NeuralVoiceEngine {
         case .kokoro:
             sherpaOnnxOfflineTtsConfig(model: sherpaOnnxOfflineTtsModelConfig(
                 kokoro: sherpaOnnxOfflineTtsKokoroModelConfig(model: path("model.int8.onnx"), voices: path("voices.bin"),
-                                                              tokens: path("tokens.txt"), dataDir: path("espeak-ng-data")),
+                                                              tokens: path("tokens.txt"), dataDir: path("espeak-ng-data"), lang: lang),
                 numThreads: threads, debug: 0))
         case .piper(_, let file):
             sherpaOnnxOfflineTtsConfig(model: sherpaOnnxOfflineTtsModelConfig(
@@ -695,6 +704,7 @@ actor NeuralVoiceEngine {
         guard created.tts != nil else { throw NeuralVoiceError.notInstalled }
         tts = created
         loaded = model
+        loadedLang = lang
         return created
     }
 
