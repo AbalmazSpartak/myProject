@@ -25,7 +25,7 @@ struct NeuralVoiceSettingsView: View {
                 piperSection(language: "ru", choice: $russianChoice, header: "Русские книги",
                              footer: "Голос Piper для чтения русских книг вслух, мужской, без интернета. Скачивается отдельно (\(NeuralVoice.piperDownloadSize)); при скачивании другого голоса прежний удаляется.")
 
-                // Один раздел: выбор голоса, прослушать, «Голос скачан» (или скачать), удалить
+                // Один раздел: выбор голоса, прослушать, удалить — или «Скачать голос», пока не скачан
                 Section {
                     if voice.phase == .ready {
                         Picker("Голос", selection: $voiceID) {
@@ -124,8 +124,8 @@ struct NeuralVoiceSettingsView: View {
         case .unpacking(let fraction):
             progressRow("Распаковка…", fraction)
         case .ready:
-            Label("Голос скачан", systemImage: "checkmark.circle.fill")
-                .foregroundColor(.green)
+            // Скачан — видно по «Прослушать» и «Удалить голос», отдельной плашки не нужно
+            EmptyView()
         case .failed(let message):
             VStack(alignment: .leading, spacing: 8) {
                 Text(message)
@@ -151,8 +151,6 @@ struct NeuralVoiceSettingsView: View {
                     .foregroundColor(.gray)
             }
         case .ready:
-            Label(kokoroML.isLoaded ? "Скачан, в памяти" : "Скачан", systemImage: "checkmark.circle.fill")
-                .foregroundColor(.green)
             Toggle("Загружать при запуске", isOn: $preloadKokoro)
                 .onChange(of: preloadKokoro) { _, isOn in if isOn { kokoroML.preloadIfReading() } }
             Button("Удалить", role: .destructive) { isConfirmingMLRemove = true }
@@ -201,8 +199,6 @@ struct NeuralVoiceSettingsView: View {
                 Button("Попробовать ещё раз") { voice.downloadPiper(choice) }
             }
         case .ready where NeuralVoice.installedPiper(language: language) == choice:
-            Label("Голос «\(choice.title)» скачан", systemImage: "checkmark.circle.fill")
-                .foregroundColor(.green)
             Button { voice.previewPiper(choice) } label: {
                 HStack {
                     Label("Прослушать", systemImage: "speaker.wave.2.fill")
