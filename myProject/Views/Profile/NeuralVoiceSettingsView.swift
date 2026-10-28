@@ -20,7 +20,7 @@ struct NeuralVoiceSettingsView: View {
         List {
             Group {
                 piperSection(language: "en", choice: $englishChoice, header: "Английские книги",
-                             footer: "Лёгкий голос Piper")
+                             footer: "Лёгкая озвучка Kokoro и Piper")
 
                 piperSection(language: "ru", choice: $russianChoice, header: "Русские книги",
                              footer: "Лёгкий голос Piper")
