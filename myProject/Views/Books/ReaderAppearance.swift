@@ -343,8 +343,6 @@ struct ReaderAppearanceSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    sample
-
                     section("Листание")
                     Picker("Листание", selection: $layout) {
                         ForEach(ReaderLayout.allCases) { Text($0.title).tag($0) }
@@ -375,6 +373,7 @@ struct ReaderAppearanceSheet: View {
                             themeTile(item)
                         }
                     }
+                    sample
                     if theme == .nightCustom { nightSettings }
 
                     section("Размер шрифта")
