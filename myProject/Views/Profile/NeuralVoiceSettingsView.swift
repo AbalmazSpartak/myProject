@@ -58,14 +58,14 @@ struct NeuralVoiceSettingsView: View {
                 } header: {
                     Text("Голос Kokoro")
                 } footer: {
-                    Text(kokoroFooter)
+                    Text("Звучит живее системного")
                 }
 
                 if KokoroML.isSupported {
                     Section {
                         kokoroMLStatus
                     } header: {
-                        Text("Kokoro на нейроядре — для книг")
+                        Text("Нейроядро Kokoro — для озвучки книг")
                     } footer: {
                         Text("Английские книги без пауз, подсвечивается каждое слово. Скачивается отдельно (\(KokoroML.downloadSize)).")
                     }
@@ -74,6 +74,8 @@ struct NeuralVoiceSettingsView: View {
             .listRowBackground(Color.cardBackground)
         }
         .brandListBackground()
+        // Заголовки разделов — как написаны, а не ПРОПИСНЫМИ
+        .textCase(nil)
         .navigationTitle("Нейросетевой голос")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -102,12 +104,6 @@ struct NeuralVoiceSettingsView: View {
         } message: {
             Text("Освободится \(NeuralVoice.downloadSize). Озвучка станет системной, голос можно скачать снова.")
         }
-    }
-
-    private var kokoroFooter: String {
-        let about = "Звучит живее системного, работает без интернета. Скачивается один раз (\(NeuralVoice.downloadSize))."
-        guard voice.phase == .ready, voice.kokoroTooSlow else { return about }
-        return "На этом устройстве Kokoro не успевает читать книги без пауз — их читает Piper (если скачан) или системный голос.\n\n" + about
     }
 
     @ViewBuilder
