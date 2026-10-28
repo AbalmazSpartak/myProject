@@ -21,10 +21,18 @@ struct NeuralVoiceSettingsView: View {
     var body: some View {
         List {
             Group {
-                Section {
-                    status
-                } footer: {
-                    Text("Голос Kokoro звучит живее системного и работает без интернета. Скачивается один раз (\(NeuralVoice.downloadSize)), в резервную копию iCloud не попадает. Пока голос не скачан или выключен — говорит системный.")
+                piperSection(language: "en", choice: $englishChoice, header: "Английские книги",
+                             footer: "Лёгкий голос Piper: читает без пауз даже там, где Kokoro не успевает (iPhone 12, iPad Air 4 и старше). Без интернета, свободная лицензия. Скачивается отдельно (\(NeuralVoice.piperDownloadSize)); при скачивании другого голоса прежний удаляется. Скачали — английские книги читает он; вернуть Kokoro можно здесь же.")
+
+                piperSection(language: "ru", choice: $russianChoice, header: "Русские книги",
+                             footer: "Голос Piper для чтения русских книг вслух, мужской, без интернета. Скачивается отдельно (\(NeuralVoice.piperDownloadSize)); при скачивании другого голоса прежний удаляется.")
+
+                if voice.phase == .ready || kokoroML.isReady || voice.piperPhase("en") == .ready || voice.piperPhase("ru") == .ready {
+                    Section {
+                        Toggle("Читать книги этим голосом", isOn: $readsBooks)
+                    } footer: {
+                        Text("Английские книги читает Kokoro, если устройство успевает, иначе Piper; русские — Piper. Подсвечивается всё предложение: время отдельных слов нейросеть не отдаёт. Заряда тратится больше, чем с системным голосом.")
+                    }
                 }
 
                 if voice.phase == .ready {
@@ -64,6 +72,12 @@ struct NeuralVoiceSettingsView: View {
                     }
                 }
 
+                Section {
+                    status
+                } footer: {
+                    Text("Голос Kokoro звучит живее системного и работает без интернета. Скачивается один раз (\(NeuralVoice.downloadSize)), в резервную копию iCloud не попадает. Пока голос не скачан или выключен — говорит системный.")
+                }
+
                 if KokoroML.isSupported {
                     Section {
                         kokoroMLStatus
@@ -71,20 +85,6 @@ struct NeuralVoiceSettingsView: View {
                         Text("Kokoro на нейроядре — для книг")
                     } footer: {
                         Text("Тот же голос Kokoro (выбор голоса — выше), но на нейроядре iPhone: читает английские книги без пауз даже на iPhone 12, подсвечивается каждое слово. Скачивается отдельно (\(KokoroML.downloadSize)); в память загружается около 25 секунд — при открытии английской книги, а с «Загружать при запуске» в режиме «Чтение» — сразу при запуске приложения, если последняя книга английская. В памяти занимает ~700 МБ; через 10 минут без чтения выгружается.")
-                    }
-                }
-
-                piperSection(language: "en", choice: $englishChoice, header: "Английские книги",
-                             footer: "Лёгкий голос Piper: читает без пауз даже там, где Kokoro не успевает (iPhone 12, iPad Air 4 и старше). Без интернета, свободная лицензия. Скачивается отдельно (\(NeuralVoice.piperDownloadSize)); при скачивании другого голоса прежний удаляется. Скачали — английские книги читает он; вернуть Kokoro можно здесь же.")
-
-                piperSection(language: "ru", choice: $russianChoice, header: "Русские книги",
-                             footer: "Голос Piper для чтения русских книг вслух, мужской, без интернета. Скачивается отдельно (\(NeuralVoice.piperDownloadSize)); при скачивании другого голоса прежний удаляется.")
-
-                if voice.phase == .ready || kokoroML.isReady || voice.piperPhase("en") == .ready || voice.piperPhase("ru") == .ready {
-                    Section {
-                        Toggle("Читать книги этим голосом", isOn: $readsBooks)
-                    } footer: {
-                        Text("Английские книги читает Kokoro, если устройство успевает, иначе Piper; русские — Piper. Подсвечивается всё предложение: время отдельных слов нейросеть не отдаёт. Заряда тратится больше, чем с системным голосом.")
                     }
                 }
             }
