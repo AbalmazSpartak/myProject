@@ -42,6 +42,7 @@ struct ReviewSessionView: View {
             }
         }
         .background(Color.brandBackground.ignoresSafeArea())
+        .onAppear { NeuralVoice.shared.warmUp() }
         .onChange(of: word?.persistentModelID, initial: true) { _, _ in
             guard autoSpeak, showEnglish, let word else { return }
             TextToSpeechManager.shared.speak(word.english)

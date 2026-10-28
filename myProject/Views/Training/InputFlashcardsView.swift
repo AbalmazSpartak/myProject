@@ -260,6 +260,7 @@ struct InputFlashcardsView: View {
             TextToSpeechManager.shared.speakAutomatically(word.english)
         }
         .onAppear {
+            NeuralVoice.shared.warmUp()
             loadWords()
             generateSession()
         }

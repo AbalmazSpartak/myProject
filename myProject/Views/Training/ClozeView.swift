@@ -59,6 +59,7 @@ struct ClozeView: View {
         }
         .background(Color.brandBackground.ignoresSafeArea())
         .onAppear {
+            NeuralVoice.shared.warmUp()
             startSession()
         }
     }

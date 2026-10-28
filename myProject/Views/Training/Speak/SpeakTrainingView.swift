@@ -84,6 +84,7 @@ struct SpeakTrainingView: View {
             }
         }
         .background(Color.brandBackground.ignoresSafeArea())
+        .onAppear { NeuralVoice.shared.warmUp() }
         .onDisappear { checker.cancel() }
     }
 

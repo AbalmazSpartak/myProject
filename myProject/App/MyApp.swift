@@ -33,6 +33,8 @@ struct MyApp: App {
                 KokoroML.shared.preloadIfReading()
                 ReaderSpeech.prepareLastBook(in: mainContext)
                 guard AppMode.current == .learning else { return }
+                // Слова озвучивает нейроголос — модель в памяти заранее, первое слово без ожидания
+                NeuralVoice.shared.warmUp()
                 await Self.prepareLearning(context: mainContext)
             }
         } catch {
@@ -54,6 +56,7 @@ struct MyApp: App {
                 reloadWordsChangedByWidget()
                 // Вернулись в приложение — Kokoro мог выгрузиться (10 минут без чтения, блокировка)
                 KokoroML.shared.preloadIfReading()
+                if mode == .learning { NeuralVoice.shared.warmUp() }
                 // Сообщения об ошибках и сигналы словаря, сохранённые без интернета; новые правки словаря
                 Task {
                     await WordReports.flush()
