@@ -33,13 +33,12 @@ struct SettingsView: View {
     @AppStorage(SpeechSettings.voiceKey) private var speechVoice = ""
     @AppStorage(SpeechSettings.rateKey) private var speechRate = SpeechSettings.defaultRate
     @AppStorage(SpeechSettings.autoSpeakKey) private var autoSpeak = false
-    @AppStorage(NeuralVoice.enabledKey) private var neuralVoiceEnabled = false
     @AppStorage(NeuralVoice.booksKey) private var neuralReadsBooks = true
     @State private var neuralVoice = NeuralVoice.shared
     @State private var kokoroML = KokoroML.shared
 
     private var neuralVoiceSummary: String {
-        NeuralVoice.isInstalled ? (neuralVoiceEnabled ? "включён" : "выключен") : "не скачан"
+        NeuralVoice.isInstalled ? "скачан" : "не скачан"
     }
     /// Скачан хоть один нейроголос — Kokoro (процессор или нейроядро) или Piper
     private var hasNeuralVoice: Bool {
@@ -114,7 +113,7 @@ struct SettingsView: View {
     @ViewBuilder
     private var voiceSection: some View {
         Section(header: Text("Озвучка"), footer: Text(mode == .learning
-                                                      ? "При переводе с русского на английский слово звучит после ответа, чтобы не подсказывать."
+                                                      ? "При переводе с русского на английский слово звучит после ответа, чтобы не подсказывать. Если скачан нейросетевой голос Kokoro, слова озвучивает он (голос выбирается на его экране), а акцент и голос выше — для обычного голоса."
                                                       : "Акцент, голос и скорость — для английских книг. Книги на других языках читает голос своего языка.")) {
             Picker("Акцент", selection: $speechAccent) {
                 Text("Американский").tag("en-US")

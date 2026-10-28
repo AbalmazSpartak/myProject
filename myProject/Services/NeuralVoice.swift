@@ -119,7 +119,6 @@ final class NeuralVoice {
         return names.indices.contains(id) ? names[id] : names[1]
     }
 
-    static let enabledKey = "neural_voice_enabled"
     static let voiceKey = "neural_voice_id"
     /// Читать книги вслух нейросетевым голосом (если он скачан); по умолчанию — да
     static let booksKey = "neural_voice_books"
@@ -205,10 +204,8 @@ final class NeuralVoice {
 
     var isDownloading: Bool { downloadTask != nil }
 
-    /// Голос включён и скачан — озвучка идёт через него
-    var isActive: Bool {
-        UserDefaults.standard.bool(forKey: Self.enabledKey) && phase == .ready
-    }
+    /// Голос скачан — слова озвучиваются им, иначе системным
+    var isActive: Bool { phase == .ready }
 
     var selectedVoice: Int {
         UserDefaults.standard.object(forKey: Self.voiceKey) as? Int ?? 1
@@ -233,7 +230,6 @@ final class NeuralVoice {
                     }
                 }.value
                 phase = Self.isInstalled ? .ready : .failed("Архив распаковался не полностью")
-                if phase == .ready { UserDefaults.standard.set(true, forKey: Self.enabledKey) }
             } catch is CancellationError {
                 phase = .notDownloaded
             } catch {
@@ -293,7 +289,6 @@ final class NeuralVoice {
         cacheOrder = []
         Task { await engine.unload() }
         try? FileManager.default.removeItem(at: Self.modelFolder)
-        UserDefaults.standard.set(false, forKey: Self.enabledKey)
         phase = .notDownloaded
     }
 

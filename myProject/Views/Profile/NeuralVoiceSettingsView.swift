@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// Настройки → «Озвучка» → «Нейросетевой голос»: скачать модель, включить, выбрать голос, послушать, удалить;
+/// Настройки → «Озвучка» → «Нейросетевой голос»: скачать модель, выбрать голос, послушать, удалить;
 /// лёгкие голоса Piper для английских и русских книг; переключатель «Читать книги этим голосом» — в Настройках
 struct NeuralVoiceSettingsView: View {
-    @AppStorage(NeuralVoice.enabledKey) private var isEnabled = false
     @AppStorage(NeuralVoice.voiceKey) private var voiceID = 1
     @State private var voice = NeuralVoice.shared
     @State private var kokoroML = KokoroML.shared
@@ -28,14 +27,12 @@ struct NeuralVoiceSettingsView: View {
 
                 if voice.phase == .ready {
                     Section {
-                        Toggle("Озвучивать нейросетевым голосом", isOn: $isEnabled)
                         Picker("Голос", selection: $voiceID) {
                             ForEach(NeuralVoice.voices) { item in
                                 Text(item.title).tag(item.id)
                             }
                         }
                         Button {
-                            isEnabled = true
                             TextToSpeechManager.shared.speak(Self.sample)
                         } label: {
                             HStack {
@@ -85,7 +82,6 @@ struct NeuralVoiceSettingsView: View {
         .navigationTitle("Нейросетевой голос")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { voice.warmUp() }
-        .onChange(of: isEnabled) { _, enabled in if enabled { voice.warmUp() } }
         .alert("Удалить голос?", isPresented: Binding(get: { piperToRemove != nil }, set: { if !$0 { piperToRemove = nil } })) {
             Button("Отмена", role: .cancel) {}
             Button("Удалить", role: .destructive) {
