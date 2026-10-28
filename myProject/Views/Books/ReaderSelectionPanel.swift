@@ -3,7 +3,8 @@ import SwiftData
 @preconcurrency import Translation
 
 /// Панель под выделенным текстом: слово — перевод встроенным переводчиком iOS; фраза — в Google Переводчик
-/// (переводчик iOS переводит литературные фразы почти дословно); озвучка, копирование, «В словарь» книги
+/// (переводчик iOS переводит литературные фразы почти дословно); озвучка, копирование, «В словарь» книги.
+/// У книги с добавленным переводом — ещё «В переводе книги»: то же место у переводчика, слово подсвечено
 struct ReaderSelectionPanel: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.openURL) private var openURL
@@ -11,6 +12,8 @@ struct ReaderSelectionPanel: View {
     let text: String
     let bookTitle: String
     var language = BookLanguage.english
+    /// Место в переводе книги — ищется, когда панель открылась
+    let passageLookup: () -> BookPassage?
     let onClose: () -> Void
 
     @State private var translation: String?
@@ -19,6 +22,7 @@ struct ReaderSelectionPanel: View {
     @State private var failed = false
     @State private var isAdded = false
     @State private var definedWord: DefinedWord?
+    @State private var passage: BookPassage?
     @State private var copied = false
     /// Фраза в словарь: перевод вписывает сам читатель (например, из Google Переводчика)
     @State private var isEnteringTranslation = false
@@ -34,6 +38,12 @@ struct ReaderSelectionPanel: View {
         if let translation { return translation }
         let typed = manualTranslation.trimmingCharacters(in: .whitespacesAndNewlines)
         return typed.isEmpty ? nil : typed
+    }
+
+    /// Перевод из книги для словаря: у слова — найденное в переводе слово, у целых предложений — их перевод
+    private var bookSuggestion: String? {
+        guard let passage else { return nil }
+        return isSingleWord ? passage.lemma : (passage.coversSentences ? passage.text : nil)
     }
 
     /// Фразу — в словарь; целый абзац там ни к чему
@@ -70,9 +80,29 @@ struct ReaderSelectionPanel: View {
                     .foregroundColor(.gray)
             }
 
+            if let passage {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("В переводе книги")
+                        .scaledFont(size: 12, weight: .semibold)
+                        .foregroundColor(.gray)
+                    Text(Self.marked(passage))
+                        .scaledFont(size: 15, design: .serif)
+                        .foregroundColor(.brandDark.opacity(0.85))
+                        .lineLimit(5)
+                }
+            }
+
             if isEnteringTranslation {
+                if let bookSuggestion, manualTranslation != bookSuggestion {
+                    Button { manualTranslation = bookSuggestion } label: {
+                        Label("Из перевода книги: «\(bookSuggestion)»", systemImage: "text.quote")
+                            .scaledFont(size: 13, weight: .semibold)
+                            .lineLimit(1)
+                    }
+                    .tint(.brown)
+                }
                 HStack(spacing: 8) {
-                    TextField("Перевод фразы", text: $manualTranslation)
+                    TextField(isSingleWord ? "Перевод" : "Перевод фразы", text: $manualTranslation)
                         .scaledFont(size: 15)
                         .focused($isTranslationFocused)
                         .submitLabel(.done)
@@ -123,10 +153,12 @@ struct ReaderSelectionPanel: View {
                 }
                 if isEnglish && fitsDictionary {
                     action(isAdded ? "В словаре" : "В словарь", icon: isAdded ? "checkmark.circle.fill" : "plus.circle",
-                           disabled: isAdded || (isSingleWord && translation == nil)) {
+                           disabled: isAdded || (isSingleWord && translation == nil && bookSuggestion == nil)) {
                         if dictionaryTranslation != nil {
                             add()
                         } else {
+                            // Подсказка из перевода книги — сразу в поле, поправить можно
+                            manualTranslation = bookSuggestion ?? ""
                             isEnteringTranslation = true
                             isTranslationFocused = true
                         }
@@ -151,6 +183,7 @@ struct ReaderSelectionPanel: View {
                 failed = true
             }
         }
+        .task(id: text) { passage = passageLookup() }
         .onChange(of: text) { _, _ in
             translation = nil
             failed = false
@@ -159,6 +192,17 @@ struct ReaderSelectionPanel: View {
             isEnteringTranslation = false
             manualTranslation = ""
         }
+    }
+
+    /// Перевод книги с подсвеченными переводами выделенного слова
+    static func marked(_ passage: BookPassage) -> AttributedString {
+        var result = AttributedString(passage.text)
+        for highlight in passage.highlights {
+            guard let range = Range(highlight, in: result) else { continue }
+            result[range].backgroundColor = Color.teal.opacity(0.25)
+            result[range].inlinePresentationIntent = .stronglyEmphasized
+        }
+        return result
     }
 
     /// Google Переводчик с уже вставленным текстом: приложение, если стоит, иначе сайт

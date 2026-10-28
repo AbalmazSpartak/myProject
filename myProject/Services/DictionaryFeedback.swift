@@ -5,7 +5,7 @@ import SwiftData
 /// edit — пользователь поправил слово из базы, context — добавил слово из текста (в каком значении),
 /// missing — слова нет в базе, hard — слово упорно не запоминается. Очередь — как у «Сообщить об ошибке»
 enum DictionarySignals {
-    /// Настройки → «Помогать улучшать словарь»; по умолчанию включено
+    /// Настройки → «Помогать улучшать словарь»; по умолчанию включено. В «Чтении» переключатель спрятан — и сигналов нет
     static let enabledKey = "improve_dictionary"
 
     struct Signal: Codable {
@@ -20,7 +20,9 @@ enum DictionarySignals {
         var sentence = ""
     }
 
-    static var isEnabled: Bool { UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true }
+    static var isEnabled: Bool {
+        AppMode.current == .learning && UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true
+    }
 
     /// Случайный номер установки — чтобы считать, сколько разных людей предложили одно и то же. Ни с кем не связан
     static var installID: String {

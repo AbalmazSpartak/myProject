@@ -10,6 +10,8 @@ struct WordLookupView: View {
 
     let tapped: TappedWord
     let bookTitle: String
+    /// Читать книгу вслух с этого слова
+    var onReadFromHere: (() -> Void)?
 
     @State private var lemma = ""
     @State private var partOfSpeech = ""
@@ -30,8 +32,11 @@ struct WordLookupView: View {
     /// ИИ-подсказка не пришла: запас на сегодня кончился или нет сети
     @State private var cloudMessage: String?
     @AppStorage(CloudContext.enabledKey) private var aiHints = false
+    @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
     /// Разговорная форма старой книги (knowed, a-going, de) — плашка с обычной формой и урок
     @State private var colloquial: ColloquialForm?
+    /// То же место в переводе книги; подсветка уточняется, когда известен перевод слова (из базы или переводчика)
+    @State private var passage: BookPassage?
     @State private var lesson: CommunityTopic?
 
     private var bookList: WordList? {
@@ -53,9 +58,13 @@ struct WordLookupView: View {
                 ReadingBreakdownView(word: tapped.word, lemma: lemma, transcription: baseWord?.transcription,
                                      translation: baseWord?.russian ?? translation)
                 translationBlock
+                if let passage {
+                    bookTranslationBlock(passage)
+                }
                 if isFindingContext || contextEnglish != nil {
                     contextBlock
-                } else if aiHints {
+                } else if aiHints && mode == .learning {
+                    // В «Чтении» переключатель ИИ-подсказок спрятан — и кнопки нет
                     cloudButton
                 }
                 sentenceBlock
@@ -171,12 +180,51 @@ struct WordLookupView: View {
                 TextField("перевод", text: $translation)
                     .scaledFont(size: 20, design: .serif)
                     .foregroundColor(.brandDark)
+                // В переводе книги нашлось это слово — можно взять оттуда
+                if let lemma = passage?.lemma, translation.caseInsensitiveCompare(lemma) != .orderedSame {
+                    Button { translation = lemma } label: {
+                        Label("Из перевода книги: «\(lemma)»", systemImage: "text.quote")
+                            .scaledFont(size: 13, weight: .semibold)
+                    }
+                    .tint(.brown)
+                }
             }
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.cardBackground)
         .cornerRadius(14)
+    }
+
+    /// «В переводе книги» — то же место у переводчика книги, перевод слова подсвечен
+    private func bookTranslationBlock(_ passage: BookPassage) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label("В переводе книги", systemImage: "text.quote")
+                .scaledFont(size: 12, weight: .semibold)
+                .foregroundColor(.gray)
+            Text(ReaderSelectionPanel.marked(passage))
+                .scaledFont(size: 16, design: .serif)
+                .foregroundColor(.brandDark)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.cardBackground)
+        .cornerRadius(14)
+    }
+
+    /// Словарь приложения слова не знает (Hatter) — ищем в переводе книги его перевод из базы или переводчика (шляпник ≈ шляпочник)
+    private func refinePassageHighlights() {
+        guard var current = passage, current.highlights.isEmpty else { return }
+        let source = baseWord?.russian ?? translation
+        let words = source.replacingOccurrences(of: "\\([^)]*\\)", with: "", options: .regularExpression)
+            .split(whereSeparator: { ",;".contains($0) })
+            .map { Set($0.split(separator: " ").map { $0.lowercased().trimmingCharacters(in: .punctuationCharacters) }.filter { $0.count >= 3 }) }
+            .filter { !$0.isEmpty }
+        let found = ParallelText.highlights(in: current.text, for: words)
+        guard !found.ranges.isEmpty else { return }
+        current.highlights = found.ranges
+        current.lemma = found.lemma
+        passage = current
     }
 
     /// «В этом предложении» — Apple Intelligence (iPhone 15 Pro и новее) или ИИ-подсказка с сервера, если она включена
@@ -259,6 +307,12 @@ struct WordLookupView: View {
                 Label("Прослушать предложение", systemImage: "play.circle")
                     .scaledFont(size: 15)
             }
+            if let onReadFromHere {
+                Button(action: onReadFromHere) {
+                    Label("Читать вслух с этого слова", systemImage: "play.fill")
+                        .scaledFont(size: 15)
+                }
+            }
         }
         .tint(.brown)
     }
@@ -288,6 +342,7 @@ struct WordLookupView: View {
 
     private func prepare() {
         guard lemma.isEmpty else { return }
+        passage = tapped.passage
         colloquial = Self.colloquialForm(tapped)
         var found = TextWordExtractor.lemma(of: tapped.word, at: tapped.range, in: tapped.sentence)
         // de → the, goin’ → going → go: перевод — у обычного слова
@@ -304,6 +359,7 @@ struct WordLookupView: View {
         }
         baseWord = matches.first { $0.partOfSpeech == found.partOfSpeech } ?? matches.first
         if baseWord == nil { requestTranslation() }
+        refinePassageHighlights()
         findContextMeaning()
     }
 
@@ -354,6 +410,7 @@ struct WordLookupView: View {
                 let result = try await WordTranslator.translate(lemma, partOfSpeech: partOfSpeech, session: session)
                 translation = result.text
                 translationDoubtful = result.doubtful
+                refinePassageHighlights()
             }
             if let contextEnglish, contextRussian == nil {
                 contextRussian = WordTranslator.cleaned(try await session.translate(contextEnglish).targetText)

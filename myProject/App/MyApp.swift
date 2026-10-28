@@ -6,6 +6,7 @@ import WidgetKit
 struct MyApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
+    @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
 
     // Создаем ModelContainer один раз и храним его в свойстве
     private var container: ModelContainer
@@ -27,12 +28,8 @@ struct MyApp: App {
                 // Обрывки «ca» / «wo» / «sha» из разобранных книг — в can't / won't / shall
                 DataPreloader.fixContractionFragments(context: mainContext)
                 DataPreloader.resetImagesIfSourcesChanged(context: mainContext)
-                // Встроенные темы «Сообщества» — после переустановки возвращаются, с новой версией обновляются
-                BuiltInTopics.sync(context: mainContext)
-                // Одобренные правки словаря с сервера — поверх words.csv
-                await DictionaryPatch.sync(context: mainContext)
-                // Голос для озвучки — заранее, чтобы первое слово не запиналось
-                TextToSpeechManager.shared.prepare()
+                guard AppMode.current == .learning else { return }
+                await Self.prepareLearning(context: mainContext)
             }
         } catch {
             fatalError("Не удалось запустить хранилище SwiftData: \(error)")
@@ -55,12 +52,29 @@ struct MyApp: App {
                 Task {
                     await WordReports.flush()
                     await DictionarySignals.flush()
-                    await DictionaryPatch.sync(context: container.mainContext)
+                    if mode == .learning { await DictionaryPatch.sync(context: container.mainContext) }
                 }
             case .background: shareWithWidget()
             default: break
             }
         }
+        .onChange(of: mode) { _, mode in
+            // Тексты напоминаний — про слова или про чтение
+            DailyReminder.refresh()
+            // Из «Чтения» в «Изучение» — догоняем то, что при запуске пропустили
+            guard mode == .learning else { return }
+            Task { await Self.prepareLearning(context: container.mainContext) }
+        }
+    }
+
+    /// Нужно только «Изучению»: в «Чтении» не запускается — меньше работы при каждом открытии
+    private static func prepareLearning(context: ModelContext) async {
+        // Встроенные темы «Сообщества» — после переустановки возвращаются, с новой версией обновляются
+        BuiltInTopics.sync(context: context)
+        // Одобренные правки словаря с сервера — поверх words.csv
+        await DictionaryPatch.sync(context: context)
+        // Голос для озвучки — заранее, чтобы первое слово не запиналось
+        TextToSpeechManager.shared.prepare()
     }
 
     /// Виджет оценил слова, пока приложение было в фоне. Слова в памяти — со старым расписанием,
@@ -75,6 +89,8 @@ struct MyApp: App {
     /// Уходим в фон: сохранить прогресс и обновить виджет — у слов могло поменяться расписание
     private func shareWithWidget() {
         try? container.mainContext.save()
+        // Виджет «Повторение» — для изучения: в «Чтении» тренировок нет, расписание слов не меняется
+        guard mode == .learning else { return }
         AppGroup.defaults.set(studyScope.rawValue, forKey: StudyScope.storageKey)
         WidgetCenter.shared.reloadAllTimelines()
     }

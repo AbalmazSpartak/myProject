@@ -401,6 +401,9 @@ extension ParallelText {
 nonisolated struct AlignmentLexicon: Sendable {
     private let entries: [String: Set<String>]
 
+    /// Основная база приложения — загружается один раз, при первом обращении
+    static let bundled: AlignmentLexicon? = Bundle.main.url(forResource: "words", withExtension: "csv").flatMap(load)
+
     init(entries: [String: Set<String>]) {
         self.entries = entries
     }
@@ -477,6 +480,128 @@ nonisolated struct AlignmentLexicon: Sendable {
         }
         fields.append(current)
         return fields
+    }
+}
+
+/// Место в переводе книги для выделенного или нажатого: предложения перевода и найденные в них слова
+nonisolated struct BookPassage: Sendable, Equatable {
+    /// Предложения перевода, где сказано то же, что в выделенном
+    let text: String
+    /// Переводы выделенного слова в этих предложениях (UTF-16 в text)
+    var highlights: [NSRange]
+    /// Словарная форма первого найденного слова — подсказка перевода для словаря
+    var lemma: String?
+    /// Выделены целые предложения — перевод фразы можно взять из книги целиком
+    let coversSentences: Bool
+}
+
+extension ParallelText {
+    /// Перевод выделенного: абзац делится на предложения, предложения сопоставляются с предложениями перевода
+    /// абзаца — так же, как абзацы, но внутри одной пары. Одно выделенное слово — ещё и подсветка его перевода
+    nonisolated static func passage(original: String, selected: NSRange, translation: String,
+                                    lexicon: AlignmentLexicon?) -> BookPassage? {
+        let originalSentences = sentences(original), translatedSentences = sentences(translation)
+        guard !originalSentences.isEmpty, !translatedSentences.isEmpty else { return nil }
+        let ns = original as NSString, translated = translation as NSString
+        let spans: [BookAlignment.Span]
+        if originalSentences.count == 1 || translatedSentences.count == 1 {
+            // Одно предложение с любой стороны — весь перевод абзаца к нему
+            spans = originalSentences.map { _ in .init(start: 0, count: translatedSentences.count) }
+        } else {
+            let ratio = ns.length > 0 ? Double(translated.length) / Double(ns.length) : 1
+            spans = paragraphSpans(original: originalSentences.map { Features(english: ns.substring(with: $0), lexicon: lexicon) },
+                                   translation: russianFeatures(translatedSentences.map { translated.substring(with: $0) }),
+                                   ratio: ratio)
+        }
+        // Выделенные предложения; у предложения, слитого переводчиком с соседним, перевод — у соседа
+        let chosen = originalSentences.indices.filter {
+            NSIntersectionRange(originalSentences[$0], selected).length > 0 || NSLocationInRange(selected.location, originalSentences[$0])
+        }
+        guard let firstChosen = chosen.first, let lastChosen = chosen.last else { return nil }
+        let withTranslation = (firstChosen...lastChosen).filter { spans[$0].count > 0 }
+        let owner = withTranslation.isEmpty ? spans[..<firstChosen].lastIndex(where: { $0.count > 0 }) : nil
+        let used = withTranslation.isEmpty ? (owner.map { [$0] } ?? []) : withTranslation
+        guard let first = used.first.map({ spans[$0] }), let last = used.last.map({ spans[$0] }) else { return nil }
+        let from = translatedSentences[first.start].location
+        let to = NSMaxRange(translatedSentences[last.start + last.count - 1])
+        let text = translated.substring(with: NSRange(location: from, length: to - from)).trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let covered = chosen.reduce(0) { $0 + NSIntersectionRange(originalSentences[$1], selected).length }
+        let total = chosen.reduce(0) { $0 + originalSentences[$1].length }
+        var passage = BookPassage(text: text, highlights: [], lemma: nil, coversSentences: total > 0 && Double(covered) >= 0.8 * Double(total))
+        // Одно слово — ищем его перевод в найденных предложениях
+        let word = ns.substring(with: selected).trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
+        if let lexicon, !word.isEmpty, !word.contains(" ") {
+            let words = lexicon.translations(of: word)
+            let found = highlights(in: text, for: words)
+            passage.highlights = found.ranges
+            passage.lemma = found.lemma
+            // Перевода слова в этих предложениях нет, а в соседнем предложении абзаца он есть — значит, сопоставилось мимо:
+            // берём ближайшее предложение, где он есть
+            if found.ranges.isEmpty, translatedSentences.count > 1 {
+                var best: BookPassage?
+                var bestDistance = Int.max
+                for index in translatedSentences.indices {
+                    let sentence = translated.substring(with: translatedSentences[index]).trimmingCharacters(in: .whitespacesAndNewlines)
+                    let match = highlights(in: sentence, for: words)
+                    let distance = abs(index - first.start)
+                    guard !match.ranges.isEmpty, distance < bestDistance else { continue }
+                    best = BookPassage(text: sentence, highlights: match.ranges, lemma: match.lemma, coversSentences: false)
+                    bestDistance = distance
+                }
+                if let best { passage = best }
+            }
+        }
+        return passage
+    }
+
+    /// Слова текста, словарная форма которых — один из переводов (или почти совпадает: кролик — кроличий, шляпник — шляпочник)
+    nonisolated static func highlights(in text: String, for translations: [Set<String>]) -> (ranges: [NSRange], lemma: String?) {
+        let targets = translations.reduce(into: Set<String>()) { $0.formUnion($1) }
+        guard !targets.isEmpty else { return ([], nil) }
+        let tagger = NLTagger(tagSchemes: [.lemma])
+        tagger.string = text
+        tagger.setLanguage(.russian, range: text.startIndex..<text.endIndex)
+        var ranges: [NSRange] = []
+        var lemma: String?
+        tagger.enumerateTags(in: text.startIndex..<text.endIndex, unit: .word, scheme: .lemma,
+                             options: [.omitPunctuation, .omitWhitespace, .omitOther]) { tag, range in
+            let word = (tag?.rawValue ?? String(text[range])).lowercased()
+            guard word.count >= 3, targets.contains(word) || targets.contains(where: { similar($0, word) }) else { return true }
+            ranges.append(NSRange(range, in: text))
+            if lemma == nil { lemma = word }
+            return true
+        }
+        return (ranges, lemma)
+    }
+
+    /// Одно слово в разных формах и родственных словах: общее начало хотя бы 4 букв у слов от 6 букв
+    private nonisolated static func similar(_ a: String, _ b: String) -> Bool {
+        guard a.count >= 6, b.count >= 6 else { return false }
+        // Глагол и не глагол — разные слова, хоть и похожи: сказать — сказка
+        let verb = { (word: String) in ["ть", "ться", "ти", "чь"].contains { word.hasSuffix($0) } }
+        guard verb(a) == verb(b) else { return false }
+        return zip(a, b).prefix { $0 == $1 }.count >= max(4, min(a.count, b.count) - 4)
+    }
+
+    /// Предложения абзаца (UTF-16). Кусок со строчной буквы — слова автора после реплики («— Вернитесь! — крикнул червяк»,
+    /// «“Come back!” the Caterpillar called») — продолжение предыдущего предложения, а не новое
+    nonisolated static func sentences(_ text: String) -> [NSRange] {
+        let tokenizer = NLTokenizer(unit: .sentence)
+        tokenizer.string = text
+        var result: [NSRange] = []
+        for token in tokenizer.tokens(for: text.startIndex..<text.endIndex) {
+            let range = NSRange(token, in: text)
+            // Перенос строки между абзацами перевода — не предложение
+            guard text[token].contains(where: \.isLetter) else { continue }
+            let continues = text[token].first(where: \.isLetter)?.isLowercase == true
+            if continues, let last = result.last {
+                result[result.count - 1] = NSRange(location: last.location, length: NSMaxRange(range) - last.location)
+            } else {
+                result.append(range)
+            }
+        }
+        return result
     }
 }
 

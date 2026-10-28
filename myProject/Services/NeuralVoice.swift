@@ -6,7 +6,8 @@ import SherpaOnnx
 
 /// Нейросетевой голос Kokoro (82M, int8) через sherpa-onnx: работает на процессоре, без интернета.
 /// Модель (~100 МБ архив, ~150 МБ распакованная) не входит в приложение — скачивается по кнопке в настройках «Озвучки» с официального релиза sherpa-onnx.
-/// Пока голос не скачан, выключен или не справился — озвучивает системный голос, как раньше
+/// Пока голос не скачан, выключен или не справился — озвучивает системный голос, как раньше.
+/// Книги вслух: английские — Kokoro (если устройство успевает) или лёгкий голос Piper, русские — Piper; Piper скачивается отдельно
 @MainActor
 @Observable
 final class NeuralVoice {
@@ -44,14 +45,94 @@ final class NeuralVoice {
         Voice(id: 10, name: "Lewis", accent: "брит.", female: false),
     ]
 
+    /// Лёгкие голоса Piper для книг — только со свободной лицензией: CC0 или общественное достояние
+    /// (у «Ирины» лицензия записи неизвестна; «Руслан», hfc и Ryan — только некоммерческие)
+    enum PiperVoice: String, CaseIterable, Identifiable, Sendable {
+        case dmitri, denis, kristin, cori, joe, norman
+
+        nonisolated var id: Self { self }
+
+        /// Язык книг, которые читает голос
+        nonisolated var language: String {
+            switch self {
+            case .dmitri, .denis: "ru"
+            case .kristin, .cori, .joe, .norman: "en"
+            }
+        }
+
+        private nonisolated var locale: String {
+            switch self {
+            case .dmitri, .denis: "ru_RU"
+            case .cori: "en_GB"
+            case .kristin, .joe, .norman: "en_US"
+            }
+        }
+
+        var title: String {
+            switch self {
+            case .dmitri: "Дмитрий"
+            case .denis: "Денис"
+            case .kristin: "Кристин"
+            case .cori: "Кори"
+            case .joe: "Джо"
+            case .norman: "Норман"
+            }
+        }
+
+        /// Для списка в настройках: имя, акцент, голос
+        var summary: String {
+            switch self {
+            case .dmitri, .denis: "\(title) · муж."
+            case .kristin: "\(title) · амер., жен."
+            case .cori: "\(title) · брит., жен."
+            case .joe, .norman: "\(title) · амер., муж."
+            }
+        }
+
+        nonisolated var folder: String { "vits-piper-\(locale)-\(rawValue)-medium" }
+        nonisolated var modelFile: String { "\(locale)-\(rawValue)-medium.onnx" }
+        nonisolated var archive: URL {
+            URL(string: "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/\(folder).tar.bz2")!
+        }
+
+        static func voices(for language: String) -> [PiperVoice] {
+            allCases.filter { $0.language == language }
+        }
+    }
+
+    /// Голос, которым читается книга
+    struct BookVoice: Sendable, Equatable {
+        let model: NeuralVoiceEngine.Model
+        let speaker: Int
+    }
+
     static let enabledKey = "neural_voice_enabled"
     static let voiceKey = "neural_voice_id"
+    /// Читать книги вслух нейросетевым голосом (если он скачан); по умолчанию — да
+    static let booksKey = "neural_voice_books"
+    /// Замерено при чтении: Kokoro готовит речь медленнее, чем она звучит (iPhone 12, iPad Air 4 и старше)
+    static let kokoroSlowKey = "neural_kokoro_too_slow"
+    /// Кто читает английские книги: "kokoro", "piper" или "" — сам (Kokoro, если успевает)
+    static let englishBooksVoiceKey = "neural_en_books_voice"
     static let downloadSize = "~100 МБ, на iPhone ~150 МБ"
+    static let piperDownloadSize = "~67 МБ, на iPhone ~75 МБ"
 
     private nonisolated static let archiveURL = URL(string: "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-int8-en-v0_19.tar.bz2")!
     private nonisolated static let folderName = "kokoro-int8-en-v0_19"
 
     private(set) var phase: Phase = .notDownloaded
+    /// Голоса Piper по языкам книг («ru», «en») — скачиваются отдельно
+    private(set) var piperPhases: [String: Phase] = [:]
+    /// Kokoro не успевает читать книги на этом устройстве — книги читает Piper или системный голос
+    private(set) var kokoroTooSlow = UserDefaults.standard.bool(forKey: NeuralVoice.kokoroSlowKey)
+    private(set) var englishBooksVoice = UserDefaults.standard.string(forKey: NeuralVoice.englishBooksVoiceKey) ?? ""
+    /// Голос Piper, фраза которого готовится для «Прослушать», — в настройках крутится индикатор
+    private(set) var previewing: PiperVoice?
+    private var previewTask: Task<Void, Never>?
+    private let previewNode = AVAudioPlayerNode()
+    /// Частота, на которую подключён плеер «Прослушать»; nil — ещё не подключён
+    private var previewRate: Double?
+    /// Одна загрузка за раз: архивы распаковываются в общую папку
     private var downloadTask: Task<Void, Never>?
     private let audioEngine = AVAudioEngine()
     private let playerNode = AVAudioPlayerNode()
@@ -71,6 +152,11 @@ final class NeuralVoice {
 
     private init() {
         phase = Self.isInstalled ? .ready : .notDownloaded
+        for language in ["ru", "en"] {
+            piperPhases[language] = Self.installedPiper(language: language) != nil ? .ready : .notDownloaded
+        }
+        // Английский Piper скачан, а выбора ещё не было (скачан до появления выбора) — читает он
+        if englishBooksVoice.isEmpty, piperPhases["en"] == .ready { setEnglishBooksVoice("piper") }
     }
 
     // MARK: - Где лежит модель
@@ -89,6 +175,22 @@ final class NeuralVoice {
             FileManager.default.fileExists(atPath: folder.appendingPathComponent($0).path)
         }
     }
+
+    /// Скачанный голос Piper для книг на этом языке
+    nonisolated static func installedPiper(language: String) -> PiperVoice? {
+        PiperVoice.allCases.first { voice in
+            let folder = root.appendingPathComponent(voice.folder, isDirectory: true)
+            return voice.language == language && [voice.modelFile, "tokens.txt", "espeak-ng-data"].allSatisfy {
+                FileManager.default.fileExists(atPath: folder.appendingPathComponent($0).path)
+            }
+        }
+    }
+
+    func piperPhase(_ language: String) -> Phase {
+        piperPhases[language] ?? .notDownloaded
+    }
+
+    var isDownloading: Bool { downloadTask != nil }
 
     /// Голос включён и скачан — озвучка идёт через него
     var isActive: Bool {
@@ -113,7 +215,7 @@ final class NeuralVoice {
                 }
                 phase = .unpacking(0)
                 try await Task.detached(priority: .userInitiated) {
-                    try Self.install(archive) { fraction in
+                    try Self.install(archive, folder: Self.folderName) { fraction in
                         Task { @MainActor in NeuralVoice.shared.phase = .unpacking(fraction) }
                     }
                 }.value
@@ -128,21 +230,150 @@ final class NeuralVoice {
         }
     }
 
+    /// Голос Piper для книг; другой голос того же языка после установки удаляется — место не копится
+    func downloadPiper(_ voice: PiperVoice) {
+        guard downloadTask == nil else { return }
+        let language = voice.language
+        piperPhases[language] = .downloading(0)
+        downloadTask = Task {
+            do {
+                let archive = try await Self.fetch(voice.archive) { fraction in
+                    Task { @MainActor in
+                        let shared = NeuralVoice.shared
+                        if case .downloading = shared.piperPhase(language) { shared.piperPhases[language] = .downloading(fraction) }
+                    }
+                }
+                piperPhases[language] = .unpacking(0)
+                try await Task.detached(priority: .userInitiated) {
+                    try Self.install(archive, folder: voice.folder) { fraction in
+                        Task { @MainActor in NeuralVoice.shared.piperPhases[language] = .unpacking(fraction) }
+                    }
+                }.value
+                for other in PiperVoice.voices(for: language) where other != voice {
+                    try? FileManager.default.removeItem(at: Self.root.appendingPathComponent(other.folder))
+                }
+                piperPhases[language] = Self.installedPiper(language: language) == voice ? .ready : .failed("Архив распаковался не полностью")
+                // Скачали английский Piper — значит, хотят им слушать книги
+                if language == "en", piperPhases[language] == .ready { setEnglishBooksVoice("piper") }
+            } catch is CancellationError {
+                piperPhases[language] = Self.installedPiper(language: language) != nil ? .ready : .notDownloaded
+            } catch {
+                piperPhases[language] = .failed("Не удалось скачать голос. Проверьте интернет и место на iPhone.")
+            }
+            downloadTask = nil
+        }
+    }
+
     func cancelDownload() {
         downloadTask?.cancel()
         downloadTask = nil
         phase = Self.isInstalled ? .ready : .notDownloaded
+        for language in ["ru", "en"] {
+            piperPhases[language] = Self.installedPiper(language: language) != nil ? .ready : .notDownloaded
+        }
     }
 
-    /// Удалить модель — освобождает место; озвучка снова системная
+    /// Удалить модель — освобождает место; озвучка снова системная. Голоса Piper остаются
     func remove() {
         stop()
         cache = [:]
         cacheOrder = []
         Task { await engine.unload() }
-        try? FileManager.default.removeItem(at: Self.root)
+        try? FileManager.default.removeItem(at: Self.modelFolder)
         UserDefaults.standard.set(false, forKey: Self.enabledKey)
         phase = .notDownloaded
+    }
+
+    /// Удалить голос Piper этого языка — его книги снова читает Kokoro или системный голос
+    func removePiper(language: String) {
+        Task { await engine.unload() }
+        for voice in PiperVoice.voices(for: language) {
+            try? FileManager.default.removeItem(at: Self.root.appendingPathComponent(voice.folder))
+        }
+        piperPhases[language] = .notDownloaded
+        if language == "en", englishBooksVoice == "piper" { setEnglishBooksVoice("") }
+    }
+
+    /// Выбор в настройках: кто читает английские книги
+    func setEnglishBooksVoice(_ choice: String) {
+        englishBooksVoice = choice
+        UserDefaults.standard.set(choice, forKey: Self.englishBooksVoiceKey)
+    }
+
+    /// Замер скорости Kokoro при чтении — только если голос выбирается сам; явный выбор Kokoro не трогаем
+    var checksKokoroSpeed: Bool { englishBooksVoice.isEmpty }
+
+    /// Замер при чтении: Kokoro не успевает — английские книги дальше читает Piper или системный голос
+    func markKokoroTooSlow() {
+        kokoroTooSlow = true
+        UserDefaults.standard.set(true, forKey: Self.kokoroSlowKey)
+    }
+
+    /// «Проверить снова» в настройках — следующее чтение опять замерит Kokoro
+    func resetKokoroCheck() {
+        kokoroTooSlow = false
+        UserDefaults.standard.set(false, forKey: Self.kokoroSlowKey)
+    }
+
+    // MARK: - Книги вслух
+
+    /// Нейросетевой голос для книги на этом языке; nil — книгу читает системный.
+    /// Английские: Kokoro живее всех, но на A14 и старше не успевает — тогда Piper, если скачан
+    func bookVoice(language: String) -> BookVoice? {
+        guard UserDefaults.standard.object(forKey: Self.booksKey) as? Bool ?? true else { return nil }
+        let language = language.hasPrefix("ru") ? "ru" : language.hasPrefix("en") ? "en" : language
+        let piper = piperPhase(language) == .ready ? Self.installedPiper(language: language) : nil
+        let piperVoice = piper.map {
+            BookVoice(model: .piper(Self.root.appendingPathComponent($0.folder, isDirectory: true), file: $0.modelFile), speaker: 0)
+        }
+        guard language == "en", phase == .ready else { return piperVoice }
+        let kokoro = BookVoice(model: .kokoro(Self.modelFolder), speaker: selectedVoice)
+        switch englishBooksVoice {
+        case "kokoro": return kokoro
+        case "piper": return piperVoice ?? kokoro
+        default: return kokoroTooSlow ? piperVoice : kokoro
+        }
+    }
+
+    /// «Прослушать» в настройках: короткая фраза голосом Piper
+    func previewPiper(_ voice: PiperVoice) {
+        stop()
+        previewing = voice
+        let text = voice.language == "ru" ? "Здравствуйте! Так будут звучать русские книги." : "Hello! This is how English books will sound."
+        let model = NeuralVoiceEngine.Model.piper(Self.root.appendingPathComponent(voice.folder, isDirectory: true), file: voice.modelFile)
+        previewTask = Task {
+            let audio = try? await engine.audio(text, model: model, speaker: 0, speed: 1)
+            guard !Task.isCancelled else { return }
+            previewing = nil
+            if let audio { try? playPreview(audio) }
+        }
+    }
+
+    private func playPreview(_ audio: NeuralVoiceEngine.Audio) throws {
+        let rate = Double(audio.sampleRate)
+        if previewRate != rate {
+            audioEngine.stop()
+            if previewRate == nil { audioEngine.attach(previewNode) } else { audioEngine.disconnectNodeOutput(previewNode) }
+            audioEngine.connect(previewNode, to: audioEngine.mainMixerNode,
+                                format: AVAudioFormat(standardFormatWithSampleRate: rate, channels: 1))
+            previewRate = rate
+        }
+        if !audioEngine.isRunning {
+            try AVAudioSession.sharedInstance().setActive(true)
+            try audioEngine.start()
+        }
+        guard !audio.samples.isEmpty, let format = AVAudioFormat(standardFormatWithSampleRate: rate, channels: 1),
+              let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(audio.samples.count)),
+              let channel = buffer.floatChannelData?[0] else { return }
+        buffer.frameLength = buffer.frameCapacity
+        audio.samples.withUnsafeBufferPointer { channel.update(from: $0.baseAddress!, count: audio.samples.count) }
+        previewNode.scheduleBuffer(buffer, completionHandler: nil)
+        previewNode.play()
+    }
+
+    /// Предложение книги — звук; готовится на своём потоке, главный не ждёт
+    func bookAudio(_ text: String, voice: BookVoice, speed: Float) async throws -> NeuralVoiceEngine.Audio {
+        try await engine.audio(text, model: voice.model, speaker: voice.speaker, speed: speed)
     }
 
     /// Скачать файл с прогрессом во временную папку
@@ -150,15 +381,16 @@ final class NeuralVoice {
         let delegate = DownloadProgress(progress)
         let (temporary, response) = try await URLSession.shared.download(from: url, delegate: delegate)
         guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw URLError(.badServerResponse) }
-        let kept = FileManager.default.temporaryDirectory.appendingPathComponent("kokoro-voice.tar.bz2")
+        let kept = FileManager.default.temporaryDirectory.appendingPathComponent(url.lastPathComponent)
         try? FileManager.default.removeItem(at: kept)
         try FileManager.default.moveItem(at: temporary, to: kept)
         return kept
     }
 
-    private nonisolated static func install(_ archive: URL, progress: @escaping @Sendable (Double) -> Void) throws {
+    /// Распаковать архив в общую папку голосов; заменяется только папка этого голоса
+    private nonisolated static func install(_ archive: URL, folder: String, progress: @escaping @Sendable (Double) -> Void) throws {
         let manager = FileManager.default
-        try? manager.removeItem(at: root)
+        try? manager.removeItem(at: root.appendingPathComponent(folder))
         try manager.createDirectory(at: root, withIntermediateDirectories: true)
         var values = URLResourceValues()
         values.isExcludedFromBackup = true
@@ -216,6 +448,10 @@ final class NeuralVoice {
     }
 
     func stop() {
+        previewTask?.cancel()
+        previewTask = nil
+        previewing = nil
+        if previewRate != nil { previewNode.stop() }
         speakTask?.cancel()
         speakTask = nil
         pendingKey = nil
@@ -331,44 +567,80 @@ final class NeuralVoice {
 actor NeuralVoiceEngine {
     static let sampleRate = 24_000
 
+    /// Kokoro — английский, много голосов; Piper — один голос в модели (русский для книг)
+    enum Model: Sendable, Equatable {
+        case kokoro(URL)
+        case piper(URL, file: String)
+    }
+
+    struct Audio: Sendable {
+        let samples: [Float]
+        let sampleRate: Int
+    }
+
     private var tts: SherpaOnnxOfflineTtsWrapper?
+    /// Какая модель в памяти: другая — выгружаем и загружаем нужную
+    private var loaded: Model?
     private var unloadTask: Task<Void, Never>?
 
     func generate(_ text: String, voice: Int, speed: Float, folder: URL) throws -> [Float] {
+        try audio(text, model: .kokoro(folder), speaker: voice, speed: speed).samples
+    }
+
+    func audio(_ text: String, model: Model, speaker: Int, speed: Float) throws -> Audio {
         // Отменили, пока ждали очереди, — не тратим секунды на устаревшую фразу
         try Task.checkCancellation()
         let clean = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !clean.isEmpty else { return [] }
-        let tts = try load(folder)
-        let audio = tts.generate(text: clean, sid: voice, speed: speed)
+        guard !clean.isEmpty else { return Audio(samples: [], sampleRate: Self.sampleRate) }
+        let tts = try load(model)
+        let generated = tts.generate(text: clean, sid: speaker, speed: speed)
         scheduleUnload()
-        let samples = audio.samples
+        let samples = generated.samples
         guard !samples.isEmpty else { throw NeuralVoiceError.empty }
-        return samples
+        return Audio(samples: samples, sampleRate: Int(generated.sampleRate))
     }
 
     func warmUp(_ folder: URL) throws {
-        _ = try load(folder)
+        _ = try load(.kokoro(folder))
         scheduleUnload()
     }
 
     func unload() {
         unloadTask?.cancel()
         tts = nil
+        loaded = nil
     }
 
-    private func load(_ folder: URL) throws -> SherpaOnnxOfflineTtsWrapper {
-        if let tts { return tts }
-        let path = { (name: String) in folder.appendingPathComponent(name).path }
-        guard FileManager.default.fileExists(atPath: path("model.int8.onnx")) else { throw NeuralVoiceError.notInstalled }
-        let kokoro = sherpaOnnxOfflineTtsKokoroModelConfig(model: path("model.int8.onnx"), voices: path("voices.bin"),
-                                                           tokens: path("tokens.txt"), dataDir: path("espeak-ng-data"))
+    private func load(_ model: Model) throws -> SherpaOnnxOfflineTtsWrapper {
+        if let tts, loaded == model { return tts }
+        tts = nil
+        loaded = nil
+        // Замер на A14: 4 потока быстрее всего (2 — на 10% медленнее, 3 — ещё медленнее: поток уходит на экономное ядро)
         let threads = max(1, min(4, ProcessInfo.processInfo.activeProcessorCount - 2))
-        let model = sherpaOnnxOfflineTtsModelConfig(kokoro: kokoro, numThreads: threads, debug: 0)
-        var config = sherpaOnnxOfflineTtsConfig(model: model)
+        let folder: URL
+        let required: String
+        switch model {
+        case .kokoro(let url): (folder, required) = (url, "model.int8.onnx")
+        case .piper(let url, let file): (folder, required) = (url, file)
+        }
+        let path = { (name: String) in folder.appendingPathComponent(name).path }
+        guard FileManager.default.fileExists(atPath: path(required)) else { throw NeuralVoiceError.notInstalled }
+        var config = switch model {
+        case .kokoro:
+            sherpaOnnxOfflineTtsConfig(model: sherpaOnnxOfflineTtsModelConfig(
+                kokoro: sherpaOnnxOfflineTtsKokoroModelConfig(model: path("model.int8.onnx"), voices: path("voices.bin"),
+                                                              tokens: path("tokens.txt"), dataDir: path("espeak-ng-data")),
+                numThreads: threads, debug: 0))
+        case .piper(_, let file):
+            sherpaOnnxOfflineTtsConfig(model: sherpaOnnxOfflineTtsModelConfig(
+                vits: sherpaOnnxOfflineTtsVitsModelConfig(model: path(file), lexicon: "", tokens: path("tokens.txt"),
+                                                          dataDir: path("espeak-ng-data")),
+                numThreads: threads, debug: 0))
+        }
         let created = SherpaOnnxOfflineTtsWrapper(config: &config)
         guard created.tts != nil else { throw NeuralVoiceError.notInstalled }
         tts = created
+        loaded = model
         return created
     }
 
@@ -378,6 +650,7 @@ actor NeuralVoiceEngine {
             try? await Task.sleep(for: .seconds(180))
             guard !Task.isCancelled else { return }
             tts = nil
+            loaded = nil
         }
     }
 }

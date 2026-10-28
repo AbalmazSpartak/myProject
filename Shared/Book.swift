@@ -21,6 +21,8 @@ final class Book {
     @Attribute(.externalStorage) var translationData: Data?
     /// Какие абзацы перевода стоят под каждым абзацем книги — JSON BookAlignment
     @Attribute(.externalStorage) var alignmentData: Data?
+    /// Закладки — JSON массива BookBookmark
+    var bookmarksData: Data?
 
     init(_ parsed: ParsedBook, gutenbergID: Int? = nil) {
         title = parsed.title

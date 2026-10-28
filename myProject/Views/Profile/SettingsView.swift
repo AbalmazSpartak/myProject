@@ -170,34 +170,39 @@ struct SettingsView: View {
                         }
                     }
 
-                    Section {
-                        Toggle("ИИ-подсказки", isOn: $aiHints)
-                        if aiHints {
-                            Picker("Подсказка", selection: $aiHintsQuality) {
-                                ForEach(CloudContext.Quality.allCases, id: \.self) { quality in
-                                    Text(quality.title).tag(quality.rawValue)
+                    // ИИ-подсказки и перевод слов из книг — для изучения; в «Чтении» спрятаны и выключены
+                    if mode == .learning {
+                        Section {
+                            Toggle("ИИ-подсказки", isOn: $aiHints)
+                            if aiHints {
+                                Picker("Подсказка", selection: $aiHintsQuality) {
+                                    ForEach(CloudContext.Quality.allCases, id: \.self) { quality in
+                                        Text(quality.title).tag(quality.rawValue)
+                                    }
                                 }
+                                .pickerStyle(.segmented)
                             }
-                            .pickerStyle(.segmented)
+                        } footer: {
+                            Text(aiHints
+                                 ? "Кнопка «Значение в этом предложении» в карточке слова в читалке. Слово и предложение уходят на сервер WordLearner (ИИ Claude), без имени и почты. Обычная — быстрая; более точная — точнее подбирает значение и тратит 3 подсказки из дневного запаса вместо одной. Где есть Apple Intelligence, значение показывается сразу и бесплатно."
+                                 : "Перевод слова именно в этом предложении — в карточке слова в читалке.")
                         }
-                    } footer: {
-                        Text(aiHints
-                             ? "Кнопка «Значение в этом предложении» в карточке слова в читалке. Слово и предложение уходят на сервер WordLearner (ИИ Claude), без имени и почты. Обычная — быстрая; более точная — точнее подбирает значение и тратит 3 подсказки из дневного запаса вместо одной. Где есть Apple Intelligence, значение показывается сразу и бесплатно."
-                             : "Перевод слова именно в этом предложении — в карточке слова в читалке.")
-                    }
 
-                    Section {
-                        Picker("Слова из книг", selection: $bookWordsTranslator) {
-                            Text("Спрашивать").tag("")
-                            Text("ИИ").tag("ai")
-                            Text("Встроенный").tag("apple")
+                        Section {
+                            Picker("Слова из книг", selection: $bookWordsTranslator) {
+                                Text("Спрашивать").tag("")
+                                Text("ИИ").tag("ai")
+                                Text("Встроенный").tag("apple")
+                            }
+                        } footer: {
+                            Text("Перевод новых слов, когда словарь создаётся из книги или файла. ИИ переводит в значении из предложения и понимает диалект; нужен интернет, слово и предложение уходят на сервер WordLearner без имени и почты.")
                         }
-                    } footer: {
-                        Text("Перевод новых слов, когда словарь создаётся из книги или файла. ИИ переводит в значении из предложения и понимает диалект; нужен интернет, слово и предложение уходят на сервер WordLearner без имени и почты.")
                     }
 
                     // Озвучка
-                    Section(header: Text("Озвучка"), footer: Text("При переводе с русского на английский слово звучит после ответа, чтобы не подсказывать.")) {
+                    Section(header: Text("Озвучка"), footer: Text(mode == .learning
+                                                                  ? "При переводе с русского на английский слово звучит после ответа, чтобы не подсказывать."
+                                                                  : "Акцент, голос и скорость — для английских книг. Книги на других языках читает голос своего языка.")) {
                         Picker("Акцент", selection: $speechAccent) {
                             Text("Американский").tag("en-US")
                             Text("Британский").tag("en-GB")
@@ -228,7 +233,9 @@ struct SettingsView: View {
                         }
                         .padding(.vertical, 4)
 
-                        Toggle("Озвучивать слово сразу", isOn: $autoSpeak)
+                        if mode == .learning {
+                            Toggle("Озвучивать слово сразу", isOn: $autoSpeak)
+                        }
 
                         Button {
                             TextToSpeechManager.shared.speak("Hello! This is how English words will sound.")
@@ -239,7 +246,8 @@ struct SettingsView: View {
 
                     // Напоминание
                     Section {
-                        Toggle("Напоминать заниматься", isOn: Binding(get: { reminderEnabled }, set: setReminder))
+                        Toggle(mode == .learning ? "Напоминать заниматься" : "Напоминать о чтении",
+                               isOn: Binding(get: { reminderEnabled }, set: setReminder))
                         if reminderEnabled {
                             DatePicker("Время", selection: reminderDate, displayedComponents: .hourAndMinute)
                         }
@@ -248,13 +256,17 @@ struct SettingsView: View {
                     } footer: {
                         Text(notificationsDenied
                              ? "Уведомления запрещены — включите их в Настройках iPhone → WordLearner → Уведомления."
-                             : "Раз в день, без спешки и счётчиков — просто повод уделить словам пару минут.")
+                             : mode == .learning
+                             ? "Раз в день, без спешки и счётчиков — просто повод уделить словам пару минут."
+                             : "Раз в день, без спешки — просто повод почитать пару страниц.")
                     }
 
-                    Section {
-                        Toggle("Помогать улучшать словарь", isOn: $improveDictionary)
-                    } footer: {
-                        Text("Анонимно, без имени и почты: ваши правки слов из встроенного словаря, слова, добавленные из книг (с предложением), и слова, которые долго не запоминаются. По ним исправляются переводы для всех.")
+                    if mode == .learning {
+                        Section {
+                            Toggle("Помогать улучшать словарь", isOn: $improveDictionary)
+                        } footer: {
+                            Text("Анонимно, без имени и почты: ваши правки слов из встроенного словаря, слова, добавленные из книг (с предложением), и слова, которые долго не запоминаются. По ним исправляются переводы для всех.")
+                        }
                     }
 
                     // Резервная копия

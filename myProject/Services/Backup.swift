@@ -115,6 +115,7 @@ nonisolated struct BackupFile: Codable, Sendable {
         /// Перевод книги и сопоставление абзацев — в копиях до перевода их нет
         var translationData: Data?
         var alignmentData: Data?
+        var bookmarksData: Data?
     }
 
     /// Что в копии — для подтверждения перед восстановлением
@@ -198,7 +199,8 @@ enum Backup {
             BackupFile.BookRecord(id: book.id, title: book.title, author: book.author, addedAt: book.addedAt,
                                   lastOpenedAt: book.lastOpenedAt, gutenbergID: book.gutenbergID, cover: book.coverData,
                                   chaptersData: book.chaptersData, position: book.position,
-                                  translationData: book.translationData, alignmentData: book.alignmentData)
+                                  translationData: book.translationData, alignmentData: book.alignmentData,
+                                  bookmarksData: book.bookmarksData)
         } : []
         return BackupFile(includesMedia: includeMedia, words: words, lists: lists, categories: categories, profile: profile,
                           topics: topics, topicRatings: topicRatings, topicComments: topicComments, books: books,
@@ -377,6 +379,7 @@ enum Backup {
             book.position = record.position
             book.translationData = record.translationData
             book.alignmentData = record.alignmentData
+            book.bookmarksData = record.bookmarksData
             context.insert(book)
         }
 

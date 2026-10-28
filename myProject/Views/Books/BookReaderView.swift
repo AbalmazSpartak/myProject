@@ -9,6 +9,11 @@ struct TappedWord: Identifiable {
     let sentence: String
     /// Где слово в предложении — для словарной формы
     let range: Range<String.Index>
+    /// То же место в переводе книги, если перевод добавлен
+    var passage: BookPassage?
+    /// Абзац главы и начало слова в нём (UTF-16) — для «Читать вслух отсюда»
+    var paragraph = 0
+    var location = 0
 }
 
 /// Читалка: глава прокручивается, нажатие на слово — перевод; место чтения запоминается
@@ -56,6 +61,14 @@ struct BookReaderView: View {
     /// Абзацы открытой страницы — для «Перевод страницы»; в объекте, а не в @State: листание не перерисовывает читалку
     @State private var pageParagraphs = PageParagraphs()
 
+    /// Закладки: абзацы от начала книги
+    @State private var bookmarks: [BookBookmark] = []
+    @State private var isShowingBookmarks = false
+    @State private var isAddingBookmark = false
+    @State private var bookmarkNote = ""
+    /// Шапка спрятана: при чтении — тонкая строка с названием главы
+    @State private var isChromeHidden = false
+
     /// Оформление — снимок настроек: обновляется после шторки «Оформление»
     @State private var style = ReaderStyle.current()
     /// Чтение вслух
@@ -74,8 +87,18 @@ struct BookReaderView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-            Divider().opacity(0.4)
+            // Место под шапку — всегда одной высоты: свёрнута она или нет, текст не перекрывается и страница не прыгает
+            ZStack {
+                if isChromeHidden {
+                    compactTitle
+                        .transition(.opacity)
+                } else {
+                    header
+                        .transition(.opacity)
+                }
+            }
+            .frame(height: Self.barHeight)
+            Divider().opacity(isChromeHidden ? 0 : 0.4)
             if let linkedParagraphs, style.layout == .pages, let chapter {
                 ReaderPagedText(
                     chapterID: chapterIndex,
@@ -100,6 +123,10 @@ struct BookReaderView: View {
                         book.position = chapterStarts[chapterIndex] + paragraph
                     },
                     onPageParagraphs: { pageParagraphs.range = $0 },
+                    passage: bookPassage,
+                    bookmarked: chapterBookmarks,
+                    onBackgroundTap: toggleChrome,
+                    onPageTurn: { setChromeHidden(true) },
                     onTap: handleTap,
                     onPrevious: { go(to: chapterIndex - 1, atEnd: true) },
                     onNext: { go(to: chapterIndex + 1) }
@@ -119,6 +146,8 @@ struct BookReaderView: View {
                     translations: showsParallel ? chapterTranslations : [],
                     translationFont: style.font.font(size: style.fontSize * 0.86),
                     onShiftTranslation: shiftTranslation,
+                    bookmarked: chapterBookmarks,
+                    onScrollDirection: { setChromeHidden($0) },
                     onVisible: { paragraph in
                         // Место чтения — прямо в книгу: у читалки нет состояния, которое менялось бы при прокрутке
                         guard chapterStarts.indices.contains(chapterIndex) else { return }
@@ -151,10 +180,36 @@ struct BookReaderView: View {
             }
         }
         .onDisappear { speech.stop() }
+        .onChange(of: speechSpeed) { _, _ in speech.speedChanged() }
+        // Голос сменился сам (Kokoro не успевает) — коротко говорим об этом
+        .overlay(alignment: .bottom) {
+            if let notice = speech.notice {
+                Text(notice)
+                    .scaledFont(size: 14)
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(Color.black.opacity(0.8), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 40)
+                    .onTapGesture { speech.notice = nil }
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut, value: speech.notice)
+        .task(id: speech.notice) {
+            guard speech.notice != nil else { return }
+            try? await Task.sleep(for: .seconds(6))
+            speech.notice = nil
+        }
         // Глава готовится, когда главы загружены и при каждой смене главы
         .task(id: "\(chapters.count)-\(chapterIndex)-\(style.phonicsID)") { await prepareChapter() }
         .sheet(item: $tappedWord) { tapped in
-            WordLookupView(tapped: tapped, bookTitle: book.title)
+            WordLookupView(tapped: tapped, bookTitle: book.title) {
+                tappedWord = nil
+                speech.start(from: tapped.paragraph, offset: tapped.location)
+            }
                 .presentationDetents([.medium, .large])
                 .appThemedColorScheme()
         }
@@ -175,6 +230,18 @@ struct BookReaderView: View {
         .sheet(isPresented: $isShowingDictionary) {
             BookDictionaryView(book: book)
                 .appThemedColorScheme()
+        }
+        .sheet(isPresented: $isShowingBookmarks) {
+            BookBookmarksView(bookmarks: bookmarks, chapters: chapters, chapterStarts: chapterStarts,
+                          onSelect: { open($0.paragraph) }, onDelete: removeBookmark)
+                .appThemedColorScheme()
+        }
+        .alert("Закладка", isPresented: $isAddingBookmark) {
+            TextField("Заметка (можно пусто)", text: $bookmarkNote)
+            Button("Отмена", role: .cancel) {}
+            Button("Добавить", action: addBookmark)
+        } message: {
+            Text("На этом месте книги. Заметка — например, «вернуться сюда».")
         }
         .sheet(isPresented: $isShowingPageTranslation) {
             PageTranslationView(items: pageTranslationItems, onShift: shiftTranslation)
@@ -208,65 +275,68 @@ struct BookReaderView: View {
 
     // MARK: - Шапка
 
+    /// Шапка: назад, название главы (нажатие — оглавление), чтение вслух, остальное (и оформление) — в «…»
     private var header: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 14) {
             Button(action: { dismiss() }) {
-                HStack(spacing: 4) {
-                    Image(systemName: "chevron.left")
-                    Text("Книги")
-                }
-                .scaledFont(size: 17, weight: .semibold)
-                .foregroundColor(style.text)
+                Image(systemName: "chevron.left")
+                    .scaledFont(size: 20, weight: .semibold)
+                    .foregroundColor(style.text)
+                    .frame(width: 30, height: 34, alignment: .leading)
+                    .contentShape(Rectangle())
             }
-            Spacer()
+            .accessibilityLabel("Книги")
             Button { isShowingContents = true } label: {
                 Text(chapter?.title ?? book.title)
-                    .scaledFont(size: 15, weight: .semibold)
+                    .scaledFont(size: 16, weight: .semibold)
                     .foregroundColor(style.text)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .frame(maxWidth: .infinity)
             }
             .accessibilityHint("Оглавление")
-            Spacer()
             Button(action: toggleReading) {
-                Image(systemName: speech.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                    .scaledFont(size: 24)
-                    .foregroundColor(style.text)
-            }
-            .accessibilityLabel(speech.isPlaying ? "Пауза" : "Читать вслух")
-            Button { isShowingSearch = true } label: {
-                Image(systemName: "magnifyingglass")
-                    .scaledFont(size: 19, weight: .semibold)
-                    .foregroundColor(style.text)
-            }
-            .accessibilityLabel("Поиск по книге")
-            if alignment != nil {
-                Button(action: showTranslation) {
-                    Image(systemName: "translate")
-                        .scaledFont(size: 19, weight: .semibold)
+                if speech.isPreparing {
+                    // Нейросетевой голос готовит фразу — нажатие ставит на паузу, как обычно
+                    ProgressView()
+                        .tint(style.text)
+                        .frame(width: 26, height: 26)
+                } else {
+                    Image(systemName: speech.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                        .scaledFont(size: 24)
                         .foregroundColor(style.text)
                 }
-                .accessibilityLabel(style.layout == .pages ? "Перевод страницы" : "Параллельный перевод")
             }
-            Button { isShowingAppearance = true } label: {
-                Text("Aa")
-                    .font(.system(size: 19, weight: .semibold, design: .serif))
-                    .foregroundColor(style.text)
-            }
-            .accessibilityLabel("Оформление")
+            .accessibilityLabel(speech.isPlaying ? "Пауза" : "Читать вслух")
             Menu {
+                Button { isShowingAppearance = true } label: {
+                    Label("Оформление", systemImage: "textformat.size")
+                }
                 Button { isShowingContents = true } label: {
                     Label("Оглавление", systemImage: "list.bullet")
                 }
                 Button { isShowingSearch = true } label: {
                     Label("Поиск по книге", systemImage: "magnifyingglass")
                 }
+                if let current = currentBookmark {
+                    Button(role: .destructive) { removeBookmark(current) } label: {
+                        Label("Убрать закладку", systemImage: "bookmark.slash")
+                    }
+                } else {
+                    Button {
+                        bookmarkNote = ""
+                        isAddingBookmark = true
+                    } label: {
+                        Label("Добавить закладку", systemImage: "bookmark")
+                    }
+                }
+                Button { isShowingBookmarks = true } label: {
+                    Label(bookmarks.isEmpty ? "Закладки" : "Закладки (\(bookmarks.count))", systemImage: "list.bullet.rectangle")
+                }
                 if isEnglish {
                     Button { isShowingDictionary = true } label: {
                         Label("Словарь из книги", systemImage: "text.book.closed")
                     }
-                }
-                Button { isShowingAppearance = true } label: {
-                    Label("Оформление", systemImage: "textformat.size")
                 }
                 translationMenu
                 Picker(selection: $speechSpeed) {
@@ -311,6 +381,32 @@ struct BookReaderView: View {
                 Label("Добавить перевод книги…", systemImage: "doc.badge.plus")
             }
         }
+    }
+
+    /// Высота места под шапку
+    private static let barHeight: CGFloat = 50
+
+    /// Шапка спрятана — тонкая строка с названием главы; нажатие возвращает шапку
+    private var compactTitle: some View {
+        Text(chapter?.title ?? book.title)
+            .scaledFont(size: 12, weight: .medium)
+            .foregroundColor(style.text.opacity(0.5))
+            .lineLimit(1)
+            .padding(.horizontal, 40)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .onTapGesture { setChromeHidden(false) }
+            .accessibilityAddTraits(.isButton)
+            .accessibilityHint("Показать меню")
+    }
+
+    private func toggleChrome() {
+        setChromeHidden(!isChromeHidden)
+    }
+
+    private func setChromeHidden(_ hidden: Bool) {
+        guard hidden != isChromeHidden else { return }
+        withAnimation(.easeInOut(duration: 0.2)) { isChromeHidden = hidden }
     }
 
     // MARK: - Текст главы
@@ -390,10 +486,12 @@ struct BookReaderView: View {
             return start
         }
         loadTranslation()
+        bookmarks = book.bookmarks
         let position = book.position
         chapterIndex = chapterStarts.lastIndex { $0 <= position } ?? 0
         startParagraph = position - (chapterStarts.indices.contains(chapterIndex) ? chapterStarts[chapterIndex] : 0)
         book.lastOpenedAt = Date()
+        DailyReminder.rememberBook(book.title)
     }
 
     /// Ссылки на слова для всей главы — в фоне, один раз; с подсветкой правил чтения, если она включена
@@ -416,7 +514,8 @@ struct BookReaderView: View {
                 Self.linked($1, paragraph: $0, english: english, phonics: phonics, cache: &cache)
             }
         }.value
-        speech.load(paragraphs: paragraphs, chapterTitle: chapter.title, bookTitle: book.title)
+        speech.load(paragraphs: paragraphs, chapterTitle: chapter.title, bookTitle: book.title,
+                    author: book.author, cover: book.coverData)
         if continuesReading {
             continuesReading = false
             speech.start(from: 0)
@@ -435,6 +534,54 @@ struct BookReaderView: View {
         }
     }
 
+    // MARK: - Закладки
+
+    /// Абзацы открытой главы с закладкой (номера в главе)
+    private var chapterBookmarks: Set<Int> {
+        guard chapterStarts.indices.contains(chapterIndex), let chapter else { return [] }
+        let start = chapterStarts[chapterIndex]
+        return Set(bookmarks.map { $0.paragraph - start }.filter { chapter.paragraphs.indices.contains($0) })
+    }
+
+    /// Закладка на открытом месте: на открытой странице, в прокрутке — на абзаце вверху экрана
+    private var currentBookmark: BookBookmark? {
+        guard chapterStarts.indices.contains(chapterIndex) else { return nil }
+        let start = chapterStarts[chapterIndex]
+        let range = style.layout == .pages ? pageParagraphs.range.map { (start + $0.lowerBound)...(start + $0.upperBound) } : nil
+        return bookmarks.first { range?.contains($0.paragraph) ?? ($0.paragraph == book.position) }
+    }
+
+    private func addBookmark() {
+        let note = bookmarkNote.trimmingCharacters(in: .whitespacesAndNewlines)
+        bookmarks.append(BookBookmark(paragraph: book.position, note: note))
+        saveBookmarks()
+        Haptics.tap()
+    }
+
+    private func removeBookmark(_ bookmark: BookBookmark) {
+        bookmarks.removeAll { $0.id == bookmark.id }
+        saveBookmarks()
+    }
+
+    private func saveBookmarks() {
+        book.bookmarks = bookmarks
+        bookmarks = book.bookmarks
+        try? modelContext.save()
+    }
+
+    /// Переход к абзацу книги: другая глава открывается на нём, в открытой — прокрутка или листание к нему
+    private func open(_ paragraph: Int) {
+        guard let index = chapterStarts.lastIndex(where: { $0 <= paragraph }), chapters.indices.contains(index) else { return }
+        speech.stop()
+        let local = paragraph - chapterStarts[index]
+        mark.show(paragraph: local, range: NSRange(location: 0, length: 0))
+        book.position = paragraph
+        if index != chapterIndex {
+            startParagraph = local
+            chapterIndex = index
+        }
+    }
+
     // MARK: - Перевод книги
 
     private func loadTranslation() {
@@ -446,15 +593,6 @@ struct BookReaderView: View {
         chapterTranslations = alignment.map {
             ParallelText.paragraphs(chapter: chapterIndex, alignment: $0, translation: translationParagraphs)
         } ?? []
-    }
-
-    /// Прокрутка — перевод под абзацами включается и выключается; страницы — шторка с переводом открытой страницы
-    private func showTranslation() {
-        if style.layout == .pages {
-            isShowingPageTranslation = true
-        } else {
-            showsParallel.toggle()
-        }
     }
 
     /// Абзацы открытой страницы с переводом; до первого листания — несколько абзацев от места чтения
@@ -483,9 +621,9 @@ struct BookReaderView: View {
         }
         let original = chapters
         // Английская книга и русский перевод — пары абзацев ищутся и по словарю базы, не только по длине
-        let lexiconURL = isEnglish && BookLanguage.detect(translation) == "ru" ? Bundle.main.url(forResource: "words", withExtension: "csv") : nil
+        let usesLexicon = isEnglish && BookLanguage.detect(translation) == "ru"
         let aligned = await Task.detached(priority: .userInitiated) {
-            ParallelText.align(original, translation: translation, lexicon: lexiconURL.flatMap(AlignmentLexicon.load))
+            ParallelText.align(original, translation: translation, lexicon: usesLexicon ? AlignmentLexicon.bundled : nil)
         }.value
         book.translationData = try? JSONEncoder().encode(translation)
         book.alignmentData = try? JSONEncoder().encode(aligned)
@@ -494,6 +632,19 @@ struct BookReaderView: View {
         updateChapterTranslations()
         showsParallel = true
         translationVersion += 1
+    }
+
+    /// Перевод книги для выделенного или нажатого: предложения перевода абзаца. Абзац без своего перевода
+    /// (переводчик слил его с предыдущим) — ищем у предыдущего, оба абзаца одним текстом
+    private func bookPassage(paragraph: Int, range: NSRange) -> BookPassage? {
+        guard let chapter, chapter.paragraphs.indices.contains(paragraph), chapterTranslations.indices.contains(paragraph) else { return nil }
+        var owner = paragraph
+        while chapterTranslations[owner] == nil, owner > 0, paragraph - owner < 3 { owner -= 1 }
+        guard let translation = chapterTranslations[owner] else { return nil }
+        let original = chapter.paragraphs[owner...paragraph].joined(separator: " ")
+        let shift = chapter.paragraphs[owner..<paragraph].reduce(0) { $0 + ($1 as NSString).length + 1 }
+        return ParallelText.passage(original: original, selected: NSRange(location: range.location + shift, length: range.length),
+                                    translation: translation, lexicon: isEnglish ? AlignmentLexicon.bundled : nil)
     }
 
     /// «Сдвинуть перевод» с этого абзаца до конца главы: +1 — здесь следующий абзац перевода, −1 — предыдущий
@@ -556,7 +707,9 @@ struct BookReaderView: View {
             definedWord = DefinedWord(term: String(paragraph[range]))
             return
         }
-        tappedWord = TappedWord(word: String(paragraph[range]), sentence: sentence, range: start..<end)
+        tappedWord = TappedWord(word: String(paragraph[range]), sentence: sentence, range: start..<end,
+                                passage: bookPassage(paragraph: parts[0], range: NSRange(location: parts[1], length: parts[2])),
+                                paragraph: parts[0], location: parts[1])
     }
 
     private static func sentence(containing range: Range<String.Index>, in text: String) -> Range<String.Index> {
@@ -663,17 +816,22 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
     let translations: [String?]
     let translationFont: Font
     let onShiftTranslation: (Int, Int) -> Void
+    let bookmarked: Set<Int>
+    /// true — читают дальше вниз (шапку спрятать), false — вернулись вверх (показать)
+    let onScrollDirection: (Bool) -> Void
     let onVisible: (Int) -> Void
     let onTap: (URL) -> Void
     @ViewBuilder let navigation: () -> Navigation
 
     /// Видимые абзацы — в обычном объекте, а не в @State: их смена при прокрутке не перерисовывает главу
     @State private var visible = VisibleParagraphs()
+    /// Откуда началось движение в одну сторону — шапка меняется, когда ушли от него на 40 точек
+    @State private var scrollAnchor = ScrollAnchor()
 
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.chapterID == rhs.chapterID && lhs.paragraphs.count == rhs.paragraphs.count
             && lhs.font == rhs.font && lhs.textColor == rhs.textColor && lhs.lineSpacing == rhs.lineSpacing
-            && lhs.translations.count == rhs.translations.count
+            && lhs.translations.count == rhs.translations.count && lhs.bookmarked == rhs.bookmarked
     }
 
     var body: some View {
@@ -686,6 +844,13 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
                                         translation: translations.indices.contains(index) ? translations[index] : nil,
                                         translationFont: translationFont,
                                         onShiftTranslation: { onShiftTranslation(index, $0) })
+                            .overlay(alignment: .topTrailing) {
+                                if bookmarked.contains(index) {
+                                    BookmarkRibbon()
+                                        .offset(x: 18, y: -6)
+                                        .allowsHitTesting(false)
+                                }
+                            }
                             .id(index)
                     }
                     navigation()
@@ -697,6 +862,23 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
             }
             .onScrollTargetVisibilityChange(idType: Int.self, threshold: 0.01) { ids in
                 visible.ids = ids
+            }
+            .onScrollGeometryChange(for: CGFloat.self, of: { $0.contentOffset.y }) { _, offset in
+                let moved = offset - scrollAnchor.offset
+                if offset < 20 {
+                    onScrollDirection(false)
+                    scrollAnchor.offset = offset
+                } else if moved > 40 {
+                    onScrollDirection(true)
+                    scrollAnchor.offset = offset
+                } else if moved < -40 {
+                    onScrollDirection(false)
+                    scrollAnchor.offset = offset
+                } else if (moved > 0) != scrollAnchor.goingDown {
+                    // Повернули обратно — отсчёт с этого места
+                    scrollAnchor.goingDown = moved > 0
+                    scrollAnchor.offset = offset
+                }
             }
             // Место чтения запоминаем, когда прокрутка остановилась, а не на каждом абзаце
             .onScrollPhaseChange { _, phase in
@@ -790,6 +972,12 @@ private struct ReaderParagraph: View {
 /// Какие абзацы сейчас на экране. Класс без наблюдения: запись не вызывает перерисовку
 private final class VisibleParagraphs {
     var ids: [Int] = []
+}
+
+/// Прокрутка для шапки: где началось движение и в какую сторону. Без наблюдения — прокрутка не перерисовывает главу
+private final class ScrollAnchor {
+    var offset: CGFloat = 0
+    var goingDown = true
 }
 
 /// Перевод встал не напротив своего абзаца — сдвинуть с этого места до конца главы

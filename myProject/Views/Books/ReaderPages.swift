@@ -122,6 +122,16 @@ nonisolated final class ReaderPageLayout {
         return (segment.paragraph, NSRange(location: range.location - offsets[index] + segment.range.location, length: range.length))
     }
 
+    /// Выделенное в первом задетом абзаце: абзац главы и место в нём — по нему ищется перевод книги
+    func firstParagraphPart(of range: NSRange) -> (paragraph: Int, range: NSRange)? {
+        for index in segments.indices {
+            guard let part = local(range, segment: index) else { continue }
+            let segment = segments[index]
+            return (segment.paragraph, NSRange(location: part.location + segment.range.location, length: part.length))
+        }
+        return nil
+    }
+
     /// Выделенный текст: абзацы — через пробел, для перевода и озвучки
     func string(_ range: NSRange) -> String {
         text.substring(with: range).replacingOccurrences(of: "\n", with: " ")
@@ -168,6 +178,14 @@ struct ReaderPagedText: View, Equatable {
     let onVisible: (Int) -> Void
     /// Абзацы открытой страницы — для «Перевод страницы»
     let onPageParagraphs: (ClosedRange<Int>) -> Void
+    /// Перевод книги для выделенного: абзац и место в нём
+    let passage: (Int, NSRange) -> BookPassage?
+    /// Абзацы главы с закладкой — на их странице ленточка в углу
+    let bookmarked: Set<Int>
+    /// Нажатие в середине страницы мимо слов — показать или скрыть шапку
+    let onBackgroundTap: () -> Void
+    /// Страницу перелистнули — шапка прячется, тексту больше места
+    let onPageTurn: () -> Void
     let onTap: (URL) -> Void
     let onPrevious: () -> Void
     let onNext: () -> Void
@@ -185,6 +203,8 @@ struct ReaderPagedText: View, Equatable {
     @State private var dragMode: DragMode?
     /// Где палец, пока выделяют, — над ним лупа
     @State private var fingerLocation: CGPoint?
+    /// Страницу открыла сама читалка (разбивка на страницы), а не читатель — шапку не прятать
+    @State private var isSettingPage = false
 
     private enum DragMode { case extend, start, end }
 
@@ -199,7 +219,7 @@ struct ReaderPagedText: View, Equatable {
         lhs.chapterID == rhs.chapterID && lhs.paragraphs.count == rhs.paragraphs.count && lhs.readerFont == rhs.readerFont
             && lhs.fontSize == rhs.fontSize && lhs.textColor == rhs.textColor && lhs.lineSpacing == rhs.lineSpacing
             && lhs.curl == rhs.curl && lhs.animated == rhs.animated && lhs.background == rhs.background && lhs.bookTitle == rhs.bookTitle
-            && lhs.language == rhs.language
+            && lhs.language == rhs.language && lhs.bookmarked == rhs.bookmarked
     }
 
     var body: some View {
@@ -224,7 +244,11 @@ struct ReaderPagedText: View, Equatable {
                         .allowsHitTesting(false)
                     // Палец отпустили — панель с выделенным: перевод, озвучка, копирование, в словарь
                     if let selection, press == nil, let layout = selectionLayout {
-                        ReaderSelectionPanel(text: layout.string(selection.range), bookTitle: bookTitle, language: language) { clearSelection() }
+                        let selected = selection.range
+                        ReaderSelectionPanel(text: layout.string(selected), bookTitle: bookTitle, language: language,
+                                             passageLookup: { layout.firstParagraphPart(of: selected).flatMap { passage($0.paragraph, $0.range) } }) {
+                            clearSelection()
+                        }
                             .padding(.horizontal, 12)
                             .padding(.bottom, 8)
                             .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -248,6 +272,7 @@ struct ReaderPagedText: View, Equatable {
             if page == pages.count, hasNext { onNext(); return }
             if let first = pages[safe: page]?.first?.paragraph { onVisible(first) }
             reportPageParagraphs()
+            if isSettingPage { isSettingPage = false } else { onPageTurn() }
         }
         // Чтение вслух листает само: читаемое слово ушло на следующую страницу — перелистываем
         .onChange(of: speech.paragraph) { _, _ in followSpeech() }
@@ -285,6 +310,14 @@ struct ReaderPagedText: View, Equatable {
             pageBody(segments, page: index)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .background(background)
+                .overlay(alignment: .topTrailing) {
+                    // Закладка — ленточкой в углу, как в бумажной книге
+                    if segments.contains(where: { bookmarked.contains($0.paragraph) }) {
+                        BookmarkRibbon()
+                            .padding(.trailing, 14)
+                            .allowsHitTesting(false)
+                    }
+                }
                 .overlay(alignment: .topLeading) {
                     if let fingerLocation, selection?.page == index {
                         GeometryReader { proxy in
@@ -442,8 +475,8 @@ struct ReaderPagedText: View, Equatable {
                     turn(-1)
                 } else if x > width * (1 - Self.edgeZone) {
                     turn(1)
-                } else {
-                    translate(at: value.location, page: index, textWidth: textWidth)
+                } else if !translate(at: value.location, page: index, textWidth: textWidth) {
+                    onBackgroundTap()
                 }
             }
     }
@@ -516,13 +549,16 @@ struct ReaderPagedText: View, Equatable {
     }
 
     /// Нажатие на слово в середине страницы — карточка слова
-    private func translate(at location: CGPoint, page index: Int, textWidth: CGFloat) {
+    /// false — под пальцем нет слова
+    @discardableResult
+    private func translate(at location: CGPoint, page index: Int, textWidth: CGFloat) -> Bool {
         guard let layout = layout(page: index, textWidth: textWidth),
               let character = layout.index(at: textPoint(location), exact: true),
               let word = layout.word(at: character),
               let position = layout.paragraphPosition(of: word),
-              let url = URL(string: "wlword://w/\(position.paragraph)/\(position.range.location)/\(position.range.length)") else { return }
+              let url = URL(string: "wlword://w/\(position.paragraph)/\(position.range.location)/\(position.range.length)") else { return false }
         onTap(url)
+        return true
     }
 
     /// Страницы — в фоне; запас в полстроки снизу: SwiftUI и TextKit могут разойтись на пиксель-другой
@@ -536,6 +572,7 @@ struct ReaderPagedText: View, Equatable {
         guard !result.isEmpty else { return }
         let keep = pages.isEmpty ? startParagraph : (pages[safe: page]?.first?.paragraph ?? startParagraph)
         let opening = pages.isEmpty
+        isSettingPage = true
         pages = result
         defer { reportPageParagraphs() }
         // Глава открыта поиском — сразу страница с найденным словом, а не начало абзаца
