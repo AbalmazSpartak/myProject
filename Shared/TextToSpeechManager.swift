@@ -10,6 +10,20 @@ enum SpeechSettings {
     static let rateKey = "speech_rate"
     static let defaultRate = 0.45
     static let rateRange = 0.3...0.55
+
+    /// Скорость нейросетевого голоса по бегунку «Скорость речи»: на обычной точке — 1, на краях шкалы — 0,75 и 1,25
+    static func neuralSpeedFactor(rate: Double) -> Double {
+        let clamped = min(max(rate, rateRange.lowerBound), rateRange.upperBound)
+        if clamped <= defaultRate {
+            return 0.75 + 0.25 * (clamped - rateRange.lowerBound) / (defaultRate - rateRange.lowerBound)
+        }
+        return 1 + 0.25 * (clamped - defaultRate) / (rateRange.upperBound - defaultRate)
+    }
+
+    /// То же — из сохранённых настроек
+    static var neuralSpeedFactor: Double {
+        neuralSpeedFactor(rate: UserDefaults.standard.object(forKey: rateKey) as? Double ?? defaultRate)
+    }
     /// Произносить английское слово сразу при показе, без нажатия на динамик
     static let autoSpeakKey = "speech_auto"
     /// Выбранный голос (identifier); пусто — автоматически лучший скачанный для акцента

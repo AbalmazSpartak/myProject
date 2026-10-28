@@ -443,7 +443,8 @@ final class NeuralVoice {
     func speak(_ text: String, slow: Bool = false) -> Bool {
         guard isActive else { return false }
         let voice = selectedVoice
-        let speed: Float = slow ? 0.7 : 1.0
+        // Скорость из «Озвучки» (0,75…1,25); «медленно» — ещё на 30% тише
+        let speed = Float(SpeechSettings.neuralSpeedFactor * (slow ? 0.7 : 1.0))
         let key = "\(voice)|\(speed)|\(text)"
         if pendingKey == key { return true }
         stop()

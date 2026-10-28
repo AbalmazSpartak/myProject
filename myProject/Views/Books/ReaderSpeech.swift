@@ -1031,9 +1031,8 @@ final class ReaderSpeech: NSObject {
     }
 
     private static func neuralSpeedSetting() -> Float {
-        let base = UserDefaults.standard.object(forKey: SpeechSettings.rateKey) as? Double ?? SpeechSettings.defaultRate
         let speed = UserDefaults.standard.object(forKey: Self.speedKey) as? Double ?? 1
-        return Float(speed * min(max(base / SpeechSettings.defaultRate, 0.75), 1.25))
+        return Float(speed * SpeechSettings.neuralSpeedFactor)
     }
 
     // MARK: - Экран блокировки и наушники
