@@ -143,12 +143,12 @@ struct VoicePickerView: View {
 
 /// Название выбранного голоса для строки в «Озвучке»
 enum VoiceSummary {
-    static func current(accent: String, voiceID: String) -> String {
-        // Слова говорит Kokoro — в строке его голос
-        let defaults = UserDefaults.standard
-        if NeuralVoice.shared.phase == .ready, defaults.string(forKey: SpeechSettings.wordsEngineKey) != "system",
-           let neural = NeuralVoice.voices.first(where: { $0.id == (defaults.object(forKey: NeuralVoice.voiceKey) as? Int ?? 1) }) {
-            return neural.name
+    /// neuralID и wordsEngine передаются из экрана, а не читаются из настроек: строка перерисовывается вместе с ними
+    static func current(accent: String, voiceID: String, neuralID: Int, wordsEngine: String) -> String {
+        // Слова говорит Kokoro — в строке его голос (того же акцента, что выбран)
+        if NeuralVoice.shared.phase == .ready, wordsEngine != "system" {
+            let list = NeuralVoice.voices(accent: accent)
+            if let neural = list.first(where: { $0.id == neuralID }) ?? list.first { return neural.name }
         }
         let voice = SpeechSettings.resolveVoice(accent: accent, identifier: voiceID)
         let chosen = SpeechSettings.voices(for: accent).contains { $0.identifier == voiceID }

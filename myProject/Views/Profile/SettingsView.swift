@@ -32,6 +32,7 @@ struct SettingsView: View {
     @AppStorage(SpeechSettings.accentKey) private var speechAccent = SpeechSettings.defaultAccent
     @AppStorage(SpeechSettings.voiceKey) private var speechVoice = ""
     @AppStorage(NeuralVoice.voiceKey) private var neuralVoiceID = 1
+    @AppStorage(SpeechSettings.wordsEngineKey) private var wordsEngine = ""
     @AppStorage(SpeechSettings.rateKey) private var speechRate = SpeechSettings.defaultRate
     @AppStorage(SpeechSettings.autoSpeakKey) private var autoSpeak = false
     @AppStorage(NeuralVoice.booksKey) private var neuralReadsBooks = true
@@ -131,7 +132,8 @@ struct SettingsView: View {
             NavigationLink {
                 VoicePickerView()
             } label: {
-                LabeledContent("Голос", value: VoiceSummary.current(accent: speechAccent, voiceID: speechVoice))
+                LabeledContent("Голос", value: VoiceSummary.current(accent: speechAccent, voiceID: speechVoice,
+                                                                         neuralID: neuralVoiceID, wordsEngine: wordsEngine))
             }
 
             SpeechRateSlider(rate: $speechRate)
