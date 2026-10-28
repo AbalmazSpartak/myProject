@@ -127,17 +127,7 @@ struct SettingsView: View {
                 LabeledContent("Голос", value: VoiceSummary.current(accent: speechAccent, voiceID: speechVoice))
             }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Скорость речи")
-                Slider(value: $speechRate, in: SpeechSettings.rateRange) {
-                    Text("Скорость речи")
-                } minimumValueLabel: {
-                    Image(systemName: "tortoise.fill").foregroundColor(.gray)
-                } maximumValueLabel: {
-                    Image(systemName: "hare.fill").foregroundColor(.gray)
-                }
-            }
-            .padding(.vertical, 4)
+            SpeechRateSlider(rate: $speechRate)
 
             if mode == .learning {
                 Toggle("Озвучивать слово сразу", isOn: $autoSpeak)
