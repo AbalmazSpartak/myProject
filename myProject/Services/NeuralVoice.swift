@@ -102,8 +102,21 @@ final class NeuralVoice {
 
     /// Голос, которым читается книга
     struct BookVoice: Sendable, Equatable {
-        let model: NeuralVoiceEngine.Model
+        /// sherpa-onnx на процессоре (Kokoro, Piper) или Kokoro на нейроядре (голос по имени)
+        enum Engine: Sendable, Equatable {
+            case sherpa(NeuralVoiceEngine.Model)
+            case kokoroML(String)
+        }
+
+        let engine: Engine
         let speaker: Int
+    }
+
+    /// Голос Kokoro по номеру из настроек — имя у Kokoro на нейроядре (у «Default» — af_heart)
+    static func kokoroName(_ id: Int) -> String {
+        let names = ["af_heart", "af_bella", "af_nicole", "af_sarah", "af_sky", "am_adam", "am_michael",
+                     "bf_emma", "bf_isabella", "bm_george", "bm_lewis"]
+        return names.indices.contains(id) ? names[id] : names[1]
     }
 
     static let enabledKey = "neural_voice_enabled"
@@ -284,6 +297,12 @@ final class NeuralVoice {
         phase = .notDownloaded
     }
 
+    /// Выгрузить модель из памяти (проба Kokoro на нейроядре — памяти на обе не хватает)
+    func unloadEngine() async {
+        stop()
+        await engine.unload()
+    }
+
     /// Удалить голос Piper этого языка — его книги снова читает Kokoro или системный голос
     func removePiper(language: String) {
         Task { await engine.unload() }
@@ -324,15 +343,26 @@ final class NeuralVoice {
         let language = language.hasPrefix("ru") ? "ru" : language.hasPrefix("en") ? "en" : language
         let piper = piperPhase(language) == .ready ? Self.installedPiper(language: language) : nil
         let piperVoice = piper.map {
-            BookVoice(model: .piper(Self.root.appendingPathComponent($0.folder, isDirectory: true), file: $0.modelFile), speaker: 0)
+            BookVoice(engine: .sherpa(.piper(Self.root.appendingPathComponent($0.folder, isDirectory: true), file: $0.modelFile)),
+                      speaker: 0)
         }
-        guard language == "en", phase == .ready else { return piperVoice }
-        let kokoro = BookVoice(model: .kokoro(Self.modelFolder), speaker: selectedVoice)
+        guard language == "en" else { return piperVoice }
+        // Kokoro: на нейроядре — если скачан и iOS подходит, иначе на процессоре (если успевает)
+        let kokoroML = KokoroML.shared.isReady ? BookVoice(engine: .kokoroML(Self.kokoroName(selectedVoice)), speaker: 0) : nil
+        let kokoroCPU = phase == .ready ? BookVoice(engine: .sherpa(.kokoro(Self.modelFolder)), speaker: selectedVoice) : nil
         switch englishBooksVoice {
-        case "kokoro": return kokoro
-        case "piper": return piperVoice ?? kokoro
-        default: return kokoroTooSlow ? piperVoice : kokoro
+        case "kokoro": return kokoroML ?? kokoroCPU ?? piperVoice
+        case "piper": return piperVoice ?? kokoroML ?? kokoroCPU
+        default: return kokoroML ?? (kokoroTooSlow ? nil : kokoroCPU) ?? piperVoice
         }
+    }
+
+    /// Скачанный голос Piper для книг на этом языке — замена Kokoro на нейроядре, пока экран заблокирован
+    func piperBookVoice(language: String) -> BookVoice? {
+        let language = language.hasPrefix("ru") ? "ru" : language.hasPrefix("en") ? "en" : language
+        guard piperPhase(language) == .ready, let voice = Self.installedPiper(language: language) else { return nil }
+        return BookVoice(engine: .sherpa(.piper(Self.root.appendingPathComponent(voice.folder, isDirectory: true), file: voice.modelFile)),
+                         speaker: 0)
     }
 
     /// «Прослушать» в настройках: короткая фраза голосом Piper
@@ -372,8 +402,14 @@ final class NeuralVoice {
     }
 
     /// Предложение книги — звук; готовится на своём потоке, главный не ждёт
-    func bookAudio(_ text: String, voice: BookVoice, speed: Float) async throws -> NeuralVoiceEngine.Audio {
-        try await engine.audio(text, model: voice.model, speaker: voice.speaker, speed: speed)
+    /// words — начала произнесённых слов в секундах (их отдаёт только Kokoro на нейроядре)
+    func bookAudio(_ text: String, voice: BookVoice, speed: Float) async throws -> (audio: NeuralVoiceEngine.Audio, words: [Double]?) {
+        switch voice.engine {
+        case .sherpa(let model):
+            return (try await engine.audio(text, model: model, speaker: voice.speaker, speed: speed), nil)
+        case .kokoroML(let name):
+            return try await KokoroML.shared.synthesize(text, voice: name, speed: speed)
+        }
     }
 
     /// Скачать файл с прогрессом во временную папку
@@ -428,7 +464,10 @@ final class NeuralVoice {
                     if let cached = cache[partKey] {
                         samples = cached
                     } else {
-                        samples = try await engine.generate(parts[index], voice: voice, speed: speed, folder: folder)
+                        // Kokoro на нейроядре уже в памяти (читается книга) — слово им: быстрее, и вторая модель не нужна
+                        samples = KokoroML.shared.isLoaded
+                            ? try await KokoroML.shared.synthesize(parts[index], voice: Self.kokoroName(voice), speed: speed).audio.samples
+                            : try await engine.generate(parts[index], voice: voice, speed: speed, folder: folder)
                         remember(samples, for: partKey)
                     }
                     try Task.checkCancellation()

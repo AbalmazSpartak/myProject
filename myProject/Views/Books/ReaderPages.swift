@@ -633,9 +633,10 @@ private struct ReaderPageSegment: View {
         if let selected, let selectedRange = Range(selected, in: result) {
             result[selectedRange].backgroundColor = Color.accentColor.opacity(0.28)
         }
-        if highlighting, let word = speech.word {
-            let local = NSRange(location: word.location - segment.range.location, length: word.length)
-            if local.location >= 0, NSMaxRange(local) <= segment.range.length, let wordRange = Range(local, in: result) {
+        // Предложение, перенесённое на другую страницу, — подсвечиваем его часть на этой странице
+        if highlighting, let word = speech.word, let visible = word.intersection(segment.range), visible.length > 0 {
+            let local = NSRange(location: visible.location - segment.range.location, length: visible.length)
+            if let wordRange = Range(local, in: result) {
                 result[wordRange].backgroundColor = Color.yellow.opacity(0.45)
             }
         }

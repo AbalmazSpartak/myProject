@@ -28,6 +28,10 @@ struct MyApp: App {
                 // Обрывки «ca» / «wo» / «sha» из разобранных книг — в can't / won't / shall
                 DataPreloader.fixContractionFragments(context: mainContext)
                 DataPreloader.resetImagesIfSourcesChanged(context: mainContext)
+                // «Чтение»: голос для английских книг — заранее в память, и начало последней озвученной книги
+                // готовится заранее (если включено в настройках)
+                KokoroML.shared.preloadIfReading()
+                ReaderSpeech.prepareLastBook(in: mainContext)
                 guard AppMode.current == .learning else { return }
                 await Self.prepareLearning(context: mainContext)
             }
@@ -48,6 +52,8 @@ struct MyApp: App {
             switch phase {
             case .active:
                 reloadWordsChangedByWidget()
+                // Вернулись в приложение — Kokoro мог выгрузиться (10 минут без чтения, блокировка)
+                KokoroML.shared.preloadIfReading()
                 // Сообщения об ошибках и сигналы словаря, сохранённые без интернета; новые правки словаря
                 Task {
                     await WordReports.flush()

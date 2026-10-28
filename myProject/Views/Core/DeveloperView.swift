@@ -31,6 +31,12 @@ struct DeveloperView: View {
                         }
                     }
 
+                    Section(footer: Text("Проба: Kokoro на нейроядре через Core ML — успевает ли читать книги на этом устройстве.")) {
+                        NavigationLink("Kokoro на нейроядре") {
+                            KokoroCoreMLTestView()
+                        }
+                    }
+
                     Section("Статус базы") {
                         LabeledContent("Слов всего", value: "\(allWords.count)")
                         LabeledContent("Категорий", value: "\(categories.count)")

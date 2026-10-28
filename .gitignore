@@ -26,3 +26,4 @@ server/**/node_modules/
 
 # Секреты для локального wrangler dev
 server/**/.dev.vars
+*.xcodeproj/-Xcc/

@@ -7,7 +7,10 @@ struct NeuralVoiceSettingsView: View {
     @AppStorage(NeuralVoice.voiceKey) private var voiceID = 1
     @AppStorage(NeuralVoice.booksKey) private var readsBooks = true
     @State private var voice = NeuralVoice.shared
+    @State private var kokoroML = KokoroML.shared
+    @AppStorage(KokoroML.preloadKey) private var preloadKokoro = true
     @State private var isConfirmingRemove = false
+    @State private var isConfirmingMLRemove = false
     /// Язык, голос Piper которого удаляем («en», «ru»)
     @State private var piperToRemove: String?
     @State private var englishChoice = NeuralVoice.installedPiper(language: "en") ?? .kristin
@@ -61,13 +64,23 @@ struct NeuralVoiceSettingsView: View {
                     }
                 }
 
+                if KokoroML.isSupported {
+                    Section {
+                        kokoroMLStatus
+                    } header: {
+                        Text("Kokoro на нейроядре — для книг")
+                    } footer: {
+                        Text("Тот же голос Kokoro (выбор голоса — выше), но на нейроядре iPhone: читает английские книги без пауз даже на iPhone 12, подсвечивается каждое слово. Скачивается отдельно (\(KokoroML.downloadSize)); в память загружается около 25 секунд — при открытии английской книги, а с «Загружать при запуске» в режиме «Чтение» — сразу при запуске приложения, если последняя книга английская. В памяти занимает ~700 МБ; через 10 минут без чтения выгружается.")
+                    }
+                }
+
                 piperSection(language: "en", choice: $englishChoice, header: "Английские книги",
                              footer: "Лёгкий голос Piper: читает без пауз даже там, где Kokoro не успевает (iPhone 12, iPad Air 4 и старше). Без интернета, свободная лицензия. Скачивается отдельно (\(NeuralVoice.piperDownloadSize)); при скачивании другого голоса прежний удаляется. Скачали — английские книги читает он; вернуть Kokoro можно здесь же.")
 
                 piperSection(language: "ru", choice: $russianChoice, header: "Русские книги",
                              footer: "Голос Piper для чтения русских книг вслух, мужской, без интернета. Скачивается отдельно (\(NeuralVoice.piperDownloadSize)); при скачивании другого голоса прежний удаляется.")
 
-                if voice.phase == .ready || voice.piperPhase("en") == .ready || voice.piperPhase("ru") == .ready {
+                if voice.phase == .ready || kokoroML.isReady || voice.piperPhase("en") == .ready || voice.piperPhase("ru") == .ready {
                     Section {
                         Toggle("Читать книги этим голосом", isOn: $readsBooks)
                     } footer: {
@@ -89,6 +102,12 @@ struct NeuralVoiceSettingsView: View {
             }
         } message: {
             Text("Эти книги снова будет читать системный голос. Скачать можно заново.")
+        }
+        .alert("Удалить Kokoro на нейроядре?", isPresented: $isConfirmingMLRemove) {
+            Button("Отмена", role: .cancel) {}
+            Button("Удалить", role: .destructive) { kokoroML.remove() }
+        } message: {
+            Text("Освободится \(KokoroML.downloadSize). Английские книги будет читать Piper или системный голос.")
         }
         .alert("Удалить нейросетевой голос?", isPresented: $isConfirmingRemove) {
             Button("Отмена", role: .cancel) {}
@@ -125,11 +144,41 @@ struct NeuralVoiceSettingsView: View {
         }
     }
 
+    @ViewBuilder
+    private var kokoroMLStatus: some View {
+        switch kokoroML.phase {
+        case .notDownloaded:
+            Button {
+                kokoroML.download()
+            } label: {
+                Label("Скачать (\(KokoroML.downloadSize))", systemImage: "arrow.down.circle.fill")
+            }
+        case .downloading:
+            HStack(spacing: 10) {
+                ProgressView()
+                Text("Скачиваю и готовлю голос — несколько минут…")
+                    .foregroundColor(.gray)
+            }
+        case .ready:
+            Label(kokoroML.isLoaded ? "Скачан, в памяти" : "Скачан", systemImage: "checkmark.circle.fill")
+                .foregroundColor(.green)
+            Toggle("Загружать при запуске", isOn: $preloadKokoro)
+                .onChange(of: preloadKokoro) { _, isOn in if isOn { kokoroML.preloadIfReading() } }
+            Button("Удалить", role: .destructive) { isConfirmingMLRemove = true }
+        case .failed(let message):
+            VStack(alignment: .leading, spacing: 8) {
+                Text(message)
+                    .foregroundColor(.red)
+                Button("Попробовать ещё раз") { kokoroML.download() }
+            }
+        }
+    }
+
     /// Голос Piper для книг на одном языке: выбор, скачать, прослушать, удалить;
     /// у английских книг, когда скачаны оба, — кто их читает: Kokoro или Piper
     private func piperSection(language: String, choice: Binding<NeuralVoice.PiperVoice>, header: String, footer: String) -> some View {
         Section {
-            if language == "en", voice.phase == .ready, voice.piperPhase("en") == .ready {
+            if language == "en", voice.phase == .ready || kokoroML.isReady, voice.piperPhase("en") == .ready {
                 Picker("Читает книги", selection: englishBooksVoice) {
                     Text("Kokoro").tag("kokoro")
                     Text("Piper").tag("piper")

@@ -480,6 +480,9 @@ struct BookReaderView: View {
         chapters = book.chapters
         language = BookLanguage.detect(chapters)
         speech.language = isEnglish ? nil : language
+        // Запуск в режиме «Чтение» загрузит Kokoro заранее, только если последняя книга английская
+        UserDefaults.standard.set(language, forKey: KokoroML.lastBookLanguageKey)
+        speech.preloadVoice()
         var start = 0
         chapterStarts = chapters.map { chapter in
             defer { start += chapter.paragraphs.count }
@@ -515,7 +518,7 @@ struct BookReaderView: View {
             }
         }.value
         speech.load(paragraphs: paragraphs, chapterTitle: chapter.title, bookTitle: book.title,
-                    author: book.author, cover: book.coverData)
+                    author: book.author, cover: book.coverData, bookID: book.id, chapter: chapterIndex)
         if continuesReading {
             continuesReading = false
             speech.start(from: 0)

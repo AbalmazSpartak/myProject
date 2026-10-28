@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		A1000000000000000000AA21 /* WordWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A1000000000000000000AA01 /* WordWidget.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B2000000000000000000BB03 /* sherpa-onnx in Frameworks */ = {isa = PBXBuildFile; productRef = B2000000000000000000BB02 /* sherpa-onnx */; };
+		B2000000000000000000CC03 /* FluidAudio in Frameworks */ = {isa = PBXBuildFile; productRef = B2000000000000000000CC02 /* FluidAudio */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -84,6 +85,7 @@
 			isa = PBXFrameworksBuildPhase;
 			files = (
 				B2000000000000000000BB03 /* sherpa-onnx in Frameworks */,
+				B2000000000000000000CC03 /* FluidAudio in Frameworks */,
 			);
 		};
 		A1000000000000000000AA15 /* Frameworks */ = {
@@ -129,6 +131,7 @@
 			name = myProject;
 			packageProductDependencies = (
 				B2000000000000000000BB02 /* sherpa-onnx */,
+				B2000000000000000000CC02 /* FluidAudio */,
 			);
 			productName = MyApp;
 			productReference = C8CC0B5B306B4BEE00E8C3A6 /* myProject.app */;
@@ -182,6 +185,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				B2000000000000000000BB01 /* XCRemoteSwiftPackageReference "sherpa-onnx" */,
+				B2000000000000000000CC01 /* XCRemoteSwiftPackageReference "FluidAudio" */,
 			);
 			preferredProjectObjectVersion = 90;
 			productRefGroup = 000000000000000000000001;
@@ -572,6 +576,14 @@
 				version = 1.13.8;
 			};
 		};
+		B2000000000000000000CC01 /* XCRemoteSwiftPackageReference "FluidAudio" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/FluidInference/FluidAudio.git";
+			requirement = {
+				kind = exactVersion;
+				version = 0.17.7;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -579,6 +591,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B2000000000000000000BB01 /* XCRemoteSwiftPackageReference "sherpa-onnx" */;
 			productName = "sherpa-onnx";
+		};
+		B2000000000000000000CC02 /* FluidAudio */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B2000000000000000000CC01 /* XCRemoteSwiftPackageReference "FluidAudio" */;
+			productName = FluidAudio;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

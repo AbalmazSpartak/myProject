@@ -102,6 +102,51 @@ struct SettingsView: View {
                             .autocorrectionDisabled()
                     }
                 
+                    // Озвучка
+                    Section(header: Text("Озвучка"), footer: Text(mode == .learning
+                                                                  ? "При переводе с русского на английский слово звучит после ответа, чтобы не подсказывать."
+                                                                  : "Акцент, голос и скорость — для английских книг. Книги на других языках читает голос своего языка.")) {
+                        Picker("Акцент", selection: $speechAccent) {
+                            Text("Американский").tag("en-US")
+                            Text("Британский").tag("en-GB")
+                        }
+                        .pickerStyle(.segmented)
+
+                        NavigationLink {
+                            VoicePickerView()
+                        } label: {
+                            LabeledContent("Голос", value: VoiceSummary.current(accent: speechAccent, voiceID: speechVoice))
+                        }
+
+                        NavigationLink {
+                            NeuralVoiceSettingsView()
+                        } label: {
+                            LabeledContent("Нейросетевой голос", value: neuralVoiceSummary)
+                        }
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Скорость речи")
+                            Slider(value: $speechRate, in: SpeechSettings.rateRange) {
+                                Text("Скорость речи")
+                            } minimumValueLabel: {
+                                Image(systemName: "tortoise.fill").foregroundColor(.gray)
+                            } maximumValueLabel: {
+                                Image(systemName: "hare.fill").foregroundColor(.gray)
+                            }
+                        }
+                        .padding(.vertical, 4)
+
+                        if mode == .learning {
+                            Toggle("Озвучивать слово сразу", isOn: $autoSpeak)
+                        }
+
+                        Button {
+                            TextToSpeechManager.shared.speak("Hello! This is how English words will sound.")
+                        } label: {
+                            Label("Прослушать", systemImage: "speaker.wave.2.fill")
+                        }
+                    }
+
                     Section {
                         Picker("Режим", selection: modeChoice) {
                             ForEach(AppMode.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
@@ -196,51 +241,6 @@ struct SettingsView: View {
                             }
                         } footer: {
                             Text("Перевод новых слов, когда словарь создаётся из книги или файла. ИИ переводит в значении из предложения и понимает диалект; нужен интернет, слово и предложение уходят на сервер WordLearner без имени и почты.")
-                        }
-                    }
-
-                    // Озвучка
-                    Section(header: Text("Озвучка"), footer: Text(mode == .learning
-                                                                  ? "При переводе с русского на английский слово звучит после ответа, чтобы не подсказывать."
-                                                                  : "Акцент, голос и скорость — для английских книг. Книги на других языках читает голос своего языка.")) {
-                        Picker("Акцент", selection: $speechAccent) {
-                            Text("Американский").tag("en-US")
-                            Text("Британский").tag("en-GB")
-                        }
-                        .pickerStyle(.segmented)
-
-                        NavigationLink {
-                            VoicePickerView()
-                        } label: {
-                            LabeledContent("Голос", value: VoiceSummary.current(accent: speechAccent, voiceID: speechVoice))
-                        }
-
-                        NavigationLink {
-                            NeuralVoiceSettingsView()
-                        } label: {
-                            LabeledContent("Нейросетевой голос", value: neuralVoiceSummary)
-                        }
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Скорость речи")
-                            Slider(value: $speechRate, in: SpeechSettings.rateRange) {
-                                Text("Скорость речи")
-                            } minimumValueLabel: {
-                                Image(systemName: "tortoise.fill").foregroundColor(.gray)
-                            } maximumValueLabel: {
-                                Image(systemName: "hare.fill").foregroundColor(.gray)
-                            }
-                        }
-                        .padding(.vertical, 4)
-
-                        if mode == .learning {
-                            Toggle("Озвучивать слово сразу", isOn: $autoSpeak)
-                        }
-
-                        Button {
-                            TextToSpeechManager.shared.speak("Hello! This is how English words will sound.")
-                        } label: {
-                            Label("Прослушать", systemImage: "speaker.wave.2.fill")
                         }
                     }
 
