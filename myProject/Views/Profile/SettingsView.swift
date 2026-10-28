@@ -125,10 +125,8 @@ struct SettingsView: View {
             }
             .pickerStyle(.segmented)
             // Голос Kokoro другого акцента не подходит — берём первый голос нового акцента
-            .onChange(of: speechAccent) { _, accent in
-                let list = NeuralVoice.voices(accent: accent)
-                if !list.contains(where: { $0.id == neuralVoiceID }), let first = list.first { neuralVoiceID = first.id }
-            }
+            .onChange(of: speechAccent) { _, _ in NeuralVoice.alignWithAccent() }
+            .onAppear { NeuralVoice.alignWithAccent() }
 
             NavigationLink {
                 VoicePickerView()

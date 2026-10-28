@@ -28,6 +28,8 @@ final class NeuralVoice {
         let female: Bool
 
         var title: String { "\(name) · \(accent), \(female ? "жен." : "муж.")" }
+        /// Акцент в настройках «Озвучки»
+        var accentCode: String { accent == "брит." ? "en-GB" : "en-US" }
     }
 
     /// Голоса модели kokoro-en-v0_19 по номерам
@@ -47,7 +49,16 @@ final class NeuralVoice {
 
     /// Голоса Kokoro выбранного акцента ("en-GB" — британские, иначе американские)
     static func voices(accent: String) -> [Voice] {
-        voices.filter { $0.accent == (accent == "en-GB" ? "брит." : "амер.") }
+        voices.filter { $0.accentCode == accent }
+    }
+
+    /// Голос Kokoro не того акцента, что выбран в «Озвучке», — берём первый голос этого акцента
+    static func alignWithAccent() {
+        let defaults = UserDefaults.standard
+        let accent = defaults.string(forKey: SpeechSettings.accentKey) ?? SpeechSettings.defaultAccent
+        let id = defaults.object(forKey: voiceKey) as? Int ?? 1
+        let list = voices(accent: accent)
+        if !list.contains(where: { $0.id == id }), let first = list.first { defaults.set(first.id, forKey: voiceKey) }
     }
 
     /// Лёгкие голоса Piper для книг — только со свободной лицензией: CC0 или общественное достояние

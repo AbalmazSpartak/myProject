@@ -84,9 +84,18 @@ struct NeuralVoiceSettingsView: View {
                 HelpButton(topic: .neuralVoice)
             }
         }
-        .onAppear { voice.warmUp() }
+        .onAppear {
+            NeuralVoice.alignWithAccent()
+            voice.warmUp()
+        }
         // Выбрали голос Kokoro — слова снова говорит он, а не системный
-        .onChange(of: voiceID) { _, _ in wordsEngine = "" }
+        .onChange(of: voiceID) { _, id in
+            wordsEngine = ""
+            // Голос другого акцента — акцент в «Озвучке» следует за ним, чтобы они не расходились
+            if let chosen = NeuralVoice.voices.first(where: { $0.id == id }) {
+                UserDefaults.standard.set(chosen.accentCode, forKey: SpeechSettings.accentKey)
+            }
+        }
         .alert("Удалить голос?", isPresented: Binding(get: { piperToRemove != nil }, set: { if !$0 { piperToRemove = nil } })) {
             Button("Отмена", role: .cancel) {}
             Button("Удалить", role: .destructive) {

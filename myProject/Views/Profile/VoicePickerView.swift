@@ -97,7 +97,10 @@ struct VoicePickerView: View {
         .navigationTitle("Голос")
         .navigationBarTitleDisplayMode(.inline)
         // Скачали голос в настройках iPhone и вернулись — список обновится
-        .onAppear { voices = SpeechSettings.voices(for: accent) }
+        .onAppear {
+            NeuralVoice.alignWithAccent()
+            voices = SpeechSettings.voices(for: accent)
+        }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
             voices = SpeechSettings.voices(for: accent)
         }
