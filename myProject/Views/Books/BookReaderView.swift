@@ -66,6 +66,9 @@ struct BookReaderView: View {
     @State private var isShowingBookmarks = false
     @State private var isAddingBookmark = false
     @State private var bookmarkNote = ""
+    /// «Начать книгу с этого места»: подтверждение; версия растёт, когда начало убрали, — глава собирается заново
+    @State private var isConfirmingTrim = false
+    @State private var contentVersion = 0
     /// Шапка спрятана: при чтении — тонкая строка с названием главы
     @State private var isChromeHidden = false
 
@@ -132,7 +135,7 @@ struct BookReaderView: View {
                     onNext: { go(to: chapterIndex + 1) }
                 )
                 .equatable()
-                .id("\(chapterIndex)-\(style.phonicsID)")
+                .id("\(chapterIndex)-\(style.phonicsID)-\(contentVersion)")
             } else if let linkedParagraphs {
                 ReaderChapterText(
                     chapterID: chapterIndex,
@@ -158,7 +161,7 @@ struct BookReaderView: View {
                     chapterNavigation
                 }
                 .equatable()
-                .id("\(chapterIndex)-\(style.phonicsID)-\(showsParallel)-\(translationVersion)")
+                .id("\(chapterIndex)-\(style.phonicsID)-\(showsParallel)-\(translationVersion)-\(contentVersion)")
             } else {
                 Spacer()
                 ProgressView()
@@ -204,7 +207,7 @@ struct BookReaderView: View {
             speech.notice = nil
         }
         // Глава готовится, когда главы загружены и при каждой смене главы
-        .task(id: "\(chapters.count)-\(chapterIndex)-\(style.phonicsID)") { await prepareChapter() }
+        .task(id: "\(chapters.count)-\(chapterIndex)-\(style.phonicsID)-\(contentVersion)") { await prepareChapter() }
         .sheet(item: $tappedWord) { tapped in
             WordLookupView(tapped: tapped, bookTitle: book.title) {
                 tappedWord = nil
@@ -264,6 +267,12 @@ struct BookReaderView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(translationError ?? "")
+        }
+        .alert("Начать книгу с этого места?", isPresented: $isConfirmingTrim) {
+            Button("Отмена", role: .cancel) {}
+            Button("Убрать начало", role: .destructive, action: trimBeforeCurrentPosition)
+        } message: {
+            Text("Всё, что стоит до открытой страницы (абзацев: \(book.position)) — обложка, оглавление, служебные строки, — будет убрано из книги. Вернуть можно, добавив книгу заново.")
         }
         .alert("Убрать перевод?", isPresented: $isConfirmingTranslationRemoval) {
             Button("Отмена", role: .cancel) {}
@@ -336,6 +345,12 @@ struct BookReaderView: View {
                 if isEnglish {
                     Button { isShowingDictionary = true } label: {
                         Label("Словарь из книги", systemImage: "text.book.closed")
+                    }
+                }
+                // Перевод привязан к абзацам книги — с ним начало не убрать
+                if alignment == nil, book.position > 0 {
+                    Button { isConfirmingTrim = true } label: {
+                        Label("Начать книгу с этого места", systemImage: "scissors")
                     }
                 }
                 translationMenu
@@ -564,6 +579,47 @@ struct BookReaderView: View {
     private func removeBookmark(_ bookmark: BookBookmark) {
         bookmarks.removeAll { $0.id == bookmark.id }
         saveBookmarks()
+    }
+
+    /// Всё до абзаца вверху открытой страницы — из книги: главы, закладки и место чтения сдвигаются на столько же
+    private func trimBeforeCurrentPosition() {
+        let cut = book.position
+        guard cut > 0, alignment == nil else { return }
+        speech.stop()
+        var remaining = cut
+        var kept: [BookChapter] = []
+        for var item in chapters {
+            if remaining >= item.paragraphs.count {
+                remaining -= item.paragraphs.count
+                continue
+            }
+            if remaining > 0 {
+                item.paragraphs.removeFirst(remaining)
+                remaining = 0
+            }
+            kept.append(item)
+        }
+        guard !kept.isEmpty, let data = try? JSONEncoder().encode(kept) else { return }
+        book.chaptersData = data
+        book.paragraphCount = kept.reduce(0) { $0 + $1.paragraphs.count }
+        book.position = 0
+        bookmarks = bookmarks.filter { $0.paragraph >= cut }.map { bookmark in
+            var shifted = bookmark
+            shifted.paragraph -= cut
+            return shifted
+        }
+        book.bookmarks = bookmarks
+        try? modelContext.save()
+        chapters = kept
+        var start = 0
+        chapterStarts = kept.map { chapter in
+            defer { start += chapter.paragraphs.count }
+            return start
+        }
+        chapterIndex = 0
+        startParagraph = 0
+        contentVersion += 1
+        Haptics.tap()
     }
 
     private func saveBookmarks() {

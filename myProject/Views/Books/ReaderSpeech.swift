@@ -1180,7 +1180,7 @@ enum SpokenText {
     /// Абзац с символа start — предложения для голоса
     static func pieces(of paragraph: String, from start: Int, language: String) -> [Piece] {
         let source = paragraph as NSString
-        guard start < source.length else { return [] }
+        guard start < source.length, !isPageMark(paragraph) else { return [] }
         var spoken: Spoken = (Array(source.substring(from: start).utf16), Array(start..<source.length),
                               Array(start + 1...source.length))
         for (pattern, replacement) in rules {
@@ -1205,6 +1205,12 @@ enum SpokenText {
             return true
         }
         return pieces
+    }
+
+    /// Номер между тире («-2-», «— 12 —») — номер страницы или главы, вслух его не читаем
+    static func isPageMark(_ paragraph: String) -> Bool {
+        paragraph.trimmingCharacters(in: .whitespacesAndNewlines)
+            .range(of: "^[-–—−]\\s*\\d{1,4}\\s*[-–—−]$", options: .regularExpression) != nil
     }
 
     /// Реплика: абзац начинается с тире или кавычки

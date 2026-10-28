@@ -129,7 +129,8 @@ nonisolated enum HTMLText {
     }
 }
 
-/// Служебный текст вокруг книги: шапка и лицензия Project Gutenberg, страница «Об этом электронном издании» Викитеки.
+/// Служебный текст вокруг книги: шапка и лицензия Project Gutenberg, страница «Об этом электронном издании» Викитеки,
+/// заглушка и реклама ознакомительного фрагмента (Литрес), повтор автора и названия в начале, номера страниц.
 /// Читать и учить его незачем, а при сопоставлении с переводом он сбивает длину текста
 nonisolated enum BookCleanup {
     private static let serviceTitles: Set<String> = ["об этом электронном издании", "about this digital edition"]
@@ -142,7 +143,7 @@ nonisolated enum BookCleanup {
         paragraph.range(of: "^(\\*{3}\\s*)?END OF (THE |THIS )?PROJECT GUTENBERG", options: [.regularExpression, .caseInsensitive]) != nil
     }
 
-    static func clean(_ chapters: [BookChapter]) -> [BookChapter] {
+    static func clean(_ chapters: [BookChapter], title: String = "", author: String = "") -> [BookChapter] {
         var result = chapters.filter { !serviceTitles.contains($0.title.trimmingCharacters(in: .whitespaces).lowercased()) }
         // До «*** START OF …» — шапка Gutenberg, после «*** END OF …» — лицензия
         if let chapter = result.firstIndex(where: { $0.paragraphs.contains(where: isGutenbergStart) }),
@@ -155,7 +156,117 @@ nonisolated enum BookCleanup {
             result.removeLast(result.count - chapter - 1)
             result[chapter].paragraphs.removeLast(result[chapter].paragraphs.count - paragraph)
         }
+        result = strippedPreview(result)
+        result = strippedFrontTitle(result, title: title, author: author)
+        result = numbered(result)
         return result.filter { $0.paragraphs.contains(where: { $0.contains(where: \.isLetter) }) }
+    }
+
+    // MARK: Ознакомительный фрагмент
+
+    private static func isPreviewEnd(_ paragraph: String) -> Bool {
+        paragraph.count < 80 && paragraph.range(of: "конец ознакомительного фрагмента", options: .caseInsensitive) != nil
+    }
+
+    /// Короткая строка без точки в конце — имя автора, «Глава», номер: так выглядит оглавление-заглушка
+    private static func isStubLine(_ paragraph: String) -> Bool {
+        let text = paragraph.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard text.count <= 40, let last = text.unicodeScalars.last else { return false }
+        return !CharacterSet(charactersIn: ".!?…»\"”)").contains(last)
+    }
+
+    /// «Конец ознакомительного фрагмента»: в начале книги — убрать его и заглушку перед ним (автор, «Глава», «-1-»…);
+    /// в конце — убрать его и всё после (реклама и оплата на Литрес)
+    private static func strippedPreview(_ chapters: [BookChapter]) -> [BookChapter] {
+        var result = chapters
+        func firstMarker() -> (chapter: Int, paragraph: Int)? {
+            for chapter in result.indices {
+                if let paragraph = result[chapter].paragraphs.firstIndex(where: isPreviewEnd) { return (chapter, paragraph) }
+            }
+            return nil
+        }
+        while let (chapter, paragraph) = firstMarker() {
+            let after = result[chapter].paragraphs.count - paragraph - 1
+                + result[(chapter + 1)...].reduce(0) { $0 + $1.paragraphs.count }
+            if after <= 8 {
+                result[chapter].paragraphs.removeSubrange(paragraph...)
+                result.removeSubrange((chapter + 1)...)
+            } else {
+                var from = paragraph
+                while from > 0, isStubLine(result[chapter].paragraphs[from - 1]) { from -= 1 }
+                result[chapter].paragraphs.removeSubrange(from...paragraph)
+            }
+        }
+        return result
+    }
+
+    // MARK: Начало книги
+
+    private static func normalized(_ text: String) -> String {
+        text.lowercased()
+            .trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+    }
+
+    /// В первых абзацах автор и название повторяются, как на титульном листе, и стоит подпись «Annotation»
+    private static func strippedFrontTitle(_ chapters: [BookChapter], title: String, author: String) -> [BookChapter] {
+        guard !chapters.isEmpty else { return chapters }
+        let known = Set([title, author, "annotation"].map(normalized).filter { !$0.isEmpty })
+        var result = chapters
+        let head = min(12, result[0].paragraphs.count)
+        let kept = result[0].paragraphs.prefix(head).filter { !known.contains(normalized($0)) }
+        result[0].paragraphs.replaceSubrange(0..<head, with: kept)
+        return result
+    }
+
+    // MARK: Номера глав и страниц
+
+    /// «-2-», «— 12 —»: номер между тире
+    private static func dashedNumber(_ paragraph: String) -> Int? {
+        let text = paragraph.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard text.range(of: "^[-–—−]\\s*\\d{1,4}\\s*[-–—−]$", options: .regularExpression) != nil else { return nil }
+        return Int(text.filter(\.isNumber))
+    }
+
+    private static func isChapterWord(_ paragraph: String) -> Bool {
+        paragraph.trimmingCharacters(in: .whitespacesAndNewlines).range(of: "^(глава|chapter|часть|part)$", options: [.regularExpression, .caseInsensitive]) != nil
+    }
+
+    /// «Глава» и «-1-» отдельными строками — одна строка «Глава 1»; дальше «-2-», «-3-» по порядку, не чаще чем через 20 абзацев, —
+    /// номера глав. Остальные номера между тире — номера страниц, их убираем
+    private static func numbered(_ chapters: [BookChapter]) -> [BookChapter] {
+        var word: String?
+        var lastNumber = 0
+        var sinceMarker = Int.max
+        return chapters.map { chapter in
+            var result = chapter
+            var paragraphs: [String] = []
+            var index = 0
+            let source = chapter.paragraphs
+            while index < source.count {
+                let text = source[index].trimmingCharacters(in: .whitespacesAndNewlines)
+                if isChapterWord(text), index + 1 < source.count, let number = dashedNumber(source[index + 1]) {
+                    paragraphs.append("\(text) \(number)")
+                    word = text
+                    lastNumber = number
+                    sinceMarker = 0
+                    index += 2
+                } else if let number = dashedNumber(text) {
+                    if number == lastNumber + 1, sinceMarker >= 20 {
+                        paragraphs.append(word.map { "\($0) \(number)" } ?? text)
+                        lastNumber = number
+                        sinceMarker = 0
+                    }
+                    index += 1
+                } else {
+                    paragraphs.append(source[index])
+                    sinceMarker = sinceMarker == Int.max ? Int.max : sinceMarker + 1
+                    index += 1
+                }
+            }
+            result.paragraphs = paragraphs
+            return result
+        }
     }
 }
 
@@ -189,7 +300,7 @@ nonisolated enum BookParser {
         default:
             book = try parseText(data, title: fileName)
         }
-        book.chapters = BookCleanup.clean(book.chapters)
+        book.chapters = BookCleanup.clean(book.chapters, title: book.title, author: book.author)
         guard !book.chapters.isEmpty else { throw ParseError.empty }
         return book
     }
@@ -207,7 +318,7 @@ nonisolated enum BookParser {
             let title = (heading?.isEmpty == false ? heading : nil) ?? "Глава \(chapters.count + 1)"
             chapters.append(BookChapter(title: title, paragraphs: paragraphs))
         }
-        let cleaned = BookCleanup.clean(chapters)
+        let cleaned = BookCleanup.clean(chapters, title: epub.title ?? fallbackTitle, author: epub.author ?? "")
         guard !cleaned.isEmpty else { throw ParseError.empty }
         return ParsedBook(title: epub.title ?? fallbackTitle, author: epub.author ?? "", cover: epub.cover, chapters: cleaned)
     }
