@@ -638,6 +638,9 @@ actor NeuralVoiceEngine {
     private var loaded: Model?
     /// С каким языком espeak загружен Kokoro: британские голоса — «en-gb», иначе произношение выходит американским и с искажениями
     private var loadedLang = ""
+    /// Британская фонетика в этой модели не нашлась — дальше сразу американская
+    private var britishUnsupported = false
+    private static let britishLang = "en-gb-x-rp"
     private var unloadTask: Task<Void, Never>?
 
     func generate(_ text: String, voice: Int, speed: Float, folder: URL) throws -> [Float] {
@@ -649,9 +652,16 @@ actor NeuralVoiceEngine {
         try Task.checkCancellation()
         let clean = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !clean.isEmpty else { return Audio(samples: [], sampleRate: Self.sampleRate) }
-        let tts = try load(model, lang: Self.lang(for: model, speaker: speaker))
-        let generated = tts.generate(text: clean, sid: speaker, speed: speed)
+        var lang = Self.lang(for: model, speaker: speaker)
+        if lang == Self.britishLang, britishUnsupported { lang = "en-us" }
+        var generated = try load(model, lang: lang).generate(text: clean, sid: speaker, speed: speed)
+        // Нет такого голоса espeak — библиотека возвращает пустоту (раньше на этом падало приложение): читаем по-старому
+        if generated.audio == nil, lang == Self.britishLang {
+            britishUnsupported = true
+            generated = try load(model, lang: "en-us").generate(text: clean, sid: speaker, speed: speed)
+        }
         scheduleUnload()
+        guard generated.audio != nil else { throw NeuralVoiceError.empty }
         let samples = generated.samples
         guard !samples.isEmpty else { throw NeuralVoiceError.empty }
         return Audio(samples: samples, sampleRate: Int(generated.sampleRate))
@@ -665,7 +675,7 @@ actor NeuralVoiceEngine {
     /// Голоса Kokoro 7–10 (Emma, Isabella, George, Lewis) — британские
     nonisolated static func lang(for model: Model, speaker: Int) -> String {
         guard case .kokoro = model else { return "" }
-        return speaker >= 7 ? "en-gb" : "en-us"
+        return speaker >= 7 ? britishLang : "en-us"
     }
 
     func unload() {
