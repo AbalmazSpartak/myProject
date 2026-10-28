@@ -19,12 +19,6 @@ struct NeuralVoiceSettingsView: View {
     var body: some View {
         List {
             Group {
-                piperSection(language: "en", choice: $englishChoice, header: "Английские книги",
-                             footer: "Лёгкая озвучка Kokoro и Piper")
-
-                piperSection(language: "ru", choice: $russianChoice, header: "Русские книги",
-                             footer: "Лёгкий голос Piper")
-
                 // Один раздел: выбор голоса, прослушать, удалить — или «Скачать голос», пока не скачан
                 Section {
                     if voice.phase == .ready {
@@ -70,6 +64,12 @@ struct NeuralVoiceSettingsView: View {
                         Text("Английские книги без пауз, подсвечивается каждое слово. Скачивается отдельно (\(KokoroML.downloadSize)).")
                     }
                 }
+
+                piperSection(language: "en", choice: $englishChoice, header: "Английские книги",
+                             footer: "Лёгкая озвучка Kokoro и Piper")
+
+                piperSection(language: "ru", choice: $russianChoice, header: "Русские книги",
+                             footer: "Лёгкий голос Piper")
             }
             .listRowBackground(Color.cardBackground)
         }
