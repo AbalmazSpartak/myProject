@@ -6,8 +6,10 @@
 - Target: iOS 18+ / macOS (iOS 18 needed for Translation in text scan)
 
 ## Build and Test Commands
-- Build: xcodebuild -project myProject.xcodeproj -target myProject -sdk iphonesimulator -configuration Debug build
-  - Builds the target directly; the app lands in `build/Debug-iphonesimulator/myProject.app` (gitignored) — install it with `xcrun simctl install <device> <path>` to check screens.
+- Build (simulator): xcodebuild -project myProject.xcodeproj -scheme myProject -destination 'generic/platform=iOS Simulator' -configuration Debug build
+- Build (iPhone): xcodebuild -project myProject.xcodeproj -scheme myProject -destination 'generic/platform=iOS' -configuration Debug -allowProvisioningUpdates build
+  - Build with `-scheme`, not `-target`: since the FluidAudio package (Kokoro on Neural Engine) was added, `-target` fails with «failed creating index directory '-I/Users/…': Read-only file system» (and leaves junk in `myProject.xcodeproj/-Xcc/`, gitignored).
+  - The app lands in DerivedData (`~/Library/Developer/Xcode/DerivedData/myProject-*/Build/Products/Debug-iphoneos/myProject.app`); install on the iPhone with `xcrun devicectl device install app --device <id> <path>`, on a simulator with `xcrun simctl install <device> <path>`.
   - The scheme is shared (`myProject.xcodeproj/xcshareddata/xcschemes/myProject.xcscheme`) since 2026-10-03; before that the auto-generated scheme once reported BUILD SUCCEEDED without compiling. If any build shows no `SwiftCompile` steps after source changes, don't trust it.
 - Test: there are no test targets yet.
 
