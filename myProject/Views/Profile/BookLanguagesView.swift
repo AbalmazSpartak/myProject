@@ -74,8 +74,8 @@ struct BookLanguageVoiceView: View {
             Section {
                 if hasBothEnglish {
                     Picker("Читает книги", selection: englishBooksVoice) {
-                        Text("Kokoro").tag("kokoro")
                         Text("Piper").tag("piper")
+                        Text("Kokoro").tag("kokoro")
                     }
                     .pickerStyle(.segmented)
                 }
