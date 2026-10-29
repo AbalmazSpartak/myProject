@@ -16,14 +16,14 @@ struct SpeechSettingsView: View {
 
     /// Что видно у строки «Нейросетевой голос»: слова озвучивает скачанный Kokoro; книги — Kokoro на нейроядре или Piper, если включено «Читать книги этим голосом»
     private var neuralVoiceSummary: String {
-        let readsBooks = neuralReadsBooks && (kokoroML.isReady || neuralVoice.piperPhase("en") == .ready || neuralVoice.piperPhase("ru") == .ready)
+        let readsBooks = neuralReadsBooks && (kokoroML.isReady || neuralVoice.hasPiper)
         if neuralVoice.phase == .ready || readsBooks { return "используется" }
         return hasNeuralVoice ? "не используется" : "не скачан"
     }
     /// Скачан хоть один нейроголос — Kokoro (процессор или нейроядро) или Piper
     private var hasNeuralVoice: Bool {
         neuralVoice.phase == .ready || kokoroML.isReady
-            || neuralVoice.piperPhase("en") == .ready || neuralVoice.piperPhase("ru") == .ready
+            || neuralVoice.hasPiper
     }
 
     /// Озвучка

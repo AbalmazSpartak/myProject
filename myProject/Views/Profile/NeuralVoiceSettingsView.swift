@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Настройки → «Озвучка» → «Нейросетевой голос»: скачать модель, выбрать голос, послушать, удалить;
-/// лёгкие голоса Piper для английских и русских книг; переключатель «Читать книги этим голосом» — в Настройках
+/// языки книг (голоса Piper) — на своём экране; переключатель «Читать книги этим голосом» — в Настройках
 struct NeuralVoiceSettingsView: View {
     @AppStorage(NeuralVoice.voiceKey) private var voiceID = 1
     @AppStorage(SpeechSettings.wordsEngineKey) private var wordsEngine = ""
@@ -10,10 +10,6 @@ struct NeuralVoiceSettingsView: View {
     @AppStorage(KokoroML.preloadKey) private var preloadKokoro = true
     @State private var isConfirmingRemove = false
     @State private var isConfirmingMLRemove = false
-    /// Язык, голос Piper которого удаляем («en», «ru»)
-    @State private var piperToRemove: String?
-    @State private var englishChoice = NeuralVoice.installedPiper(language: "en") ?? .kristin
-    @State private var russianChoice = NeuralVoice.installedPiper(language: "ru") ?? .dmitri
 
     private static let sample = "Hello! This is how English words will sound."
 
@@ -66,11 +62,15 @@ struct NeuralVoiceSettingsView: View {
                     }
                 }
 
-                piperSection(language: "en", choice: $englishChoice, header: "Английские книги",
-                             footer: "Лёгкая озвучка Kokoro и Piper")
-
-                piperSection(language: "ru", choice: $russianChoice, header: "Русские книги",
-                             footer: "Лёгкий голос Piper")
+                Section {
+                    NavigationLink {
+                        BookLanguagesView()
+                    } label: {
+                        LabeledContent("Языки книг", value: voice.hasPiper ? "есть голоса" : "")
+                    }
+                } footer: {
+                    Text("Лёгкие голоса Piper для книг на английском, русском, польском, немецком и других языках. Если голоса нет, книгу читает голос iPhone.")
+                }
             }
             .listRowBackground(Color.cardBackground)
         }
@@ -95,14 +95,6 @@ struct NeuralVoiceSettingsView: View {
             if let chosen = NeuralVoice.voices.first(where: { $0.id == id }) {
                 UserDefaults.standard.set(chosen.accentCode, forKey: SpeechSettings.accentKey)
             }
-        }
-        .alert("Удалить голос?", isPresented: Binding(get: { piperToRemove != nil }, set: { if !$0 { piperToRemove = nil } })) {
-            Button("Отмена", role: .cancel) {}
-            Button("Удалить", role: .destructive) {
-                if let piperToRemove { voice.removePiper(language: piperToRemove) }
-            }
-        } message: {
-            Text("Эти книги снова будет читать системный голос. Скачать можно заново.")
         }
         .alert("Удалить Kokoro на нейроядре?", isPresented: $isConfirmingMLRemove) {
             Button("Отмена", role: .cancel) {}
@@ -130,9 +122,9 @@ struct NeuralVoiceSettingsView: View {
             // Идёт загрузка голоса Piper — по одной за раз
             .disabled(voice.isDownloading)
         case .downloading(let fraction):
-            progressRow("Загрузка…", fraction)
+            VoiceProgressRow(title: "Загрузка…", fraction: fraction)
         case .unpacking(let fraction):
-            progressRow("Распаковка…", fraction)
+            VoiceProgressRow(title: "Распаковка…", fraction: fraction)
         case .ready:
             // Скачан — видно по «Прослушать» и «Удалить голос», отдельной плашки не нужно
             EmptyView()
@@ -170,83 +162,6 @@ struct NeuralVoiceSettingsView: View {
                     .foregroundColor(.red)
                 Button("Попробовать ещё раз") { kokoroML.download() }
             }
-        }
-    }
-
-    /// Голос Piper для книг на одном языке: выбор, скачать, прослушать, удалить;
-    /// у английских книг, когда скачаны оба, — кто их читает: Kokoro или Piper
-    private func piperSection(language: String, choice: Binding<NeuralVoice.PiperVoice>, header: String, footer: String) -> some View {
-        Section {
-            if language == "en", voice.phase == .ready || kokoroML.isReady, voice.piperPhase("en") == .ready {
-                Picker("Читает книги", selection: englishBooksVoice) {
-                    Text("Kokoro").tag("kokoro")
-                    Text("Piper").tag("piper")
-                }
-                .pickerStyle(.segmented)
-            }
-            Picker("Голос", selection: choice) {
-                ForEach(NeuralVoice.PiperVoice.voices(for: language)) { Text($0.summary).tag($0) }
-            }
-            piperStatus(language: language, choice: choice.wrappedValue)
-        } header: {
-            Text(header)
-        } footer: {
-            Text(footer)
-        }
-    }
-
-    @ViewBuilder
-    private func piperStatus(language: String, choice: NeuralVoice.PiperVoice) -> some View {
-        switch voice.piperPhase(language) {
-        case .downloading(let fraction):
-            progressRow("Загрузка…", fraction)
-        case .unpacking(let fraction):
-            progressRow("Распаковка…", fraction)
-        case .failed(let message):
-            VStack(alignment: .leading, spacing: 8) {
-                Text(message)
-                    .foregroundColor(.red)
-                Button("Попробовать ещё раз") { voice.downloadPiper(choice) }
-            }
-        case .ready where NeuralVoice.installedPiper(language: language) == choice:
-            Button { voice.previewPiper(choice) } label: {
-                HStack {
-                    Label("Прослушать", systemImage: "speaker.wave.2.fill")
-                    if voice.previewing == choice {
-                        Spacer()
-                        ProgressView()
-                    }
-                }
-            }
-            Button("Удалить голос", role: .destructive) { piperToRemove = language }
-        default:
-            Button {
-                voice.downloadPiper(choice)
-            } label: {
-                Label("Скачать «\(choice.title)» (\(NeuralVoice.piperDownloadSizeShort))", systemImage: "arrow.down.circle.fill")
-            }
-            .disabled(voice.isDownloading)
-        }
-    }
-
-    /// Кто читает английские книги; пока выбор не сделан — тот, кто сейчас читает на самом деле
-    private var englishBooksVoice: Binding<String> {
-        Binding(get: { voice.englishBooksVoice.isEmpty ? (voice.kokoroTooSlow ? "piper" : "kokoro") : voice.englishBooksVoice },
-                set: { voice.setEnglishBooksVoice($0) })
-    }
-
-    private func progressRow(_ title: String, _ fraction: Double) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(title)
-                Spacer()
-                Text("\(Int(fraction * 100))%")
-                    .monospacedDigit()
-                    .foregroundColor(.gray)
-            }
-            ProgressView(value: fraction)
-            Button("Отменить", role: .cancel) { voice.cancelDownload() }
-                .font(.footnote)
         }
     }
 }

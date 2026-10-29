@@ -65,14 +65,28 @@ final class NeuralVoice {
     /// (у «Ирины» лицензия записи неизвестна; «Руслан», hfc и Ryan — только некоммерческие)
     enum PiperVoice: String, CaseIterable, Identifiable, Sendable {
         case dmitri, denis, kristin, cori, joe, norman
+        case darkman, gosia, mc_speech, thorsten, davefx, ukrainian_tts, faber, cadu, ronnie, pim, jirka
 
         nonisolated var id: Self { self }
+
+        /// Языки, для которых есть голоса, в порядке списка в настройках: код (как у `BookLanguage`) и название
+        static let languages: [(code: String, title: String)] = [
+            ("en", "Английский"), ("ru", "Русский"), ("pl", "Польский"), ("de", "Немецкий"), ("es", "Испанский"),
+            ("uk", "Украинский"), ("pt", "Португальский"), ("nl", "Нидерландский"), ("cs", "Чешский"),
+        ]
 
         /// Язык книг, которые читает голос
         nonisolated var language: String {
             switch self {
             case .dmitri, .denis: "ru"
             case .kristin, .cori, .joe, .norman: "en"
+            case .darkman, .gosia, .mc_speech: "pl"
+            case .thorsten: "de"
+            case .davefx: "es"
+            case .ukrainian_tts: "uk"
+            case .faber, .cadu: "pt"
+            case .ronnie, .pim: "nl"
+            case .jirka: "cs"
             }
         }
 
@@ -81,6 +95,13 @@ final class NeuralVoice {
             case .dmitri, .denis: "ru_RU"
             case .cori: "en_GB"
             case .kristin, .joe, .norman: "en_US"
+            case .darkman, .gosia, .mc_speech: "pl_PL"
+            case .thorsten: "de_DE"
+            case .davefx: "es_ES"
+            case .ukrainian_tts: "uk_UA"
+            case .faber, .cadu: "pt_BR"
+            case .ronnie, .pim: "nl_NL"
+            case .jirka: "cs_CZ"
             }
         }
 
@@ -92,16 +113,29 @@ final class NeuralVoice {
             case .cori: "Кори"
             case .joe: "Джо"
             case .norman: "Норман"
+            case .darkman: "Даркман"
+            case .gosia: "Гося"
+            case .mc_speech: "MC Speech"
+            case .thorsten: "Торстен"
+            case .davefx: "Дейв"
+            case .ukrainian_tts: "Украинский"
+            case .faber: "Фабер"
+            case .cadu: "Каду"
+            case .ronnie: "Ронни"
+            case .pim: "Пим"
+            case .jirka: "Йирка"
             }
         }
 
         /// Для списка в настройках: имя, акцент, голос
         var summary: String {
             switch self {
-            case .dmitri, .denis: "\(title) · муж."
+            case .dmitri, .denis, .darkman, .mc_speech, .thorsten, .davefx, .faber, .cadu, .ronnie, .jirka: "\(title) · муж."
             case .kristin: "\(title) · амер., жен."
             case .cori: "\(title) · брит., жен."
             case .joe, .norman: "\(title) · амер., муж."
+            case .gosia: "\(title) · жен."
+            case .ukrainian_tts, .pim: title
             }
         }
 
@@ -182,7 +216,7 @@ final class NeuralVoice {
 
     private init() {
         phase = Self.isInstalled ? .ready : .notDownloaded
-        for language in ["ru", "en"] {
+        for (language, _) in PiperVoice.languages {
             piperPhases[language] = Self.installedPiper(language: language) != nil ? .ready : .notDownloaded
         }
         // Английский Piper скачан, а выбора ещё не было (скачан до появления выбора) — читает он
@@ -215,6 +249,14 @@ final class NeuralVoice {
             }
         }
     }
+
+    /// «pt-BR», «en_US» → «pt», «en»
+    nonisolated static func languageCode(_ language: String) -> String {
+        String(language.lowercased().prefix { $0 != "-" && $0 != "_" })
+    }
+
+    /// Скачан хотя бы один голос Piper — на любом языке
+    var hasPiper: Bool { piperPhases.values.contains(.ready) }
 
     func piperPhase(_ language: String) -> Phase {
         piperPhases[language] ?? .notDownloaded
@@ -295,7 +337,7 @@ final class NeuralVoice {
         downloadTask?.cancel()
         downloadTask = nil
         phase = Self.isInstalled ? .ready : .notDownloaded
-        for language in ["ru", "en"] {
+        for (language, _) in PiperVoice.languages {
             piperPhases[language] = Self.installedPiper(language: language) != nil ? .ready : .notDownloaded
         }
     }
@@ -353,7 +395,7 @@ final class NeuralVoice {
     /// Английские: Kokoro живее всех, но на A14 и старше не успевает — тогда Piper, если скачан
     func bookVoice(language: String) -> BookVoice? {
         guard UserDefaults.standard.object(forKey: Self.booksKey) as? Bool ?? true else { return nil }
-        let language = language.hasPrefix("ru") ? "ru" : language.hasPrefix("en") ? "en" : language
+        let language = Self.languageCode(language)
         let piper = piperPhase(language) == .ready ? Self.installedPiper(language: language) : nil
         let piperVoice = piper.map {
             BookVoice(engine: .sherpa(.piper(Self.root.appendingPathComponent($0.folder, isDirectory: true), file: $0.modelFile)),
@@ -372,7 +414,7 @@ final class NeuralVoice {
 
     /// Скачанный голос Piper для книг на этом языке — замена Kokoro на нейроядре, пока экран заблокирован
     func piperBookVoice(language: String) -> BookVoice? {
-        let language = language.hasPrefix("ru") ? "ru" : language.hasPrefix("en") ? "en" : language
+        let language = Self.languageCode(language)
         guard piperPhase(language) == .ready, let voice = Self.installedPiper(language: language) else { return nil }
         return BookVoice(engine: .sherpa(.piper(Self.root.appendingPathComponent(voice.folder, isDirectory: true), file: voice.modelFile)),
                          speaker: 0)
