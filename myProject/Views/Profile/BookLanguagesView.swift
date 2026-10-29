@@ -35,8 +35,6 @@ struct BookLanguagesView: View {
                         LabeledContent(language.title, value: installedTitle(language.code))
                     }
                 }
-            } footer: {
-                Text("Книги на других языках, а также на этих, пока голос не скачан, читает голос iPhone.")
             }
             .listRowBackground(Color.cardBackground)
         }
@@ -96,8 +94,6 @@ struct BookLanguageVoiceView: View {
                     }
                     status
                 }
-            } footer: {
-                Text(code == "en" ? "Лёгкая озвучка Kokoro и Piper" : "Лёгкий голос Piper")
             }
             .listRowBackground(Color.cardBackground)
         }

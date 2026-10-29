@@ -52,6 +52,16 @@ struct NeuralVoiceSettingsView: View {
                     Text("Звучит живее системного")
                 }
 
+                Section {
+                    NavigationLink {
+                        BookLanguagesView()
+                    } label: {
+                        LabeledContent("Языки книг", value: voice.hasPiper ? "есть голоса" : "")
+                    }
+                } footer: {
+                    Text("Лёгкие голоса Piper для книг на английском, русском, польском, немецком и других языках. Если голоса нет, книгу читает голос iPhone.")
+                }
+
                 if KokoroML.isSupported {
                     Section {
                         kokoroMLStatus
@@ -62,15 +72,6 @@ struct NeuralVoiceSettingsView: View {
                     }
                 }
 
-                Section {
-                    NavigationLink {
-                        BookLanguagesView()
-                    } label: {
-                        LabeledContent("Языки книг", value: voice.hasPiper ? "есть голоса" : "")
-                    }
-                } footer: {
-                    Text("Лёгкие голоса Piper для книг на английском, русском, польском, немецком и других языках. Если голоса нет, книгу читает голос iPhone.")
-                }
             }
             .listRowBackground(Color.cardBackground)
         }
