@@ -3,6 +3,7 @@ import SwiftUI
 /// Бегунок скорости речи с 10 точками на шкале (без цифр): левая точка — самая медленная речь, правая — самая быстрая
 struct SpeechRateSlider: View {
     @Binding var rate: Double
+    var title = "Скорость речи"
 
     private static let points = 10
     private static let lower = SpeechSettings.rateRange.lowerBound
@@ -10,11 +11,11 @@ struct SpeechRateSlider: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Скорость речи")
+            Text(title)
             HStack(spacing: 8) {
                 Image(systemName: "tortoise.fill").foregroundColor(.gray)
                 Slider(value: $rate, in: SpeechSettings.rateRange, step: Self.step) {
-                    Text("Скорость речи")
+                    Text(title)
                 }
                 .overlay { dots }
                 Image(systemName: "hare.fill").foregroundColor(.gray)

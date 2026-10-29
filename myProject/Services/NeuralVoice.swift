@@ -190,6 +190,11 @@ final class NeuralVoice {
     /// Kokoro не успевает читать книги на этом устройстве — книги читает Piper или системный голос
     private(set) var kokoroTooSlow = UserDefaults.standard.bool(forKey: NeuralVoice.kokoroSlowKey)
     private(set) var englishBooksVoice = UserDefaults.standard.string(forKey: NeuralVoice.englishBooksVoiceKey) ?? ""
+    /// Чем читаются книги на языке: "system", "piper:<голос>" или "kokoro:<номер>" (английский); выбирается в «Озвучке»
+    private(set) var bookChoices: [String: String] = [:]
+    /// Фраза «Прослушать» для книг готовится
+    private(set) var isPreviewingBook = false
+    private let systemPreview = AVSpeechSynthesizer()
     /// Голос Piper, фраза которого готовится для «Прослушать», — в настройках крутится индикатор
     private(set) var previewing: PiperVoice?
     private var previewTask: Task<Void, Never>?
@@ -219,8 +224,9 @@ final class NeuralVoice {
         for (language, _) in PiperVoice.languages {
             piperPhases[language] = Self.installedPiper(language: language) != nil ? .ready : .notDownloaded
         }
-        // Английский Piper скачан, а выбора ещё не было (скачан до появления выбора) — читает он
-        if englishBooksVoice.isEmpty, piperPhases["en"] == .ready { setEnglishBooksVoice("piper") }
+        for (language, _) in PiperVoice.languages {
+            bookChoices[language] = UserDefaults.standard.string(forKey: Self.bookChoiceKey(language))
+        }
     }
 
     // MARK: - Где лежит модель
@@ -322,8 +328,6 @@ final class NeuralVoice {
                     try? FileManager.default.removeItem(at: Self.root.appendingPathComponent(other.folder))
                 }
                 piperPhases[language] = Self.installedPiper(language: language) == voice ? .ready : .failed("Архив распаковался не полностью")
-                // Скачали английский Piper — значит, хотят им слушать книги
-                if language == "en", piperPhases[language] == .ready { setEnglishBooksVoice("piper") }
             } catch is CancellationError {
                 piperPhases[language] = Self.installedPiper(language: language) != nil ? .ready : .notDownloaded
             } catch {
@@ -350,6 +354,12 @@ final class NeuralVoice {
         Task { await engine.unload() }
         try? FileManager.default.removeItem(at: Self.modelFolder)
         phase = .notDownloaded
+        kokoroRemoved()
+    }
+
+    /// Kokoro удалён совсем (процессор и нейроядро) — английские книги не могут читаться им, выбор возвращается к системному
+    func kokoroRemoved() {
+        if phase != .ready, !KokoroML.shared.isReady, bookChoice("en").hasPrefix("kokoro:") { setBookChoice("en", "system") }
     }
 
     /// Выгрузить модель из памяти (проба Kokoro на нейроядре — памяти на обе не хватает)
@@ -365,17 +375,55 @@ final class NeuralVoice {
             try? FileManager.default.removeItem(at: Self.root.appendingPathComponent(voice.folder))
         }
         piperPhases[language] = .notDownloaded
-        if language == "en", englishBooksVoice == "piper" { setEnglishBooksVoice("") }
+        if bookChoice(language).hasPrefix("piper:") { setBookChoice(language, "system") }
     }
 
-    /// Выбор в настройках: кто читает английские книги
+    /// Выбор в настройках: кто читает английские книги (прежний выбор — только для переноса на новый)
     func setEnglishBooksVoice(_ choice: String) {
         englishBooksVoice = choice
         UserDefaults.standard.set(choice, forKey: Self.englishBooksVoiceKey)
     }
 
-    /// Замер скорости Kokoro при чтении — только если голос выбирается сам; явный выбор Kokoro не трогаем
-    var checksKokoroSpeed: Bool { englishBooksVoice.isEmpty }
+    // MARK: - Кто читает книги
+
+    static func bookChoiceKey(_ language: String) -> String { "book_voice_\(language)" }
+
+    /// Чем читаются книги на этом языке. Пока выбора не было — как они читались до появления выбора
+    func bookChoice(_ language: String) -> String {
+        let language = Self.languageCode(language)
+        return bookChoices[language] ?? legacyChoice(language)
+    }
+
+    func setBookChoice(_ language: String, _ choice: String) {
+        bookChoices[language] = choice
+        UserDefaults.standard.set(choice, forKey: Self.bookChoiceKey(language))
+    }
+
+    /// Как книги читались, пока выбора не было: скачанный голос читает, если не выключено «Читать книги этим голосом»
+    private func legacyChoice(_ language: String) -> String {
+        guard UserDefaults.standard.object(forKey: Self.booksKey) as? Bool ?? true else { return "system" }
+        let piper = Self.installedPiper(language: language).map { "piper:\($0.rawValue)" }
+        guard language == "en" else { return piper ?? "system" }
+        let kokoro = phase == .ready || KokoroML.shared.isReady ? "kokoro:\(selectedVoice)" : nil
+        switch englishBooksVoice {
+        case "kokoro": return kokoro ?? piper ?? "system"
+        case "piper": return piper ?? kokoro ?? "system"
+        default: return (KokoroML.shared.isReady || !kokoroTooSlow ? kokoro : nil) ?? piper ?? "system"
+        }
+    }
+
+    /// Подпись выбранного голоса для строки «Голос» в «Книгах»
+    func bookVoiceTitle(_ language: String) -> String {
+        let choice = bookChoice(language)
+        if choice.hasPrefix("piper:"), let voice = PiperVoice(rawValue: String(choice.dropFirst(6))) { return "Piper · \(voice.title)" }
+        if choice.hasPrefix("kokoro:"), let id = Int(choice.dropFirst(7)), let voice = Self.voices.first(where: { $0.id == id }) {
+            return "Kokoro · \(voice.name)"
+        }
+        return "Системный"
+    }
+
+    /// Замер скорости Kokoro при чтении — когда английские книги читает Kokoro
+    var checksKokoroSpeed: Bool { bookChoice("en").hasPrefix("kokoro:") }
 
     /// Замер при чтении: Kokoro не успевает — английские книги дальше читает Piper или системный голос
     func markKokoroTooSlow() {
@@ -391,25 +439,24 @@ final class NeuralVoice {
 
     // MARK: - Книги вслух
 
-    /// Нейросетевой голос для книги на этом языке; nil — книгу читает системный.
-    /// Английские: Kokoro живее всех, но на A14 и старше не успевает — тогда Piper, если скачан
+    /// Нейросетевой голос для книги на этом языке по выбору в «Озвучке»; nil — книгу читает системный.
+    /// Kokoro на процессоре на A14 и старше не успевает — тогда вместо него Piper, если скачан
     func bookVoice(language: String) -> BookVoice? {
-        guard UserDefaults.standard.object(forKey: Self.booksKey) as? Bool ?? true else { return nil }
         let language = Self.languageCode(language)
-        let piper = piperPhase(language) == .ready ? Self.installedPiper(language: language) : nil
-        let piperVoice = piper.map {
-            BookVoice(engine: .sherpa(.piper(Self.root.appendingPathComponent($0.folder, isDirectory: true), file: $0.modelFile)),
-                      speaker: 0)
+        let choice = bookChoice(language)
+        // Как читалось раньше — запоминаем, чтобы выбор не уплывал после скачиваний и удалений
+        if bookChoices[language] == nil { setBookChoice(language, choice) }
+        if choice.hasPrefix("piper:") {
+            guard let voice = PiperVoice(rawValue: String(choice.dropFirst(6))), voice.language == language,
+                  piperPhase(language) == .ready, Self.installedPiper(language: language) == voice else { return nil }
+            return piperBookVoice(language: language)
         }
-        guard language == "en" else { return piperVoice }
+        guard choice.hasPrefix("kokoro:"), language == "en" else { return nil }
+        let id = Int(choice.dropFirst(7)) ?? selectedVoice
         // Kokoro: на нейроядре — если скачан и iOS подходит, иначе на процессоре (если успевает)
-        let kokoroML = KokoroML.shared.isReady ? BookVoice(engine: .kokoroML(Self.kokoroName(selectedVoice)), speaker: 0) : nil
-        let kokoroCPU = phase == .ready ? BookVoice(engine: .sherpa(.kokoro(Self.modelFolder)), speaker: selectedVoice) : nil
-        switch englishBooksVoice {
-        case "kokoro": return kokoroML ?? kokoroCPU ?? piperVoice
-        case "piper": return piperVoice ?? kokoroML ?? kokoroCPU
-        default: return kokoroML ?? (kokoroTooSlow ? nil : kokoroCPU) ?? piperVoice
-        }
+        if KokoroML.shared.isReady { return BookVoice(engine: .kokoroML(Self.kokoroName(id)), speaker: 0) }
+        if phase == .ready, !kokoroTooSlow { return BookVoice(engine: .sherpa(.kokoro(Self.modelFolder)), speaker: id) }
+        return piperBookVoice(language: language)
     }
 
     /// Скачанный голос Piper для книг на этом языке — замена Kokoro на нейроядре, пока экран заблокирован
@@ -431,6 +478,45 @@ final class NeuralVoice {
             guard !Task.isCancelled else { return }
             previewing = nil
             if let audio { try? playPreview(audio) }
+        }
+    }
+
+    /// «Прослушать» для книг: короткая фраза тем голосом и с той скоростью, что выбраны для книг на этом языке
+    func previewBook(language: String) {
+        stop()
+        systemPreview.stopSpeaking(at: .immediate)
+        let language = Self.languageCode(language)
+        let text = Self.previewText(language)
+        guard let voice = bookVoice(language: language) else {
+            let utterance = AVSpeechUtterance(string: text)
+            let accent = UserDefaults.standard.string(forKey: SpeechSettings.accentKey) ?? SpeechSettings.defaultAccent
+            utterance.voice = language == "en"
+                ? SpeechSettings.resolveVoice(accent: accent, identifier: UserDefaults.standard.string(forKey: SpeechSettings.voiceKey) ?? "")
+                : SpeechSettings.bestVoice(language: language)
+            utterance.rate = Float(min(max(SpeechSettings.bookRate, Double(AVSpeechUtteranceMinimumSpeechRate)), 0.75))
+            systemPreview.speak(utterance)
+            return
+        }
+        isPreviewingBook = true
+        previewTask = Task {
+            let result = try? await bookAudio(text, voice: voice, speed: Float(SpeechSettings.bookNeuralSpeedFactor))
+            guard !Task.isCancelled else { return }
+            isPreviewingBook = false
+            if let audio = result?.audio { try? playPreview(audio) }
+        }
+    }
+
+    private static func previewText(_ language: String) -> String {
+        switch language {
+        case "ru": "Здравствуйте! Так будут звучать книги."
+        case "pl": "Cześć! Tak będą brzmiały książki."
+        case "de": "Hallo! So werden Bücher klingen."
+        case "es": "¡Hola! Así sonarán los libros."
+        case "uk": "Привіт! Так звучатимуть книги."
+        case "pt": "Olá! É assim que os livros vão soar."
+        case "nl": "Hallo! Zo klinken boeken."
+        case "cs": "Ahoj! Takto budou znít knihy."
+        default: "Hello! This is how books will sound."
         }
     }
 
@@ -547,6 +633,7 @@ final class NeuralVoice {
         previewTask?.cancel()
         previewTask = nil
         previewing = nil
+        isPreviewingBook = false
         if previewRate != nil { previewNode.stop() }
         speakTask?.cancel()
         speakTask = nil

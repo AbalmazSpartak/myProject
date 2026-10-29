@@ -50,17 +50,14 @@ struct BookLanguagesView: View {
     }
 }
 
-/// Голос Piper для книг на одном языке: выбор, скачать, прослушать, удалить;
-/// у английских книг, когда скачаны оба, — кто их читает: Kokoro или Piper
+/// Голос Piper для книг на одном языке: выбор, скачать, прослушать, удалить, назначить читать книги
 struct BookLanguageVoiceView: View {
     let code: String
     let title: String
 
     @State private var voice = NeuralVoice.shared
-    @State private var kokoroML = KokoroML.shared
     @State private var choice: NeuralVoice.PiperVoice
     @State private var isConfirmingRemove = false
-    @AppStorage(NeuralVoice.voiceKey) private var kokoroVoiceID = 1
 
     init(code: String, title: String) {
         self.code = code
@@ -71,29 +68,10 @@ struct BookLanguageVoiceView: View {
     var body: some View {
         List {
             Section {
-                if hasBothEnglish {
-                    Picker("Читает книги", selection: englishBooksVoice) {
-                        Text("Piper").tag("piper")
-                        Text("Kokoro").tag("kokoro")
-                    }
-                    .pickerStyle(.segmented)
+                Picker("Голос", selection: $choice) {
+                    ForEach(NeuralVoice.PiperVoice.voices(for: code)) { Text($0.summary).tag($0) }
                 }
-                if showsKokoro {
-                    // Голос Kokoro выбирается на экране «Нейросетевой голос»; здесь — строка на том же месте, что у Piper, и «Прослушать»
-                    LabeledContent("Голос", value: NeuralVoice.voices.first { $0.id == kokoroVoiceID }?.title ?? "")
-                    if voice.phase == .ready {
-                        Button {
-                            TextToSpeechManager.shared.speak("Hello! This is how English books will sound.")
-                        } label: {
-                            Label("Прослушать Kokoro", systemImage: "speaker.wave.2.fill")
-                        }
-                    }
-                } else {
-                    Picker("Голос", selection: $choice) {
-                        ForEach(NeuralVoice.PiperVoice.voices(for: code)) { Text($0.summary).tag($0) }
-                    }
-                    status
-                }
+                status
             }
             .listRowBackground(Color.cardBackground)
         }
@@ -105,17 +83,11 @@ struct BookLanguageVoiceView: View {
             Button("Отмена", role: .cancel) {}
             Button("Удалить", role: .destructive) { voice.removePiper(language: code) }
         } message: {
-            Text("Эти книги снова будет читать системный голос. Скачать можно заново.")
+            Text("Книги на этом языке снова будет читать системный голос. Скачать можно заново.")
         }
     }
 
-    /// У английских скачан и Kokoro, и Piper — между ними переключатель
-    private var hasBothEnglish: Bool {
-        code == "en" && (voice.phase == .ready || kokoroML.isReady) && voice.piperPhase("en") == .ready
-    }
-
-    /// Выбран Kokoro — Piper-голос и его кнопки не нужны
-    private var showsKokoro: Bool { hasBothEnglish && englishBooksVoice.wrappedValue == "kokoro" }
+    private var choiceKey: String { "piper:\(choice.rawValue)" }
 
     @ViewBuilder
     private var status: some View {
@@ -140,6 +112,12 @@ struct BookLanguageVoiceView: View {
                     }
                 }
             }
+            if voice.bookChoice(code) == choiceKey {
+                Label("Читает книги", systemImage: "checkmark")
+                    .foregroundColor(.gray)
+            } else {
+                Button("Читать книги этим голосом") { voice.setBookChoice(code, choiceKey) }
+            }
             Button("Удалить голос", role: .destructive) { isConfirmingRemove = true }
         default:
             Button {
@@ -150,10 +128,72 @@ struct BookLanguageVoiceView: View {
             .disabled(voice.isDownloading)
         }
     }
+}
 
-    /// Кто читает английские книги; пока выбор не сделан — тот, кто сейчас читает на самом деле
-    private var englishBooksVoice: Binding<String> {
-        Binding(get: { voice.englishBooksVoice.isEmpty ? (voice.kokoroTooSlow ? "piper" : "kokoro") : voice.englishBooksVoice },
-                set: { voice.setEnglishBooksVoice($0) })
+/// Озвучка → «Книги» → «Голос»: чем читать книги на языке — системным голосом, скачанным Piper или Kokoro (английский)
+struct BookVoicePickerView: View {
+    let code: String
+    let title: String
+
+    @State private var voice = NeuralVoice.shared
+    @State private var kokoroML = KokoroML.shared
+
+    private var hasKokoro: Bool { voice.phase == .ready || kokoroML.isReady }
+
+    var body: some View {
+        List {
+            Section {
+                row("Системный голос iPhone", choice: "system")
+            } footer: {
+                Text(code == "en" ? "Голос и акцент — из блока «Слова»." : "Лучший скачанный в iPhone голос этого языка.")
+                    .textSelection(.enabled)
+            }
+            .listRowBackground(Color.cardBackground)
+
+            if let piper = NeuralVoice.installedPiper(language: code), voice.piperPhase(code) == .ready {
+                Section("Piper") {
+                    row(piper.summary, choice: "piper:\(piper.rawValue)")
+                }
+                .listRowBackground(Color.cardBackground)
+            }
+
+            if code == "en", hasKokoro {
+                Section("Kokoro") {
+                    ForEach(NeuralVoice.voices) { item in
+                        row(item.title, choice: "kokoro:\(item.id)")
+                    }
+                }
+                .listRowBackground(Color.cardBackground)
+            }
+
+            Section {
+                NavigationLink("Скачать голоса Piper") {
+                    BookLanguageVoiceView(code: code, title: title)
+                }
+                if code == "en" && !hasKokoro {
+                    NavigationLink("Скачать Kokoro") { NeuralVoiceSettingsView() }
+                }
+            }
+            .listRowBackground(Color.cardBackground)
+        }
+        .brandListBackground()
+        .textCase(nil)
+        .navigationTitle("Голос · \(title)")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func row(_ name: String, choice: String) -> some View {
+        Button {
+            voice.setBookChoice(code, choice)
+        } label: {
+            HStack {
+                Text(name)
+                    .foregroundColor(.primary)
+                Spacer()
+                if voice.bookChoice(code) == choice {
+                    Image(systemName: "checkmark")
+                }
+            }
+        }
     }
 }

@@ -75,7 +75,6 @@ final class KokoroML {
                 _ = try await loaded()
                 UserDefaults.standard.set(true, forKey: Self.installedKey)
                 phase = .ready
-                NeuralVoice.shared.setEnglishBooksVoice("kokoro")
             } catch {
                 phase = .failed("Не удалось скачать голос. Проверьте интернет и место на iPhone.")
             }
@@ -106,7 +105,7 @@ final class KokoroML {
             for folder in Self.modelFolders { try? FileManager.default.removeItem(at: folder) }
             UserDefaults.standard.set(false, forKey: Self.installedKey)
             phase = .notDownloaded
-            if NeuralVoice.shared.englishBooksVoice == "kokoro" { NeuralVoice.shared.setEnglishBooksVoice("") }
+            NeuralVoice.shared.kokoroRemoved()
         }
     }
 

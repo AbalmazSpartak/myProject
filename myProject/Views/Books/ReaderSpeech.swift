@@ -414,7 +414,7 @@ final class ReaderSpeech: NSObject {
     }
 
     private func currentRate() -> Float {
-        let base = UserDefaults.standard.object(forKey: SpeechSettings.rateKey) as? Double ?? SpeechSettings.defaultRate
+        let base = SpeechSettings.bookRate
         let speed = UserDefaults.standard.object(forKey: Self.speedKey) as? Double ?? 1
         // Выше 0,75 голос iOS начинает глотать слова
         return Float(min(max(base * speed, Double(AVSpeechUtteranceMinimumSpeechRate)), 0.75))
@@ -1025,14 +1025,14 @@ final class ReaderSpeech: NSObject {
         return zip(bounds, bounds.dropFirst()).map { $0..<$1 }
     }
 
-    /// Скорость нейросетевого голоса: множитель читалки и — мягче — скорость речи из «Озвучки»
+    /// Скорость нейросетевого голоса: множитель читалки и — мягче — скорость чтения из «Озвучки»
     private func neuralSpeed() -> Float {
         Self.neuralSpeedSetting()
     }
 
     private static func neuralSpeedSetting() -> Float {
         let speed = UserDefaults.standard.object(forKey: Self.speedKey) as? Double ?? 1
-        return Float(speed * SpeechSettings.neuralSpeedFactor)
+        return Float(speed * SpeechSettings.bookNeuralSpeedFactor)
     }
 
     // MARK: - Экран блокировки и наушники

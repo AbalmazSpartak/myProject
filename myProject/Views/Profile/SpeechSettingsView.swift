@@ -8,18 +8,16 @@ struct SpeechSettingsView: View {
     @AppStorage(SpeechSettings.voiceKey) private var speechVoice = ""
     @AppStorage(NeuralVoice.voiceKey) private var neuralVoiceID = 1
     @AppStorage(SpeechSettings.wordsEngineKey) private var wordsEngine = ""
+    @AppStorage("settings_book_language") private var bookLanguage = "en"
+    /// Не читается: подписка на ключ перерисовывает экран, когда бегунок книг меняет значение
+    @AppStorage(SpeechSettings.bookRateKey) private var bookRateValue = 0.0
     @AppStorage(SpeechSettings.rateKey) private var speechRate = SpeechSettings.defaultRate
     @AppStorage(SpeechSettings.autoSpeakKey) private var autoSpeak = false
-    @AppStorage(NeuralVoice.booksKey) private var neuralReadsBooks = true
     @State private var neuralVoice = NeuralVoice.shared
     @State private var kokoroML = KokoroML.shared
 
-    /// Что видно у строки «Нейросетевой голос»: слова озвучивает скачанный Kokoro; книги — Kokoro на нейроядре или Piper, если включено «Читать книги этим голосом»
-    private var neuralVoiceSummary: String {
-        let readsBooks = neuralReadsBooks && (kokoroML.isReady || neuralVoice.hasPiper)
-        if neuralVoice.phase == .ready || readsBooks { return "используется" }
-        return hasNeuralVoice ? "не используется" : "не скачан"
-    }
+    /// Что видно у строки «Нейросетевой голос»: скачано ли что-то
+    private var neuralVoiceSummary: String { hasNeuralVoice ? "скачан" : "не скачан" }
     /// Скачан хоть один нейроголос — Kokoro (процессор или нейроядро) или Piper
     private var hasNeuralVoice: Bool {
         neuralVoice.phase == .ready || kokoroML.isReady
@@ -29,7 +27,7 @@ struct SpeechSettingsView: View {
     /// Озвучка
     @ViewBuilder
     private var voiceSection: some View {
-        Section(footer: mode == .learning ? nil : Text("Акцент, голос и скорость — для английских книг. Книги на других языках читает голос своего языка.").textSelection(.enabled)) {
+        Section {
             Picker("Акцент", selection: $speechAccent) {
                 Text("Американский").tag("en-US")
                 Text("Британский").tag("en-GB")
@@ -53,6 +51,11 @@ struct SpeechSettingsView: View {
             } label: {
                 Label("Прослушать", systemImage: "speaker.wave.2.fill")
             }
+        } header: {
+            Text("Слова")
+        } footer: {
+            Text("Как приложение произносит слова: в карточках, тренировках и при нажатии на слово.")
+                .textSelection(.enabled)
         }
     }
 
@@ -84,31 +87,56 @@ struct SpeechSettingsView: View {
         }
     }
 
-    /// «Читать книги этим голосом» — на виду, не внутри экрана нейроголоса
+    /// Книги: язык, голос и скорость чтения — свои, не зависят от слов
     @ViewBuilder
-    private var booksVoiceSection: some View {
+    private var booksSection: some View {
         Section {
-            Toggle("Читать книги этим голосом", isOn: $neuralReadsBooks)
-
-            if neuralReadsBooks && !hasNeuralVoice {
-                Label("Чтобы заработало, откройте «Нейросетевой голос» и скачайте голос. Пока его нет, книги читает обычный голос iPhone.",
-                      systemImage: "info.circle")
-                    .scaledFont(size: 14)
-                    .foregroundColor(.orange)
+            Picker("Язык книги", selection: $bookLanguage) {
+                ForEach(NeuralVoice.PiperVoice.languages, id: \.code) { Text($0.title).tag($0.code) }
             }
+
+            NavigationLink {
+                BookVoicePickerView(code: bookLanguage, title: bookLanguageTitle)
+            } label: {
+                LabeledContent("Голос", value: neuralVoice.bookVoiceTitle(bookLanguage))
+            }
+
+            SpeechRateSlider(rate: bookRate, title: "Скорость чтения")
+
+            Button {
+                neuralVoice.previewBook(language: bookLanguage)
+            } label: {
+                HStack {
+                    Label("Прослушать", systemImage: "speaker.wave.2.fill")
+                    if neuralVoice.isPreviewingBook {
+                        Spacer()
+                        ProgressView()
+                    }
+                }
+            }
+        } header: {
+            Text("Книги")
         } footer: {
-            Text("Включено — книги читает нейросетевой голос (Kokoro или Piper), если он скачан. Выключено — обычный голос iPhone с акцентом, голосом и скоростью из «Озвучки». Нейроголос тратит больше заряда.")
+            Text("Как читаются книги вслух. Голос и скорость выбираются для каждого языка книги отдельно от слов.")
                 .textSelection(.enabled)
         }
+    }
+
+    private var bookLanguageTitle: String {
+        NeuralVoice.PiperVoice.languages.first { $0.code == bookLanguage }?.title ?? ""
+    }
+
+    private var bookRate: Binding<Double> {
+        Binding(get: { SpeechSettings.bookRate }, set: { UserDefaults.standard.set($0, forKey: SpeechSettings.bookRateKey) })
     }
 
     var body: some View {
         Form {
             Group {
                 voiceSection
-                neuralSection
                 autoSpeakSection
-                booksVoiceSection
+                booksSection
+                neuralSection
             }
             .listRowBackground(Color.cardBackground)
         }

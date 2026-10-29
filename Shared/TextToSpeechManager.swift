@@ -24,6 +24,14 @@ enum SpeechSettings {
     static var neuralSpeedFactor: Double {
         neuralSpeedFactor(rate: UserDefaults.standard.object(forKey: rateKey) as? Double ?? defaultRate)
     }
+    /// Скорость чтения книг вслух — своя; пока не выбрана, такая же, как у слов
+    static let bookRateKey = "book_speech_rate"
+    static var bookRate: Double {
+        let defaults = UserDefaults.standard
+        return defaults.object(forKey: bookRateKey) as? Double ?? defaults.object(forKey: rateKey) as? Double ?? defaultRate
+    }
+    static var bookNeuralSpeedFactor: Double { neuralSpeedFactor(rate: bookRate) }
+
     /// Произносить английское слово сразу при показе, без нажатия на динамик
     static let autoSpeakKey = "speech_auto"
     /// Выбранный голос (identifier); пусто — автоматически лучший скачанный для акцента
