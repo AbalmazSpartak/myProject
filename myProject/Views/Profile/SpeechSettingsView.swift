@@ -29,7 +29,7 @@ struct SpeechSettingsView: View {
     /// Озвучка
     @ViewBuilder
     private var voiceSection: some View {
-        Section(footer: mode == .learning ? nil : Text("Акцент, голос и скорость — для английских книг. Книги на других языках читает голос своего языка.")) {
+        Section(footer: mode == .learning ? nil : Text("Акцент, голос и скорость — для английских книг. Книги на других языках читает голос своего языка.").textSelection(.enabled)) {
             Picker("Акцент", selection: $speechAccent) {
                 Text("Американский").tag("en-US")
                 Text("Британский").tag("en-GB")
@@ -64,6 +64,7 @@ struct SpeechSettingsView: View {
                 Toggle("Озвучивать слово сразу", isOn: $autoSpeak)
             } footer: {
                 Text("При переводе с русского на английский слово звучит после ответа, чтобы не подсказывать.")
+                    .textSelection(.enabled)
             }
         }
     }
@@ -79,6 +80,7 @@ struct SpeechSettingsView: View {
             }
         } footer: {
             Text("Скачать и настроить лёгкую озвучку Piper и Kokoro.")
+                .textSelection(.enabled)
         }
     }
 
@@ -96,6 +98,7 @@ struct SpeechSettingsView: View {
             }
         } footer: {
             Text("Включено — книги читает нейросетевой голос (Kokoro или Piper), если он скачан. Выключено — обычный голос iPhone с акцентом, голосом и скоростью из «Озвучки». Нейроголос тратит больше заряда.")
+                .textSelection(.enabled)
         }
     }
 

@@ -24,6 +24,7 @@ struct NeuralVoiceSettingsView: View {
                     }
                 } footer: {
                     Text("Лёгкие голоса Piper для книг на английском, русском, польском, немецком и других языках. Если голоса нет, книгу читает голос iPhone.")
+                        .textSelection(.enabled)
                 }
 
                 // Один раздел: выбор голоса, прослушать, удалить — или «Скачать голос», пока не скачан
@@ -60,6 +61,7 @@ struct NeuralVoiceSettingsView: View {
                     Text("Голос Kokoro")
                 } footer: {
                     Text("Звучит живее системного")
+                        .textSelection(.enabled)
                 }
 
                 if KokoroML.isSupported {
@@ -69,6 +71,7 @@ struct NeuralVoiceSettingsView: View {
                         Text("Нейроядро Kokoro — для озвучки книг")
                     } footer: {
                         Text("Английские книги без пауз, подсвечивается каждое слово. Скачивается отдельно (\(KokoroML.downloadSize)).")
+                            .textSelection(.enabled)
                     }
                 }
 
