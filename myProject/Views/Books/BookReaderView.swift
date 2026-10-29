@@ -284,8 +284,27 @@ struct BookReaderView: View {
 
     // MARK: - Шапка
 
-    /// Шапка: назад, название главы (нажатие — оглавление), чтение вслух, остальное (и оформление) — в «…»
+    /// Шапка: назад, название главы по центру (нажатие — оглавление), чтение вслух, оформление, остальное — в «…».
+    /// Название не зависит от кнопок по краям и стоит там же, где в свёрнутой шапке
     private var header: some View {
+        ZStack {
+            buttonsBar
+            Button { isShowingContents = true } label: {
+                Text(chapter?.title ?? book.title)
+                    .scaledFont(size: 16, weight: .semibold)
+                    .foregroundColor(style.text)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .frame(maxWidth: .infinity)
+            }
+            .padding(.horizontal, 112)
+            .accessibilityHint("Оглавление")
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+    }
+
+    private var buttonsBar: some View {
         HStack(spacing: 14) {
             Button(action: { dismiss() }) {
                 Image(systemName: "chevron.left")
@@ -295,15 +314,7 @@ struct BookReaderView: View {
                     .contentShape(Rectangle())
             }
             .accessibilityLabel("Книги")
-            Button { isShowingContents = true } label: {
-                Text(chapter?.title ?? book.title)
-                    .scaledFont(size: 16, weight: .semibold)
-                    .foregroundColor(style.text)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .frame(maxWidth: .infinity)
-            }
-            .accessibilityHint("Оглавление")
+            Spacer()
             Button(action: toggleReading) {
                 if speech.isPreparing {
                     // Нейросетевой голос готовит фразу — нажатие ставит на паузу, как обычно
@@ -317,10 +328,13 @@ struct BookReaderView: View {
                 }
             }
             .accessibilityLabel(speech.isPlaying ? "Пауза" : "Читать вслух")
+            Button { isShowingAppearance = true } label: {
+                Image(systemName: "textformat.size")
+                    .scaledFont(size: 22)
+                    .foregroundColor(style.text)
+            }
+            .accessibilityLabel("Оформление")
             Menu {
-                Button { isShowingAppearance = true } label: {
-                    Label("Оформление", systemImage: "textformat.size")
-                }
                 Button { isShowingContents = true } label: {
                     Label("Оглавление", systemImage: "list.bullet")
                 }
@@ -369,8 +383,6 @@ struct BookReaderView: View {
             }
             .accessibilityLabel("Ещё")
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
     }
 
     @ViewBuilder
