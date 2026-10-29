@@ -69,6 +69,7 @@ struct HelpCard<Content: View>: View {
                 Text(title)
                     .scaledFont(size: 18, weight: .bold, design: .rounded)
                     .foregroundColor(.brandDark)
+                    .textSelection(.enabled)
             }
 
             Divider()
@@ -95,6 +96,7 @@ struct HelpParagraph: View {
             .scaledFont(size: 15)
             .foregroundColor(.brandDark)
             .fixedSize(horizontal: false, vertical: true)
+            .textSelection(.enabled)
     }
 }
 
