@@ -171,7 +171,7 @@ struct BookReaderView: View {
         .background(style.background.ignoresSafeArea())
         // Тёмная тема книги — светлые часы и батарея в статус-баре
         .preferredColorScheme(style.colorScheme)
-        .readableColumn(720)
+        .readableColumn(PadLayout.readerWidth)
         .task {
             open()
             speech.onChapterEnd = {

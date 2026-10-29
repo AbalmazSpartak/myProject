@@ -5,6 +5,8 @@ enum PadLayout {
     static let isPad = UIDevice.current.userInterfaceIdiom == .pad
     /// Ширина колонки: на экране iPad в 1000+ точек строки и карточки во всю ширину читать неудобно
     static let columnWidth: CGFloat = 680
+    /// Читалка: на iPad вертикально текст идёт почти во всю ширину экрана, горизонтально колонка не шире этого
+    static let readerWidth: CGFloat = 860
     /// Плитки «Обзора» и «Сообщества»: на iPad крупнее, на iPhone — 150 × 96, как были
     static let tileSize = isPad ? CGSize(width: 210, height: 134) : CGSize(width: 150, height: 96)
     /// Карточка «Слова дня» на iPad не шире этого — иначе картинка растягивается на весь экран

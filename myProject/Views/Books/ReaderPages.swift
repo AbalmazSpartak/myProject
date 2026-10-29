@@ -211,7 +211,7 @@ struct ReaderPagedText: View, Equatable {
     /// Доля ширины у каждого края, где нажатие листает
     private static let edgeZone: CGFloat = 0.25
 
-    private static let horizontalPadding: CGFloat = 28
+    private static let horizontalPadding: CGFloat = PadLayout.isPad ? 40 : 28
     private static let topPadding: CGFloat = 16
     private static let footerHeight: CGFloat = 34
 
