@@ -72,17 +72,28 @@ struct BookLanguageVoiceView: View {
     var body: some View {
         List {
             Section {
-                if code == "en", voice.phase == .ready || kokoroML.isReady, voice.piperPhase("en") == .ready {
+                if hasBothEnglish {
                     Picker("Читает книги", selection: englishBooksVoice) {
                         Text("Kokoro").tag("kokoro")
                         Text("Piper").tag("piper")
                     }
                     .pickerStyle(.segmented)
                 }
-                Picker("Голос", selection: $choice) {
-                    ForEach(NeuralVoice.PiperVoice.voices(for: code)) { Text($0.summary).tag($0) }
+                if showsKokoro {
+                    // Голос Kokoro выбирается на экране «Нейросетевой голос»; здесь — только послушать
+                    if voice.phase == .ready {
+                        Button {
+                            TextToSpeechManager.shared.speak("Hello! This is how English books will sound.")
+                        } label: {
+                            Label("Прослушать Kokoro", systemImage: "speaker.wave.2.fill")
+                        }
+                    }
+                } else {
+                    Picker("Голос", selection: $choice) {
+                        ForEach(NeuralVoice.PiperVoice.voices(for: code)) { Text($0.summary).tag($0) }
+                    }
+                    status
                 }
-                status
             } footer: {
                 Text(code == "en" ? "Лёгкая озвучка Kokoro и Piper" : "Лёгкий голос Piper")
             }
@@ -99,6 +110,14 @@ struct BookLanguageVoiceView: View {
             Text("Эти книги снова будет читать системный голос. Скачать можно заново.")
         }
     }
+
+    /// У английских скачан и Kokoro, и Piper — между ними переключатель
+    private var hasBothEnglish: Bool {
+        code == "en" && (voice.phase == .ready || kokoroML.isReady) && voice.piperPhase("en") == .ready
+    }
+
+    /// Выбран Kokoro — Piper-голос и его кнопки не нужны
+    private var showsKokoro: Bool { hasBothEnglish && englishBooksVoice.wrappedValue == "kokoro" }
 
     @ViewBuilder
     private var status: some View {
