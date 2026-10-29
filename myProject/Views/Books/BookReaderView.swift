@@ -765,6 +765,13 @@ struct BookReaderView: View {
         guard url.scheme == Self.wordScheme, let chapter else { return }
         let parts = url.pathComponents.compactMap(Int.init)
         guard parts.count == 3, chapter.paragraphs.indices.contains(parts[0]) else { return }
+        // Строка оглавления в начале книги — переход в главу, а не карточка слова
+        if let target = contentsEntry(chapter.paragraphs[parts[0]]) {
+            go(to: target)
+            return
+        }
+        // В режиме «Чтение» карточки слова нет — нажатие на слово ничего не делает
+        guard AppMode.current == .learning else { return }
         // Перевод слова — чтение вслух на паузу, продолжится кнопкой ▶️
         speech.pause()
         let paragraph = chapter.paragraphs[parts[0]]
@@ -781,6 +788,33 @@ struct BookReaderView: View {
         tappedWord = TappedWord(word: String(paragraph[range]), sentence: sentence, range: start..<end,
                                 passage: bookPassage(paragraph: parts[0], range: NSRange(location: parts[1], length: parts[2])),
                                 paragraph: parts[0], location: parts[1])
+    }
+
+    /// Строка оглавления в тексте («CHAPTER I. Jonathan Harker’s Journal») → глава, куда она ведёт:
+    /// название совпадает с названием главы или у обоих одинаковое «CHAPTER <номер>»
+    private func contentsEntry(_ text: String) -> Int? {
+        guard text.count <= 120 else { return nil }
+        let key = Self.contentsKey(text)
+        guard key.count >= 3 else { return nil }
+        let head = Self.chapterHead(text)
+        return chapters.indices.first { index in
+            guard index != chapterIndex else { return false }
+            let title = chapters[index].title
+            if Self.contentsKey(title) == key { return true }
+            if let head, Self.chapterHead(title) == head { return true }
+            return false
+        }
+    }
+
+    /// Только буквы и цифры в нижнем регистре: кавычки и точки в оглавлении и в заголовке главы могут различаться
+    private static func contentsKey(_ text: String) -> String {
+        text.lowercased().filter { $0.isLetter || $0.isNumber }
+    }
+
+    /// «CHAPTER XIV. …» → «chapter xiv»
+    private static func chapterHead(_ text: String) -> String? {
+        guard let match = text.firstMatch(of: /(?i)^\s*(chapter|глава)\s+([ivxlcdm]+|\d+)\b/) else { return nil }
+        return "\(match.1.lowercased()) \(match.2.lowercased())"
     }
 
     private static func sentence(containing range: Range<String.Index>, in text: String) -> Range<String.Index> {
