@@ -585,7 +585,12 @@ final class ReaderSpeech: NSObject {
                 // Перед репликой — вдох; после предложения — короткая пауза, после абзаца — длиннее
                 let before = number == 0 && from == 0 && SpokenText.isDialogue(text) ? 0.15 : 0
                 let after = number == pieces.count - 1 ? Self.paragraphPause : Self.sentencePause
-                let marks = Self.wordMarks(result.words, piece: piece)
+                // Piper и Kokoro на процессоре не отдают время слов — считаем приблизительно (если не выключено в «Озвучке»)
+                let starts = result.words ?? (isKokoroML || !NeuralVoice.estimatesWordTimes
+                                              ? nil
+                                              : Self.estimatedStarts(piece: piece, samples: result.audio.samples,
+                                                                     rate: Double(result.audio.sampleRate)))
+                let marks = Self.wordMarks(starts, piece: piece)
                 #if DEBUG
                 if let starts = result.words {
                     print("[TTS] слова: модель \(starts.count), подсветка \(marks.isEmpty ? "по предложению" : "по словам") — «\(piece.text.prefix(40))»")
@@ -915,6 +920,38 @@ final class ReaderSpeech: NSObject {
             let lower = piece.starts[range.location]
             return (time, NSRange(location: lower, length: piece.ends[range.location + range.length - 1] - lower))
         }
+    }
+
+    /// Приблизительное время начала каждого слова в звуке предложения: речь между первым и последним слышимым звуком
+    /// делится по длине слов (буквы + небольшой вес на слово), после запятой, двоеточия и тире — добавка на паузу.
+    /// Начало и конец предложения точные, внутри слово может сдвигаться примерно на 0,2 с
+    private static func estimatedStarts(piece: SpokenText.Piece, samples: [Float], rate: Double) -> [Double]? {
+        let text = piece.text as NSString
+        let ranges = wordPattern.matches(in: piece.text, range: NSRange(location: 0, length: text.length)).map(\.range)
+        guard !ranges.isEmpty, rate > 0 else { return nil }
+        let peak = samples.reduce(Float(0)) { max($0, abs($1)) }
+        guard peak > 0 else { return nil }
+        let threshold = peak * 0.03
+        guard let first = samples.firstIndex(where: { abs($0) > threshold }),
+              let last = samples.lastIndex(where: { abs($0) > threshold }), last > first else { return nil }
+        let begin = Double(first) / rate
+        let length = Double(last + 1 - first) / rate
+        // Вес слова и пауза после него
+        var offsets: [Double] = []
+        var total = 0.0
+        for (number, range) in ranges.enumerated() {
+            offsets.append(total)
+            total += Double(range.length) + 2
+            let next = range.location + range.length
+            if number < ranges.count - 1, next < text.length {
+                switch text.character(at: next) {
+                case 44, 59, 58, 8212, 8211: total += 3  // , ; : — –
+                default: break
+                }
+            }
+        }
+        guard total > 0 else { return nil }
+        return offsets.map { begin + length * $0 / total }
     }
 
     /// Слово: буквы и цифры, внутри — апостроф или дефис (I’m, good-bye)

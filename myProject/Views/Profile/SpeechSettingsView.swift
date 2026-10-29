@@ -8,6 +8,7 @@ struct SpeechSettingsView: View {
     @AppStorage(SpeechSettings.voiceKey) private var speechVoice = ""
     @AppStorage(NeuralVoice.voiceKey) private var neuralVoiceID = 1
     @AppStorage(SpeechSettings.wordsEngineKey) private var wordsEngine = ""
+    @AppStorage(NeuralVoice.wordHighlightKey) private var wordHighlight = true
     @AppStorage("settings_book_language") private var bookLanguage = "en"
     /// Не читается: подписка на ключ перерисовывает экран, когда бегунок книг меняет значение
     @AppStorage(SpeechSettings.bookRateKey) private var bookRateValue = 0.0
@@ -122,6 +123,17 @@ struct SpeechSettingsView: View {
         }
     }
 
+    /// Бегущая подсветка слов у Piper и Kokoro на процессоре
+    @ViewBuilder
+    private var highlightSection: some View {
+        Section {
+            Toggle("Подсветка слов", isOn: $wordHighlight)
+        } footer: {
+            Text("Подсвечивать читаемое слово при чтении голосами Piper и Kokoro (на процессоре). Время слов считается приблизительно, может чуть расходиться со звуком. Выключено — подсвечивается всё предложение. Kokoro на нейроядре подсвечивает слова точно всегда.")
+                .textSelection(.enabled)
+        }
+    }
+
     private var bookLanguageTitle: String {
         NeuralVoice.PiperVoice.languages.first { $0.code == bookLanguage }?.title ?? ""
     }
@@ -137,6 +149,7 @@ struct SpeechSettingsView: View {
                 if mode == .learning { voiceSection }
                 autoSpeakSection
                 booksSection
+                highlightSection
                 neuralSection
             }
             .listRowBackground(Color.cardBackground)

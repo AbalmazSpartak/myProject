@@ -148,7 +148,7 @@ enum Backup {
         ReaderSettings.themeKey, ReaderSettings.fontSizeKey, ReaderSettings.fontKey, ReaderSettings.spacingKey,
         ReaderSettings.customTextKey, ReaderSettings.customBackgroundKey, ReaderSettings.nightBrightnessKey, ReaderSettings.nightWarmthKey, ReaderSettings.nightTextKey, "scan_select_learning",
         DailyReminder.enabledKey, DailyReminder.timeKey, CloudContext.enabledKey, CloudContext.qualityKey, BookWordsAI.choiceKey,
-        SpeechSettings.accentKey, SpeechSettings.rateKey, SpeechSettings.bookRateKey, SpeechSettings.autoSpeakKey, SpeechSettings.voiceKey,
+        SpeechSettings.accentKey, SpeechSettings.rateKey, SpeechSettings.bookRateKey, NeuralVoice.wordHighlightKey, SpeechSettings.autoSpeakKey, SpeechSettings.voiceKey,
         DailyNewWords.limitKey, "new_words_day", "new_words_count", SessionLength.key, StudyScope.storageKey,
     ] + NeuralVoice.PiperVoice.languages.map { NeuralVoice.bookChoiceKey($0.code) } + RaceGhost.allKeys
     /// Общие с виджетом: оценки по дням, серия дней

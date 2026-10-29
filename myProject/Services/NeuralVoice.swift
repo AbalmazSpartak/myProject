@@ -170,6 +170,9 @@ final class NeuralVoice {
     }
 
     static let voiceKey = "neural_voice_id"
+    /// Бегущая подсветка слов у голосов без разметки времени (Piper, Kokoro на процессоре): время слов считается приблизительно
+    static let wordHighlightKey = "neural_word_highlight"
+    static var estimatesWordTimes: Bool { UserDefaults.standard.object(forKey: wordHighlightKey) as? Bool ?? true }
     /// Читать книги вслух нейросетевым голосом (если он скачан); по умолчанию — да
     static let booksKey = "neural_voice_books"
     /// Замерено при чтении: Kokoro готовит речь медленнее, чем она звучит (iPhone 12, iPad Air 4 и старше)
