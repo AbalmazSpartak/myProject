@@ -569,8 +569,11 @@ struct ReaderPagedText: View, Equatable {
             ReaderPaginator.pages(paragraphs: plain, font: font.uiFont(size: fontSize), lineSpacing: lineSpacing,
                                   size: CGSize(width: size.width, height: height))
         }.value
-        guard !result.isEmpty else { return }
-        let keep = pages.isEmpty ? startParagraph : (pages[safe: page]?.first?.paragraph ?? startParagraph)
+        // Размер уже сменился (поворот экрана) — этот расчёт устарел, его страницы не подставлять
+        guard !result.isEmpty, !Task.isCancelled else { return }
+        // Место чтения — начало открытой страницы: абзац и символ в нём, чтобы после поворота экрана остаться на том же тексте
+        let keepSegment = pages.isEmpty ? nil : pages[safe: page]?.first
+        let keep = keepSegment?.paragraph ?? startParagraph
         let opening = pages.isEmpty
         isSettingPage = true
         pages = result
@@ -579,7 +582,13 @@ struct ReaderPagedText: View, Equatable {
         if opening, mark.paragraph == startParagraph, let target = markedPage() {
             page = target
         } else {
-            page = result.firstIndex { $0.contains { $0.paragraph == keep } } ?? 0
+            page = result.firstIndex { segments in
+                segments.contains { segment in
+                    guard segment.paragraph == keep else { return false }
+                    guard let keepSegment else { return true }
+                    return keepSegment.range.location >= segment.range.location && keepSegment.range.location < NSMaxRange(segment.range)
+                }
+            } ?? result.firstIndex { $0.contains { $0.paragraph == keep } } ?? 0
         }
     }
 
