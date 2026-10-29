@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Оформление читалки: тема, размер и шрифт, интервал, свои цвета. Общее для всех книг
 enum ReaderTheme: String, CaseIterable, Identifiable {
-    case app, paper, sepia, gray, night, nightCustom, custom
+    case app, paper, sepia, gray, night, nightCustom
 
     var id: String { rawValue }
 
@@ -13,15 +13,14 @@ enum ReaderTheme: String, CaseIterable, Identifiable {
         case .sepia: return "Сепия"
         case .gray: return "Серая"
         case .night: return "Ночь"
-        case .nightCustom: return "Моя ночь"
-        case .custom: return "Своя"
+        case .nightCustom: return "Своя"
         }
     }
 
-    /// Готовые цвета; у «Как в приложении» — цвета приложения, у «Своей» — выбранные
+    /// Готовые цвета; у «Как в приложении» — цвета приложения, у «Своей» — по ползункам
     var colors: (background: Color, text: Color)? {
         switch self {
-        case .app, .nightCustom, .custom: return nil
+        case .app, .nightCustom: return nil
         case .paper: return (Self.rgb(0xFFFFFF), Self.rgb(0x111111))
         case .sepia: return (Self.rgb(0xF4ECD8), Self.rgb(0x5B4636))
         case .gray: return (Self.rgb(0x4A4A4C), Self.rgb(0xE3E3E3))
@@ -32,9 +31,9 @@ enum ReaderTheme: String, CaseIterable, Identifiable {
     /// Тёмный фон — светлый статус-бар
     var isDark: Bool? {
         switch self {
-        case .gray, .night, .nightCustom: return true
+        case .gray, .night: return true
         case .paper, .sepia: return false
-        case .app, .custom: return nil
+        case .app, .nightCustom: return nil
         }
     }
 
@@ -43,25 +42,28 @@ enum ReaderTheme: String, CaseIterable, Identifiable {
     }
 }
 
-/// «Моя ночь»: три ползунка вместо колеса цветов — яркость фона, тёплость оттенка и яркость текста.
-/// Оттенок (от холодного через белый и янтарный к красному) умножается на яркость, поэтому фон и текст одного тона
+/// «Своя»: три ползунка вместо колеса цветов — яркость фона, тёплость оттенка и яркость текста.
+/// Оттенок (от холодного через белый и янтарный к красному) умножается на яркость, поэтому фон и текст одного тона.
+/// Светлый фон бледнеет к белому, чтобы получалась бумага, а не оранжевый
 struct NightPalette: Equatable {
-    /// Фон: 0 — чёрный, 0.3 — тёмно-серый
+    /// Фон: 0 — чёрный, 0.3 — тёмно-серый, 0.95 — светлая бумага
     var brightness = 0.06
     /// 0 — холодный, 0.25 — нейтральный, 0.7 — янтарный, 1 — красный
     var warmth = 0.6
-    /// Текст: 0.3 — тусклый, 0.95 — почти белый
+    /// Текст: 0.05 — почти чёрный (для светлого фона), 0.3 — тусклый, 0.95 — почти белый
     var text = 0.72
 
     static let standard = NightPalette()
-    static let brightnessRange = 0.0...0.3
-    static let textRange = 0.3...0.95
+    static let brightnessRange = 0.0...1.0
+    static let textRange = 0.05...0.95
 
     /// Заготовки: берёшь за основу и подправляешь ползунками
     static let presets: [(title: String, palette: NightPalette)] = [
-        ("Тёплая", NightPalette(brightness: 0.06, warmth: 0.65, text: 0.72)),
-        ("Холодная", NightPalette(brightness: 0.08, warmth: 0.0, text: 0.75)),
-        ("Красная", NightPalette(brightness: 0.03, warmth: 1.0, text: 0.85)),
+        ("Тёплая ночь", NightPalette(brightness: 0.06, warmth: 0.65, text: 0.72)),
+        ("Холодная ночь", NightPalette(brightness: 0.08, warmth: 0.0, text: 0.75)),
+        ("Красная ночь", NightPalette(brightness: 0.03, warmth: 1.0, text: 0.85)),
+        ("Тёплый день", NightPalette(brightness: 0.95, warmth: 0.6, text: 0.15)),
+        ("Холодный день", NightPalette(brightness: 0.95, warmth: 0.05, text: 0.15)),
     ]
 
     private static let stops: [(at: Double, rgb: (Double, Double, Double))] = [
@@ -79,24 +81,34 @@ struct NightPalette: Equatable {
         return (a.0 + (b.0 - a.0) * t, a.1 + (b.1 - a.1) * t, a.2 + (b.2 - a.2) * t)
     }
 
-    private func color(_ level: Double) -> Color {
+    /// Цвет оттенка при яркости level; у светлого фона оттенок бледнеет к белому
+    private func rgb(_ level: Double, isBackground: Bool) -> (r: Double, g: Double, b: Double) {
         let tint = tint
-        return Color(red: tint.r * level, green: tint.g * level, blue: tint.b * level)
+        let fade = isBackground ? min(max((level - 0.3) / 0.5, 0), 1) * 0.85 : 0
+        func mix(_ channel: Double) -> Double { (channel + (1 - channel) * fade) * level }
+        return (mix(tint.r), mix(tint.g), mix(tint.b))
     }
 
-    var backgroundColor: Color { color(brightness) }
-    var textColor: Color { color(text) }
+    var backgroundColor: Color {
+        let c = rgb(brightness, isBackground: true)
+        return Color(red: c.r, green: c.g, blue: c.b)
+    }
+
+    var textColor: Color {
+        let c = rgb(text, isBackground: false)
+        return Color(red: c.r, green: c.g, blue: c.b)
+    }
 
     /// Контраст текста и фона (WCAG): ниже 3 читать уже тяжело
     var contrast: Double {
-        func luminance(_ level: Double) -> Double {
-            let tint = tint
+        func luminance(_ level: Double, isBackground: Bool) -> Double {
+            let c = rgb(level, isBackground: isBackground)
             func channel(_ value: Double) -> Double {
                 value <= 0.03928 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
             }
-            return 0.2126 * channel(tint.r * level) + 0.7152 * channel(tint.g * level) + 0.0722 * channel(tint.b * level)
+            return 0.2126 * channel(c.r) + 0.7152 * channel(c.g) + 0.0722 * channel(c.b)
         }
-        let a = luminance(text), b = luminance(brightness)
+        let a = luminance(text, isBackground: false), b = luminance(brightness, isBackground: true)
         return (max(a, b) + 0.05) / (min(a, b) + 0.05)
     }
 }
@@ -193,8 +205,6 @@ enum ReaderSettings {
     static func phonicsOptions(mode: String, rules: String) -> Set<PhonicsOption> {
         PhonicsOption.options(from: rules) ?? (mode == "all" ? Set(PhonicsOption.allCases) : PhonicsOption.tricky)
     }
-    static let customTextKey = "reader_custom_text"
-    static let customBackgroundKey = "reader_custom_background"
     static let nightBrightnessKey = "reader_night_brightness"
     static let nightWarmthKey = "reader_night_warmth"
     static let nightTextKey = "reader_night_text"
@@ -226,8 +236,6 @@ struct ReaderStyle: Equatable {
     var pageTurn: ReaderPageTurn = .slide
     /// nil — подсветка выключена
     var phonics: Set<PhonicsOption>?
-    let customText: Color
-    let customBackground: Color
     var night = NightPalette.standard
 
     /// Снимок настроек. Читалка берёт его при открытии и после шторки «Оформление», а не на каждый кадр:
@@ -242,8 +250,6 @@ struct ReaderStyle: Equatable {
             layout: defaults.string(forKey: ReaderSettings.layoutKey).flatMap(ReaderLayout.init(rawValue:)) ?? .pages,
             pageTurn: defaults.string(forKey: ReaderSettings.pageTurnKey).flatMap(ReaderPageTurn.init(rawValue:)) ?? .slide,
             phonics: Self.phonics(defaults),
-            customText: ReaderSettings.color(from: defaults.string(forKey: ReaderSettings.customTextKey) ?? "", fallback: .black),
-            customBackground: ReaderSettings.color(from: defaults.string(forKey: ReaderSettings.customBackgroundKey) ?? "", fallback: .white),
             night: NightPalette(brightness: defaults.object(forKey: ReaderSettings.nightBrightnessKey) as? Double ?? NightPalette.standard.brightness,
                                 warmth: defaults.object(forKey: ReaderSettings.nightWarmthKey) as? Double ?? NightPalette.standard.warmth,
                                 text: defaults.object(forKey: ReaderSettings.nightTextKey) as? Double ?? NightPalette.standard.text))
@@ -261,7 +267,6 @@ struct ReaderStyle: Equatable {
     var background: Color {
         switch theme {
         case .app: return .brandBackground
-        case .custom: return customBackground
         case .nightCustom: return night.backgroundColor
         default: return theme.colors!.background
         }
@@ -270,7 +275,6 @@ struct ReaderStyle: Equatable {
     var text: Color {
         switch theme {
         case .app: return .brandDark
-        case .custom: return customText
         case .nightCustom: return night.textColor
         default: return theme.colors!.text
         }
@@ -279,10 +283,8 @@ struct ReaderStyle: Equatable {
     /// Для статус-бара: тема явно тёмная или светлая; у «Своей» — по яркости фона; nil — как в приложении
     var colorScheme: ColorScheme? {
         if let isDark = theme.isDark { return isDark ? .dark : .light }
-        guard theme == .custom else { return nil }
-        var white: CGFloat = 0, alpha: CGFloat = 0
-        UIColor(customBackground).getWhite(&white, alpha: &alpha)
-        return white < 0.5 ? .dark : .light
+        guard theme == .nightCustom else { return nil }
+        return night.brightness < 0.5 ? .dark : .light
     }
 }
 
@@ -298,16 +300,12 @@ struct ReaderAppearanceSheet: View {
     @AppStorage(ReaderSettings.pageTurnKey) private var pageTurn = ReaderPageTurn.slide
     @AppStorage(ReaderSettings.phonicsKey) private var phonicsMode = "off"
     @AppStorage(ReaderSettings.phonicsRulesKey) private var phonicsRules = ""
-    @AppStorage(ReaderSettings.customTextKey) private var customTextRaw = ""
-    @AppStorage(ReaderSettings.customBackgroundKey) private var customBackgroundRaw = ""
     @AppStorage(ReaderSettings.nightBrightnessKey) private var nightBrightness = NightPalette.standard.brightness
     @AppStorage(ReaderSettings.nightWarmthKey) private var nightWarmth = NightPalette.standard.warmth
     @AppStorage(ReaderSettings.nightTextKey) private var nightText = NightPalette.standard.text
 
     private var style: ReaderStyle {
         ReaderStyle(theme: theme, fontSize: fontSize, font: font, spacing: spacing,
-                    customText: ReaderSettings.color(from: customTextRaw, fallback: .black),
-                    customBackground: ReaderSettings.color(from: customBackgroundRaw, fallback: .white),
                     night: night)
     }
 
@@ -329,14 +327,6 @@ struct ReaderAppearanceSheet: View {
     private var phonicsSelection: Binding<Set<PhonicsOption>> {
         Binding(get: { ReaderSettings.phonicsOptions(mode: phonicsMode, rules: phonicsRules) },
                 set: { phonicsRules = PhonicsOption.raw($0) })
-    }
-
-    private var customText: Binding<Color> {
-        Binding(get: { style.customText }, set: { customTextRaw = ReaderSettings.raw(from: $0); theme = .custom })
-    }
-
-    private var customBackground: Binding<Color> {
-        Binding(get: { style.customBackground }, set: { customBackgroundRaw = ReaderSettings.raw(from: $0); theme = .custom })
     }
 
     var body: some View {
@@ -400,21 +390,6 @@ struct ReaderAppearanceSheet: View {
                     }
                     .pickerStyle(.segmented)
 
-                    section("Свои цвета")
-                    VStack(spacing: 0) {
-                        ColorPicker("Цвет текста", selection: customText, supportsOpacity: false)
-                            .padding(.vertical, 10)
-                        Divider()
-                        ColorPicker("Цвет фона", selection: customBackground, supportsOpacity: false)
-                            .padding(.vertical, 10)
-                    }
-                    .padding(.horizontal, 14)
-                    .background(Color.cardBackground)
-                    .cornerRadius(14)
-                    Text("Выбор цвета включает тему «Своя».")
-                        .scaledFont(size: 13)
-                        .foregroundColor(.gray)
-
                     Button("Сбросить оформление") {
                         theme = .app
                         fontSize = ReaderSettings.defaultFontSize
@@ -463,7 +438,7 @@ struct ReaderAppearanceSheet: View {
 
     private func themeTile(_ item: ReaderTheme) -> some View {
         let preview = ReaderStyle(theme: item, fontSize: 17, font: font, spacing: spacing,
-                                  customText: style.customText, customBackground: style.customBackground, night: night)
+                                  night: night)
         return Button { theme = item } label: {
             VStack(spacing: 6) {
                 Text("Aa")
@@ -487,29 +462,32 @@ struct ReaderAppearanceSheet: View {
         .accessibilityAddTraits(theme == item ? .isSelected : [])
     }
 
-    /// Ползунки «Моя ночь»; образец вверху шторки меняется сразу
+    /// Заготовки и ползунки «Своей»; образец вверху шторки меняется сразу
     @ViewBuilder
     private var nightSettings: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 8) {
-                ForEach(NightPalette.presets, id: \.title) { preset in
-                    Button(preset.title) {
-                        nightBrightness = preset.palette.brightness
-                        nightWarmth = preset.palette.warmth
-                        nightText = preset.palette.text
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(NightPalette.presets, id: \.title) { preset in
+                        Button(preset.title) {
+                            nightBrightness = preset.palette.brightness
+                            nightWarmth = preset.palette.warmth
+                            nightText = preset.palette.text
+                        }
+                        .scaledFont(size: 14, weight: .semibold)
+                        .foregroundColor(preset.palette.textColor)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Capsule().fill(preset.palette.backgroundColor))
+                        .overlay(Capsule().stroke(Color.gray.opacity(0.3), lineWidth: 1))
                     }
-                    .scaledFont(size: 14, weight: .semibold)
-                    .foregroundColor(.brandTint)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .background(Capsule().fill(Color.cardBackground))
                 }
             }
             nightSlider("Яркость фона", value: $nightBrightness, range: NightPalette.brightnessRange)
             nightSlider("Тёплость оттенка", value: $nightWarmth, range: 0...1)
             nightSlider("Яркость текста", value: $nightText, range: NightPalette.textRange)
             if night.contrast < 3 {
-                Label("Текст почти сливается с фоном — прибавьте яркость текста", systemImage: "exclamationmark.triangle.fill")
+                Label("Текст почти сливается с фоном — измените яркость текста или фона", systemImage: "exclamationmark.triangle.fill")
                     .scaledFont(size: 13)
                     .foregroundColor(.orange)
             }
