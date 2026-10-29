@@ -29,9 +29,7 @@ struct SpeechSettingsView: View {
     /// Озвучка
     @ViewBuilder
     private var voiceSection: some View {
-        Section(header: Text("Озвучка"), footer: Text(mode == .learning
-                                                      ? "Раздел, где вы настраиваете, как приложение произносит английские слова и читает книги вслух."
-                                                      : "Акцент, голос и скорость — для английских книг. Книги на других языках читает голос своего языка.")) {
+        Section(footer: mode == .learning ? nil : Text("Акцент, голос и скорость — для английских книг. Книги на других языках читает голос своего языка.")) {
             Picker("Акцент", selection: $speechAccent) {
                 Text("Американский").tag("en-US")
                 Text("Британский").tag("en-GB")

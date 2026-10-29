@@ -42,6 +42,8 @@ struct SettingsView: View {
             } label: {
                 Label("Озвучка", systemImage: "speaker.wave.2.fill")
             }
+        } footer: {
+            Text("Раздел, где вы настраиваете, как приложение произносит английские слова и читает книги вслух.")
         }
     }
 
