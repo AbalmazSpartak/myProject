@@ -62,6 +62,7 @@ struct BookLanguageVoiceView: View {
     @State private var kokoroML = KokoroML.shared
     @State private var choice: NeuralVoice.PiperVoice
     @State private var isConfirmingRemove = false
+    @AppStorage(NeuralVoice.voiceKey) private var kokoroVoiceID = 1
 
     init(code: String, title: String) {
         self.code = code
@@ -80,7 +81,8 @@ struct BookLanguageVoiceView: View {
                     .pickerStyle(.segmented)
                 }
                 if showsKokoro {
-                    // Голос Kokoro выбирается на экране «Нейросетевой голос»; здесь — только послушать
+                    // Голос Kokoro выбирается на экране «Нейросетевой голос»; здесь — строка на том же месте, что у Piper, и «Прослушать»
+                    LabeledContent("Голос", value: NeuralVoice.voices.first { $0.id == kokoroVoiceID }?.title ?? "")
                     if voice.phase == .ready {
                         Button {
                             TextToSpeechManager.shared.speak("Hello! This is how English books will sound.")
