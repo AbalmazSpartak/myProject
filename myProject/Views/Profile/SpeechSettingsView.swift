@@ -30,7 +30,7 @@ struct SpeechSettingsView: View {
     @ViewBuilder
     private var voiceSection: some View {
         Section(header: Text("Озвучка"), footer: Text(mode == .learning
-                                                      ? "При переводе с русского на английский слово звучит после ответа, чтобы не подсказывать. В списке «Голос» — нейросетевые голоса Kokoro (если скачан) и системные: слова говорит тот, что отмечен. Акцент сразу меняет список."
+                                                      ? "Раздел, где вы настраиваете, как приложение произносит английские слова и читает книги вслух."
                                                       : "Акцент, голос и скорость — для английских книг. Книги на других языках читает голос своего языка.")) {
             Picker("Акцент", selection: $speechAccent) {
                 Text("Американский").tag("en-US")
@@ -50,10 +50,6 @@ struct SpeechSettingsView: View {
 
             SpeechRateSlider(rate: $speechRate)
 
-            if mode == .learning {
-                Toggle("Озвучивать слово сразу", isOn: $autoSpeak)
-            }
-
             Button {
                 TextToSpeechManager.shared.speak("Hello! This is how English words will sound.")
             } label: {
@@ -62,7 +58,19 @@ struct SpeechSettingsView: View {
         }
     }
 
-    /// Нейроголос: экран со скачиванием и выбором голосов, а «Читать книги этим голосом» — здесь, на виду
+    /// «Озвучивать слово сразу» — только в «Изучении»
+    @ViewBuilder
+    private var autoSpeakSection: some View {
+        if mode == .learning {
+            Section {
+                Toggle("Озвучивать слово сразу", isOn: $autoSpeak)
+            } footer: {
+                Text("При переводе с русского на английский слово звучит после ответа, чтобы не подсказывать.")
+            }
+        }
+    }
+
+    /// Нейроголос: экран со скачиванием и выбором голосов
     @ViewBuilder
     private var neuralSection: some View {
         Section {
@@ -71,7 +79,15 @@ struct SpeechSettingsView: View {
             } label: {
                 LabeledContent("Нейросетевой голос", value: neuralVoiceSummary)
             }
+        } footer: {
+            Text("Скачать и настроить лёгкую озвучку Piper и Kokoro.")
+        }
+    }
 
+    /// «Читать книги этим голосом» — на виду, не внутри экрана нейроголоса
+    @ViewBuilder
+    private var booksVoiceSection: some View {
+        Section {
             Toggle("Читать книги этим голосом", isOn: $neuralReadsBooks)
 
             if neuralReadsBooks && !hasNeuralVoice {
@@ -89,7 +105,9 @@ struct SpeechSettingsView: View {
         Form {
             Group {
                 voiceSection
+                autoSpeakSection
                 neuralSection
+                booksVoiceSection
             }
             .listRowBackground(Color.cardBackground)
         }
