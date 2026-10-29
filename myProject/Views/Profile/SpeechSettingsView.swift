@@ -106,8 +106,8 @@ struct SpeechSettingsView: View {
         Form {
             Group {
                 voiceSection
-                autoSpeakSection
                 neuralSection
+                autoSpeakSection
                 booksVoiceSection
             }
             .listRowBackground(Color.cardBackground)
