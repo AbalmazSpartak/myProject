@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import PhotosUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
@@ -54,65 +53,6 @@ struct SettingsView: View {
     @AppStorage(DailyReminder.timeKey) private var reminderTime = DailyReminder.defaultTime
     /// Пользователь запретил уведомления — подсказываем, где их включить
     @State private var notificationsDenied = false
-
-    @State private var selectedPhotoItem: PhotosPickerItem?
-    @State private var isChoosingAvatar = false
-    
-    /// Имя и фото — только в «Изучении»
-    @ViewBuilder
-    private var personalSection: some View {
-        Section(header: Text("Личные данные")) {
-            HStack(spacing: 16) {
-                ZStack {
-                    Circle()
-                        .fill(Color.teal.opacity(0.15))
-                        .frame(width: 60, height: 60)
-                
-                    if let data = profile.avatarData, let uiImage = UIImage(data: data) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 60, height: 60)
-                            .clipShape(Circle())
-                    } else {
-                        Image(systemName: "person.fill")
-                            .scaledFont(size: 30)
-                            .foregroundColor(.teal)
-                    }
-                }
-            
-                VStack(alignment: .leading, spacing: 6) {
-                    // Подпись PhotosPicker — Sendable-замыкание: профиль читаем заранее
-                    let photoButtonTitle = profile.avatarData == nil ? "Загрузить фото" : "Изменить фото"
-                    PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                        Text(photoButtonTitle)
-                            .scaledFont(size: 15, weight: .semibold)
-                            .foregroundColor(.teal)
-                    }
-                    .buttonStyle(.borderless)
-
-                    Button("Выбрать аватарку") { isChoosingAvatar = true }
-                        .scaledFont(size: 15, weight: .semibold)
-                        .foregroundColor(.teal)
-                        .buttonStyle(.borderless)
-                
-                    if profile.avatarData != nil {
-                        Button("Удалить фото", role: .destructive) {
-                            profile.avatarData = nil
-                            selectedPhotoItem = nil
-                        }
-                        .scaledFont(size: 13)
-                        .buttonStyle(.borderless)
-                    }
-                }
-            }
-            .padding(.vertical, 4)
-        
-            TextField("Ваше имя", text: $profile.name)
-                .autocorrectionDisabled()
-        }
-    
-    }
 
     /// Озвучка
     @ViewBuilder
@@ -220,7 +160,6 @@ struct SettingsView: View {
                 Group {
                     // В каждом режиме свой порядок: «Изучение» — личное и озвучка, «Чтение» — оформление и режим сверху
                     if mode == .learning {
-                        personalSection
                         voiceSection
                         neuralSection
                         modeSection
@@ -342,27 +281,6 @@ struct SettingsView: View {
                         dismiss()
                     }
                     .fontWeight(.bold)
-                }
-            }
-            .sheet(isPresented: $isChoosingAvatar) {
-                AvatarPickerView(name: profile.name) { data in
-                    profile.avatarData = data
-                    selectedPhotoItem = nil
-                }
-                .appThemedColorScheme()
-            }
-            .onChange(of: selectedPhotoItem) { _, newItem in
-                Task {
-                    if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                        await MainActor.run {
-                            if let uiImage = UIImage(data: data),
-                               let compressedData = uiImage.jpegData(compressionQuality: 0.7) {
-                                profile.avatarData = compressedData
-                            } else {
-                                profile.avatarData = data
-                            }
-                        }
-                    }
                 }
             }
         }

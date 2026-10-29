@@ -10,6 +10,7 @@ struct ProfileView: View {
     @Query private var profiles: [UserProfile]
     
     @State private var showSettings = false
+    @State private var showPersonalData = false
     @State private var levelProgress: [LevelProgress] = []
     @State private var vocabularyStatus = VocabularyStatus()
     /// Вкладка под серией дней — запоминается
@@ -85,10 +86,19 @@ struct ProfileView: View {
                         }
                     }
                     
-                    Text(profile.name)
-                        .scaledFont(size: 24, weight: .semibold, design: .serif)
-                        .foregroundColor(.brandDark)
+                    HStack(spacing: 6) {
+                        Text(profile.name)
+                            .scaledFont(size: 24, weight: .semibold, design: .serif)
+                            .foregroundColor(.brandDark)
+                        Image(systemName: "pencil")
+                            .scaledFont(size: 14, weight: .semibold)
+                            .foregroundColor(.gray)
+                    }
                 }
+                .contentShape(Rectangle())
+                .onTapGesture { showPersonalData = true }
+                .accessibilityAddTraits(.isButton)
+                .accessibilityHint("Изменить имя и фото")
                 
                 DailyStreakCard(current: streak, best: bestStreak, week: streakWeek)
                     .padding(.horizontal, 20)
@@ -126,6 +136,10 @@ struct ProfileView: View {
         .onAppear(perform: reloadProgress)
         // Норму уменьшили ниже пройденного — сегодняшний день сразу идёт в серию
         .onChange(of: newWordsPerDay) { _, _ in reloadProgress() }
+        .sheet(isPresented: $showPersonalData) {
+            PersonalDataView(profile: profile)
+                .appThemedColorScheme()
+        }
         .sheet(isPresented: $showSettings) {
             SettingsView(profile: profile)
                 .appThemedColorScheme()
