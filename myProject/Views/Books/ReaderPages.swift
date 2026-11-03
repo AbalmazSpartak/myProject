@@ -236,7 +236,7 @@ struct ReaderPagedText: View, Equatable {
                                  curl: curl, animated: animated, background: UIColor(background), isLocked: selection != nil) { index in
                         AnyView(pageContent(index, width: proxy.size.width, textWidth: textSize.width))
                     }
-                    .id("\(curl)-\(animated)")
+                    .id("\(curl)-\(animated)-\(UIColor(background))-\(UIColor(textColor))")
                     Text("\(min(max(page, 0), pages.count - 1) + 1) из \(pages.count)")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(textColor.opacity(0.5))
