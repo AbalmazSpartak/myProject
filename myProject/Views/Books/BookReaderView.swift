@@ -129,6 +129,7 @@ struct BookReaderView: View {
                     onVisible: { paragraph in
                         guard chapterStarts.indices.contains(chapterIndex) else { return }
                         book.position = chapterStarts[chapterIndex] + paragraph
+                        book.furthest = max(book.furthest, book.position)
                     },
                     onPageParagraphs: { pageParagraphs.range = $0 },
                     passage: bookPassage,
@@ -160,6 +161,7 @@ struct BookReaderView: View {
                         // Место чтения — прямо в книгу: у читалки нет состояния, которое менялось бы при прокрутке
                         guard chapterStarts.indices.contains(chapterIndex) else { return }
                         book.position = chapterStarts[chapterIndex] + paragraph
+                        book.furthest = max(book.furthest, book.position)
                     },
                     onTap: handleTap
                 ) {
@@ -185,6 +187,7 @@ struct BookReaderView: View {
                 startParagraph = 0
                 chapterIndex += 1
                 book.position = chapterStarts[chapterIndex]
+                book.furthest = max(book.furthest, book.position)
             }
         }
         .onDisappear { speech.stop() }
@@ -233,7 +236,7 @@ struct BookReaderView: View {
                 isShowingSearch = true
             }
         }) {
-            BookNamesView(chapters: chapters, position: book.position, names: $bookNames,
+            BookNamesView(chapters: chapters, position: max(book.furthest, book.position), names: $bookNames,
                           onSelect: { mention in
                               jump(to: BookSearchResult(id: 0, chapter: mention.chapter, paragraph: mention.paragraph,
                                                         range: mention.range, snippet: AttributedString()))

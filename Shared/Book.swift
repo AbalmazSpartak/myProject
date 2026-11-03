@@ -17,6 +17,8 @@ final class Book {
     var paragraphCount: Int
     /// Где остановились: номер абзаца от начала книги
     var position: Int = 0
+    /// Дальше всего дочитано: номер абзаца от начала книги. Не уменьшается, когда вернулись к началу, — по нему «Герои и места» не открывают спойлеров
+    var furthest: Int = 0
     /// Перевод книги, добавленный пользователем: главы — JSON массива BookChapter
     @Attribute(.externalStorage) var translationData: Data?
     /// Какие абзацы перевода стоят под каждым абзацем книги — JSON BookAlignment
