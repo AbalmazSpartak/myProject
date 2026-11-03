@@ -24,6 +24,11 @@ struct BookReaderView: View {
     /// Открыта кнопкой «Слушать» на странице книги: чтение вслух начинается само
     var listensOnOpen = false
     @State private var didAutoListen = false
+    /// Экран слушания поверх читалки; таймер сна
+    @State private var isShowingPlayer = false
+    @State private var sleep = SleepTimer.off
+    @State private var sleepEndsAt: Date?
+    @State private var sleepTask: Task<Void, Never>?
 
     @State private var chapters: [BookChapter] = []
     /// С какого абзаца книги начинается каждая глава
@@ -185,6 +190,12 @@ struct BookReaderView: View {
         .task {
             open()
             speech.onChapterEnd = {
+                // Таймер сна «в конце главы» — дальше не читаем
+                if sleep == .chapterEnd {
+                    setSleep(.off)
+                    speech.stop()
+                    return
+                }
                 guard chapterIndex + 1 < chapters.count else { speech.stop(); return }
                 continuesReading = true
                 startParagraph = 0
@@ -193,7 +204,10 @@ struct BookReaderView: View {
                 book.furthest = max(book.furthest, book.position)
             }
         }
-        .onDisappear { speech.stop() }
+        .onDisappear {
+            sleepTask?.cancel()
+            speech.stop()
+        }
         .onChange(of: speechSpeed) { _, _ in speech.speedChanged() }
         // Голос сменился сам (Kokoro не успевает) — коротко говорим об этом
         .overlay(alignment: .bottom) {
@@ -232,6 +246,17 @@ struct BookReaderView: View {
                 .ignoresSafeArea()
         }
         .sheet(isPresented: $isShowingContents) { contents }
+        .overlay {
+            if isShowingPlayer, let chapter {
+                ReaderPlayerView(book: book, chapterTitle: chapter.title, chapterNumber: chapterIndex + 1, chapterCount: chapters.count,
+                                 paragraphs: chapter.paragraphs, speech: speech, speed: $speechSpeed,
+                                 sleep: sleep, sleepEndsAt: sleepEndsAt, onSleep: setSleep, onToggle: toggleReading,
+                                 onSeek: { speech.start(from: $0) }, onChapter: playerChapter(_:),
+                                 onChapters: { isShowingContents = true }, onClose: { isShowingPlayer = false })
+                    .transition(.move(edge: .bottom))
+            }
+        }
+        .animation(.easeInOut(duration: 0.25), value: isShowingPlayer)
         .sheet(isPresented: $isShowingNames, onDismiss: {
             if let query = pendingSearch {
                 pendingSearch = nil
@@ -364,6 +389,9 @@ struct BookReaderView: View {
             }
             .accessibilityLabel("Оформление")
             Menu {
+                Button { isShowingPlayer = true } label: {
+                    Label("Плеер", systemImage: "headphones")
+                }
                 Button { isShowingContents = true } label: {
                     Label("Оглавление", systemImage: "list.bullet")
                 }
@@ -554,6 +582,7 @@ struct BookReaderView: View {
         startParagraph = position - (chapterStarts.indices.contains(chapterIndex) ? chapterStarts[chapterIndex] : 0)
         book.lastOpenedAt = Date()
         DailyReminder.rememberBook(book.title)
+        if listensOnOpen { isShowingPlayer = true }
     }
 
     /// Ссылки на слова для всей главы — в фоне, один раз; с подсветкой правил чтения, если она включена
@@ -596,6 +625,31 @@ struct BookReaderView: View {
         } else if chapterStarts.indices.contains(chapterIndex), let chapter {
             let top = min(max(book.position - chapterStarts[chapterIndex], 0), max(chapter.paragraphs.count - 1, 0))
             speech.start(from: top)
+        }
+    }
+
+    /// Экран слушания: ⏮ ⏭ — соседняя глава; читает дальше, если до этого читал
+    private func playerChapter(_ delta: Int) {
+        let wasPlaying = speech.isPlaying || speech.isPreparing
+        let target = chapterIndex + delta
+        guard chapters.indices.contains(target) else { return }
+        go(to: target)
+        continuesReading = wasPlaying
+    }
+
+    /// Таймер сна: через время — пауза; «в конце главы» проверяет onChapterEnd
+    private func setSleep(_ option: SleepTimer) {
+        sleepTask?.cancel()
+        sleep = option
+        sleepEndsAt = nil
+        guard case .minutes(let minutes) = option else { return }
+        sleepEndsAt = Date().addingTimeInterval(Double(minutes) * 60)
+        sleepTask = Task {
+            try? await Task.sleep(for: .seconds(minutes * 60))
+            guard !Task.isCancelled else { return }
+            speech.pause()
+            sleep = .off
+            sleepEndsAt = nil
         }
     }
 
