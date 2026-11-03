@@ -45,6 +45,8 @@ struct BookDetailView: View {
             }
         }
         .background(Color.brandBackground.ignoresSafeArea())
+        // Читалка в дневной теме делает светлым весь стек; страница книги держит тему приложения сама
+        .appThemedColorScheme()
         .toolbar(.visible, for: .navigationBar)
         .toolbarBackground(.hidden, for: .navigationBar)
         .navigationBarTitleDisplayMode(.inline)
