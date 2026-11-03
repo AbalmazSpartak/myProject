@@ -29,6 +29,9 @@ struct BookReaderView: View {
     @State private var sleep = SleepTimer.off
     @State private var sleepEndsAt: Date?
     @State private var sleepTask: Task<Void, Never>?
+    /// Нижняя панель: пока двигают ползунок книги — его значение
+    @State private var barDrag: Double?
+    @Environment(\.colorScheme) private var systemScheme
 
     @State private var chapters: [BookChapter] = []
     /// С какого абзаца книги начинается каждая глава
@@ -257,6 +260,13 @@ struct BookReaderView: View {
             }
         }
         .animation(.easeInOut(duration: 0.25), value: isShowingPlayer)
+        // Нижняя панель — вместе с шапкой; поверх страницы, не сдвигая текст
+        .overlay(alignment: .bottom) {
+            if !isChromeHidden, !isShowingPlayer, !chapters.isEmpty {
+                bottomBar
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
         .sheet(isPresented: $isShowingNames, onDismiss: {
             if let query = pendingSearch {
                 pendingSearch = nil
@@ -626,6 +636,67 @@ struct BookReaderView: View {
             let top = min(max(book.position - chapterStarts[chapterIndex], 0), max(chapter.paragraphs.count - 1, 0))
             speech.start(from: top)
         }
+    }
+
+    // MARK: - Нижняя панель
+
+    /// Прогресс по всей книге и быстрые кнопки: тема, оглавление, поиск, закладки
+    private var bottomBar: some View {
+        let total = max(book.paragraphCount, 1)
+        let fraction = barDrag ?? min(Double(book.position) / Double(total), 1)
+        return VStack(spacing: 10) {
+            HStack(spacing: 12) {
+                Slider(value: Binding(get: { fraction }, set: { barDrag = $0 }), in: 0...1) { editing in
+                    if !editing, let value = barDrag {
+                        barDrag = nil
+                        open(min(Int(value * Double(total)), total - 1))
+                    }
+                }
+                .tint(style.text.opacity(0.7))
+                Text("\(Int((fraction * 100).rounded()))%")
+                    .scaledFont(size: 13, weight: .medium)
+                    .monospacedDigit()
+                    .foregroundColor(style.text.opacity(0.7))
+                    .frame(width: 40, alignment: .trailing)
+            }
+            HStack(spacing: 0) {
+                barButton(isNight ? "sun.max" : "moon", isNight ? "День" : "Ночь") { toggleDayNight() }
+                barButton("list.bullet", "Оглавление") { isShowingContents = true }
+                barButton("magnifyingglass", "Поиск") { isShowingSearch = true }
+                barButton("bookmark", bookmarks.isEmpty ? "Закладки" : "Закладки \(bookmarks.count)") { isShowingBookmarks = true }
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+        .frame(maxWidth: .infinity)
+        .background(style.background.shadow(color: .black.opacity(0.12), radius: 6, y: -2).ignoresSafeArea(edges: .bottom))
+    }
+
+    private func barButton(_ icon: String, _ title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Image(systemName: icon)
+                    .scaledFont(size: 20)
+                Text(title)
+                    .scaledFont(size: 12)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            .foregroundColor(style.text.opacity(0.85))
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var isNight: Bool { (style.colorScheme ?? systemScheme) == .dark }
+
+    /// «Ночь» ↔ «День»: тёмная тема — «Ночь», светлая — «Бумага»; прочие настройки оформления остаются
+    private func toggleDayNight() {
+        let next: ReaderTheme = isNight ? .paper : .night
+        UserDefaults.standard.set(next.rawValue, forKey: ReaderSettings.themeKey)
+        style = .current()
     }
 
     /// Экран слушания: ⏮ ⏭ — соседняя глава; читает дальше, если до этого читал
