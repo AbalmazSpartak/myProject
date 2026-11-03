@@ -21,6 +21,9 @@ struct BookReaderView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Bindable var book: Book
+    /// Открыта кнопкой «Слушать» на странице книги: чтение вслух начинается само
+    var listensOnOpen = false
+    @State private var didAutoListen = false
 
     @State private var chapters: [BookChapter] = []
     /// С какого абзаца книги начинается каждая глава
@@ -578,6 +581,9 @@ struct BookReaderView: View {
         if continuesReading {
             continuesReading = false
             speech.start(from: 0)
+        } else if listensOnOpen, !didAutoListen {
+            didAutoListen = true
+            speech.start(from: startParagraph)
         }
     }
 

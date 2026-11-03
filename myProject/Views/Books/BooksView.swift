@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
 
-/// «Книги»: библиотека — книги из «Файлов» и из каталога Project Gutenberg; нажатие открывает читалку
+/// «Книги»: библиотека — книги из «Файлов» и из каталога Project Gutenberg; нажатие открывает страницу книги, оттуда — читалка
 struct BooksView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
@@ -70,8 +70,7 @@ struct BooksView: View {
             }
         }
         .navigationDestination(item: $openedBook) { book in
-            BookReaderView(book: book)
-                .toolbar(.hidden, for: .navigationBar)
+            BookDetailView(book: book)
         }
         .fileImporter(isPresented: $isImporting, allowedContentTypes: UTType.bookFiles) { result in
             if case .success(let url) = result {
