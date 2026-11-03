@@ -40,6 +40,11 @@ struct BookReaderView: View {
     @State private var isShowingDictionary = false
     @State private var isShowingAppearance = false
     @State private var isShowingSearch = false
+    /// «Герои и места»: имена по всей книге считаются один раз при первом открытии
+    @State private var isShowingNames = false
+    @State private var bookNames: [BookName]?
+    /// Из шторки имён — «все места»: поиск открывается, когда шторка закрылась
+    @State private var pendingSearch: String?
     /// Запрос поиска остаётся до закрытия книги — снова открыли поиск, а там прежние результаты
     @State private var searchQuery = ""
     /// Место, найденное поиском, — подсвечено несколько секунд
@@ -221,6 +226,24 @@ struct BookReaderView: View {
                 .ignoresSafeArea()
         }
         .sheet(isPresented: $isShowingContents) { contents }
+        .sheet(isPresented: $isShowingNames, onDismiss: {
+            if let query = pendingSearch {
+                pendingSearch = nil
+                searchQuery = query
+                isShowingSearch = true
+            }
+        }) {
+            BookNamesView(chapters: chapters, position: book.position, names: $bookNames,
+                          onSelect: { mention in
+                              jump(to: BookSearchResult(id: 0, chapter: mention.chapter, paragraph: mention.paragraph,
+                                                        range: mention.range, snippet: AttributedString()))
+                          },
+                          onSearch: { query in
+                              pendingSearch = query
+                              isShowingNames = false
+                          })
+                .appThemedColorScheme()
+        }
         .sheet(isPresented: $isShowingSearch) {
             BookSearchView(chapters: chapters, query: $searchQuery, onSelect: jump)
                 .appThemedColorScheme()
@@ -337,6 +360,9 @@ struct BookReaderView: View {
             Menu {
                 Button { isShowingContents = true } label: {
                     Label("Оглавление", systemImage: "list.bullet")
+                }
+                Button { isShowingNames = true } label: {
+                    Label("Герои и места", systemImage: "person.2")
                 }
                 Button { isShowingSearch = true } label: {
                     Label("Поиск по книге", systemImage: "magnifyingglass")
@@ -631,6 +657,7 @@ struct BookReaderView: View {
         chapterIndex = 0
         startParagraph = 0
         contentVersion += 1
+        bookNames = nil
         Haptics.tap()
     }
 
