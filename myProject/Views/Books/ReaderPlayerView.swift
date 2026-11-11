@@ -69,6 +69,7 @@ struct ReaderPlayerView: View {
                     titleBlock
                     progress
                     controls
+                    preparingNote
                     tools
                     chaptersButton
                 }
@@ -210,6 +211,18 @@ struct ReaderPlayerView: View {
                 .disabled(chapterNumber >= chapterCount)
         }
         .buttonStyle(.plain)
+    }
+
+    /// Голос готовит первую фразу (после установки или запуска приложения это может занять время) — видно, что не зависло.
+    /// Место занято всегда: подпись не двигает кнопки
+    private var preparingNote: some View {
+        Text("Готовлю голос — в первый раз это дольше…")
+            .scaledFont(size: 13)
+            .foregroundColor(.gray)
+            .opacity(speech.isPreparing ? 1 : 0)
+            .animation(.easeInOut(duration: 0.2), value: speech.isPreparing)
+            .padding(.top, -10)
+            .accessibilityHidden(!speech.isPreparing)
     }
 
     private func control(_ icon: String, label: String, action: @escaping () -> Void) -> some View {
