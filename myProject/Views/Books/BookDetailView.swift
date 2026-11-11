@@ -245,7 +245,7 @@ struct BookDetailView: View {
                 if recorder.isRecording(book.id), let job = recorder.job {
                     ProgressView(value: job.fraction)
                         .tint(.brandTint)
-                    Text("Записываю: глава \(job.chapter + 1) из \(job.total) · \(Int(job.fraction * 100))%. Не закрывайте приложение, экран не погаснет.")
+                    Text("Записываю: глава \(job.chapter + 1) из \(job.total) · \(Int(job.fraction * 100))%" + (job.remainingText.map { " · осталось \($0)" } ?? "") + ". Не закрывайте приложение, экран не погаснет.")
                         .scaledFont(size: 13)
                         .foregroundColor(.gray)
                     audiobookButton("Остановить", systemImage: "stop.circle") { recorder.cancel() }
@@ -265,7 +265,7 @@ struct BookDetailView: View {
                     }
                     if !complete {
                         audiobookButton(recordedChapters == 0 ? "Записать озвучку" : "Продолжить запись", systemImage: "arrow.down.circle") {
-                            recorder.start(bookID: book.id, chaptersData: book.chaptersData, language: details.language)
+                            recorder.start(bookID: book.id, title: book.title, chaptersData: book.chaptersData, language: details.language)
                         }
                     }
                     if audioSize > 0 {

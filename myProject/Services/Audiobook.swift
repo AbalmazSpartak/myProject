@@ -131,11 +131,22 @@ final class AudiobookRecorder {
 
     struct Job {
         let bookID: UUID
+        let title: String
         let voiceKey: String
         /// 0…1 по абзацам всей книги
         var fraction: Double
         var chapter: Int
         let total: Int
+        let startedAt = Date()
+        /// С какой доли начали (часть глав уже была записана) — по ней считается, сколько ещё ждать
+        var startFraction: Double?
+
+        /// Сколько ещё идёт запись, секунды; nil — пока мало данных для оценки
+        var remaining: TimeInterval? {
+            guard let startFraction, fraction - startFraction > 0.01 else { return nil }
+            let elapsed = Date().timeIntervalSince(startedAt)
+            return elapsed * (1 - fraction) / (fraction - startFraction)
+        }
     }
 
     private(set) var job: Job?
@@ -147,13 +158,13 @@ final class AudiobookRecorder {
 
     func isRecording(_ book: UUID) -> Bool { job?.bookID == book }
 
-    func start(bookID: UUID, chaptersData: Data, language: String) {
+    func start(bookID: UUID, title: String, chaptersData: Data, language: String) {
         guard job == nil, let voice = NeuralVoice.shared.bookVoice(language: language) else { return }
         failure = nil
         let key = AudiobookStore.voiceKey(voice)
         let isKokoroML = if case .kokoroML = voice.engine { true } else { false }
         let speed = Float(SpeechSettings.bookNeuralSpeedFactor)
-        job = Job(bookID: bookID, voiceKey: key, fraction: 0, chapter: 0, total: 0)
+        job = Job(bookID: bookID, title: title, voiceKey: key, fraction: 0, chapter: 0, total: 0)
         UIApplication.shared.isIdleTimerDisabled = true
         task = Task {
             defer {
@@ -166,7 +177,7 @@ final class AudiobookRecorder {
             }.value
             guard !chapters.isEmpty else { return }
             let totalParagraphs = max(chapters.reduce(0) { $0 + $1.paragraphs.count }, 1)
-            job = Job(bookID: bookID, voiceKey: key, fraction: 0, chapter: 0, total: chapters.count)
+            job = Job(bookID: bookID, title: title, voiceKey: key, fraction: 0, chapter: 0, total: chapters.count)
             do { try AudiobookStore.prepareFolder(book: bookID, key: key) } catch {
                 failure = (bookID, "Не удалось создать папку для озвучки.")
                 return
@@ -180,6 +191,7 @@ final class AudiobookRecorder {
                     job?.fraction = Double(done) / Double(totalParagraphs)
                     continue
                 }
+                if job?.startFraction == nil { job?.startFraction = Double(done) / Double(totalParagraphs) }
                 do {
                     try await record(chapter, index: index, bookID: bookID, key: key, voice: voice, isKokoroML: isKokoroML,
                                      language: language, speed: speed) { paragraph in
@@ -264,5 +276,52 @@ final class AudiobookRecorder {
         try FileManager.default.moveItem(at: temporary, to: final)
         try AudiobookStore.save(AudiobookChapter(rate: rate, paragraphCount: chapter.paragraphs.count, segments: segments),
                                 book: bookID, key: key, index: index)
+    }
+}
+
+extension AudiobookRecorder.Job {
+    /// «≈ 40 мин», «≈ 2 ч 5 мин»
+    var remainingText: String? {
+        guard let remaining else { return nil }
+        let minutes = Int((remaining / 60).rounded(.up))
+        return minutes >= 60 ? "≈ \(minutes / 60) ч \(minutes % 60) мин" : "≈ \(max(minutes, 1)) мин"
+    }
+}
+
+/// Полоса прогресса записи озвучки: видна в библиотеке, пока идёт запись, — не нужно держать страницу книги открытой
+struct AudiobookRecordingBar: View {
+    @State private var recorder = AudiobookRecorder.shared
+
+    var body: some View {
+        if let job = recorder.job {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Image(systemName: "waveform")
+                    Text("Записываю озвучку: \(job.title)")
+                        .lineLimit(1)
+                    Spacer()
+                    Text("\(Int(job.fraction * 100))%")
+                        .monospacedDigit()
+                }
+                .scaledFont(size: 14, weight: .semibold)
+                .foregroundColor(.brandDark)
+                ProgressView(value: job.fraction)
+                    .tint(.brandTint)
+                HStack {
+                    Text("Глава \(job.chapter + 1) из \(job.total)" + (job.remainingText.map { " · осталось \($0)" } ?? ""))
+                    Spacer()
+                    Button("Остановить") { recorder.cancel() }
+                        .foregroundColor(.brandTint)
+                }
+                .scaledFont(size: 13)
+                .foregroundColor(.gray)
+            }
+            .padding(14)
+            .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.cardBackground))
+            .shadow(color: .black.opacity(0.1), radius: 6, y: 2)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 8)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+        }
     }
 }

@@ -62,6 +62,7 @@ struct BooksView: View {
             .tabViewStyle(.page(indexDisplayMode: .never))
         }
         .background(Color.brandBackground.ignoresSafeArea())
+        .safeAreaInset(edge: .bottom) { AudiobookRecordingBar() }
         .overlay {
             if isParsing {
                 ProgressView("Открываю книгу…")
