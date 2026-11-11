@@ -1,7 +1,7 @@
 import Foundation
 import Security
 
-/// Аккаунт WordLearner: вход по почте с одноразовым кодом (сервер wordlearner-account).
+/// Аккаунт WordLearner: почта и пароль (сервер wordlearner-account). Почту при регистрации и сбросе пароля подтверждает код из письма.
 /// Ключ входа лежит в связке ключей, почта — в настройках для показа. Вход не обязателен: без него приложение работает как раньше
 @Observable
 final class Account {
@@ -20,10 +20,16 @@ final class Account {
         case tooMany
         case wrongCode
         case expired
+        case weakPassword
+        case wrongPassword
+        /// Вход закрыт после неверных попыток; столько секунд ждать
+        case locked(Int)
         /// Почтовый сервис не отправил письмо
         case mail
         case network
     }
+
+    static let minPassword = 8
 
     var isSignedIn: Bool { email != nil && Self.token != nil }
 
@@ -31,9 +37,9 @@ final class Account {
         email = Self.token == nil ? nil : UserDefaults.standard.string(forKey: Self.emailKey)
     }
 
-    // MARK: - Вход
+    // MARK: - Регистрация и сброс пароля
 
-    /// Просит сервер отправить код на почту
+    /// Просит сервер отправить код на почту: так подтверждается адрес при регистрации и сбросе пароля
     func requestCode(email: String) async throws {
         let (status, body) = try await Self.post("auth/request", ["email": email])
         switch status {
@@ -45,16 +51,13 @@ final class Account {
         }
     }
 
-    /// Проверяет код; при успехе устройство входит в аккаунт
-    func verify(email: String, code: String) async throws {
+    /// Проверяет код; возвращает разрешение задать пароль
+    func verify(email: String, code: String) async throws -> String {
         let (status, body) = try await Self.post("auth/verify", ["email": email, "code": code])
         switch status {
         case 200:
-            guard let token = body["token"] as? String else { throw Failure.network }
-            Self.token = token
-            let confirmed = body["email"] as? String ?? email
-            UserDefaults.standard.set(confirmed, forKey: Self.emailKey)
-            self.email = confirmed
+            guard let ticket = body["ticket"] as? String else { throw Failure.network }
+            return ticket
         case 400: throw Failure.wrongCode
         case 401:
             switch body["error"] as? String {
@@ -62,8 +65,61 @@ final class Account {
             case "too_many": throw Failure.tooMany
             default: throw Failure.wrongCode
             }
+        case 429: throw Failure.tooMany
         default: throw Failure.network
         }
+    }
+
+    /// Задаёт пароль по разрешению и входит
+    func setPassword(email: String, ticket: String, password: String) async throws {
+        let (status, body) = try await Self.post("auth/password", ["email": email, "ticket": ticket, "password": password])
+        switch status {
+        case 200: try accept(body, fallback: email)
+        case 400: throw Failure.weakPassword
+        case 401: throw Failure.expired
+        case 429: throw Failure.tooMany
+        default: throw Failure.network
+        }
+    }
+
+    // MARK: - Вход
+
+    func signIn(email: String, password: String) async throws {
+        let (status, body) = try await Self.post("auth/login", ["email": email, "password": password])
+        switch status {
+        case 200: try accept(body, fallback: email)
+        case 400, 401: throw Failure.wrongPassword
+        case 429:
+            if body["error"] as? String == "locked" { throw Failure.locked(body["wait"] as? Int ?? 900) }
+            throw Failure.tooMany
+        default: throw Failure.network
+        }
+    }
+
+    /// Смена пароля: другие устройства войдут заново
+    func changePassword(old: String, new: String) async throws {
+        guard let token = Self.token else { throw Failure.network }
+        let (status, body) = try await Self.post("me/password", ["old": old, "password": new], token: token)
+        switch status {
+        case 200: return
+        case 400: throw Failure.weakPassword
+        case 401:
+            // Ключ устарел (пароль сменили на другом устройстве) — нужен новый вход
+            if body["error"] as? String == "unauthorized" { await signOut() }
+            throw Failure.wrongPassword
+        case 429:
+            if body["error"] as? String == "locked" { throw Failure.locked(body["wait"] as? Int ?? 900) }
+            throw Failure.tooMany
+        default: throw Failure.network
+        }
+    }
+
+    private func accept(_ body: [String: Any], fallback: String) throws {
+        guard let token = body["token"] as? String else { throw Failure.network }
+        Self.token = token
+        let confirmed = body["email"] as? String ?? fallback
+        UserDefaults.standard.set(confirmed, forKey: Self.emailKey)
+        email = confirmed
     }
 
     /// Выход на этом устройстве: ключ стирается здесь и закрывается на сервере (если есть сеть)
@@ -84,9 +140,10 @@ final class Account {
 
     // MARK: - Сеть
 
-    nonisolated private static func post(_ path: String, _ fields: [String: String]) async throws -> (Int, [String: Any]) {
+    nonisolated private static func post(_ path: String, _ fields: [String: String], token: String? = nil) async throws -> (Int, [String: Any]) {
         var request = URLRequest(url: baseURL.appending(path: path), timeoutInterval: 15)
         request.httpMethod = "POST"
+        if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try? JSONEncoder().encode(fields)
         guard let (data, response) = try? await URLSession.shared.data(for: request),
