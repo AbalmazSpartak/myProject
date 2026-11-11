@@ -10,6 +10,10 @@ struct BookDetailView: View {
     @State private var isReading = false
     @State private var listensOnOpen = false
     @State private var isShowingDictionary = false
+    @State private var recorder = AudiobookRecorder.shared
+    @State private var recordedChapters = 0
+    @State private var audioSize: Int64 = 0
+    @State private var isConfirmingDelete = false
 
     /// Что нужно разобрать из текста книги: делается один раз, в фоне
     private struct Details {
@@ -35,6 +39,7 @@ struct BookDetailView: View {
                     chips
                     actions
                     aboutCard
+                    audiobookCard
                     if mode == .learning { dictionaryButton }
                 }
                 .padding(.horizontal, 20)
@@ -220,6 +225,103 @@ struct BookDetailView: View {
                 .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.cardBackground))
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: - Озвучка
+
+    /// Голос, которым сейчас читается книга; nil — нейросетевого нет, записать нечего
+    private var audiobookVoice: NeuralVoice.BookVoice? {
+        details.flatMap { NeuralVoice.shared.bookVoice(language: $0.language) }
+    }
+
+    private var audiobookKey: String? { audiobookVoice.map(AudiobookStore.voiceKey) }
+
+    private var audiobookCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Озвучка")
+                .scaledFont(size: 17, weight: .semibold)
+                .foregroundColor(.brandDark)
+            if let details {
+                if recorder.isRecording(book.id), let job = recorder.job {
+                    ProgressView(value: job.fraction)
+                        .tint(.brandTint)
+                    Text("Записываю: глава \(job.chapter + 1) из \(job.total) · \(Int(job.fraction * 100))%. Не закрывайте приложение, экран не погаснет.")
+                        .scaledFont(size: 13)
+                        .foregroundColor(.gray)
+                    audiobookButton("Остановить", systemImage: "stop.circle") { recorder.cancel() }
+                } else if audiobookVoice == nil {
+                    Text("Нужен нейросетевой голос: Настройки → Озвучка → Нейросетевой голос. Записанная озвучка читается им же.")
+                        .scaledFont(size: 13)
+                        .foregroundColor(.gray)
+                } else {
+                    let complete = recordedChapters >= details.chapters && details.chapters > 0
+                    Text(audiobookStatus(details, complete: complete))
+                        .scaledFont(size: 14)
+                        .foregroundColor(.brandDark)
+                    if let failure = recorder.failure, failure.bookID == book.id {
+                        Text(failure.text)
+                            .scaledFont(size: 13)
+                            .foregroundColor(.red)
+                    }
+                    if !complete {
+                        audiobookButton(recordedChapters == 0 ? "Записать озвучку" : "Продолжить запись", systemImage: "arrow.down.circle") {
+                            recorder.start(bookID: book.id, chaptersData: book.chaptersData, language: details.language)
+                        }
+                    }
+                    if audioSize > 0 {
+                        audiobookButton("Удалить озвучку", systemImage: "trash", role: .destructive) { isConfirmingDelete = true }
+                    }
+                    Text("Книга читается записью без ожидания, подсветка предложений и скорость работают как обычно. Если сменить голос в «Озвучке», запись нужно сделать заново.")
+                        .scaledFont(size: 13)
+                        .foregroundColor(.gray)
+                }
+            } else {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.cardBackground))
+        .confirmationDialog("Удалить озвучку этой книги?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
+            Button("Удалить", role: .destructive) {
+                AudiobookStore.delete(book: book.id)
+                refreshAudiobook()
+            }
+        }
+        .onChange(of: recorder.job?.chapter) { _, _ in refreshAudiobook() }
+        .onChange(of: recorder.job == nil) { _, _ in refreshAudiobook() }
+        .onChange(of: details?.chapters) { _, _ in refreshAudiobook() }
+    }
+
+    private func audiobookStatus(_ details: Details, complete: Bool) -> String {
+        let megabytes = ByteCountFormatter.string(fromByteCount: audioSize, countStyle: .file)
+        if complete { return "Записано: все \(details.chapters) глав · \(megabytes)" }
+        if recordedChapters > 0 { return "Записано \(recordedChapters) из \(details.chapters) глав · \(megabytes)" }
+        // ~150 слов в минуту речи
+        let estimate = Double(details.words) / 150 * AudiobookStore.megabytesPerMinute
+        return "Не записана. Размер около \(Int(estimate.rounded())) МБ, запись идёт, пока приложение открыто. Голос: \(NeuralVoice.shared.bookVoiceTitle(details.language))."
+    }
+
+    private func audiobookButton(_ title: String, systemImage: String, role: ButtonRole? = nil, action: @escaping () -> Void) -> some View {
+        Button(role: role, action: action) {
+            Label(title, systemImage: systemImage)
+                .scaledFont(size: 16, weight: .semibold)
+                .foregroundColor(role == .destructive ? .red : .brandTint)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.brandFill))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func refreshAudiobook() {
+        guard let details, let key = audiobookKey else {
+            recordedChapters = 0
+            audioSize = AudiobookStore.size(book: book.id)
+            return
+        }
+        recordedChapters = AudiobookStore.recordedCount(book: book.id, key: key, chapters: details.chapters)
+        audioSize = AudiobookStore.size(book: book.id)
     }
 
     // MARK: - Данные

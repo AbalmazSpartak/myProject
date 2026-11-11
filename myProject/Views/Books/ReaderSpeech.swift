@@ -16,8 +16,8 @@ final class ReaderSpeech: NSObject {
     static let speedKey = "reader_speech_speed"
     static let speeds: [Double] = [0.75, 1, 1.25, 1.5]
     /// Паузы чтеца: между предложениями — короткая, между абзацами — длиннее
-    private static let sentencePause: TimeInterval = 0.12
-    private static let paragraphPause: TimeInterval = 0.3
+    static let sentencePause: TimeInterval = 0.12
+    static let paragraphPause: TimeInterval = 0.3
 
     private(set) var isPlaying = false
     /// Читаемый абзац главы; nil — чтение не начиналось или остановлено
@@ -54,6 +54,11 @@ final class ReaderSpeech: NSObject {
     // Нейросетевой голос: звук готовится по предложению вперёд и играет через свой плеер
     @ObservationIgnored private let audioEngine = AVAudioEngine()
     @ObservationIgnored private let player = AVAudioPlayerNode()
+    /// Скорость записанной озвучки: звук записан на обычной скорости, быстрее и медленнее — здесь, без смены голоса
+    @ObservationIgnored private let timePitch = AVAudioUnitTimePitch()
+    @ObservationIgnored private var playerPitched = false
+    /// Играет записанная озвучка главы, а не голос, готовящий фразы на лету
+    @ObservationIgnored private var isPlayingRecording = false
     /// Частота, на которую подключён плеер (у Kokoro и Piper она разная); nil — плеер ещё не подключён
     @ObservationIgnored private var playerRate: Double?
     @ObservationIgnored private var neuralTask: Task<Void, Never>?
@@ -166,7 +171,7 @@ final class ReaderSpeech: NSObject {
         // Новое чтение — Kokoro с первой фразы, даже если до этого после блокировки читал Piper
         usedLockedVoice = false
         // Приготовленное при запуске приложения — если чтение с того же места, тем же голосом и на той же скорости
-        let ready = offset == 0 ? takePreroll(for: index) : nil
+        let ready = offset == 0 && recording() == nil ? takePreroll(for: index) : nil
         Self.cancelPreroll()
         // Книгу читает Kokoro на нейроядре — при следующем запуске приложения она приготовит начало заранее
         if let bookID, let voice = NeuralVoice.shared.bookVoice(language: language ?? BookLanguage.english),
@@ -321,6 +326,11 @@ final class ReaderSpeech: NSObject {
         print("[TTS] перезапуск с текущего места (скорость или звук переключился)")
         fflush(stdout)
         #endif
+        // Записанная озвучка: скорость — у проигрывателя, без перезапуска (движок остановлен — звук переключился, тогда как обычно)
+        if isPlayingRecording, audioEngine.isRunning {
+            timePitch.rate = Float(Self.readerSpeed())
+            return
+        }
         // На паузе готовый звук — на старой скорости: выбрасываем, продолжение приготовит заново
         if neuralPaused {
             stopNeural()
@@ -369,7 +379,7 @@ final class ReaderSpeech: NSObject {
 
     private func speak(_ index: Int, from offset: Int = 0) {
         if !neuralFailed, let voice = NeuralVoice.shared.bookVoice(language: language ?? BookLanguage.english) {
-            speakNeural(index, from: offset, voice: voice)
+            speakNeural(index, from: offset, voice: voice, recorded: recording(voice))
         } else {
             speakSystem(index, from: offset)
         }
@@ -502,8 +512,11 @@ final class ReaderSpeech: NSObject {
     /// Звук готовится вперёд, пока звучит готовое, — главы идут без пауз. Piper — по предложению,
     /// Kokoro — большими кусками (см. produceKokoro). Подсвечивается предложение целиком: время отдельных слов
     /// модель не отдаёт. Пока запас не накоплен, на ▶️ крутится индикатор
-    private func speakNeural(_ index: Int, from offset: Int, voice: NeuralVoice.BookVoice, prepared: Preroll? = nil) {
+    private func speakNeural(_ index: Int, from offset: Int, voice: NeuralVoice.BookVoice, prepared: Preroll? = nil,
+                              recorded: (chapter: AudiobookChapter, url: URL)? = nil) {
         stopNeural()
+        isPlayingRecording = recorded != nil
+        timePitch.rate = Float(Self.readerSpeed())
         paragraph = index
         isPreparing = true
         // Kokoro на процессоре не успевает короткими фразами — ему большие куски; Piper и Kokoro на нейроядре — по предложению
@@ -513,6 +526,11 @@ final class ReaderSpeech: NSObject {
         // Kokoro на нейроядре: с запасом перед стартом громкость ровная — без него на iPhone 12
         // первые фразы звучали заметно громче остальных
         if case .kokoroML = voice.engine { holdThreshold = Self.kokoroMLStartBuffer }
+        // Запись готова целиком: запас не копим, играем сразу, и замер скорости Kokoro не нужен
+        if recorded != nil {
+            neuralIsKokoro = false
+            holdThreshold = 0
+        }
         isHolding = true
         let current = generation
         let language = language ?? BookLanguage.english
@@ -528,7 +546,9 @@ final class ReaderSpeech: NSObject {
         let from: (paragraph: Int, offset: Int) = prepared?.next ?? (index, offset)
         let paragraphCount = paragraphs.count
         neuralTask = Task {
-            if from.paragraph < paragraphCount {
+            if let recorded {
+                await produceRecorded(recorded.chapter, url: recorded.url, from: index, offset: offset, generation: current)
+            } else if from.paragraph < paragraphCount {
                 if isKokoro {
                     await produceKokoro(from: from.paragraph, offset: from.offset, voice: voice, speed: speed, language: language,
                                         generation: current)
@@ -659,6 +679,44 @@ final class ReaderSpeech: NSObject {
                     fail(paragraph: sentence.paragraph, from: sentence.piece.starts[0])
                     return
                 }
+            }
+        }
+    }
+
+    /// Скорость чтения из настроек читалки (1 — обычная)
+    private static func readerSpeed() -> Double {
+        UserDefaults.standard.object(forKey: speedKey) as? Double ?? 1
+    }
+
+    /// Записанная озвучка текущей главы тем голосом, которым читает книга сейчас; nil — записи нет
+    private func recording(_ voice: NeuralVoice.BookVoice? = nil) -> (chapter: AudiobookChapter, url: URL)? {
+        guard !neuralFailed, let bookID, !paragraphs.isEmpty,
+              let voice = voice ?? NeuralVoice.shared.bookVoice(language: language ?? BookLanguage.english) else { return nil }
+        return AudiobookStore.chapter(book: bookID, key: AudiobookStore.voiceKey(voice), index: chapterIndex,
+                                      paragraphCount: paragraphs.count)
+    }
+
+    /// Вместо голоса — звук из файла: предложение за предложением в тот же плеер, с той же подсветкой и паузами
+    private func produceRecorded(_ chapter: AudiobookChapter, url: URL, from index: Int, offset: Int,
+                                 generation current: Int) async {
+        guard let file = try? AVAudioFile(forReading: url) else {
+            fail(paragraph: index, from: offset)
+            return
+        }
+        let first = chapter.segments.firstIndex { $0.paragraph > index || ($0.paragraph == index && $0.location + $0.length > offset) }
+            ?? chapter.segments.count
+        for segment in chapter.segments[first...] {
+            guard await waitForRoom(limit: Self.lookahead, generation: current) else { return }
+            guard let samples = AudiobookStore.samples(from: file, start: segment.start, frames: segment.frames) else {
+                fail(paragraph: segment.paragraph, from: segment.location)
+                return
+            }
+            let words = segment.words.map { (time: $0.time, range: NSRange(location: $0.location, length: $0.length)) }
+            guard enqueue(samples[...], rate: chapter.rate, before: segment.before, after: segment.after,
+                          paragraph: segment.paragraph, range: NSRange(location: segment.location, length: segment.length),
+                          words: words, generation: current) else {
+                fail(paragraph: segment.paragraph, from: segment.location)
+                return
             }
         }
     }
@@ -798,12 +856,25 @@ final class ReaderSpeech: NSObject {
     }
 
     private func preparePlayer(rate: Double) throws {
-        if playerRate != rate {
+        let pitched = isPlayingRecording
+        if playerRate != rate || playerPitched != pitched {
             audioEngine.stop()
-            if playerRate == nil { audioEngine.attach(player) } else { audioEngine.disconnectNodeOutput(player) }
-            audioEngine.connect(player, to: audioEngine.mainMixerNode,
-                                format: AVAudioFormat(standardFormatWithSampleRate: rate, channels: 1))
+            if playerRate == nil {
+                audioEngine.attach(player)
+                audioEngine.attach(timePitch)
+            } else {
+                audioEngine.disconnectNodeOutput(player)
+                audioEngine.disconnectNodeOutput(timePitch)
+            }
+            let format = AVAudioFormat(standardFormatWithSampleRate: rate, channels: 1)
+            if pitched {
+                audioEngine.connect(player, to: timePitch, format: format)
+                audioEngine.connect(timePitch, to: audioEngine.mainMixerNode, format: format)
+            } else {
+                audioEngine.connect(player, to: audioEngine.mainMixerNode, format: format)
+            }
             playerRate = rate
+            playerPitched = pitched
             scheduledSamples = 0
         }
         if !audioEngine.isRunning { try audioEngine.start() }
@@ -875,7 +946,7 @@ final class ReaderSpeech: NSObject {
 
     /// Длинное предложение — кусками до 150 символов (по «,;:—», иначе по пробелу). Память Kokoro на нейроядре
     /// растёт с длиной фразы: 150 символов — ~400 МБ сверху, на ~300 символах iOS закрывала приложение
-    private static func limited(_ piece: SpokenText.Piece, to limit: Int = 150) -> [SpokenText.Piece] {
+    static func limited(_ piece: SpokenText.Piece, to limit: Int = 150) -> [SpokenText.Piece] {
         let text = piece.text as NSString
         guard text.length > limit else { return [piece] }
         var parts: [SpokenText.Piece] = []
@@ -911,7 +982,7 @@ final class ReaderSpeech: NSObject {
 
     /// Слова предложения со временем начала — если модель произнесла столько же слов, сколько в тексте;
     /// не совпало (число цифрами, сокращение) — пусто, подсвечивается всё предложение
-    private static func wordMarks(_ starts: [Double]?, piece: SpokenText.Piece) -> [(time: Double, range: NSRange)] {
+    static func wordMarks(_ starts: [Double]?, piece: SpokenText.Piece) -> [(time: Double, range: NSRange)] {
         guard let starts, !starts.isEmpty else { return [] }
         let text = piece.text as NSString
         let ranges = wordPattern.matches(in: piece.text, range: NSRange(location: 0, length: text.length)).map(\.range)
@@ -925,7 +996,7 @@ final class ReaderSpeech: NSObject {
     /// Приблизительное время начала каждого слова в звуке предложения: речь между первым и последним слышимым звуком
     /// делится по длине слов (буквы + небольшой вес на слово), после запятой, двоеточия и тире — добавка на паузу.
     /// Начало и конец предложения точные, внутри слово может сдвигаться примерно на 0,2 с
-    private static func estimatedStarts(piece: SpokenText.Piece, samples: [Float], rate: Double) -> [Double]? {
+    static func estimatedStarts(piece: SpokenText.Piece, samples: [Float], rate: Double) -> [Double]? {
         let text = piece.text as NSString
         let ranges = wordPattern.matches(in: piece.text, range: NSRange(location: 0, length: text.length)).map(\.range)
         guard !ranges.isEmpty, rate > 0 else { return nil }
@@ -967,6 +1038,7 @@ final class ReaderSpeech: NSObject {
 
     private func stopNeural() {
         generation += 1
+        isPlayingRecording = false
         neuralTask?.cancel()
         neuralTask = nil
         queue = []
@@ -982,7 +1054,7 @@ final class ReaderSpeech: NSObject {
     }
 
     /// Громкость куска — к одному уровню: средняя громкость речи (без тишины) → 0,1, пики не выше 0,95
-    private static func leveled(_ samples: [Float]) -> [Float] {
+    static func leveled(_ samples: [Float]) -> [Float] {
         let window = 480
         var energies: [Float] = []
         var index = 0
@@ -1026,7 +1098,7 @@ final class ReaderSpeech: NSObject {
     }
     #endif
 
-    private static func range(of piece: SpokenText.Piece) -> NSRange {
+    static func range(of piece: SpokenText.Piece) -> NSRange {
         NSRange(location: piece.starts[0], length: piece.ends[piece.ends.count - 1] - piece.starts[0])
     }
 
