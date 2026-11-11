@@ -197,6 +197,19 @@ struct SettingsView: View {
                         }
                     }
 
+                    // Аккаунт
+                    Section {
+                        NavigationLink {
+                            AccountView()
+                        } label: {
+                            HStack {
+                                Label("Аккаунт", systemImage: "person.crop.circle")
+                                Spacer()
+                                Text(Account.shared.email ?? "Войти").foregroundColor(.gray)
+                            }
+                        }
+                    }
+
                     // Резервная копия
                     BackupSection()
                     #if DEBUG
