@@ -1,0 +1,20 @@
+name = "wordlearner-account"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+# Секреты (npx wrangler secret put): RESEND_API_KEY — ключ Resend для писем с кодом входа
+# Переменная MAIL_FROM — от кого письма; пока нет своего домена — тестовый адрес Resend (письма идут только владельцу аккаунта Resend)
+[vars]
+MAIL_FROM = "WordLearner <onboarding@resend.dev>"
+
+[[durable_objects.bindings]]
+name = "USER"
+class_name = "User"
+
+[[durable_objects.bindings]]
+name = "GATE"
+class_name = "Gate"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["User", "Gate"]
