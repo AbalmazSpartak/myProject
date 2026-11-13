@@ -203,7 +203,6 @@ struct BookDetailView: View {
             if let details {
                 row("Язык", Self.languageName(details.language))
                 row("Глав", "\(details.realChapters)")
-                row("Слов", details.words.formatted(.number.locale(Locale(identifier: "ru_RU"))))
                 row("Всего читать", duration(minutes: Double(details.words) / Self.wordsPerMinute))
             } else {
                 ProgressView()
