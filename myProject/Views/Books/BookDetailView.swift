@@ -337,13 +337,17 @@ struct BookDetailView: View {
                     .lineLimit(1)
                     .foregroundColor(.brandDark)
                 Spacer()
-                if isRecordingThis {
-                    ProgressView()
-                } else {
-                    Image(systemName: isRecorded ? "play.fill" : "arrow.down.circle")
-                        .scaledFont(size: isRecorded ? 14 : 20)
-                        .foregroundColor(isRecorded || !isBusy ? .brandTint : .gray.opacity(0.5))
+                // Одна ширина и один размер: значки ▶ и ⬇ стоят ровно друг под другом
+                Group {
+                    if isRecordingThis {
+                        ProgressView()
+                    } else {
+                        Image(systemName: isRecorded ? "play.circle" : "arrow.down.circle")
+                            .scaledFont(size: 22)
+                            .foregroundColor(isRecorded || !isBusy ? .brandTint : .gray.opacity(0.5))
+                    }
                 }
+                .frame(width: 32, height: 32)
             }
             .scaledFont(size: 15)
             .frame(minHeight: 44)
