@@ -301,35 +301,12 @@ struct BookDetailView: View {
         .onChange(of: details?.chapters) { _, _ in refreshAudiobook() }
     }
 
-    /// Главы: ▶ слушать с этой главы, ⬇ записать (есть только у незаписанных)
+    /// Главы: у записанной справа ▶ (слушать с этой главы), у незаписанной — ⬇ (записать её)
     private func chaptersList(_ details: Details) -> some View {
         DisclosureGroup("Главы: записано \(recordedChapters) из \(details.chapters)") {
             VStack(spacing: 0) {
                 ForEach(Array(details.titles.enumerated()), id: \.offset) { index, title in
-                    HStack(spacing: 4) {
-                    Button {
-                        listensOnOpen = true
-                        listenChapter = index
-                        isReading = true
-                    } label: {
-                        HStack(spacing: 10) {
-                            Text("\(index + 1). \(title)")
-                                .lineLimit(1)
-                                .foregroundColor(.brandDark)
-                            Spacer()
-                            Image(systemName: "play.fill")
-                                .scaledFont(size: 12)
-                                .foregroundColor(.brandTint)
-                                .frame(width: 30)
-                        }
-                        .scaledFont(size: 15)
-                        .frame(minHeight: 40)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Слушать с главы \(index + 1): \(title)")
-                    chapterRecordButton(index, details: details)
-                    }
+                    chapterRow(index, title: title, details: details)
                     if index < details.titles.count - 1 { Divider() }
                 }
             }
@@ -340,28 +317,41 @@ struct BookDetailView: View {
         .tint(.brandTint)
     }
 
-    /// Записать только эту главу: у записанной — отметка, пока идёт другая запись — кнопка недоступна
     @ViewBuilder
-    private func chapterRecordButton(_ index: Int, details: Details) -> some View {
-        if recorder.isRecording(book.id), recorder.job?.chapter == index {
-            ProgressView().frame(width: 36, height: 36)
-        } else if !recordedSet.contains(index) {
-            Button {
+    private func chapterRow(_ index: Int, title: String, details: Details) -> some View {
+        let isRecorded = recordedSet.contains(index)
+        let isRecordingThis = recorder.isRecording(book.id) && recorder.job?.chapter == index
+        let isBusy = recorder.job != nil
+        Button {
+            if isRecorded {
+                listensOnOpen = true
+                listenChapter = index
+                isReading = true
+            } else if !isBusy, audiobookVoice != nil {
                 recorder.start(bookID: book.id, title: book.title, chaptersData: book.chaptersData,
                                language: details.language, only: [index])
-            } label: {
-                Image(systemName: "arrow.down.circle")
-                    .scaledFont(size: 20)
-                    .foregroundColor(recorder.job == nil ? .brandTint : .gray.opacity(0.5))
-                    .frame(width: 36, height: 36)
-                    .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
-            .disabled(recorder.job != nil || audiobookVoice == nil)
-            .accessibilityLabel("Записать главу \(index + 1)")
-        } else {
-            Color.clear.frame(width: 36, height: 36)
+        } label: {
+            HStack(spacing: 10) {
+                Text("\(index + 1). \(title)")
+                    .lineLimit(1)
+                    .foregroundColor(.brandDark)
+                Spacer()
+                if isRecordingThis {
+                    ProgressView()
+                } else {
+                    Image(systemName: isRecorded ? "play.fill" : "arrow.down.circle")
+                        .scaledFont(size: isRecorded ? 14 : 20)
+                        .foregroundColor(isRecorded || !isBusy ? .brandTint : .gray.opacity(0.5))
+                }
+            }
+            .scaledFont(size: 15)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .disabled(!isRecorded && (isBusy || audiobookVoice == nil))
+        .accessibilityLabel(isRecorded ? "Слушать с главы \(index + 1): \(title)" : "Записать главу \(index + 1): \(title)")
     }
 
     private func audiobookStatus(_ details: Details, complete: Bool) -> String {
