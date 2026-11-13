@@ -34,6 +34,13 @@ struct SettingsView: View {
     @State private var notificationsDenied = false
     @AppStorage(ReaderSelectionPanel.systemTranslatorKey) private var selectionSystemTranslator = false
 
+    private func note(_ text: String) -> some View {
+        Text(text)
+            .scaledFont(size: 12)
+            .foregroundColor(.gray)
+            .textSelection(.enabled)
+    }
+
     /// Озвучка и нейросетевой голос — на отдельном экране
     @ViewBuilder
     private var speechLink: some View {
@@ -140,43 +147,39 @@ struct SettingsView: View {
                         }
                     }
 
-                    // ИИ-подсказки и перевод слов из книг — для изучения; в «Чтении» спрятаны и выключены
-                    if mode == .learning {
-                        Section {
-                            Toggle("ИИ-подсказки", isOn: $aiHints)
-                            if aiHints {
-                                Picker("Подсказка", selection: $aiHintsQuality) {
-                                    ForEach(CloudContext.Quality.allCases, id: \.self) { quality in
-                                        Text(quality.title).tag(quality.rawValue)
-                                    }
-                                }
-                                .pickerStyle(.segmented)
-                            }
-                        } footer: {
-                            Text(aiHints
-                                 ? "Кнопка «Значение в этом предложении» в карточке слова в читалке. Слово и предложение уходят на сервер WordLearner (ИИ Claude), без имени и почты. Обычная — быстрая; более точная — точнее подбирает значение и тратит 3 подсказки из дневного запаса вместо одной. Где есть Apple Intelligence, значение показывается сразу и бесплатно."
-                                 : "Перевод слова именно в этом предложении — в карточке слова в читалке.")
-                                .textSelection(.enabled)
-                        }
-
-                        Section {
-                            Picker("Слова из книг", selection: $bookWordsTranslator) {
-                                Text("Спрашивать").tag("")
-                                Text("ИИ").tag("ai")
-                                Text("Встроенный").tag("apple")
-                            }
-                        } footer: {
-                            Text("Перевод новых слов, когда словарь создаётся из книги или файла. ИИ переводит в значении из предложения и понимает диалект; нужен интернет, слово и предложение уходят на сервер WordLearner без имени и почты.")
-                                .textSelection(.enabled)
-                        }
-                    }
-
-                    // Перевод выделенного в книге слова
+                    // Перевод слов из книг: всё в одном разделе. ИИ-подсказки и перевод словаря из книги — для изучения,
+                    // в «Чтении» спрятаны и выключены
                     Section {
-                        Toggle("Переводчик iOS для выделенных слов", isOn: $selectionSystemTranslator)
-                    } footer: {
-                        Text("По умолчанию слово, выделенное в книге, переводится из словаря приложения. Если включить, в панели выделения появится кнопка «Перевести»: встроенный переводчик iOS. Он переводит слово без контекста и иногда ошибается, например, «do» → «вечеринка».")
-                            .textSelection(.enabled)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Toggle("Переводчик iOS для выделенных слов", isOn: $selectionSystemTranslator)
+                            note("По умолчанию слово, выделенное в книге, переводится из словаря приложения. Если включить, в панели выделения появится кнопка «Перевести»: встроенный переводчик iOS. Он переводит слово без контекста и иногда ошибается, например, «do» → «вечеринка».")
+                        }
+                        if mode == .learning {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Toggle("ИИ-подсказки", isOn: $aiHints)
+                                if aiHints {
+                                    Picker("Подсказка", selection: $aiHintsQuality) {
+                                        ForEach(CloudContext.Quality.allCases, id: \.self) { quality in
+                                            Text(quality.title).tag(quality.rawValue)
+                                        }
+                                    }
+                                    .pickerStyle(.segmented)
+                                }
+                                note(aiHints
+                                     ? "Кнопка «Значение в этом предложении» в карточке слова в читалке. Слово и предложение уходят на сервер WordLearner (ИИ Claude), без имени и почты. Обычная — быстрая; более точная — точнее подбирает значение и тратит 3 подсказки из дневного запаса вместо одной. Где есть Apple Intelligence, значение показывается сразу и бесплатно."
+                                     : "Перевод слова именно в этом предложении — в карточке слова в читалке.")
+                            }
+                            VStack(alignment: .leading, spacing: 6) {
+                                Picker("Слова из книг", selection: $bookWordsTranslator) {
+                                    Text("Спрашивать").tag("")
+                                    Text("ИИ").tag("ai")
+                                    Text("Встроенный").tag("apple")
+                                }
+                                note("Перевод новых слов, когда словарь создаётся из книги или файла. ИИ переводит в значении из предложения и понимает диалект; нужен интернет, слово и предложение уходят на сервер WordLearner без имени и почты.")
+                            }
+                        }
+                    } header: {
+                        Text("Перевод слов из книг")
                     }
 
                     // Напоминание
