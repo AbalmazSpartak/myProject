@@ -24,9 +24,27 @@ struct ChapterNumbering {
         count = next
     }
 
-    /// «Глава 2 из 12 · CHAPTER II. The Pool of Tears»; у титула и содержания — только название
+    /// Название без слова «Chapter»/«Глава» и номера: «CHAPTER I. Down the Rabbit-Hole» → «Down the Rabbit-Hole».
+    /// Остался один номер без названия — nil
+    static func cleanTitle(_ title: String) -> String? {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let regex = try? NSRegularExpression(pattern: #"^(?:chapter|глава)\s+[\p{L}\d]+\s*[.:—–\-]*\s*"#, options: .caseInsensitive),
+              let match = regex.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)),
+              let range = Range(match.range, in: trimmed) else { return trimmed.isEmpty ? nil : trimmed }
+        let rest = String(trimmed[range.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        return rest.isEmpty ? nil : rest
+    }
+
+    /// Строка списка глав: «1. Down the Rabbit-Hole»; у титула и содержания — только название
+    func listTitle(for index: Int, title: String) -> String {
+        guard numbers.indices.contains(index), let number = numbers[index] else { return title }
+        return "\(number). \(Self.cleanTitle(title) ?? "Глава \(number)")"
+    }
+
+    /// «Глава 2 из 12 · The Pool of Tears»; у титула и содержания — только название
     func label(for index: Int, title: String) -> String {
         guard numbers.indices.contains(index), let number = numbers[index] else { return title }
-        return "Глава \(number) из \(count) · \(title)"
+        let head = "Глава \(number) из \(count)"
+        return Self.cleanTitle(title).map { "\(head) · \($0)" } ?? head
     }
 }

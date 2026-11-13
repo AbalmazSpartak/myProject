@@ -330,8 +330,10 @@ struct BookDetailView: View {
             .accessibilityValue(isShowingChapters ? "развёрнут" : "свёрнут")
             if isShowingChapters {
                 Divider()
+                // Номера считаются один раз на весь список, а не на каждую строку
+                let numbering = ChapterNumbering(titles: details.titles)
                 ForEach(Array(details.titles.enumerated()), id: \.offset) { index, title in
-                    chapterRow(index, title: title, details: details)
+                    chapterRow(index, title: title, numbering: numbering, details: details)
                     if index < details.titles.count - 1 { Divider() }
                 }
             }
@@ -339,7 +341,7 @@ struct BookDetailView: View {
     }
 
     @ViewBuilder
-    private func chapterRow(_ index: Int, title: String, details: Details) -> some View {
+    private func chapterRow(_ index: Int, title: String, numbering: ChapterNumbering, details: Details) -> some View {
         let isRecorded = recordedSet.contains(index)
         let isRecordingThis = recorder.isRecording(book.id) && recorder.job?.chapter == index
         let isBusy = recorder.job != nil
@@ -354,7 +356,7 @@ struct BookDetailView: View {
             }
         } label: {
             HStack(spacing: 10) {
-                Text(title)
+                Text(numbering.listTitle(for: index, title: title))
                     .lineLimit(1)
                     .foregroundColor(.brandDark)
                 Spacer()
