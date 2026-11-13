@@ -12,6 +12,8 @@ struct BookDetailView: View {
     @State private var isShowingDictionary = false
     @State private var recorder = AudiobookRecorder.shared
     @State private var recordedChapters = 0
+    @State private var recordedSet: Set<Int> = []
+    @State private var listenChapter: Int?
     @State private var audioSize: Int64 = 0
     @State private var isConfirmingDelete = false
 
@@ -21,6 +23,7 @@ struct BookDetailView: View {
         let words: Int
         let wordsRead: Int
         let language: String
+        let titles: [String]
     }
 
     /// Средняя скорость чтения про себя, слов в минуту
@@ -56,7 +59,7 @@ struct BookDetailView: View {
         .toolbarBackground(.hidden, for: .navigationBar)
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(isPresented: $isReading) {
-            BookReaderView(book: book, listensOnOpen: listensOnOpen)
+            BookReaderView(book: book, listensOnOpen: listensOnOpen, listenFromChapter: listenChapter)
                 .toolbar(.hidden, for: .navigationBar)
         }
         .sheet(isPresented: $isShowingDictionary) {
@@ -163,6 +166,7 @@ struct BookDetailView: View {
         HStack(spacing: 12) {
             Button {
                 listensOnOpen = false
+                listenChapter = nil
                 isReading = true
             } label: {
                 Text(isStarted ? "Продолжить" : "Читать")
@@ -173,6 +177,7 @@ struct BookDetailView: View {
             }
             Button {
                 listensOnOpen = true
+                listenChapter = nil
                 isReading = true
             } label: {
                 Label("Слушать", systemImage: "headphones")
@@ -249,6 +254,7 @@ struct BookDetailView: View {
                         .scaledFont(size: 13)
                         .foregroundColor(.gray)
                     audiobookButton("Остановить", systemImage: "stop.circle") { recorder.cancel() }
+                    chaptersList(details)
                 } else if audiobookVoice == nil {
                     Text("Нужен нейросетевой голос: Настройки → Озвучка → Нейросетевой голос. Записанная озвучка читается им же.")
                         .scaledFont(size: 13)
@@ -271,6 +277,7 @@ struct BookDetailView: View {
                     if audioSize > 0 {
                         audiobookButton("Удалить озвучку", systemImage: "trash", role: .destructive) { isConfirmingDelete = true }
                     }
+                    chaptersList(details)
                     Text("Книга читается записью без ожидания, подсветка предложений и скорость работают как обычно. Если сменить голос в «Озвучке», запись нужно сделать заново.")
                         .scaledFont(size: 13)
                         .foregroundColor(.gray)
@@ -292,6 +299,43 @@ struct BookDetailView: View {
         .onChange(of: recorder.job?.chapter) { _, _ in refreshAudiobook() }
         .onChange(of: recorder.job == nil) { _, _ in refreshAudiobook() }
         .onChange(of: details?.chapters) { _, _ in refreshAudiobook() }
+    }
+
+    /// Главы с отметкой, записаны ли они; нажатие — слушать книгу с этой главы
+    private func chaptersList(_ details: Details) -> some View {
+        DisclosureGroup("Главы: записано \(recordedChapters) из \(details.chapters)") {
+            VStack(spacing: 0) {
+                ForEach(Array(details.titles.enumerated()), id: \.offset) { index, title in
+                    Button {
+                        listensOnOpen = true
+                        listenChapter = index
+                        isReading = true
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: recordedSet.contains(index) ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(recordedSet.contains(index) ? .brandTint : .gray.opacity(0.6))
+                            Text("\(index + 1). \(title)")
+                                .lineLimit(1)
+                                .foregroundColor(.brandDark)
+                            Spacer()
+                            Image(systemName: "play.fill")
+                                .scaledFont(size: 12)
+                                .foregroundColor(.brandTint)
+                        }
+                        .scaledFont(size: 15)
+                        .frame(minHeight: 40)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Слушать с главы \(index + 1): \(title)")
+                    if index < details.titles.count - 1 { Divider() }
+                }
+            }
+            .padding(.top, 6)
+        }
+        .scaledFont(size: 15, weight: .semibold)
+        .foregroundColor(.brandDark)
+        .tint(.brandTint)
     }
 
     private func audiobookStatus(_ details: Details, complete: Bool) -> String {
@@ -317,10 +361,12 @@ struct BookDetailView: View {
     private func refreshAudiobook() {
         guard let details, let key = audiobookKey else {
             recordedChapters = 0
+            recordedSet = []
             audioSize = AudiobookStore.size(book: book.id)
             return
         }
-        recordedChapters = AudiobookStore.recordedCount(book: book.id, key: key, chapters: details.chapters)
+        recordedSet = Set((0..<details.chapters).filter { AudiobookStore.hasChapter(book: book.id, key: key, index: $0) })
+        recordedChapters = recordedSet.count
         audioSize = AudiobookStore.size(book: book.id)
     }
 
@@ -340,7 +386,11 @@ struct BookDetailView: View {
                     index += 1
                 }
             }
-            return Details(chapters: chapters.count, words: words, wordsRead: wordsRead, language: BookLanguage.detect(chapters))
+            let titles = chapters.enumerated().map { index, chapter -> String in
+                let title = chapter.title.trimmingCharacters(in: .whitespacesAndNewlines)
+                return title.isEmpty ? "Глава \(index + 1)" : title
+            }
+            return Details(chapters: chapters.count, words: words, wordsRead: wordsRead, language: BookLanguage.detect(chapters), titles: titles)
         }.value
     }
 

@@ -23,6 +23,8 @@ struct BookReaderView: View {
     @Bindable var book: Book
     /// Открыта кнопкой «Слушать» на странице книги: чтение вслух начинается само
     var listensOnOpen = false
+    /// «Слушать с этой главы»: книга открывается с начала этой главы (номер с нуля)
+    var listenFromChapter: Int?
     @State private var didAutoListen = false
     /// Экран слушания поверх читалки; таймер сна
     @State private var isShowingPlayer = false
@@ -588,6 +590,7 @@ struct BookReaderView: View {
         }
         loadTranslation()
         bookmarks = book.bookmarks
+        if let target = listenFromChapter, chapterStarts.indices.contains(target) { book.position = chapterStarts[target] }
         let position = book.position
         chapterIndex = chapterStarts.lastIndex { $0 <= position } ?? 0
         startParagraph = position - (chapterStarts.indices.contains(chapterIndex) ? chapterStarts[chapterIndex] : 0)
