@@ -22,7 +22,9 @@ enum SleepTimer: Hashable {
 struct ReaderPlayerView: View {
     let book: Book
     let chapterTitle: String
-    /// Номер главы с единицы
+    /// «Глава 2 из 12 · название» — номера считаются без титула и содержания; у них только название
+    let chapterLabel: String
+    /// Номер раздела в списке с единицы — для кнопок «предыдущая/следующая»
     let chapterNumber: Int
     let chapterCount: Int
     let paragraphs: [String]
@@ -140,7 +142,7 @@ struct ReaderPlayerView: View {
                     .scaledFont(size: 15, weight: .semibold)
                     .foregroundColor(.brandDark)
             }
-            Text("Глава \(chapterNumber) из \(chapterCount) · \(chapterTitle)")
+            Text(chapterLabel)
                 .scaledFont(size: 14)
                 .foregroundColor(.gray)
                 .multilineTextAlignment(.center)

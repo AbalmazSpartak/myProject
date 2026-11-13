@@ -254,7 +254,9 @@ struct BookReaderView: View {
         .sheet(isPresented: $isShowingContents) { contents }
         .overlay {
             if isShowingPlayer, let chapter {
-                ReaderPlayerView(book: book, chapterTitle: chapter.title, chapterNumber: chapterIndex + 1, chapterCount: chapters.count,
+                ReaderPlayerView(book: book, chapterTitle: chapter.title,
+                                 chapterLabel: ChapterNumbering(titles: chapters.map(\.title)).label(for: chapterIndex, title: chapter.title),
+                                 chapterNumber: chapterIndex + 1, chapterCount: chapters.count,
                                  paragraphs: chapter.paragraphs, speech: speech, speed: $speechSpeed,
                                  sleep: sleep, sleepEndsAt: sleepEndsAt, onSleep: setSleep, onToggle: toggleReading,
                                  onSeek: { speech.start(from: $0) }, onChapter: playerChapter(_:),

@@ -25,6 +25,8 @@ struct BookDetailView: View {
         let wordsRead: Int
         let language: String
         let titles: [String]
+        /// Сколько глав на самом деле: без титула и содержания
+        var realChapters: Int { ChapterNumbering(titles: titles).count }
     }
 
     /// Средняя скорость чтения про себя, слов в минуту
@@ -96,7 +98,7 @@ struct BookDetailView: View {
             .ignoresSafeArea(edges: .top)
 
             HStack(alignment: .bottom, spacing: 0) {
-                stat(title: "Глав", value: details.map { "\($0.chapters)" } ?? "—")
+                stat(title: "Глав", value: details.map { "\($0.realChapters)" } ?? "—")
                 Color.clear
                     .aspectRatio(2.0 / 3.0, contentMode: .fit)
                     .frame(width: coverWidth)
@@ -200,7 +202,7 @@ struct BookDetailView: View {
                 .foregroundColor(.brandDark)
             if let details {
                 row("Язык", Self.languageName(details.language))
-                row("Глав", "\(details.chapters)")
+                row("Глав", "\(details.realChapters)")
                 row("Слов", details.words.formatted(.number.locale(Locale(identifier: "ru_RU"))))
                 row("Всего читать", duration(minutes: Double(details.words) / Self.wordsPerMinute))
             } else {
@@ -352,7 +354,7 @@ struct BookDetailView: View {
             }
         } label: {
             HStack(spacing: 10) {
-                Text("\(index + 1). \(title)")
+                Text(title)
                     .lineLimit(1)
                     .foregroundColor(.brandDark)
                 Spacer()
