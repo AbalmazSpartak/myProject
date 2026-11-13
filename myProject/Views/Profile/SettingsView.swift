@@ -30,21 +30,6 @@ struct SettingsView: View {
     /// Пользователь запретил уведомления — подсказываем, где их включить
     @State private var notificationsDenied = false
 
-    /// Перевод слов из книг: переводчик iOS, ИИ-подсказки, словарь из книги — на отдельном экране
-    @ViewBuilder
-    private var bookTranslationLink: some View {
-        Section {
-            NavigationLink {
-                BookTranslationSettingsView()
-            } label: {
-                Label("Перевод слов из книг", systemImage: "character.bubble")
-            }
-        } footer: {
-            Text("Раздел, где вы настраиваете, чем переводятся слова из книг: словарь приложения, переводчик iOS, ИИ-подсказки.")
-                .textSelection(.enabled)
-        }
-    }
-
     /// Озвучка и нейросетевой голос — на отдельном экране
     @ViewBuilder
     private var speechLink: some View {
@@ -148,11 +133,22 @@ struct SettingsView: View {
                             } label: {
                                 LabeledContent("Словари", value: studyScope.isEverythingEnabled ? "Все" : "Выбранные")
                             }
+
+                            NavigationLink {
+                                BookTranslationSettingsView()
+                            } label: {
+                                Label("Перевод слов из книг", systemImage: "character.bubble")
+                            }
+
+                            VStack(alignment: .leading, spacing: 6) {
+                                Toggle("Помогать улучшать словарь", isOn: $improveDictionary)
+                                Text("Анонимно, без имени и почты: ваши правки слов из встроенного словаря, слова, добавленные из книг (с предложением), и слова, которые долго не запоминаются. По ним исправляются переводы для всех.")
+                                    .scaledFont(size: 12)
+                                    .foregroundColor(.gray)
+                                    .textSelection(.enabled)
+                            }
                         }
                     }
-
-                    // Перевод слов из книг — на отдельном экране, как «Озвучка»; только в «Изучении»
-                    if mode == .learning { bookTranslationLink }
 
                     // Напоминание
                     Section {
@@ -170,15 +166,6 @@ struct SettingsView: View {
                              ? "Раз в день, без спешки и счётчиков — просто повод уделить словам пару минут."
                              : "Раз в день, без спешки — просто повод почитать пару страниц.")
                             .textSelection(.enabled)
-                    }
-
-                    if mode == .learning {
-                        Section {
-                            Toggle("Помогать улучшать словарь", isOn: $improveDictionary)
-                        } footer: {
-                            Text("Анонимно, без имени и почты: ваши правки слов из встроенного словаря, слова, добавленные из книг (с предложением), и слова, которые долго не запоминаются. По ним исправляются переводы для всех.")
-                                .textSelection(.enabled)
-                        }
                     }
 
                     // Аккаунт
