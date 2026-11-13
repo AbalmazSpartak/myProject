@@ -90,6 +90,7 @@ struct BookReaderView: View {
 
     /// Оформление — снимок настроек: обновляется после шторки «Оформление»
     @State private var style = ReaderStyle.current()
+    @State private var recorder = AudiobookRecorder.shared
     /// Чтение вслух
     @State private var speech = ReaderSpeech()
     /// Глава дочитана вслух — следующую начать читать, как только она готова
@@ -658,6 +659,20 @@ struct BookReaderView: View {
                     .monospacedDigit()
                     .foregroundColor(style.text.opacity(0.7))
                     .frame(width: 40, alignment: .trailing)
+                // Идёт запись озвучки этой книги — её прогресс на той же строке
+                if recorder.isRecording(book.id), let job = recorder.job {
+                    HStack(spacing: 3) {
+                        Image(systemName: "waveform")
+                        Text("\(Int((job.fraction * 100).rounded()))%")
+                            .monospacedDigit()
+                    }
+                    .scaledFont(size: 12, weight: .semibold)
+                    .foregroundColor(style.text)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Capsule().fill(style.text.opacity(0.12)))
+                    .accessibilityLabel("Запись озвучки \(Int((job.fraction * 100).rounded())) процентов")
+                }
             }
             HStack(spacing: 0) {
                 barButton(isNight ? "sun.max" : "moon", isNight ? "День" : "Ночь") { toggleDayNight() }
