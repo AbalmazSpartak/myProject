@@ -16,6 +16,7 @@ struct BookDetailView: View {
     @State private var listenChapter: Int?
     @State private var audioSize: Int64 = 0
     @State private var isConfirmingDelete = false
+    @State private var isShowingChapters = false
 
     /// Что нужно разобрать из текста книги: делается один раз, в фоне
     private struct Details {
@@ -303,18 +304,36 @@ struct BookDetailView: View {
 
     /// Главы: у записанной справа ▶ (слушать с этой главы), у незаписанной — ⬇ (записать её)
     private func chaptersList(_ details: Details) -> some View {
-        DisclosureGroup("Главы: записано \(recordedChapters) из \(details.chapters)") {
-            VStack(spacing: 0) {
+        VStack(spacing: 0) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { isShowingChapters.toggle() }
+            } label: {
+                HStack(spacing: 10) {
+                    Text("Главы: записано \(recordedChapters) из \(details.chapters)")
+                        .scaledFont(size: 15, weight: .semibold)
+                        .foregroundColor(.brandDark)
+                    Spacer()
+                    // Та же колонка и ширина, что у значков ▶ и ⬇ в строках глав
+                    Image(systemName: "chevron.right")
+                        .scaledFont(size: 14, weight: .semibold)
+                        .foregroundColor(.brandTint)
+                        .rotationEffect(.degrees(isShowingChapters ? 90 : 0))
+                        .frame(width: 32, height: 32)
+                }
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Главы")
+            .accessibilityValue(isShowingChapters ? "развёрнут" : "свёрнут")
+            if isShowingChapters {
+                Divider()
                 ForEach(Array(details.titles.enumerated()), id: \.offset) { index, title in
                     chapterRow(index, title: title, details: details)
                     if index < details.titles.count - 1 { Divider() }
                 }
             }
-            .padding(.top, 6)
         }
-        .scaledFont(size: 15, weight: .semibold)
-        .foregroundColor(.brandDark)
-        .tint(.brandTint)
     }
 
     @ViewBuilder
