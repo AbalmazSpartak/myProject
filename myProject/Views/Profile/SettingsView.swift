@@ -32,6 +32,7 @@ struct SettingsView: View {
     @AppStorage(DailyReminder.timeKey) private var reminderTime = DailyReminder.defaultTime
     /// Пользователь запретил уведомления — подсказываем, где их включить
     @State private var notificationsDenied = false
+    @AppStorage(ReaderSelectionPanel.systemTranslatorKey) private var selectionSystemTranslator = false
 
     /// Озвучка и нейросетевой голос — на отдельном экране
     @ViewBuilder
@@ -168,6 +169,14 @@ struct SettingsView: View {
                             Text("Перевод новых слов, когда словарь создаётся из книги или файла. ИИ переводит в значении из предложения и понимает диалект; нужен интернет, слово и предложение уходят на сервер WordLearner без имени и почты.")
                                 .textSelection(.enabled)
                         }
+                    }
+
+                    // Перевод выделенного в книге слова
+                    Section {
+                        Toggle("Переводчик iOS для выделенных слов", isOn: $selectionSystemTranslator)
+                    } footer: {
+                        Text("По умолчанию слово, выделенное в книге, переводится из словаря приложения. Если включить, в панели выделения появится кнопка «Перевести»: встроенный переводчик iOS. Он переводит слово без контекста и иногда ошибается, например, «do» → «вечеринка».")
+                            .textSelection(.enabled)
                     }
 
                     // Напоминание

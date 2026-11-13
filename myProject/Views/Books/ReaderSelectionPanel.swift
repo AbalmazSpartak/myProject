@@ -2,10 +2,13 @@ import SwiftUI
 import SwiftData
 @preconcurrency import Translation
 
-/// Панель под выделенным текстом: слово — перевод встроенным переводчиком iOS; фраза — в Google Переводчик
+/// Панель под выделенным текстом: слово — перевод из словаря приложения (переводчик iOS — по желанию, в Настройках); фраза — в Google Переводчик
 /// (переводчик iOS переводит литературные фразы почти дословно); озвучка, копирование, «В словарь» книги.
 /// У книги с добавленным переводом — ещё «В переводе книги»: то же место у переводчика, слово подсвечено
 struct ReaderSelectionPanel: View {
+    /// Настройка: кнопка «Перевести» встроенным переводчиком iOS; по умолчанию выключена — перевод берётся из словаря
+    static let systemTranslatorKey = "selection_system_translator"
+
     @Environment(\.modelContext) private var modelContext
     @Environment(\.openURL) private var openURL
 
@@ -16,6 +19,9 @@ struct ReaderSelectionPanel: View {
     let passageLookup: () -> BookPassage?
     let onClose: () -> Void
 
+    @AppStorage(ReaderSelectionPanel.systemTranslatorKey) private var usesSystemTranslator = false
+    /// Слово из словаря приложения — его перевод показывается сразу
+    @State private var baseWord: Word?
     @State private var translation: String?
     @State private var config: TranslationSession.Configuration?
     @State private var isTranslating = false
@@ -36,6 +42,7 @@ struct ReaderSelectionPanel: View {
     /// Перевод для словаря: у слова — от переводчика iOS, у фразы — вписанный
     private var dictionaryTranslation: String? {
         if let translation { return translation }
+        if let baseWord { return baseWord.russian }
         let typed = manualTranslation.trimmingCharacters(in: .whitespacesAndNewlines)
         return typed.isEmpty ? nil : typed
     }
@@ -66,10 +73,17 @@ struct ReaderSelectionPanel: View {
                 .accessibilityLabel("Снять выделение")
             }
 
-            if let translation {
-                Text(translation)
+            if let baseWord {
+                Text(baseWord.russian)
                     .scaledFont(size: 15)
                     .foregroundColor(.brandDark.opacity(0.75))
+                    .lineLimit(6)
+                    .textSelection(.enabled)
+            }
+            if let translation {
+                Text(baseWord == nil ? translation : "Переводчик iOS: \(translation)")
+                    .scaledFont(size: baseWord == nil ? 15 : 13)
+                    .foregroundColor(.brandDark.opacity(baseWord == nil ? 0.75 : 0.55))
                     .lineLimit(6)
                     .textSelection(.enabled)
             } else if isTranslating {
@@ -126,6 +140,9 @@ struct ReaderSelectionPanel: View {
                             definedWord = DefinedWord(term: text.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters)))
                         }
                     }
+                } else if isSingleWord && !usesSystemTranslator {
+                    // Перевод — из словаря приложения; переводчик iOS включается в Настройках
+                    action(baseWord == nil ? "Нет в словаре" : "Из словаря", icon: "character.book.closed", disabled: true) {}
                 } else if isSingleWord {
                     action(translation == nil ? "Перевести" : "Готово", icon: "character.bubble", disabled: translation != nil || isTranslating) {
                         if config == nil {
@@ -153,7 +170,7 @@ struct ReaderSelectionPanel: View {
                 }
                 if isEnglish && fitsDictionary {
                     action(isAdded ? "В словаре" : "В словарь", icon: isAdded ? "checkmark.circle.fill" : "plus.circle",
-                           disabled: isAdded || (isSingleWord && translation == nil && bookSuggestion == nil)) {
+                           disabled: isAdded || (isSingleWord && usesSystemTranslator && translation == nil && baseWord == nil && bookSuggestion == nil)) {
                         if dictionaryTranslation != nil {
                             add()
                         } else {
@@ -183,15 +200,31 @@ struct ReaderSelectionPanel: View {
                 failed = true
             }
         }
-        .task(id: text) { passage = passageLookup() }
+        .task(id: text) {
+            passage = passageLookup()
+            baseWord = findBaseWord()
+        }
         .onChange(of: text) { _, _ in
             translation = nil
+            baseWord = nil
             failed = false
             isAdded = false
             copied = false
             isEnteringTranslation = false
             manualTranslation = ""
         }
+    }
+
+    /// Выделенное слово — в словаре приложения (по словарной форме: ran → run); у нескольких значений — первое
+    private func findBaseWord() -> Word? {
+        guard isEnglish, isSingleWord else { return nil }
+        let clean = text.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
+        guard !clean.isEmpty else { return nil }
+        let found = TextWordExtractor.lemma(of: clean, at: clean.startIndex..<clean.endIndex, in: clean)
+        let matches = modelContext.fetchAllWords().filter {
+            $0.english.caseInsensitiveCompare(found.lemma) == .orderedSame || $0.english.caseInsensitiveCompare(clean) == .orderedSame
+        }
+        return matches.first { $0.partOfSpeech == found.partOfSpeech } ?? matches.first
     }
 
     /// Перевод книги с подсвеченными переводами выделенного слова
@@ -235,13 +268,21 @@ struct ReaderSelectionPanel: View {
         .buttonStyle(.plain)
         .foregroundColor(.brandDark)
         .disabled(disabled)
-        .opacity(disabled && !(title == "В словаре" || title == "Готово") ? 0.4 : 1)
+        .opacity(disabled && !(title == "В словаре" || title == "Готово" || title == "Из словаря") ? 0.4 : 1)
     }
 
     /// Фраза — своим словом в словаре книги, с переводом; учится в тренировках, как слова
     private func add() {
         guard let translation = dictionaryTranslation else { return }
         let list = WordList.named(bookTitle, context: modelContext)
+        // Слово из словаря приложения — ссылкой со своим прогрессом, а не копией
+        if isSingleWord, let baseWord, translation == baseWord.russian {
+            if !baseWord.lists.contains(where: { $0.id == list.id }) { baseWord.lists.append(list) }
+            try? modelContext.save()
+            isAdded = true
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            return
+        }
         let phrase = text.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
         let word = Word(english: phrase, russian: translation.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters)),
                         example: "<b>\(phrase)</b>", cefrLevel: CEFRLevel.c1.rawValue, partOfSpeech: "phrase", isCustom: true)
