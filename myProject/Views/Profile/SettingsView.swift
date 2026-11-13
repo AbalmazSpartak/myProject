@@ -7,9 +7,6 @@ struct SettingsView: View {
     @Bindable var profile: UserProfile
     
     @AppStorage("app_theme") private var selectedTheme: String = "system"
-    @AppStorage("translation_mode") private var translationMode: String = "en_ru"
-    @AppStorage("show_word_images") private var showWordImages: Bool = true
-    @AppStorage(DictionarySignals.enabledKey) private var improveDictionary = true
     @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
     @AppStorage(AppMode.askKey) private var asksMode = false
 
@@ -21,14 +18,26 @@ struct SettingsView: View {
                     if let chosen = AppMode(rawValue: value) { mode = chosen }
                 })
     }
-    @AppStorage(Haptics.enabledKey) private var hapticsEnabled = true
-    @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
     @AppStorage(OverviewLayout.storageKey) private var overviewLayout = OverviewLayout.standard
-    @AppStorage(SessionLength.key) private var sessionLength = SessionLength.defaultValue
     @AppStorage(DailyReminder.enabledKey) private var reminderEnabled = false
     @AppStorage(DailyReminder.timeKey) private var reminderTime = DailyReminder.defaultTime
     /// Пользователь запретил уведомления — подсказываем, где их включить
     @State private var notificationsDenied = false
+
+    /// Обучение: перевод, подход, словари, перевод слов из книг — на отдельном экране
+    @ViewBuilder
+    private var learningLink: some View {
+        Section {
+            NavigationLink {
+                LearningSettingsView()
+            } label: {
+                Label("Обучение", systemImage: "graduationcap.fill")
+            }
+        } footer: {
+            Text("Раздел, где вы настраиваете занятия: направление перевода, размер подхода, словари, перевод слов из книг.")
+                .textSelection(.enabled)
+        }
+    }
 
     /// Озвучка и нейросетевой голос — на отдельном экране
     @ViewBuilder
@@ -102,53 +111,8 @@ struct SettingsView: View {
                         speechLink
                     }
 
-                    // Обучение
-                    if mode == .learning {
-                        Section(header: Text("Обучение"), footer: Text("Новые слова в «На повторение» идут от простых к сложным, счётчик обнуляется в полночь. После подхода можно продолжить или вернуться в меню.").textSelection(.enabled)) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Направление перевода")
-                                    .scaledFont(size: 14)
-                                    .foregroundColor(.gray)
-                            
-                                Picker("Направление перевода", selection: $translationMode) {
-                                    Text("Англ ➔ Рус").tag("en_ru")
-                                    Text("Рус ➔ Англ").tag("ru_en")
-                                }
-                                .pickerStyle(.segmented)
-                            }
-                            .padding(.vertical, 4)
-
-                            Toggle("Картинки к словам", isOn: $showWordImages)
-
-                            Toggle("Вибрация", isOn: $hapticsEnabled)
-
-                            Picker("Слов за подход", selection: $sessionLength) {
-                                ForEach(SessionLength.options, id: \.self) { length in
-                                    Text(length == 0 ? "Все" : "\(length)").tag(length)
-                                }
-                            }
-
-                            NavigationLink {
-                                StudyDictionariesView()
-                            } label: {
-                                LabeledContent("Словари", value: studyScope.isEverythingEnabled ? "Все" : "Выбранные")
-                            }
-
-                            NavigationLink {
-                                BookTranslationSettingsView()
-                            } label: {
-                                Label("Перевод слов из книг", systemImage: "character.bubble")
-                            }
-
-                            VStack(alignment: .leading, spacing: 6) {
-                                Toggle("Помогать улучшать словарь", isOn: $improveDictionary)
-                                Text("Анонимно, без имени и почты: ваши правки слов из встроенного словаря, слова, добавленные из книг (с предложением), и слова, которые долго не запоминаются. По ним исправляются переводы для всех.")
-                                    .scaledFont(size: 12)
-                                    .foregroundColor(.gray)
-                                    .textSelection(.enabled)
-                            }
-                        }
-                    }
+                    // Обучение — на отдельном экране, как «Озвучка»; только в «Изучении»
+                    if mode == .learning { learningLink }
 
                     // Напоминание
                     Section {
