@@ -301,7 +301,7 @@ struct BookDetailView: View {
         .onChange(of: details?.chapters) { _, _ in refreshAudiobook() }
     }
 
-    /// Главы с отметкой, записаны ли они; нажатие — слушать книгу с этой главы
+    /// Главы: ▶ слушать с этой главы, ⬇ записать (есть только у незаписанных)
     private func chaptersList(_ details: Details) -> some View {
         DisclosureGroup("Главы: записано \(recordedChapters) из \(details.chapters)") {
             VStack(spacing: 0) {
@@ -313,8 +313,6 @@ struct BookDetailView: View {
                         isReading = true
                     } label: {
                         HStack(spacing: 10) {
-                            Image(systemName: recordedSet.contains(index) ? "checkmark.circle.fill" : "circle")
-                                .foregroundColor(recordedSet.contains(index) ? .brandTint : .gray.opacity(0.6))
                             Text("\(index + 1). \(title)")
                                 .lineLimit(1)
                                 .foregroundColor(.brandDark)
