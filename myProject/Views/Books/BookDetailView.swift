@@ -250,7 +250,7 @@ struct BookDetailView: View {
                 if recorder.isRecording(book.id), let job = recorder.job {
                     ProgressView(value: job.fraction)
                         .tint(.brandTint)
-                    Text("Записываю: глава \(job.chapter + 1) из \(job.total) · \(Int(job.fraction * 100))%" + (job.remainingText.map { " · осталось \($0)" } ?? "") + ". Не закрывайте приложение, экран не погаснет.")
+                    Text("Записываю: \(job.chapterText.lowercased()) · \(Int(job.fraction * 100))%" + (job.remainingText.map { " · осталось \($0)" } ?? "") + ". Не закрывайте приложение, экран не погаснет.")
                         .scaledFont(size: 13)
                         .foregroundColor(.gray)
                     audiobookButton("Остановить", systemImage: "stop.circle") { recorder.cancel() }
@@ -306,6 +306,7 @@ struct BookDetailView: View {
         DisclosureGroup("Главы: записано \(recordedChapters) из \(details.chapters)") {
             VStack(spacing: 0) {
                 ForEach(Array(details.titles.enumerated()), id: \.offset) { index, title in
+                    HStack(spacing: 4) {
                     Button {
                         listensOnOpen = true
                         listenChapter = index
@@ -321,6 +322,7 @@ struct BookDetailView: View {
                             Image(systemName: "play.fill")
                                 .scaledFont(size: 12)
                                 .foregroundColor(.brandTint)
+                                .frame(width: 30)
                         }
                         .scaledFont(size: 15)
                         .frame(minHeight: 40)
@@ -328,6 +330,8 @@ struct BookDetailView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Слушать с главы \(index + 1): \(title)")
+                    chapterRecordButton(index, details: details)
+                    }
                     if index < details.titles.count - 1 { Divider() }
                 }
             }
@@ -336,6 +340,30 @@ struct BookDetailView: View {
         .scaledFont(size: 15, weight: .semibold)
         .foregroundColor(.brandDark)
         .tint(.brandTint)
+    }
+
+    /// Записать только эту главу: у записанной — отметка, пока идёт другая запись — кнопка недоступна
+    @ViewBuilder
+    private func chapterRecordButton(_ index: Int, details: Details) -> some View {
+        if recorder.isRecording(book.id), recorder.job?.chapter == index {
+            ProgressView().frame(width: 36, height: 36)
+        } else if !recordedSet.contains(index) {
+            Button {
+                recorder.start(bookID: book.id, title: book.title, chaptersData: book.chaptersData,
+                               language: details.language, only: [index])
+            } label: {
+                Image(systemName: "arrow.down.circle")
+                    .scaledFont(size: 20)
+                    .foregroundColor(recorder.job == nil ? .brandTint : .gray.opacity(0.5))
+                    .frame(width: 36, height: 36)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(recorder.job != nil || audiobookVoice == nil)
+            .accessibilityLabel("Записать главу \(index + 1)")
+        } else {
+            Color.clear.frame(width: 36, height: 36)
+        }
     }
 
     private func audiobookStatus(_ details: Details, complete: Bool) -> String {

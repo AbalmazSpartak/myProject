@@ -137,9 +137,14 @@ final class AudiobookRecorder {
         var fraction: Double
         var chapter: Int
         let total: Int
+        /// Записывают только эти главы (номера с нуля); nil — вся книга
+        let only: Set<Int>?
         let startedAt = Date()
         /// С какой доли начали (часть глав уже была записана) — по ней считается, сколько ещё ждать
         var startFraction: Double?
+
+        /// «Глава 3 из 13» при записи всей книги, «Глава 3» — одной главы
+        var chapterText: String { only == nil ? "Глава \(chapter + 1) из \(total)" : "Глава \(chapter + 1)" }
 
         /// Сколько ещё идёт запись, секунды; nil — пока мало данных для оценки
         var remaining: TimeInterval? {
@@ -158,13 +163,13 @@ final class AudiobookRecorder {
 
     func isRecording(_ book: UUID) -> Bool { job?.bookID == book }
 
-    func start(bookID: UUID, title: String, chaptersData: Data, language: String) {
+    func start(bookID: UUID, title: String, chaptersData: Data, language: String, only: Set<Int>? = nil) {
         guard job == nil, let voice = NeuralVoice.shared.bookVoice(language: language) else { return }
         failure = nil
         let key = AudiobookStore.voiceKey(voice)
         let isKokoroML = if case .kokoroML = voice.engine { true } else { false }
         let speed = Float(SpeechSettings.bookNeuralSpeedFactor)
-        job = Job(bookID: bookID, title: title, voiceKey: key, fraction: 0, chapter: 0, total: 0)
+        job = Job(bookID: bookID, title: title, voiceKey: key, fraction: 0, chapter: 0, total: 0, only: only)
         UIApplication.shared.isIdleTimerDisabled = true
         task = Task {
             defer {
@@ -176,8 +181,8 @@ final class AudiobookRecorder {
                 (try? JSONDecoder().decode([BookChapter].self, from: chaptersData)) ?? []
             }.value
             guard !chapters.isEmpty else { return }
-            let totalParagraphs = max(chapters.reduce(0) { $0 + $1.paragraphs.count }, 1)
-            job = Job(bookID: bookID, title: title, voiceKey: key, fraction: 0, chapter: 0, total: chapters.count)
+            let totalParagraphs = max(chapters.enumerated().reduce(0) { only?.contains($1.offset) == false ? $0 : $0 + $1.element.paragraphs.count }, 1)
+            job = Job(bookID: bookID, title: title, voiceKey: key, fraction: 0, chapter: 0, total: chapters.count, only: only)
             do { try AudiobookStore.prepareFolder(book: bookID, key: key) } catch {
                 failure = (bookID, "Не удалось создать папку для озвучки.")
                 return
@@ -185,6 +190,7 @@ final class AudiobookRecorder {
             var done = 0
             for (index, chapter) in chapters.enumerated() {
                 if Task.isCancelled { return }
+                if let only, !only.contains(index) { continue }
                 job?.chapter = index
                 if AudiobookStore.hasChapter(book: bookID, key: key, index: index) || chapter.paragraphs.isEmpty {
                     done += chapter.paragraphs.count
@@ -308,7 +314,7 @@ struct AudiobookRecordingBar: View {
                 ProgressView(value: job.fraction)
                     .tint(.brandTint)
                 HStack {
-                    Text("Глава \(job.chapter + 1) из \(job.total)" + (job.remainingText.map { " · осталось \($0)" } ?? ""))
+                    Text(job.chapterText + (job.remainingText.map { " · осталось \($0)" } ?? ""))
                     Spacer()
                     Button("Остановить") { recorder.cancel() }
                         .foregroundColor(.brandTint)
