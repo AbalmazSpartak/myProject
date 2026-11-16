@@ -36,6 +36,8 @@ struct BookReaderView: View {
     @Environment(\.colorScheme) private var systemScheme
 
     @State private var chapters: [BookChapter] = []
+    /// Номера глав для показа в шапке и оглавлении (считаются один раз на набор глав)
+    @State private var numbering = ChapterNumbering(titles: [])
     /// С какого абзаца книги начинается каждая глава
     @State private var chapterStarts: [Int] = []
     @State private var chapterIndex = 0
@@ -255,7 +257,7 @@ struct BookReaderView: View {
         .overlay {
             if isShowingPlayer, let chapter {
                 ReaderPlayerView(book: book, chapterTitle: chapter.title,
-                                 chapterLabel: ChapterNumbering(titles: chapters.map(\.title)).label(for: chapterIndex, title: chapter.title),
+                                 chapterLabel: numbering.label(for: chapterIndex, title: chapter.title),
                                  chapterNumber: chapterIndex + 1, chapterCount: chapters.count,
                                  paragraphs: chapter.paragraphs, speech: speech, speed: $speechSpeed,
                                  sleep: sleep, sleepEndsAt: sleepEndsAt, onSleep: setSleep, onToggle: toggleReading,
@@ -353,13 +355,19 @@ struct BookReaderView: View {
 
     // MARK: - Шапка
 
+    /// «Глава 2 · The Pool of Tears» вместо «CHAPTER II. The Pool of Tears»
+    private var chapterHeadline: String {
+        guard let chapter else { return book.title }
+        return numbering.headerTitle(for: chapterIndex, title: chapter.title)
+    }
+
     /// Шапка: назад, название главы по центру (нажатие — оглавление), чтение вслух, оформление, остальное — в «…».
     /// Название не зависит от кнопок по краям и стоит там же, где в свёрнутой шапке
     private var header: some View {
         ZStack {
             buttonsBar
             Button { isShowingContents = true } label: {
-                Text(chapter?.title ?? book.title)
+                Text(chapterHeadline)
                     .scaledFont(size: 16, weight: .semibold)
                     .foregroundColor(style.text)
                     .lineLimit(1)
@@ -490,7 +498,7 @@ struct BookReaderView: View {
 
     /// Шапка спрятана — тонкая строка с названием главы; нажатие возвращает шапку
     private var compactTitle: some View {
-        Text(chapter?.title ?? book.title)
+        Text(chapterHeadline)
             .scaledFont(size: 12, weight: .medium)
             .foregroundColor(style.text.opacity(0.5))
             .lineLimit(1)
@@ -549,7 +557,7 @@ struct BookReaderView: View {
                     isShowingContents = false
                 } label: {
                     HStack {
-                        Text(chapters[index].title)
+                        Text(numbering.listTitle(for: index, title: chapters[index].title))
                             .foregroundColor(.brandDark)
                             .lineLimit(2)
                         Spacer()
@@ -580,6 +588,7 @@ struct BookReaderView: View {
     private func open() {
         guard chapters.isEmpty else { return }
         chapters = book.chapters
+        numbering = ChapterNumbering(titles: chapters.map(\.title))
         language = BookLanguage.detect(chapters)
         speech.language = isEnglish ? nil : language
         // Запуск в режиме «Чтение» загрузит Kokoro заранее, только если последняя книга английская
@@ -803,6 +812,7 @@ struct BookReaderView: View {
         book.bookmarks = bookmarks
         try? modelContext.save()
         chapters = kept
+        numbering = ChapterNumbering(titles: kept.map(\.title))
         var start = 0
         chapterStarts = kept.map { chapter in
             defer { start += chapter.paragraphs.count }

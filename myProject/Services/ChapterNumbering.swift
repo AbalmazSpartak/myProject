@@ -47,4 +47,10 @@ struct ChapterNumbering {
         let head = "Глава \(number) из \(count)"
         return Self.cleanTitle(title).map { "\(head) · \($0)" } ?? head
     }
+
+    /// Шапка читалки: «Глава 2 · The Pool of Tears»; у титула и содержания — только название
+    func headerTitle(for index: Int, title: String) -> String {
+        guard numbers.indices.contains(index), let number = numbers[index] else { return title }
+        return Self.cleanTitle(title).map { "Глава \(number) · \($0)" } ?? "Глава \(number)"
+    }
 }

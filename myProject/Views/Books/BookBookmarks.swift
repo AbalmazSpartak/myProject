@@ -105,6 +105,6 @@ struct BookBookmarksView: View {
         guard let index = chapterStarts.lastIndex(where: { $0 <= paragraph }), chapters.indices.contains(index) else { return ("", "") }
         let local = paragraph - chapterStarts[index]
         let paragraphs = chapters[index].paragraphs
-        return (chapters[index].title, paragraphs.indices.contains(local) ? paragraphs[local] : "")
+        return (ChapterNumbering.cleanTitle(chapters[index].title) ?? chapters[index].title, paragraphs.indices.contains(local) ? paragraphs[local] : "")
     }
 }

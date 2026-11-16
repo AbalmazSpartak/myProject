@@ -183,6 +183,7 @@ struct BookSearchView: View {
 
     private func chapterTitle(_ index: Int) -> String {
         let title = chapters.indices.contains(index) ? chapters[index].title.trimmingCharacters(in: .whitespacesAndNewlines) : ""
-        return title.isEmpty ? "Глава \(index + 1)" : title
+        guard !title.isEmpty else { return "Глава \(index + 1)" }
+        return ChapterNumbering.cleanTitle(title) ?? title
     }
 }
