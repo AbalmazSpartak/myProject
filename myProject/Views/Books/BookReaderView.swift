@@ -391,7 +391,6 @@ struct BookReaderView: View {
                     .contentShape(Rectangle())
             }
             .accessibilityLabel("Книги")
-            Spacer()
             Button(action: toggleReading) {
                 if speech.isPreparing {
                     // Нейросетевой голос готовит фразу — нажатие ставит на паузу, как обычно
@@ -405,6 +404,7 @@ struct BookReaderView: View {
                 }
             }
             .accessibilityLabel(speech.isPlaying ? "Пауза" : "Читать вслух")
+            Spacer()
             Button { isShowingAppearance = true } label: {
                 Image(systemName: "textformat.size")
                     .scaledFont(size: 22)
