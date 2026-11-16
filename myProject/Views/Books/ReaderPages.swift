@@ -17,8 +17,9 @@ nonisolated enum ReaderPaginator {
         let style = NSMutableParagraphStyle()
         style.lineSpacing = lineSpacing
         style.paragraphSpacing = paragraphSpacing
+        style.hyphenationFactor = ReaderSettings.hyphenationFactor
         let storage = NSTextStorage(string: paragraphs.joined(separator: "\n"),
-                                    attributes: [.font: font, .paragraphStyle: style])
+                                    attributes: [.font: font, .paragraphStyle: style, .languageIdentifier: "en"])
         let layout = NSLayoutManager()
         storage.addLayoutManager(layout)
 
@@ -77,7 +78,8 @@ nonisolated final class ReaderPageLayout {
         let style = NSMutableParagraphStyle()
         style.lineSpacing = lineSpacing
         style.paragraphSpacing = ReaderPaginator.paragraphSpacing
-        storage = NSTextStorage(string: joined, attributes: [.font: font, .paragraphStyle: style])
+        style.hyphenationFactor = ReaderSettings.hyphenationFactor
+        storage = NSTextStorage(string: joined, attributes: [.font: font, .paragraphStyle: style, .languageIdentifier: "en"])
         storage.addLayoutManager(manager)
         container = NSTextContainer(size: CGSize(width: width, height: .greatestFiniteMagnitude))
         container.lineFragmentPadding = 0
@@ -154,6 +156,7 @@ extension ReaderFont {
 /// Глава по страницам: листается свайпом или нажатием у края, со сдвигом.
 /// С первой страницы назад — предыдущая глава, с последней вперёд — следующая
 struct ReaderPagedText: View, Equatable {
+    @AppStorage(ReaderSettings.hyphenationKey) private var hyphenation = false
     let chapterID: Int
     let paragraphs: [AttributedString]
     let plainParagraphs: [String]
@@ -255,7 +258,7 @@ struct ReaderPagedText: View, Equatable {
                     }
                 }
             }
-            .task(id: "\(Int(textSize.width))x\(Int(textSize.height))-\(readerFont.rawValue)-\(fontSize)-\(lineSpacing)") {
+            .task(id: "\(Int(textSize.width))x\(Int(textSize.height))-\(readerFont.rawValue)-\(fontSize)-\(lineSpacing)-\(hyphenation)") {
                 await paginate(textSize)
             }
         }
@@ -365,7 +368,8 @@ struct ReaderPagedText: View, Equatable {
         VStack(alignment: .leading, spacing: ReaderPaginator.paragraphSpacing) {
             ForEach(Array(segments.enumerated()), id: \.element) { number, segment in
                 ReaderPageSegment(segment: segment, text: paragraphs[segment.paragraph], font: readerFont.font(size: fontSize),
-                                  textColor: textColor, lineSpacing: lineSpacing, speech: speech, mark: mark,
+                                  textColor: textColor, lineSpacing: lineSpacing, hyphenation: hyphenation,
+                                  uiFont: readerFont.uiFont(size: fontSize), speech: speech, mark: mark,
                                   selected: selectedPart(page: index, segment: number))
             }
         }
@@ -613,6 +617,8 @@ private struct ReaderPageSegment: View {
     let font: Font
     let textColor: Color
     let lineSpacing: CGFloat
+    let hyphenation: Bool
+    let uiFont: UIFont
     let speech: ReaderSpeech
     let mark: ReaderMark
     /// Выделенное долгим нажатием — в символах этого куска
@@ -620,10 +626,17 @@ private struct ReaderPageSegment: View {
 
     var body: some View {
         let isReading = speech.paragraph == segment.paragraph
-        Text(slice(highlighting: isReading, marked: mark.paragraph == segment.paragraph ? mark.range : nil))
-            .font(font)
-            .foregroundColor(textColor)
-            .lineSpacing(lineSpacing)
+        let sliced = slice(highlighting: isReading, marked: mark.paragraph == segment.paragraph ? mark.range : nil)
+        Group {
+            if hyphenation {
+                HyphenatedLabel(text: sliced, font: uiFont, color: UIColor(textColor), lineSpacing: lineSpacing)
+            } else {
+                Text(sliced)
+                    .font(font)
+                    .foregroundColor(textColor)
+                    .lineSpacing(lineSpacing)
+            }
+        }
             .frame(maxWidth: .infinity, alignment: .leading)
             .background {
                 if isReading {
@@ -747,4 +760,46 @@ struct PageCurlView: UIViewControllerRepresentable {
             }
         }
     }
+}
+
+/// Текст с переносами по слогам: SwiftUI Text их не делает, поэтому — UILabel с той же раскладкой, что при делении на страницы
+private struct HyphenatedLabel: UIViewRepresentable {
+    let text: AttributedString
+    let font: UIFont
+    let color: UIColor
+    let lineSpacing: CGFloat
+
+    func makeUIView(context: Context) -> UILabel {
+        let label = UILabel()
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        label.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        label.isUserInteractionEnabled = false
+        return label
+    }
+
+    func updateUIView(_ label: UILabel, context: Context) {
+        let style = NSMutableParagraphStyle()
+        style.lineSpacing = lineSpacing
+        style.hyphenationFactor = 1
+        let result = NSMutableAttributedString(attributedString: NSAttributedString(text))
+        let all = NSRange(location: 0, length: result.length)
+        result.addAttributes([.font: font, .paragraphStyle: style, .languageIdentifier: "en"], range: all)
+        result.enumerateAttribute(.foregroundColor, in: all) { value, range, _ in
+            if value == nil { result.addAttribute(.foregroundColor, value: color, range: range) }
+        }
+        label.attributedText = result
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UILabel, context: Context) -> CGSize? {
+        let width = proposal.width ?? 320
+        uiView.preferredMaxLayoutWidth = width
+        let size = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
+        return CGSize(width: width, height: ceil(size.height))
+    }
+}
+
+private extension NSAttributedString.Key {
+    nonisolated static let languageIdentifier = NSAttributedString.Key("NSLanguage")
 }

@@ -193,6 +193,9 @@ enum ReaderSettings {
     static let fontSizeKey = "reader_font_size"
     static let fontKey = "reader_font"
     static let spacingKey = "reader_spacing"
+    /// Переносы слов по слогам; выключено — слово переносится на следующую строку целиком
+    nonisolated static let hyphenationKey = "reader_hyphenation"
+    nonisolated static var hyphenationFactor: Float { UserDefaults.standard.bool(forKey: hyphenationKey) ? 1 : 0 }
     static let layoutKey = "reader_layout"
     static let pageTurnKey = "reader_page_turn"
     /// Подсветка правил чтения: "off" — выключена; иначе включена (раньше были режимы "tricky" и "all")
@@ -296,6 +299,7 @@ struct ReaderAppearanceSheet: View {
     @AppStorage(ReaderSettings.fontSizeKey) private var fontSize = ReaderSettings.defaultFontSize
     @AppStorage(ReaderSettings.fontKey) private var font = ReaderFont.serif
     @AppStorage(ReaderSettings.spacingKey) private var spacing = ReaderSpacing.normal
+    @AppStorage(ReaderSettings.hyphenationKey) private var hyphenation = false
     @AppStorage(ReaderSettings.layoutKey) private var layout = ReaderLayout.pages
     @AppStorage(ReaderSettings.pageTurnKey) private var pageTurn = ReaderPageTurn.slide
     @AppStorage(ReaderSettings.phonicsKey) private var phonicsMode = "off"
@@ -390,11 +394,19 @@ struct ReaderAppearanceSheet: View {
                     }
                     .pickerStyle(.segmented)
 
+                    section("Перенос слов")
+                    Picker("Перенос слов", selection: $hyphenation) {
+                        Text("Слово целиком").tag(false)
+                        Text("По слогам").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+
                     Button("Сбросить оформление") {
                         theme = .app
                         fontSize = ReaderSettings.defaultFontSize
                         font = .serif
                         spacing = .normal
+                        hyphenation = false
                         layout = .pages
                         pageTurn = .slide
                     }
