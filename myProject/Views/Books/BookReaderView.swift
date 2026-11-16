@@ -415,9 +415,6 @@ struct BookReaderView: View {
                 Button { isShowingPlayer = true } label: {
                     Label("Плеер", systemImage: "headphones")
                 }
-                Button { isShowingContents = true } label: {
-                    Label("Оглавление", systemImage: "list.bullet")
-                }
                 Button { isShowingNames = true } label: {
                     Label("Герои и места", systemImage: "person.2")
                 }
@@ -690,7 +687,6 @@ struct BookReaderView: View {
             }
             HStack(spacing: 0) {
                 barButton(isNight ? "sun.max" : "moon", isNight ? "День" : "Ночь") { toggleDayNight() }
-                barButton("list.bullet", "Оглавление") { isShowingContents = true }
                 barButton("magnifyingglass", "Поиск") { isShowingSearch = true }
                 barButton("bookmark", bookmarks.isEmpty ? "Закладки" : "Закладки \(bookmarks.count)") { isShowingBookmarks = true }
             }
