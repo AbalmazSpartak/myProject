@@ -404,6 +404,12 @@ struct BookReaderView: View {
                 }
             }
             .accessibilityLabel(speech.isPlaying ? "Пауза" : "Читать вслух")
+            Button { isShowingPlayer = true } label: {
+                Image(systemName: "headphones")
+                    .scaledFont(size: 22)
+                    .foregroundColor(style.text)
+            }
+            .accessibilityLabel("Плеер")
             Spacer()
             Button { isShowingAppearance = true } label: {
                 Image(systemName: "textformat.size")
@@ -412,9 +418,6 @@ struct BookReaderView: View {
             }
             .accessibilityLabel("Оформление")
             Menu {
-                Button { isShowingPlayer = true } label: {
-                    Label("Плеер", systemImage: "headphones")
-                }
                 Button { isShowingNames = true } label: {
                     Label("Герои и места", systemImage: "person.2")
                 }
