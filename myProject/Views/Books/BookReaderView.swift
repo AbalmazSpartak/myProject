@@ -433,9 +433,6 @@ struct BookReaderView: View {
                         Label("Добавить закладку", systemImage: "bookmark")
                     }
                 }
-                Button { isShowingBookmarks = true } label: {
-                    Label(bookmarks.isEmpty ? "Закладки" : "Закладки (\(bookmarks.count))", systemImage: "list.bullet.rectangle")
-                }
                 if isEnglish, AppMode.current == .learning {
                     Button { isShowingDictionary = true } label: {
                         Label("Словарь из книги", systemImage: "text.book.closed")
