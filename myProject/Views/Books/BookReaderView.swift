@@ -418,9 +418,6 @@ struct BookReaderView: View {
                 Button { isShowingNames = true } label: {
                     Label("Герои и места", systemImage: "person.2")
                 }
-                Button { isShowingSearch = true } label: {
-                    Label("Поиск по книге", systemImage: "magnifyingglass")
-                }
                 if let current = currentBookmark {
                     Button(role: .destructive) { removeBookmark(current) } label: {
                         Label("Убрать закладку", systemImage: "bookmark.slash")
