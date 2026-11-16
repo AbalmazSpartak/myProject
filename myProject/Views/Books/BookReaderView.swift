@@ -436,15 +436,9 @@ struct BookReaderView: View {
                 Button { isShowingBookmarks = true } label: {
                     Label(bookmarks.isEmpty ? "Закладки" : "Закладки (\(bookmarks.count))", systemImage: "list.bullet.rectangle")
                 }
-                if isEnglish {
+                if isEnglish, AppMode.current == .learning {
                     Button { isShowingDictionary = true } label: {
                         Label("Словарь из книги", systemImage: "text.book.closed")
-                    }
-                }
-                // Перевод привязан к абзацам книги — с ним начало не убрать
-                if alignment == nil, book.position > 0 {
-                    Button { isConfirmingTrim = true } label: {
-                        Label("Начать книгу с этого места", systemImage: "scissors")
                     }
                 }
                 translationMenu
