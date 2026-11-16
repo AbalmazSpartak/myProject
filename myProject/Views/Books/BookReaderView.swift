@@ -358,7 +358,7 @@ struct BookReaderView: View {
     /// «Глава 2 · The Pool of Tears» вместо «CHAPTER II. The Pool of Tears»
     private var chapterHeadline: String {
         guard let chapter else { return book.title }
-        return numbering.headerTitle(for: chapterIndex, title: chapter.title)
+        return ChapterNumbering.cleanTitle(chapter.title) ?? chapter.title
     }
 
     /// Шапка: назад, название главы по центру (нажатие — оглавление), чтение вслух, оформление, остальное — в «…».
@@ -404,12 +404,6 @@ struct BookReaderView: View {
                 }
             }
             .accessibilityLabel(speech.isPlaying ? "Пауза" : "Читать вслух")
-            Button { isShowingPlayer = true } label: {
-                Image(systemName: "headphones")
-                    .scaledFont(size: 22)
-                    .foregroundColor(style.text)
-            }
-            .accessibilityLabel("Плеер")
             Spacer()
             Button { isShowingAppearance = true } label: {
                 Image(systemName: "textformat.size")
@@ -418,6 +412,9 @@ struct BookReaderView: View {
             }
             .accessibilityLabel("Оформление")
             Menu {
+                Button { isShowingPlayer = true } label: {
+                    Label("Плеер", systemImage: "headphones")
+                }
                 Button { isShowingNames = true } label: {
                     Label("Герои и места", systemImage: "person.2")
                 }
@@ -545,7 +542,7 @@ struct BookReaderView: View {
                     isShowingContents = false
                 } label: {
                     HStack {
-                        Text(numbering.listTitle(for: index, title: chapters[index].title))
+                        Text(ChapterNumbering.cleanTitle(chapters[index].title) ?? chapters[index].title)
                             .foregroundColor(.brandDark)
                             .lineLimit(2)
                         Spacer()

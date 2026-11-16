@@ -300,6 +300,7 @@ struct ReaderAppearanceSheet: View {
     @AppStorage(ReaderSettings.fontKey) private var font = ReaderFont.serif
     @AppStorage(ReaderSettings.spacingKey) private var spacing = ReaderSpacing.normal
     @AppStorage(ReaderSettings.hyphenationKey) private var hyphenation = false
+    @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
     @AppStorage(ReaderSettings.layoutKey) private var layout = ReaderLayout.pages
     @AppStorage(ReaderSettings.pageTurnKey) private var pageTurn = ReaderPageTurn.slide
     @AppStorage(ReaderSettings.phonicsKey) private var phonicsMode = "off"
@@ -349,16 +350,18 @@ struct ReaderAppearanceSheet: View {
                         .pickerStyle(.segmented)
                     }
 
-                    section("Правила чтения")
-                    Toggle("Подсветка правил", isOn: phonicsOn)
-                        .scaledFont(size: 16, weight: .semibold)
-                        .tint(.brown)
-                    if phonicsMode == "off" {
-                        Text("Подсветка сочетаний букв, которые читаются по особым правилам. Нажмите на слово — карточка покажет, как его читать.")
-                            .scaledFont(size: 13)
-                            .foregroundColor(.gray)
-                    } else {
-                        PhonicsLegend(selection: phonicsSelection)
+                    if mode == .learning {
+                        section("Правила чтения")
+                        Toggle("Подсветка правил", isOn: phonicsOn)
+                            .scaledFont(size: 16, weight: .semibold)
+                            .tint(.brown)
+                        if phonicsMode == "off" {
+                            Text("Подсветка сочетаний букв, которые читаются по особым правилам. Нажмите на слово — карточка покажет, как его читать.")
+                                .scaledFont(size: 13)
+                                .foregroundColor(.gray)
+                        } else {
+                            PhonicsLegend(selection: phonicsSelection)
+                        }
                     }
 
                     section("Тема")
