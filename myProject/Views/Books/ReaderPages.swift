@@ -249,7 +249,11 @@ struct ReaderPagedText: View, Equatable {
                     if let selection, press == nil, let layout = selectionLayout {
                         let selected = selection.range
                         ReaderSelectionPanel(text: layout.string(selected), bookTitle: bookTitle, language: language,
-                                             passageLookup: { layout.firstParagraphPart(of: selected).flatMap { passage($0.paragraph, $0.range) } }) {
+                                             passageLookup: { layout.firstParagraphPart(of: selected).flatMap { passage($0.paragraph, $0.range) } },
+                                             onOpenCard: NSEqualRanges(selection.range, selection.anchor) ? {
+                                                 openWord(selected)
+                                                 clearSelection()
+                                             } : nil) {
                             clearSelection()
                         }
                             .padding(.horizontal, 12)
@@ -453,11 +457,7 @@ struct ReaderPagedText: View, Equatable {
                 }
                 guard let current = press else { return }
                 if current.long {
-                    // Долгое нажатие без протягивания — привычная карточка слова
-                    if let selection, NSEqualRanges(selection.range, selection.anchor) {
-                        openWord(selection.anchor)
-                        clearSelection()
-                    }
+                    // Долгое нажатие без протягивания — слово остаётся выделенным, под ним панель с действиями
                     return
                 }
                 guard dragMode == nil else { return }

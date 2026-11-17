@@ -17,6 +17,8 @@ struct ReaderSelectionPanel: View {
     var language = BookLanguage.english
     /// Место в переводе книги — ищется, когда панель открылась
     let passageLookup: () -> BookPassage?
+    /// У одного слова — «Карточка»: полная карточка слова, как при нажатии
+    var onOpenCard: (() -> Void)?
     let onClose: () -> Void
 
     @AppStorage(ReaderSelectionPanel.systemTranslatorKey) private var usesSystemTranslator = false
@@ -156,6 +158,9 @@ struct ReaderSelectionPanel: View {
                     action("Google", icon: "globe") {
                         if let url = Self.googleTranslateURL(text) { openURL(url) }
                     }
+                }
+                if isSingleWord, let onOpenCard {
+                    action("Карточка", icon: "text.book.closed", action: onOpenCard)
                 }
                 action("Озвучить", icon: "speaker.wave.2") {
                     if isEnglish {
