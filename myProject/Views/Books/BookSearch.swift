@@ -9,6 +9,8 @@ final class ReaderMark {
     private(set) var paragraph: Int?
     private(set) var range: NSRange?
     private(set) var jump = 0
+    /// Поиск по странице: все места этого слова подсвечиваются на открытой странице (в прокрутке — в главе), пока не сбросят
+    var pageQuery = ""
     @ObservationIgnored private var clearing: Task<Void, Never>?
 
     /// Не жёлтый, как у чтения вслух, и не цвета правил чтения — чтобы не путать
@@ -47,13 +49,25 @@ nonisolated enum BookSearch {
     /// Больше списку не нужно: такое слово проще искать точнее
     static let limit = 500
 
-    static func search(_ query: String, in chapters: [BookChapter]) -> [BookSearchResult] {
+    /// Регулярка для слова или фразы: без регистра, только целые слова; nil — слишком коротко
+    private static func regex(for query: String) -> NSRegularExpression? {
         let trimmed = normalized(query.trimmingCharacters(in: .whitespacesAndNewlines))
-        guard trimmed.count >= 2 else { return [] }
+        guard trimmed.count >= 2 else { return nil }
         // Между словами фразы — любые пробелы и переносы
         let words = trimmed.split(whereSeparator: \.isWhitespace).map { NSRegularExpression.escapedPattern(for: String($0)) }
         let pattern = "(?<![\\p{L}\\p{N}])" + words.joined(separator: "\\s+") + "(?![\\p{L}\\p{N}])"
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return [] }
+        return try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive])
+    }
+
+    /// Места слова в одном тексте (UTF-16) — для подсветки на странице
+    static func ranges(of query: String, in text: String) -> [NSRange] {
+        guard let regex = regex(for: query) else { return [] }
+        let normalizedText = normalized(text)
+        return regex.matches(in: normalizedText, range: NSRange(location: 0, length: (normalizedText as NSString).length)).map(\.range)
+    }
+
+    static func search(_ query: String, in chapters: [BookChapter]) -> [BookSearchResult] {
+        guard let regex = regex(for: query) else { return [] }
         var results: [BookSearchResult] = []
         for (chapterIndex, chapter) in chapters.enumerated() {
             for (paragraphIndex, paragraph) in chapter.paragraphs.enumerated() {
@@ -95,9 +109,14 @@ nonisolated enum BookSearch {
 struct BookSearchView: View {
     let chapters: [BookChapter]
     @Binding var query: String
+    /// Страницы есть (режим «Страницы»); в прокрутке «На странице» работает по всей главе
+    let isPaged: Bool
     let onSelect: (BookSearchResult) -> Void
+    /// Слово для подсветки на странице; пустое — подсветку снять
+    let onPageSearch: (String) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @State private var onPage = false
     @State private var results: [BookSearchResult] = []
     @State private var searchedQuery = ""
     @FocusState private var isFocused: Bool
@@ -117,7 +136,22 @@ struct BookSearchView: View {
     var body: some View {
         NavigationStack {
             List {
-                if !results.isEmpty {
+                Section {
+                    Picker("Где искать", selection: $onPage) {
+                        Text("По книге").tag(false)
+                        Text(isPaged ? "На странице" : "В главе").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
+                }
+                if onPage {
+                    Text(isPaged ? "Слово подсветится на странице и останется на ней при листании. Уберёте его кнопкой внизу."
+                                 : "Слово подсветится во всей главе. Уберёте его кнопкой внизу.")
+                        .scaledFont(size: 14)
+                        .foregroundColor(.gray)
+                        .listRowBackground(Color.clear)
+                } else if !results.isEmpty {
                     Text(results.count >= BookSearch.limit
                          ? "Показаны первые \(BookSearch.limit) совпадений"
                          : "Найдено: \(results.count)")
@@ -125,7 +159,7 @@ struct BookSearchView: View {
                         .foregroundColor(.gray)
                         .listRowBackground(Color.clear)
                 }
-                ForEach(groups) { group in
+                ForEach(onPage ? [] : groups) { group in
                     Section {
                         ForEach(group.items) { result in
                             Button {
@@ -147,7 +181,9 @@ struct BookSearchView: View {
             }
             .brandListBackground()
             .overlay {
-                if results.isEmpty, searchedQuery.count >= 2 {
+                if onPage {
+                    EmptyView()
+                } else if results.isEmpty, searchedQuery.count >= 2 {
                     ContentUnavailableView.search(text: searchedQuery)
                 } else if results.isEmpty {
                     ContentUnavailableView("Поиск по книге", systemImage: "magnifyingglass",
@@ -166,6 +202,16 @@ struct BookSearchView: View {
                 }
             }
             .onAppear { if query.isEmpty { isFocused = true } }
+            .onSubmit(of: .search) { if onPage { dismiss() } }
+            .onChange(of: onPage) { _, now in
+                if !now { onPageSearch("") }
+            }
+            .task(id: "\(onPage)|\(query)") {
+                guard onPage else { return }
+                try? await Task.sleep(for: .milliseconds(300))
+                guard !Task.isCancelled else { return }
+                onPageSearch(query.trimmingCharacters(in: .whitespacesAndNewlines))
+            }
             // Ищем, когда перестали печатать; книга — в фоне, экран не тормозит
             .task(id: query) {
                 if !searchedQuery.isEmpty || !results.isEmpty {

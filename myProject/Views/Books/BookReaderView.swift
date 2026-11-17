@@ -275,6 +275,19 @@ struct BookReaderView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+        .overlay(alignment: .bottom) {
+            if !mark.pageQuery.isEmpty {
+                Button { mark.pageQuery = "" } label: {
+                    Label("Подсвечено: «\(mark.pageQuery)»", systemImage: "xmark.circle.fill")
+                        .scaledFont(size: 13, weight: .medium)
+                        .foregroundColor(style.text)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Capsule().fill(style.text.opacity(0.14)))
+                }
+                .padding(.bottom, isChromeHidden ? 44 : 150)
+            }
+        }
         .sheet(isPresented: $isShowingNames, onDismiss: {
             if let query = pendingSearch {
                 pendingSearch = nil
@@ -294,7 +307,8 @@ struct BookReaderView: View {
                 .appThemedColorScheme()
         }
         .sheet(isPresented: $isShowingSearch) {
-            BookSearchView(chapters: chapters, query: $searchQuery, onSelect: jump)
+            BookSearchView(chapters: chapters, query: $searchQuery, isPaged: style.layout == .pages, onSelect: jump,
+                           onPageSearch: { mark.pageQuery = $0 })
                 .appThemedColorScheme()
         }
         .sheet(isPresented: $isShowingAppearance, onDismiss: { style = .current() }) {
@@ -1214,7 +1228,7 @@ private struct ReaderParagraph: View {
         let isReading = speech.paragraph == index
         let isMarked = mark.paragraph == index
         VStack(alignment: .leading, spacing: 8) {
-            Text(isReading || isMarked ? highlighted : text)
+            Text(isReading || isMarked || !mark.pageQuery.isEmpty ? highlighted : text)
                 .font(font)
                 .foregroundColor(textColor)
                 .lineSpacing(lineSpacing)
@@ -1242,6 +1256,11 @@ private struct ReaderParagraph: View {
         var result = text
         if speech.paragraph == index, let word = speech.word, let range = Range(word, in: result) {
             result[range].backgroundColor = Color.yellow.opacity(0.45)
+        }
+        if !mark.pageQuery.isEmpty {
+            for found in BookSearch.ranges(of: mark.pageQuery, in: String(text.characters)) {
+                if let range = Range(found, in: result) { result[range].backgroundColor = ReaderMark.color }
+            }
         }
         if mark.paragraph == index, let found = mark.range, let range = Range(found, in: result) {
             result[range].backgroundColor = ReaderMark.color

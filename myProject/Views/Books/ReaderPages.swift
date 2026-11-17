@@ -671,6 +671,14 @@ private struct ReaderPageSegment: View {
                 result[wordRange].backgroundColor = Color.yellow.opacity(0.45)
             }
         }
+        if !mark.pageQuery.isEmpty {
+            for found in BookSearch.ranges(of: mark.pageQuery, in: String(text.characters)) {
+                let visible = NSIntersectionRange(found, segment.range)
+                guard visible.length > 0 else { continue }
+                let local = NSRange(location: visible.location - segment.range.location, length: visible.length)
+                if let foundRange = Range(local, in: result) { result[foundRange].backgroundColor = ReaderMark.color }
+            }
+        }
         if let marked {
             let local = NSRange(location: marked.location - segment.range.location, length: marked.length)
             if local.location >= 0, NSMaxRange(local) <= segment.range.length, let markRange = Range(local, in: result) {
