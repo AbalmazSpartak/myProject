@@ -210,6 +210,8 @@ struct ReaderPagedText: View, Equatable {
     @State private var fingerLocation: CGPoint?
     /// Страницу открыла сама читалка (разбивка на страницы), а не читатель — шапку не прятать
     @State private var isSettingPage = false
+    /// Ширина, под которую страницы разбиты в последний раз
+    @State private var paginatedWidth: CGFloat = 0
 
     private enum DragMode { case extend, start, end }
 
@@ -570,6 +572,9 @@ struct ReaderPagedText: View, Equatable {
 
     /// Страницы — в фоне; запас в полстроки снизу: SwiftUI и TextKit могут разойтись на пиксель-другой
     private func paginate(_ size: CGSize) async {
+        // Открыта панель выделения, а ширина та же — это клавиатура (вписывают перевод) сжала экран по высоте:
+        // страницы не пересчитываем, иначе страница сменится и выделение со своей панелью пропадут
+        if selection != nil, !pages.isEmpty, abs(size.width - paginatedWidth) < 1 { return }
         let plain = plainParagraphs, font = readerFont, fontSize = fontSize, lineSpacing = lineSpacing
         let height = size.height - fontSize * 0.6
         let result = await Task.detached(priority: .userInitiated) {
@@ -583,6 +588,7 @@ struct ReaderPagedText: View, Equatable {
         let keep = keepSegment?.paragraph ?? startParagraph
         let opening = pages.isEmpty
         isSettingPage = true
+        paginatedWidth = size.width
         pages = result
         defer { reportPageParagraphs() }
         // Глава открыта поиском — сразу страница с найденным словом, а не начало абзаца
