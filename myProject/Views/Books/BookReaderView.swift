@@ -153,6 +153,7 @@ struct BookReaderView: View {
                     onBackgroundTap: toggleChrome,
                     onPageTurn: { setChromeHidden(true) },
                     onTap: handleTap,
+                    onSelectionStart: { setChromeHidden(true) },
                     onPrevious: { go(to: chapterIndex - 1, atEnd: true) },
                     onNext: { go(to: chapterIndex + 1) }
                 )

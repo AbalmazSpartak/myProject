@@ -190,6 +190,8 @@ struct ReaderPagedText: View, Equatable {
     /// Страницу перелистнули — шапка прячется, тексту больше места
     let onPageTurn: () -> Void
     let onTap: (URL) -> Void
+    /// Слово выделено — читалка прячет шапку и нижнюю панель, иначе панель действий оказывается под ними
+    var onSelectionStart: () -> Void = {}
     let onPrevious: () -> Void
     let onNext: () -> Void
 
@@ -501,6 +503,7 @@ struct ReaderPagedText: View, Equatable {
               let character = layout.index(at: textPoint(location), exact: true),
               let word = layout.word(at: character) else { return }
         Haptics.tap()
+        onSelectionStart()
         selectionLayout = layout
         selection = (index, word, word)
         dragMode = .extend

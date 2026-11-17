@@ -38,7 +38,8 @@ struct ChapterNumbering {
     /// Строка списка глав: «1. Down the Rabbit-Hole»; у титула и содержания — только название
     func listTitle(for index: Int, title: String) -> String {
         guard numbers.indices.contains(index), let number = numbers[index] else { return title }
-        return "\(number). \(Self.cleanTitle(title) ?? "Глава \(number)")"
+        guard let clean = Self.cleanTitle(title) else { return "Глава \(number)" }
+        return "\(number). \(clean)"
     }
 
     /// «Глава 2 из 12 · The Pool of Tears»; у титула и содержания — только название
