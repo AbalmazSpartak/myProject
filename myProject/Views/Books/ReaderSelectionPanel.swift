@@ -1,4 +1,5 @@
 import SwiftUI
+import SafariServices
 import SwiftData
 @preconcurrency import Translation
 
@@ -31,6 +32,8 @@ struct ReaderSelectionPanel: View {
     @State private var rudeHidden = false
     @State private var isAdded = false
     @State private var definedWord: DefinedWord?
+    /// Google Переводчик в окне поверх читалки, без выхода в браузер
+    @State private var googlePage: GooglePage?
     @State private var passage: BookPassage?
     @State private var copied = false
     /// Фраза в словарь: перевод вписывает сам читатель (например, из Google Переводчика)
@@ -161,7 +164,7 @@ struct ReaderSelectionPanel: View {
                     }
                 } else {
                     action("Google", icon: "globe") {
-                        if let url = Self.googleTranslateURL(text) { openURL(url) }
+                        if let url = Self.googleTranslateURL(text) { googlePage = GooglePage(url: url) }
                     }
                 }
                 if isSingleWord, let onOpenCard {
@@ -197,6 +200,10 @@ struct ReaderSelectionPanel: View {
         .background(Color.cardBackground)
         .cornerRadius(18)
         .shadow(color: .black.opacity(0.15), radius: 12, y: 4)
+        .sheet(item: $googlePage) { page in
+            SafariSheet(url: page.url)
+                .ignoresSafeArea()
+        }
         .sheet(item: $definedWord) { defined in
             SystemDefinitionView(term: defined.term)
                 .ignoresSafeArea()
@@ -309,4 +316,23 @@ struct ReaderSelectionPanel: View {
         isEnteringTranslation = false
         UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
+}
+
+
+private struct GooglePage: Identifiable {
+    let url: URL
+    var id: URL { url }
+}
+
+/// Системное окно Safari поверх приложения: страница открывается внутри читалки, «Готово» возвращает к книге
+private struct SafariSheet: UIViewControllerRepresentable {
+    let url: URL
+
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        let controller = SFSafariViewController(url: url)
+        controller.dismissButtonStyle = .done
+        return controller
+    }
+
+    func updateUIViewController(_ controller: SFSafariViewController, context: Context) {}
 }
