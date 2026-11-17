@@ -42,6 +42,19 @@ struct EditWordView: View {
                         }
                         .pickerStyle(.segmented)
                     }
+                    // Слово в своих словарях (например, из книги): убрать из одного, не удаляя само слово
+                    if !word.lists.isEmpty {
+                        Section {
+                            ForEach(word.lists) { list in
+                                Button("Убрать из словаря «\(DictionaryView.shortName(list.name))»", role: .destructive) {
+                                    word.lists.removeAll { $0.id == list.id }
+                                    try? modelContext.save()
+                                }
+                            }
+                        } footer: {
+                            Text("Слово и его прогресс останутся — пропадёт только из выбранного словаря.")
+                        }
+                    }
                     // Ошибка в слове из встроенного словаря — сообщить, чтобы поправили в базе для всех
                     if !word.isCustom {
                         Section {

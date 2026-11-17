@@ -239,6 +239,15 @@ struct DictionaryView: View {
                                         }
                                         .contentShape(Rectangle())
                                         .onTapGesture { wordToShow = word }
+                                        .contextMenu {
+                                            // Открыт свой словарь — слово можно убрать из него, не удаляя совсем
+                                            if case .list(let list) = filter {
+                                                Button(role: .destructive) {
+                                                    word.lists.removeAll { $0.id == list.id }
+                                                    try? modelContext.save()
+                                                } label: { Label("Убрать из этого словаря", systemImage: "minus.circle") }
+                                            }
+                                        }
                                         .onAppear {
                                             if word.id == filteredWords.last?.id { loadMoreWords() }
                                         }
