@@ -245,7 +245,7 @@ struct DictionaryView: View {
                                                 Button(role: .destructive) {
                                                     word.lists.removeAll { $0.id == list.id }
                                                     try? modelContext.save()
-                                                } label: { Label("Убрать из этого словаря", systemImage: "minus.circle") }
+                                                } label: { Label("Удалить из словаря", systemImage: "minus.circle") }
                                             }
                                         }
                                         .onAppear {

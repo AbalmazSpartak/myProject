@@ -46,7 +46,7 @@ struct EditWordView: View {
                     if !word.lists.isEmpty {
                         Section {
                             ForEach(word.lists) { list in
-                                Button("Убрать из словаря «\(DictionaryView.shortName(list.name))»", role: .destructive) {
+                                Button(word.lists.count == 1 ? "Удалить из словаря" : "Удалить из словаря «\(DictionaryView.shortName(list.name))»", role: .destructive) {
                                     word.lists.removeAll { $0.id == list.id }
                                     try? modelContext.save()
                                 }
