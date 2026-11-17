@@ -4,6 +4,26 @@ import Foundation
 nonisolated struct BookChapter: Codable, Hashable, Sendable {
     var title: String
     var paragraphs: [String]
+
+    init(title: String, paragraphs: [String]) {
+        self.title = title
+        self.paragraphs = paragraphs
+    }
+
+    /// При чтении из сохранённой книги убирает лишний пробел перед окончанием: «it 'll» → «it'll» (в старых изданиях так набрано)
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        title = try container.decode(String.self, forKey: .title)
+        paragraphs = try container.decode([String].self, forKey: .paragraphs).map(Self.closingContractionGap)
+    }
+
+    private static let contractionGap = try! NSRegularExpression(pattern: #"(?<=\p{L}) (?=['’](?:ll|ve|re|d)\b)"#)
+
+    private static func closingContractionGap(_ text: String) -> String {
+        guard text.contains(" '") || text.contains(" ’") else { return text }
+        let range = NSRange(text.startIndex..., in: text)
+        return contractionGap.stringByReplacingMatches(in: text, range: range, withTemplate: "")
+    }
 }
 
 /// Книга после разбора файла: всё, что нужно библиотеке и читалке
