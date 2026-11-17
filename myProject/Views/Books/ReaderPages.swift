@@ -792,11 +792,27 @@ private struct HyphenatedLabel: UIViewRepresentable {
         let style = NSMutableParagraphStyle()
         style.lineSpacing = lineSpacing
         style.hyphenationFactor = 1
-        let result = NSMutableAttributedString(attributedString: NSAttributedString(text))
-        let all = NSRange(location: 0, length: result.length)
-        result.addAttributes([.font: font, .paragraphStyle: style, .languageIdentifier: "en"], range: all)
-        result.enumerateAttribute(.foregroundColor, in: all) { value, range, _ in
-            if value == nil { result.addAttribute(.foregroundColor, value: color, range: range) }
+        // Цвета и линии SwiftUI-текста (подсветка слова при озвучке, выделение, правила чтения) при переводе
+        // в NSAttributedString теряются — переносим их по кускам сами
+        let result = NSMutableAttributedString(string: String(text.characters),
+                                               attributes: [.font: font, .paragraphStyle: style, .languageIdentifier: "en",
+                                                            .foregroundColor: color])
+        for run in text.runs {
+            let range = NSRange(run.range, in: text)
+            if let value = run.foregroundColor { result.addAttribute(.foregroundColor, value: UIColor(value), range: range) }
+            if let value = run.backgroundColor { result.addAttribute(.backgroundColor, value: UIColor(value), range: range) }
+            // Параметры линии из Text.LineStyle не прочитать — узнаём две, что есть в читалке: пунктир разговорных форм и точки исключений
+            if let line = run.underlineStyle {
+                if line == Text.LineStyle(pattern: .dash, color: ColloquialRule.color) {
+                    result.addAttribute(.underlineStyle, value: (NSUnderlineStyle.single.union(.patternDash)).rawValue, range: range)
+                    result.addAttribute(.underlineColor, value: UIColor(ColloquialRule.color), range: range)
+                } else if line == Text.LineStyle(pattern: .dot, color: PhonicsKind.exceptionColor) {
+                    result.addAttribute(.underlineStyle, value: (NSUnderlineStyle.single.union(.patternDot)).rawValue, range: range)
+                    result.addAttribute(.underlineColor, value: UIColor(PhonicsKind.exceptionColor), range: range)
+                } else {
+                    result.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: range)
+                }
+            }
         }
         label.attributedText = result
     }
