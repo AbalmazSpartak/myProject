@@ -28,6 +28,7 @@ struct ReaderSelectionPanel: View {
     @State private var config: TranslationSession.Configuration?
     @State private var isTranslating = false
     @State private var failed = false
+    @State private var rudeHidden = false
     @State private var isAdded = false
     @State private var definedWord: DefinedWord?
     @State private var passage: BookPassage?
@@ -90,6 +91,10 @@ struct ReaderSelectionPanel: View {
                     .textSelection(.enabled)
             } else if isTranslating {
                 ProgressView()
+            } else if rudeHidden {
+                Text("Переводчик iOS дал грубый перевод, он скрыт. Свой перевод можно ввести через «В словарь».")
+                    .scaledFont(size: 13)
+                    .foregroundColor(.gray)
             } else if failed {
                 Text("Не удалось перевести — проверьте, скачан ли русский язык в настройках iPhone «Перевод».")
                     .scaledFont(size: 13)
@@ -175,7 +180,7 @@ struct ReaderSelectionPanel: View {
                 }
                 if isEnglish && fitsDictionary {
                     action(isAdded ? "В словаре" : "В словарь", icon: isAdded ? "checkmark.circle.fill" : "plus.circle",
-                           disabled: isAdded || (isSingleWord && usesSystemTranslator && translation == nil && baseWord == nil && bookSuggestion == nil)) {
+                           disabled: isAdded || (isSingleWord && usesSystemTranslator && translation == nil && !rudeHidden && baseWord == nil && bookSuggestion == nil)) {
                         if dictionaryTranslation != nil {
                             add()
                         } else {
@@ -200,7 +205,12 @@ struct ReaderSelectionPanel: View {
             isTranslating = true
             defer { isTranslating = false }
             do {
-                translation = try await session.translate(text).targetText
+                let result = try await session.translate(text).targetText
+                if WordTranslator.isRude(result) {
+                    rudeHidden = true
+                } else {
+                    translation = result
+                }
             } catch {
                 failed = true
             }
@@ -213,6 +223,7 @@ struct ReaderSelectionPanel: View {
             translation = nil
             baseWord = nil
             failed = false
+            rudeHidden = false
             isAdded = false
             copied = false
             isEnteringTranslation = false
