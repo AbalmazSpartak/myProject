@@ -84,6 +84,7 @@ private struct ReaderProfileView: View {
     let openLibrary: (_ section: LibraryTab) -> Void
     let openBookmarks: () -> Void
 
+    @AppStorage("profile_section") private var section = ProfileSection.account
     @State private var isShowingSettings = false
     @State private var openedBook: Book?
 
@@ -109,10 +110,16 @@ private struct ReaderProfileView: View {
                 Text("Профиль")
                     .scaledFont(size: 34, weight: .semibold, design: .serif)
                     .foregroundColor(.brandDark)
-                header
-                sections
-                readingStats
-                booksShelf
+                ProfileSectionTabs(selection: $section)
+                    .padding(.horizontal, -20)
+                switch section {
+                case .account:
+                    header
+                    sections
+                    booksShelf
+                case .stats:
+                    readingStats
+                }
             }
             .padding(20)
         }
@@ -205,39 +212,61 @@ private struct ReaderProfileView: View {
         .buttonStyle(.plain)
     }
 
-    /// Статистика «Чтения»: книги считаются по-настоящему, остальное — заглушки до появления данных
+    /// Статистика «Чтения» — вариант «Графики»: книги считаются по-настоящему, остальное — заглушки «скоро» до появления данных
     private var readingStats: some View {
         let reading = books.filter { $0.progress > 0 && $0.progress < 0.98 }.count
         let finished = books.filter { $0.progress >= 0.98 }.count
-        return VStack(alignment: .leading, spacing: 10) {
-            Text("Статистика")
-                .scaledFont(size: 20, weight: .bold)
-                .foregroundColor(.brandDark)
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
-                statTile("Читаю", "\(reading)")
-                statTile("Прочитано", "\(finished)")
-                statTile("Страницы", "—", soon: true)
-                statTile("Время чтения", "—", soon: true)
-                statTile("Слова из книг", "—", soon: true)
-                statTile("Прослушано", "—", soon: true)
+        return VStack(spacing: 10) {
+            StatCard(title: "Книги", note: "всего \(books.count) в библиотеке") {
+                HStack(alignment: .bottom, spacing: 28) {
+                    statNumber("Читаю", reading, .brandScale2)
+                    statNumber("Прочитано", finished, .brandScale4)
+                    Spacer(minLength: 0)
+                }
+                if reading + finished > 0 {
+                    GeometryReader { geo in
+                        HStack(spacing: 2) {
+                            if finished > 0 { Rectangle().fill(Color.brandScale4).frame(width: geo.size.width * CGFloat(finished) / CGFloat(reading + finished)) }
+                            if reading > 0 { Rectangle().fill(Color.brandScale2) }
+                        }
+                        .clipShape(Capsule())
+                    }
+                    .frame(height: 8)
+                }
+            }
+            soonCard("Время чтения", note: "минут в день")
+            soonCard("Страницы по месяцам", note: "последние 6 месяцев")
+            HStack(spacing: 10) {
+                soonTile("Слова из книг в словаре")
+                soonTile("Прослушано в аудио")
             }
         }
     }
 
-    private func statTile(_ title: String, _ value: String, soon: Bool = false) -> some View {
+    private func statNumber(_ title: String, _ value: Int, _ color: Color) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(title).scaledFont(size: 12).foregroundColor(.brandMuted)
-            Text(value)
-                .scaledFont(size: 30, weight: .medium, design: .serif)
-                .foregroundColor(soon ? .brandMuted : .brandDark)
-            if soon { Text("скоро").scaledFont(size: 11).foregroundColor(.brandMuted) }
+            HStack(spacing: 6) {
+                RoundedRectangle(cornerRadius: 3).fill(color).frame(width: 9, height: 9)
+                Text(title).scaledFont(size: 12).foregroundColor(.brandMuted)
+            }
+            Text("\(value)").scaledFont(size: 34, weight: .medium, design: .serif).foregroundColor(.brandDark)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 11)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
-        .accessibilityElement(children: .combine)
+    }
+
+    private func soonCard(_ title: String, note: String) -> some View {
+        StatCard(title: title, note: note) {
+            Text("Скоро: график появится, когда приложение начнёт считать.")
+                .scaledFont(size: 13).foregroundColor(.brandMuted)
+                .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
+        }
+    }
+
+    private func soonTile(_ title: String) -> some View {
+        StatCard {
+            Text(title).scaledFont(size: 12).foregroundColor(.brandMuted)
+            Text("—").scaledFont(size: 30, weight: .medium, design: .serif).foregroundColor(.brandMuted)
+            Text("скоро").scaledFont(size: 11).foregroundColor(.brandMuted)
+        }
     }
 
     private var booksShelf: some View {

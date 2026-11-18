@@ -9,6 +9,7 @@ struct ProfileView: View {
     
     @Query private var profiles: [UserProfile]
     
+    @AppStorage("profile_section") private var section = ProfileSection.account
     @State private var showSettings = false
     @State private var showPersonalData = false
     @State private var levelProgress: [LevelProgress] = []
@@ -64,44 +65,64 @@ struct ProfileView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
                 
-                // Аватар и имя
-                VStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.brandTint.opacity(0.15))
-                            .frame(width: 90, height: 90)
-                        
-                        if let data = profile.avatarData, let uiImage = UIImage(data: data) {
-                            Image(uiImage: uiImage)
-                                .resizable()
-                                .scaledToFill()
+                ProfileSectionTabs(selection: $section)
+
+                switch section {
+                case .account:
+                    // Аватар и имя
+                    VStack(spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.brandTint.opacity(0.15))
                                 .frame(width: 90, height: 90)
-                                .clipShape(Circle())
-                        } else {
-                            Image(systemName: "person.fill")
-                                .font(.system(size: 44))
-                                .foregroundColor(Color.brandTint)
+                        
+                            if let data = profile.avatarData, let uiImage = UIImage(data: data) {
+                                Image(uiImage: uiImage)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 90, height: 90)
+                                    .clipShape(Circle())
+                            } else {
+                                Image(systemName: "person.fill")
+                                    .font(.system(size: 44))
+                                    .foregroundColor(Color.brandTint)
+                            }
+                        }
+                    
+                        HStack(spacing: 6) {
+                            Text(profile.name)
+                                .scaledFont(size: 24, weight: .semibold, design: .serif)
+                                .foregroundColor(.brandDark)
+                            Image(systemName: "pencil")
+                                .scaledFont(size: 14, weight: .semibold)
+                                .foregroundColor(Color.brandMuted)
                         }
                     }
-                    
-                    HStack(spacing: 6) {
-                        Text(profile.name)
-                            .scaledFont(size: 24, weight: .semibold, design: .serif)
-                            .foregroundColor(.brandDark)
-                        Image(systemName: "pencil")
-                            .scaledFont(size: 14, weight: .semibold)
-                            .foregroundColor(Color.brandMuted)
-                    }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture { showPersonalData = true }
-                .accessibilityAddTraits(.isButton)
-                .accessibilityHint("Изменить имя и фото")
+                    .contentShape(Rectangle())
+                    .onTapGesture { showPersonalData = true }
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityHint("Изменить имя и фото")
                 
-                StatsTilesView(introduced: introducedToday, streak: streak, best: bestStreak,
-                               vocabulary: vocabularyStatus, levels: levelProgress,
-                               days: studyDays, totals: studyTotals)
+
+                    VStack(spacing: 0) {
+                        NavigationLink { AccountView() } label: {
+                            accountRow("person.crop.circle", "Аккаунт и синхронизация")
+                        }
+                        Divider().overlay(Color.brandBorder)
+                        Button { showSettings = true } label: {
+                            accountRow("gearshape", "Настройки")
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
                     .padding(.horizontal, 20)
+                case .stats:
+                    StatsChartsView(introduced: introducedToday, streak: streak, best: bestStreak, week: streakWeek,
+                                    vocabulary: vocabularyStatus, levels: levelProgress,
+                                    days: studyDays, totals: studyTotals)
+                        .padding(.horizontal, 20)
+                }
 
                 Spacer().frame(height: 20)
             }
@@ -121,6 +142,18 @@ struct ProfileView: View {
         }
     }
     
+    private func accountRow(_ icon: String, _ title: String) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon).scaledFont(size: 20).foregroundColor(.brandTint).frame(width: 26)
+            Text(title).scaledFont(size: 15).foregroundColor(.brandDark)
+            Spacer()
+            Image(systemName: "chevron.right").scaledFont(size: 13, weight: .semibold).foregroundColor(.brandMuted)
+        }
+        .padding(.horizontal, 16)
+        .frame(minHeight: 52)
+        .contentShape(Rectangle())
+    }
+
     private func reloadProgress() {
         (levelProgress, vocabularyStatus) = LevelProgress.countedWithStatus(in: modelContext)
         studyDays = DailyStudy.recent()
