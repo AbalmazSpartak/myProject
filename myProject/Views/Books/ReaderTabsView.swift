@@ -151,16 +151,22 @@ private struct ReaderProfileView: View {
     }
 
     private var sections: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(spacing: 14) {
             Text("Разделы")
                 .scaledFont(size: 22, weight: .bold, design: .serif)
                 .foregroundColor(.brandDark)
-            HStack(spacing: 14) {
+            // Четыре равные колонки на всю ширину — ряд по центру на любом экране
+            HStack(spacing: 0) {
                 section("Читаю", icon: "book") { openLibrary(false) }
+                // Пока открывает последнюю книгу: «Слушать» — на её странице
+                section("Аудио", icon: "headphones") {
+                    if let book = shelf.first { openedBook = book } else { openLibrary(false) }
+                }
                 section("Закладки", icon: "bookmark") { openBookmarks() }
                 section("Подписки", icon: "arrow.down.circle") { openLibrary(true) }
             }
         }
+        .frame(maxWidth: .infinity)
     }
 
     private func section(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
@@ -175,7 +181,7 @@ private struct ReaderProfileView: View {
                     .scaledFont(size: 14)
                     .foregroundColor(.brandDark)
             }
-            .frame(width: 74)
+            .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
     }
