@@ -22,153 +22,259 @@ struct AccountView: View {
     @State private var message: String?
     @State private var notice: String?
 
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
-        List {
-            if account.isSignedIn {
-                signedIn
-            } else {
-                switch step {
-                case .signIn: signInStep
-                case .email: emailStep
-                case .code: codeStep
-                case .password: passwordStep
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(title)
+                    .scaledFont(size: 34, weight: .semibold, design: .serif)
+                    .foregroundColor(.brandDark)
+                Text(subtitle)
+                    .scaledFont(size: 14)
+                    .foregroundColor(.brandMuted)
+                    .padding(.bottom, 4)
+                if account.isSignedIn {
+                    signedIn
+                } else {
+                    if step == .signIn || (step == .email && !isReset) { modeTabs }
+                    switch step {
+                    case .signIn: signInStep
+                    case .email: emailStep
+                    case .code: codeStep
+                    case .password: passwordStep
+                    }
+                    if let message {
+                        Text(message).scaledFont(size: 13).foregroundColor(.brandDark)
+                            .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.brandAccent, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
                 }
             }
+            .padding(20)
+            .frame(maxWidth: 520)
+            .frame(maxWidth: .infinity)
         }
-        .brandListBackground()
-        .navigationTitle("Аккаунт")
+        .scrollDismissesKeyboard(.interactively)
+        .background(Color.brandBackground.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var title: String {
+        if account.isSignedIn { return "Аккаунт" }
+        switch step {
+        case .signIn: return "Вход"
+        case .email: return isReset ? "Сброс пароля" : "Регистрация"
+        case .code: return "Код из письма"
+        case .password: return isReset ? "Новый пароль" : "Придумайте пароль"
+        }
+    }
+
+    private var subtitle: String {
+        if account.isSignedIn { return "Синхронизация включена. Выход действует только на этом устройстве: слова и книги остаются." }
+        switch step {
+        case .code: return "Код отправлен на \(cleanEmail). Письмо идёт до минуты, загляните в «Спам». Код действует 10 минут."
+        case .password: return "Почта подтверждена. Пароль хранится на сервере только в зашифрованном виде."
+        default: return "Аккаунт нужен только для синхронизации между устройствами. Читать можно и без него."
+        }
+    }
+
+    // MARK: - Элементы по дизайну
+
+    private var modeTabs: some View {
+        HStack(spacing: 2) {
+            tab("Вход", on: step == .signIn) { if step != .signIn { back() } }
+            tab("Регистрация", on: step == .email) { if step != .email { begin(reset: false) } }
+        }
+        .padding(3)
+        .background(Color.brandInputBg, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private func tab(_ title: String, on: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .scaledFont(size: 14, weight: on ? .semibold : .medium)
+                .foregroundColor(on ? .brandTint : .brandMuted)
+                .frame(maxWidth: .infinity, minHeight: 38)
+                .background {
+                    if on { RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.cardBackground) }
+                }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func field<Content: View>(_ icon: String, @ViewBuilder _ content: () -> Content) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon).scaledFont(size: 16).foregroundColor(.brandMuted).frame(width: 22)
+            content().scaledFont(size: 15).foregroundColor(.brandDark)
+        }
+        .padding(.horizontal, 14)
+        .frame(height: 48)
+        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+    }
+
+    private func primary(_ title: String, enabled: Bool = true, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Text(title).scaledFont(size: 15, weight: .semibold)
+                if isBusy { ProgressView().tint(.brandOnTint) }
+            }
+            .foregroundColor(.brandOnTint)
+            .frame(maxWidth: .infinity, minHeight: 46)
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.brandTint.opacity(enabled ? 1 : 0.4)))
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled || isBusy)
+    }
+
+    private func secondary(_ title: String, enabled: Bool = true, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title).scaledFont(size: 15, weight: .semibold)
+                .foregroundColor(.brandDark.opacity(enabled ? 1 : 0.5))
+                .frame(maxWidth: .infinity, minHeight: 46)
+                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.brandBorder, lineWidth: 1.5))
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+    }
+
+    private func link(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title).scaledFont(size: 14, weight: .medium).foregroundColor(.brandTint)
+                .frame(minHeight: 44, alignment: .leading)
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// «или» и вход через Apple — заглушка: входа через Apple пока нет
+    private var appleStub: some View {
+        VStack(spacing: 12) {
+            Text("или").scaledFont(size: 13).foregroundColor(.brandMuted).frame(maxWidth: .infinity)
+            secondary("Продолжить с Apple · скоро", enabled: false) {}
+        }
     }
 
     // MARK: - Вход
 
     private var signInStep: some View {
-        Section {
+        VStack(alignment: .leading, spacing: 12) {
             emailField
-            SecureField("Пароль", text: $password)
-                .textContentType(.password)
-                .submitLabel(.go)
-                .onSubmit(signIn)
-            Button(action: signIn) { busyLabel("Войти") }
-                .disabled(isBusy || !email.contains("@") || password.isEmpty)
-            Button("Забыли пароль?") { begin(reset: true) }
-            Button("Создать аккаунт") { begin(reset: false) }
-        } header: {
-            Text("Вход")
-        } footer: {
-            footer("Аккаунт нужен, чтобы данные были на всех ваших устройствах. Без него приложение работает как раньше.")
+            field("lock") {
+                SecureField("Пароль", text: $password)
+                    .textContentType(.password)
+                    .submitLabel(.go)
+                    .onSubmit(signIn)
+            }
+            link("Забыли пароль?") { begin(reset: true) }
+                .padding(.top, -8)
+            primary("Войти", enabled: email.contains("@") && !password.isEmpty, action: signIn)
+            appleStub
+            link("Пока без аккаунта") { dismiss() }
+                .frame(maxWidth: .infinity)
         }
-        .listRowBackground(Color.cardBackground)
     }
 
     // MARK: - Регистрация и сброс
 
     private var emailStep: some View {
-        Section {
+        VStack(alignment: .leading, spacing: 12) {
             emailField
-            Button(action: sendCode) { busyLabel("Получить код") }
-                .disabled(isBusy || !email.contains("@"))
-            Button("Назад") { back() }
-        } header: {
-            Text(isReset ? "Сброс пароля" : "Новый аккаунт")
-        } footer: {
-            footer("Пришлём на почту код из 6 цифр, чтобы убедиться, что адрес ваш.")
+            primary("Получить код", enabled: email.contains("@"), action: sendCode)
+            Text("Пришлём на почту код из 6 цифр, чтобы убедиться, что адрес ваш.")
+                .scaledFont(size: 12).foregroundColor(.brandMuted)
+            if isReset { link("Назад ко входу") { back() } } else { appleStub }
         }
-        .listRowBackground(Color.cardBackground)
     }
 
     private var codeStep: some View {
-        Section {
-            TextField("Код из письма", text: $code)
-                .keyboardType(.numberPad)
-                .textContentType(.oneTimeCode)
-                .onChange(of: code) { _, value in
-                    code = String(value.filter(\.isNumber).prefix(6))
-                    if code.count == 6 { verify() }
-                }
-            Button(action: verify) { busyLabel("Продолжить") }
-                .disabled(isBusy || code.count != 6)
-            Button("Другая почта или выслать код ещё раз") {
+        VStack(alignment: .leading, spacing: 12) {
+            field("number") {
+                TextField("Код из письма", text: $code)
+                    .keyboardType(.numberPad)
+                    .textContentType(.oneTimeCode)
+                    .onChange(of: code) { _, value in
+                        code = String(value.filter(\.isNumber).prefix(6))
+                        if code.count == 6 { verify() }
+                    }
+            }
+            primary("Продолжить", enabled: code.count == 6, action: verify)
+            link("Другая почта или выслать код ещё раз") {
                 step = .email
                 code = ""
                 message = nil
             }
             .disabled(isBusy)
-        } header: {
-            Text("Код отправлен на \(cleanEmail)")
-        } footer: {
-            footer("Письмо идёт до минуты; загляните в «Спам». Код действует 10 минут.")
         }
-        .listRowBackground(Color.cardBackground)
     }
 
     private var passwordStep: some View {
-        Section {
-            SecureField("Пароль, не короче \(Account.minPassword) символов", text: $password)
-                .textContentType(.newPassword)
-            SecureField("Повторите пароль", text: $repeated)
-                .textContentType(.newPassword)
-                .submitLabel(.done)
-                .onSubmit(savePassword)
-            Button(action: savePassword) { busyLabel(isReset ? "Сменить пароль и войти" : "Создать аккаунт") }
-                .disabled(isBusy || password.count < Account.minPassword || repeated.isEmpty)
-        } header: {
-            Text("Придумайте пароль")
-        } footer: {
-            footer("Почта подтверждена. Пароль сохранится на сервере только в зашифрованном виде; iPhone предложит запомнить его в «Связке ключей».")
+        VStack(alignment: .leading, spacing: 12) {
+            field("lock") {
+                SecureField("Пароль · не короче \(Account.minPassword) символов", text: $password)
+                    .textContentType(.newPassword)
+            }
+            field("lock") {
+                SecureField("Повторите пароль", text: $repeated)
+                    .textContentType(.newPassword)
+                    .submitLabel(.done)
+                    .onSubmit(savePassword)
+            }
+            primary(isReset ? "Сменить пароль и войти" : "Создать аккаунт",
+                    enabled: password.count >= Account.minPassword && !repeated.isEmpty, action: savePassword)
         }
-        .listRowBackground(Color.cardBackground)
     }
 
     // MARK: - Вы вошли
 
     private var signedIn: some View {
-        Group {
-            Section {
-                HStack {
-                    Text("Почта")
-                    Spacer()
-                    Text(account.email ?? "").foregroundColor(Color.brandMuted)
-                }
-                if isChangingPassword {
-                    SecureField("Старый пароль", text: $oldPassword)
-                        .textContentType(.password)
-                    SecureField("Новый пароль, не короче \(Account.minPassword) символов", text: $password)
+        VStack(alignment: .leading, spacing: 12) {
+            field("envelope") { Text(account.email ?? "") }
+            if isChangingPassword {
+                field("lock") { SecureField("Старый пароль", text: $oldPassword).textContentType(.password) }
+                field("lock") {
+                    SecureField("Новый пароль · не короче \(Account.minPassword) символов", text: $password)
                         .textContentType(.newPassword)
-                    Button(action: changePassword) { busyLabel("Сохранить пароль") }
-                        .disabled(isBusy || oldPassword.isEmpty || password.count < Account.minPassword)
-                    Button("Отмена") { isChangingPassword = false; clearPasswords() }
-                } else {
-                    Button("Сменить пароль") { isChangingPassword = true; notice = nil; message = nil }
                 }
-            } footer: {
-                VStack(alignment: .leading, spacing: 6) {
-                    if let notice { Text(notice).foregroundColor(.green) }
-                    if let message { Text(message).foregroundColor(.red) }
-                    if isChangingPassword { Text("На других устройствах после смены пароля придётся войти заново.") }
-                }
-                .textSelection(.enabled)
+                primary("Сохранить пароль", enabled: !oldPassword.isEmpty && password.count >= Account.minPassword, action: changePassword)
+                link("Отмена") { isChangingPassword = false; clearPasswords() }
+                Text("На других устройствах после смены пароля придётся войти заново.")
+                    .scaledFont(size: 12).foregroundColor(.brandMuted)
+            } else {
+                secondary("Сменить пароль") { isChangingPassword = true; notice = nil; message = nil }
             }
-            .listRowBackground(Color.cardBackground)
-            Section {
-                Button("Выйти", role: .destructive) {
-                    Task { await account.signOut() }
-                }
-            } footer: {
-                footer("Выход действует только на этом устройстве: слова и книги остаются.")
+            if let notice {
+                Text(notice).scaledFont(size: 13).foregroundColor(.brandTint)
             }
-            .listRowBackground(Color.cardBackground)
+            if let message {
+                Text(message).scaledFont(size: 13).foregroundColor(.brandDark)
+            }
+            Button {
+                Task { await account.signOut() }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "rectangle.portrait.and.arrow.right")
+                    Text("Выйти").scaledFont(size: 15, weight: .semibold)
+                }
+                .foregroundColor(.brandDark)
+                .frame(maxWidth: .infinity, minHeight: 46)
+                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.brandBorder, lineWidth: 1.5))
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 8)
         }
     }
 
     // MARK: - Общее
 
     private var emailField: some View {
-        TextField("Почта", text: $email)
-            .keyboardType(.emailAddress)
-            .textContentType(.username)
-            .textInputAutocapitalization(.never)
-            .autocorrectionDisabled()
+        field("envelope") {
+            TextField("Электронная почта", text: $email)
+                .keyboardType(.emailAddress)
+                .textContentType(.username)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+        }
     }
 
     private var cleanEmail: String { email.trimmingCharacters(in: .whitespaces).lowercased() }
