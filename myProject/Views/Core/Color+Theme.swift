@@ -37,6 +37,12 @@ extension Color {
     /// Мягкий бирюзовый акцент: плашки, подсветка
     nonisolated static let brandAccent = themed(light: rgb(0xDCEDE8), dark: rgb(0x1F3A36))
 
+    /// Шкала для статистики (песочный → тёмная бирюза): состояния слов и ответы, без красного и тревожных цветов
+    nonisolated static let brandScale1 = themed(light: rgb(0xD8C7A0), dark: rgb(0x8F8159))
+    nonisolated static let brandScale2 = themed(light: rgb(0xA9CFC5), dark: rgb(0x3F7A70))
+    nonisolated static let brandScale3 = themed(light: rgb(0x4F9A8C), dark: rgb(0x5FAE9F))
+    nonisolated static let brandScale4 = themed(light: rgb(0x1F6F63), dark: rgb(0xA6E0D3))
+
     /// Линии-разделители
     nonisolated static let brandBorder = themed(light: rgb(0xE6E0D2), dark: rgb(0x34383A))
 

@@ -111,6 +111,7 @@ private struct ReaderProfileView: View {
                     .foregroundColor(.brandDark)
                 header
                 sections
+                readingStats
                 booksShelf
             }
             .padding(20)
@@ -202,6 +203,41 @@ private struct ReaderProfileView: View {
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
+    }
+
+    /// Статистика «Чтения»: книги считаются по-настоящему, остальное — заглушки до появления данных
+    private var readingStats: some View {
+        let reading = books.filter { $0.progress > 0 && $0.progress < 0.98 }.count
+        let finished = books.filter { $0.progress >= 0.98 }.count
+        return VStack(alignment: .leading, spacing: 10) {
+            Text("Статистика")
+                .scaledFont(size: 20, weight: .bold)
+                .foregroundColor(.brandDark)
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                statTile("Читаю", "\(reading)")
+                statTile("Прочитано", "\(finished)")
+                statTile("Страницы", "—", soon: true)
+                statTile("Время чтения", "—", soon: true)
+                statTile("Слова из книг", "—", soon: true)
+                statTile("Прослушано", "—", soon: true)
+            }
+        }
+    }
+
+    private func statTile(_ title: String, _ value: String, soon: Bool = false) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).scaledFont(size: 12).foregroundColor(.brandMuted)
+            Text(value)
+                .scaledFont(size: 30, weight: .medium, design: .serif)
+                .foregroundColor(soon ? .brandMuted : .brandDark)
+            if soon { Text("скоро").scaledFont(size: 11).foregroundColor(.brandMuted) }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+        .accessibilityElement(children: .combine)
     }
 
     private var booksShelf: some View {

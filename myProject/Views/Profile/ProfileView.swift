@@ -13,8 +13,6 @@ struct ProfileView: View {
     @State private var showPersonalData = false
     @State private var levelProgress: [LevelProgress] = []
     @State private var vocabularyStatus = VocabularyStatus()
-    /// Вкладка под серией дней — запоминается
-    @AppStorage("profile_tab") private var tab = ProfileTab.stats
     @State private var studyDays: [DailyStudy.Day] = []
     @State private var studyTotals: [FSRSRating: Int] = [:]
     @State private var introducedToday = 0
@@ -100,34 +98,11 @@ struct ProfileView: View {
                 .accessibilityAddTraits(.isButton)
                 .accessibilityHint("Изменить имя и фото")
                 
-                DailyStreakCard(current: streak, best: bestStreak, week: streakWeek)
+                StatsTilesView(introduced: introducedToday, streak: streak, best: bestStreak,
+                               vocabulary: vocabularyStatus, levels: levelProgress,
+                               days: studyDays, totals: studyTotals)
                     .padding(.horizontal, 20)
-                
-                DailyGoalCard(introduced: introducedToday, compact: true)
-                    .padding(.horizontal, 20)
-                
-                Picker("Раздел", selection: $tab) {
-                    ForEach(ProfileTab.allCases) { tab in
-                        Text(tab.title).tag(tab)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 20)
 
-                switch tab {
-                case .stats:
-                    VocabularyStatusCard(status: vocabularyStatus)
-                        .padding(.horizontal, 20)
-                    DailyStudyCard(days: studyDays, totals: studyTotals)
-                        .padding(.horizontal, 20)
-                case .games:
-                    GameRecordsCard(tetrisHighScore: profile.tetrisHighScore)
-                        .padding(.horizontal, 20)
-                case .levels:
-                    LevelProgressCard(progress: levelProgress)
-                        .padding(.horizontal, 20)
-                }
-                
                 Spacer().frame(height: 20)
             }
         }

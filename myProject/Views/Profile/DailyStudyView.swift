@@ -8,10 +8,10 @@ extension FSRSRating {
     /// Цвета оценок — одни и те же в карточках, справке и профиле
     var color: Color {
         switch self {
-        case .again: return .red
-        case .hard: return .orange
-        case .good: return .blue
-        case .easy: return .green
+        case .again: return .brandScale1
+        case .hard: return .brandScale2
+        case .good: return .brandScale3
+        case .easy: return .brandScale4
         }
     }
 }
@@ -124,7 +124,7 @@ private struct GoalRing: View {
 }
 
 /// «Сколько новых слов вы хотите учить в день?»
-private struct DailyGoalSheet: View {
+struct DailyGoalSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var limit: Int
 
