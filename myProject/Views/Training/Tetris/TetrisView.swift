@@ -93,7 +93,7 @@ struct TetrisView: View {
                             }) {
                                 Image(systemName: "speaker.wave.2.fill")
                                     .scaledFont(size: 18)
-                                    .foregroundColor(.indigo)
+                                    .foregroundColor(Color.brandTint)
                             }
 
                             Spacer()
@@ -205,7 +205,7 @@ struct TetrisView: View {
                     VStack(spacing: 8) {
                         Text("Ваш счет: \(score)")
                             .scaledFont(size: 20, weight: .heavy, design: .rounded)
-                            .foregroundColor(.indigo)
+                            .foregroundColor(Color.brandTint)
                         
                         if let highScore = userProfile?.tetrisHighScore, highScore > 0 {
                             Text("Рекорд: \(highScore)")
@@ -225,7 +225,7 @@ struct TetrisView: View {
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
-                                .background(Color.indigo)
+                                .background(Color.brandTint)
                                 .cornerRadius(14)
                         }
                         
@@ -254,7 +254,7 @@ struct TetrisView: View {
                         .foregroundColor(.white)
                         .padding(.vertical, 14)
                         .padding(.horizontal, 30)
-                        .background(Capsule().fill(Color.indigo))
+                        .background(Capsule().fill(Color.brandTint))
                         .shadow(color: .black.opacity(0.2), radius: 10, y: 4)
                 }
             }
@@ -298,14 +298,14 @@ struct TetrisView: View {
             Button(action: { dismiss() }) {
                 Image(systemName: "chevron.left")
                     .scaledFont(size: 20, weight: .semibold)
-                    .foregroundColor(.indigo)
+                    .foregroundColor(Color.brandTint)
             }
             .accessibilityLabel("Обзор")
 
             VStack(alignment: .leading, spacing: 1) {
                 Text("Счёт: \(score)")
                     .scaledFont(size: 17, weight: .bold, design: .rounded)
-                    .foregroundColor(.indigo)
+                    .foregroundColor(Color.brandTint)
                 bonusStatus
             }
 
@@ -321,7 +321,7 @@ struct TetrisView: View {
             Button(action: { isPaused ? resume() : pause() }) {
                 Image(systemName: isPaused ? "play.fill" : "pause.fill")
                     .scaledFont(size: 18)
-                    .foregroundColor(.indigo)
+                    .foregroundColor(Color.brandTint)
             }
             .accessibilityLabel(isPaused ? "Продолжить" : "Пауза")
 
@@ -338,7 +338,7 @@ struct TetrisView: View {
         if bonusLeft > 0 {
             Text("×2 · ещё \(bonusLeft) \(Self.piecesNoun(bonusLeft))")
                 .scaledFont(size: 12, weight: .heavy, design: .rounded)
-                .foregroundColor(.orange)
+                .foregroundColor(Color.brandTint)
         } else {
             Text("🔥 \(answerStreak % Self.streakForBonus)/\(Self.streakForBonus)")
                 .scaledFont(size: 12, weight: .semibold, design: .rounded)
@@ -367,10 +367,10 @@ struct TetrisView: View {
         } label: {
             Label(isThinking ? "Фигура ждёт ответа" : "Подумать", systemImage: isThinking ? "hourglass" : "pause.circle.fill")
                 .scaledFont(size: 14, weight: .bold)
-                .foregroundColor(isThinking ? .orange : .indigo)
+                .foregroundColor(isThinking ? Color.brandTint : Color.brandTint)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
-                .background(Capsule().fill((isThinking ? Color.orange : Color.indigo).opacity(0.12)))
+                .background(Capsule().fill((isThinking ? Color.brandTint : Color.brandTint).opacity(0.12)))
         }
         .disabled(!isAvailable && !isThinking)
         .opacity(isAvailable || isThinking ? 1 : 0.4)

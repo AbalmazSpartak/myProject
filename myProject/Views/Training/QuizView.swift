@@ -76,7 +76,7 @@ struct QuizView: View {
                         categories: categories,
                         icon: "folder.fill",
                         tint: .purple,
-                        backgroundTint: .indigo,
+                        backgroundTint: Color.brandTint,
                         onSelect: changeFilter
                     )
                     
@@ -130,7 +130,7 @@ struct QuizView: View {
                         if translationMode == "en_ru" && !word.displayTranscription.isEmpty {
                             Text(word.displayTranscription)
                                 .scaledFont(size: 18, weight: .bold, design: .rounded)
-                                .foregroundColor(.orange)
+                                .foregroundColor(Color.brandTint)
                         }
                         PartOfSpeechBadge(word: word)
                     }
@@ -168,7 +168,7 @@ struct QuizView: View {
                                 .scaledFont(size: 16, weight: .bold, design: .rounded)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
-                                .background(Color.indigo)
+                                .background(Color.brandTint)
                                 .foregroundColor(.white)
                                 .cornerRadius(14)
                         }

@@ -76,7 +76,7 @@ struct PolyglotExerciseView<Scheme: View>: View {
                         .foregroundColor(Color.brandMuted)
                     Text("\(points) \(PolyglotProgress.pointsNoun(points))")
                         .scaledFont(size: 13, weight: .bold, design: .rounded)
-                        .foregroundColor(.orange)
+                        .foregroundColor(Color.brandTint)
                         .contentTransition(.numericText())
                         .animation(.snappy, value: points)
                 }
@@ -186,7 +186,7 @@ struct PolyglotExerciseView<Scheme: View>: View {
             Label(isCorrect ? "Верно!" : "Почти. Правильно так:",
                   systemImage: isCorrect ? "checkmark.circle.fill" : "lightbulb.fill")
                 .scaledFont(size: 18, weight: .semibold)
-                .foregroundColor(isCorrect ? .green : .orange)
+                .foregroundColor(isCorrect ? .green : Color.brandTint)
             Text(task.answerText)
                 .scaledFont(size: 22, weight: .semibold, design: .serif)
                 .foregroundColor(.brandDark)
@@ -256,11 +256,11 @@ struct PolyglotExerciseView<Scheme: View>: View {
 
                 Text("+\(points) \(PolyglotProgress.pointsNoun(points))")
                     .scaledFont(size: 34, weight: .bold, design: .rounded)
-                    .foregroundColor(.orange)
+                    .foregroundColor(Color.brandTint)
                 if points > bestBefore, bestBefore > 0 {
                     Label("Лучший раунд в уроке!", systemImage: "star.fill")
                         .scaledFont(size: 15, weight: .semibold)
-                        .foregroundColor(.orange)
+                        .foregroundColor(Color.brandTint)
                 }
 
                 Text("Верно с первого раза: \(correctCount) из \(tasks.count) · \(percent)%")
@@ -310,7 +310,7 @@ struct PolyglotExerciseView<Scheme: View>: View {
                 Spacer()
                 Text(level.stars)
                     .scaledFont(size: 18)
-                    .foregroundColor(.orange)
+                    .foregroundColor(Color.brandTint)
             }
             if let levelBefore, levelBefore != level {
                 Text("\(levelBefore.title) → \(level.title)")
@@ -322,7 +322,7 @@ struct PolyglotExerciseView<Scheme: View>: View {
                     .foregroundColor(.brandDark)
             }
             ProgressView(value: mastery)
-                .tint(.orange)
+                .tint(Color.brandTint)
             Text("\(Int((mastery * 100).rounded()))% верных за последние раунды · лучший раунд \(best) \(PolyglotProgress.pointsNoun(best))")
                 .scaledFont(size: 13)
                 .foregroundColor(Color.brandMuted)

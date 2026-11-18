@@ -29,7 +29,7 @@ struct NeuralVoiceHelpView: View {
                     HelpBullet("Бегущая подсветка по словам у Piper пока не работает — подсвечивается предложение.")
                 }
 
-                HelpCard(title: "Что важно знать", icon: "info.circle.fill", color: .blue) {
+                HelpCard(title: "Что важно знать", icon: "info.circle.fill", color: Color.brandTint) {
                     HelpBullet("Не скачан ни один голос — всё читает системный голос iPhone.")
                     HelpBullet("Нейросетевой голос чуть быстрее разряжает батарею, чем системный.")
                     HelpBullet("Скорость речи для слов настраивается в «Озвучке», для книг — в меню «…» читалки.")

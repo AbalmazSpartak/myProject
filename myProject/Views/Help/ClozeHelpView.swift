@@ -16,12 +16,12 @@ struct ClozeHelpView: View {
 
                 HelpCard(title: "Как проверяется ответ", icon: "checkmark.circle.fill", color: .green) {
                     HelpRating(title: "Верно", color: .green, text: "Вписана та же форма, что в предложении (например, captured).")
-                    HelpRating(title: "Почти", color: .orange, text: "Вписана словарная форма, а в предложении другая (capture вместо captured). Засчитывается как правильный ответ.")
+                    HelpRating(title: "Почти", color: Color.brandTint, text: "Вписана словарная форма, а в предложении другая (capture вместо captured). Засчитывается как правильный ответ.")
                     HelpRating(title: "Неверно", color: .red, text: "Слово попадает в «Работу над ошибками».")
                     HelpParagraph("Регистр букв не важен.")
                 }
 
-                HelpCard(title: "Полезно знать", icon: "info.circle.fill", color: .indigo) {
+                HelpCard(title: "Полезно знать", icon: "info.circle.fill", color: Color.brandTint) {
                     HelpBullet("Длина пропуска подсказывает длину слова. Кнопка подсказки откроет первую букву.")
                     HelpBullet("Здесь только слова с примерами из словарей, выбранных в настройках.")
                     HelpBullet("Счёт «Верно» в углу — только для текущей сессии, в статистику профиля он не идёт.")

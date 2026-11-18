@@ -57,7 +57,7 @@ struct FlashcardsView: View {
                         Text("Обзор")
                     }
                     .scaledFont(size: 16, weight: .semibold, design: .rounded)
-                    .foregroundColor(.blue)
+                    .foregroundColor(Color.brandTint)
                 }
                 
                 Spacer()
@@ -71,7 +71,7 @@ struct FlashcardsView: View {
                     categories: categories,
                     includesDue: true,
                     icon: "clock.badge.checkmark.fill",
-                    tint: .blue,
+                    tint: Color.brandTint,
                     backgroundOpacity: 0.1,
                     onSelect: changeFilter
                 )
@@ -93,7 +93,7 @@ struct FlashcardsView: View {
             if isApproachFinished {
                 ApproachDoneCard(
                     summary: "Вспомнили \(approachCorrect) из \(approachAnswered)",
-                    tint: .blue,
+                    tint: Color.brandTint,
                     onContinue: { withAnimation { generateSession() } },
                     onExit: { dismiss() }
                 )
@@ -121,7 +121,7 @@ struct FlashcardsView: View {
                             Button(action: { TextToSpeechManager.shared.speak(word.english) }) {
                                 Image(systemName: "speaker.wave.2.bubble.fill")
                                     .font(.title2)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(Color.brandTint)
                             }
                         }
                         
@@ -130,7 +130,7 @@ struct FlashcardsView: View {
                             if translationMode == "en_ru" && !word.displayTranscription.isEmpty {
                                 Text(word.displayTranscription)
                                     .scaledFont(size: 16, weight: .medium, design: .rounded)
-                                    .foregroundColor(.orange)
+                                    .foregroundColor(Color.brandTint)
                             }
                             PartOfSpeechBadge(word: word)
                         }
@@ -154,7 +154,7 @@ struct FlashcardsView: View {
 
                             Text(currentAnswer)
                                 .scaledFont(size: 28, weight: .regular, design: .serif)
-                                .foregroundColor(.blue)
+                                .foregroundColor(Color.brandTint)
                                 .multilineTextAlignment(.center)
                             
                             VStack(spacing: 8) {
@@ -166,10 +166,10 @@ struct FlashcardsView: View {
                                     FSRSActionButton(title: "Снова", color: .red) {
                                         processRating(.again)
                                     }
-                                    FSRSActionButton(title: "Трудно", color: .orange) {
+                                    FSRSActionButton(title: "Трудно", color: Color.brandTint) {
                                         processRating(.hard)
                                     }
-                                    FSRSActionButton(title: "Хорошо", color: .blue) {
+                                    FSRSActionButton(title: "Хорошо", color: Color.brandTint) {
                                         processRating(.good)
                                     }
                                     FSRSActionButton(title: "Легко", color: .green) {
@@ -189,7 +189,7 @@ struct FlashcardsView: View {
                                 .scaledFont(size: 16, weight: .bold, design: .rounded)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
-                                .background(Color.blue)
+                                .background(Color.brandTint)
                                 .foregroundColor(.white)
                                 .cornerRadius(16)
                         }

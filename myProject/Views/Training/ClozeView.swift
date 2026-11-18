@@ -165,7 +165,7 @@ struct ClozeView: View {
                 Button(action: { withAnimation { showHint = true } }) {
                     Image(systemName: "lightbulb.fill")
                         .scaledFont(size: 20)
-                        .foregroundColor(showHint ? Color.brandMuted.opacity(0.4) : .orange)
+                        .foregroundColor(showHint ? Color.brandMuted.opacity(0.4) : Color.brandTint)
                 }
                 .disabled(showHint)
                 .accessibilityLabel("Подсказка: первая буква")

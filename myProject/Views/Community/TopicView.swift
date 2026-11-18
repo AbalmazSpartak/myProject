@@ -226,7 +226,7 @@ private struct TopicRatingCard: View {
                     } label: {
                         Image(systemName: star <= topic.rating ? "star.fill" : "star")
                             .scaledFont(size: 28)
-                            .foregroundColor(star <= topic.rating ? .orange : Color.brandMuted.opacity(0.5))
+                            .foregroundColor(star <= topic.rating ? Color.brandTint : Color.brandMuted.opacity(0.5))
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("\(star) из 5")
@@ -249,8 +249,8 @@ private struct TopicRatingCard: View {
                             .foregroundColor(.brandDark)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
-                            .background(Capsule().fill(isOn ? Color.orange.opacity(0.22) : Color.brandFill))
-                            .overlay(Capsule().strokeBorder(isOn ? Color.orange : .clear, lineWidth: 1.5))
+                            .background(Capsule().fill(isOn ? Color.brandTint.opacity(0.22) : Color.brandFill))
+                            .overlay(Capsule().strokeBorder(isOn ? Color.brandTint : .clear, lineWidth: 1.5))
                     }
                     .buttonStyle(.plain)
                     .accessibilityAddTraits(isOn ? .isSelected : [])

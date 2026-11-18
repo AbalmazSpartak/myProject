@@ -18,7 +18,7 @@ struct PolyglotView: View {
                         Label("\(progress.totalPoints) \(PolyglotProgress.pointsNoun(progress.totalPoints)) за уроки",
                               systemImage: "star.circle.fill")
                             .scaledFont(size: 16, weight: .bold)
-                            .foregroundColor(.orange)
+                            .foregroundColor(Color.brandTint)
                     }
 
                     NavigationLink {
@@ -204,13 +204,13 @@ struct PolyglotView: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
                     Text(level.stars)
-                        .foregroundColor(.orange)
+                        .foregroundColor(Color.brandTint)
                     Text("\(level.title) · \(Int((mastery * 100).rounded()))%")
                         .foregroundColor(.brandDark)
                 }
                 .scaledFont(size: 13, weight: .semibold)
                 ProgressView(value: mastery)
-                    .tint(.orange)
+                    .tint(Color.brandTint)
             }
             .padding(.top, 4)
         } else {

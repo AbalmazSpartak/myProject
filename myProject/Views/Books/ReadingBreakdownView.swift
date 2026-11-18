@@ -5,9 +5,9 @@ extension PhonicsKind {
     /// Цвет подсветки в тексте и в разборе слова — мягкий, читается и на светлой, и на тёмной теме
     nonisolated var color: Color {
         switch self {
-        case .vowelTeam: return .blue
+        case .vowelTeam: return Color.brandTint
         case .magicE: return .green
-        case .rVowel: return .orange
+        case .rVowel: return Color.brandTint
         case .consonantPair: return .purple
         case .ending: return Color.brandTint
         case .silent: return Color.brandMuted
@@ -20,7 +20,7 @@ extension PhonicsKind {
 
 extension ColloquialRule {
     /// Разговорные формы — пунктиром под словом: фон занят правилами чтения
-    nonisolated static let color = Color.indigo
+    nonisolated static let color = Color.brandTint
 }
 
 /// Легенда цветов подсветки с галочками — в шторке «Оформление»: что подсвечивать в книге
@@ -180,7 +180,7 @@ struct ReadingBreakdownView: View {
                       systemImage: isQueued ? "checkmark.circle.fill" : "mic.badge.plus")
                     .scaledFont(size: 14, weight: .semibold)
             }
-            .tint(isQueued ? .green : .orange)
+            .tint(isQueued ? .green : Color.brandTint)
             .disabled(isQueued)
         }
     }
@@ -382,7 +382,7 @@ struct ReadingBreakdownView: View {
                         .foregroundColor(.brandDark)
                 } icon: {
                     Image(systemName: "lightbulb.fill")
-                        .foregroundColor(.orange)
+                        .foregroundColor(Color.brandTint)
                 }
             }
         }

@@ -145,7 +145,7 @@ struct TextScanView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(Color.brandButton)
                 .foregroundStyle(Color.brandOnButton)
-                .tint(.orange)
+                .tint(Color.brandTint)
                 .disabled(isRecognizing)
             }
             PhotosPicker(selection: $photoItem, matching: .images) {
@@ -154,7 +154,7 @@ struct TextScanView: View {
                     .padding(.vertical, 10)
             }
             .buttonStyle(.bordered)
-            .tint(.orange)
+            .tint(Color.brandTint)
             .disabled(isRecognizing)
         }
     }
@@ -177,7 +177,7 @@ struct TextScanView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(Color.brandButton)
                 .foregroundStyle(Color.brandOnButton)
-                .tint(.orange)
+                .tint(Color.brandTint)
                 .disabled(liveText.isEmpty)
             }
             HStack(spacing: 12) {
@@ -205,7 +205,7 @@ struct TextScanView: View {
                 }
             }
             .buttonStyle(.bordered)
-            .tint(.orange)
+            .tint(Color.brandTint)
             .disabled(isRecognizing)
         }
     }

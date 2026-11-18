@@ -60,18 +60,18 @@ enum HelpTopic: String, CaseIterable, Identifiable {
     var color: Color {
         switch self {
         case .profile: return Color.brandTint
-        case .flashcards: return .blue
+        case .flashcards: return Color.brandTint
         case .quiz: return .purple
         case .cloze: return .pink
         case .inputCards: return Color.brandTint
-        case .dictionary: return .orange
-        case .tetris: return .indigo
+        case .dictionary: return Color.brandTint
+        case .tetris: return Color.brandTint
         case .race: return .green
         case .community: return Color.brandTint
         case .books: return Color.brandTint
         case .polyglot: return .red
         case .schulte: return Color.brandTint
-        case .speak: return .orange
+        case .speak: return Color.brandTint
         case .neuralVoice: return .mint
         }
     }

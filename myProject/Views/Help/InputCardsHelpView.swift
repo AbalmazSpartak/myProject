@@ -22,7 +22,7 @@ struct InputCardsHelpView: View {
                     HelpBullet("Ошибка отправляет слово в «Работу над ошибками», правильный ответ — убирает из неё.")
                 }
 
-                HelpCard(title: "Режимы", icon: "line.3.horizontal.decrease.circle.fill", color: .indigo) {
+                HelpCard(title: "Режимы", icon: "line.3.horizontal.decrease.circle.fill", color: Color.brandTint) {
                     HelpBullet("«Все слова», «Работа над ошибками», темы и уровни A1–C2 — переключаются кнопкой в правом верхнем углу.")
                     HelpBullet("Направление (англ ➔ рус или рус ➔ англ) меняется в профиле: ⚙️ → «Обучение».")
                     HelpBullet("Ответы засчитываются в статистику карточек в профиле.")

@@ -125,7 +125,7 @@ struct SpeakTrainingView: View {
             VStack(spacing: 20) {
                 Image(systemName: "mic.circle.fill")
                     .scaledFont(size: 64)
-                    .foregroundColor(.orange)
+                    .foregroundColor(Color.brandTint)
                 Text("Послушайте слово, произнесите его в микрофон — телефон распознает речь и скажет, понятно ли получилось.")
                     .scaledFont(size: 16)
                     .foregroundColor(.brandDark)
@@ -280,9 +280,9 @@ struct SpeakTrainingView: View {
             } label: {
                 ZStack {
                     Circle()
-                        .fill(listening ? Color.red : Color.orange)
+                        .fill(listening ? Color.red : Color.brandTint)
                         .frame(width: 96, height: 96)
-                        .shadow(color: (listening ? Color.red : Color.orange).opacity(0.35), radius: listening ? 14 : 6)
+                        .shadow(color: (listening ? Color.red : Color.brandTint).opacity(0.35), radius: listening ? 14 : 6)
                     if checker.phase == .processing {
                         ProgressView().tint(.white)
                     } else {
@@ -413,7 +413,7 @@ struct SpeakTrainingView: View {
                     ForEach(outcomes, id: \.item.id) { outcome in
                         HStack {
                             Image(systemName: outcome.firstTry ? "checkmark.circle.fill" : outcome.passed ? "arrow.uturn.right.circle.fill" : "xmark.circle.fill")
-                                .foregroundColor(outcome.firstTry ? .green : outcome.passed ? .orange : .red)
+                                .foregroundColor(outcome.firstTry ? .green : outcome.passed ? Color.brandTint : .red)
                             Text(outcome.item.english)
                                 .scaledFont(size: 17, weight: .semibold, design: .serif)
                                 .foregroundColor(.brandDark)

@@ -47,7 +47,7 @@ struct WordOfDayRow: View {
                 Spacer(minLength: 0)
                 Image(systemName: "speaker.wave.2.fill")
                     .scaledFont(size: 20)
-                    .foregroundColor(.orange)
+                    .foregroundColor(Color.brandTint)
             }
             .padding(14)
             .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 18, style: .continuous))

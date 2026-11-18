@@ -112,8 +112,8 @@ struct VocabularyStatusCard: View {
                 .scaledFont(size: 20, weight: .semibold, design: .serif)
                 .foregroundColor(.brandDark)
             row("Выучены", hint: "повторение через дни", count: status.learned, color: .green)
-            row("Изучаются", hint: "первые повторения", count: status.learning, color: .blue)
-            row("Забыты — учим снова", hint: nil, count: status.relearning, color: .orange)
+            row("Изучаются", hint: "первые повторения", count: status.learning, color: Color.brandTint)
+            row("Забыты — учим снова", hint: nil, count: status.relearning, color: Color.brandTint)
             row("Пора повторить", hint: "сегодня", count: status.due, color: .red)
         }
         .padding(16)

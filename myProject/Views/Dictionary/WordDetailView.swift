@@ -65,7 +65,7 @@ struct WordDetailView: View {
                 } label: {
                     Image(systemName: "speaker.wave.2.fill")
                         .scaledFont(size: 24)
-                        .foregroundColor(.orange)
+                        .foregroundColor(Color.brandTint)
                 }
                 .accessibilityLabel("Озвучить")
             }
@@ -81,7 +81,7 @@ struct WordDetailView: View {
                         .italic()
                         .foregroundColor(Color.brandMuted)
                 }
-                badge(word.cefrLevel, color: .indigo)
+                badge(word.cefrLevel, color: Color.brandTint)
                 if !word.isCustom, !word.tags.isEmpty {
                     let isOxford = word.tags == StudyScope.oxfordTag
                     badge(isOxford ? "Oxford" : "доп.", color: isOxford ? Color.brandTint : Color.brandMuted)
@@ -170,7 +170,7 @@ struct WordDetailView: View {
             if word.isMistake {
                 Label("В списке «Слова с ошибками»", systemImage: "exclamationmark.triangle.fill")
                     .scaledFont(size: 14)
-                    .foregroundColor(.orange)
+                    .foregroundColor(Color.brandTint)
             }
         }
         .padding(16)

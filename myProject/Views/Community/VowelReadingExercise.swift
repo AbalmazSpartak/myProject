@@ -214,7 +214,7 @@ struct VowelReadingExerciseView: View {
             Label(isCorrect ? "Верно!" : "Здесь \(task.answer)",
                   systemImage: isCorrect ? "checkmark.circle.fill" : "lightbulb.fill")
                 .scaledFont(size: 17, weight: .semibold)
-                .foregroundColor(isCorrect ? .green : .orange)
+                .foregroundColor(isCorrect ? .green : Color.brandTint)
             Text("\(task.type.title): \(task.type.rule).")
                 .scaledFont(size: 15)
                 .foregroundColor(.brandDark)

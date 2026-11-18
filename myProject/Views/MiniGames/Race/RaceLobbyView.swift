@@ -124,7 +124,7 @@ struct RaceLobbyView: View {
         Button { isChoosingWords = true } label: {
             HStack(spacing: 12) {
                 Image(systemName: "books.vertical.fill")
-                    .foregroundColor(.indigo)
+                    .foregroundColor(Color.brandTint)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Слова для гонки")
                         .scaledFont(size: 13)
@@ -203,7 +203,7 @@ struct RaceLobbyView: View {
                     .scaledFont(size: 17, weight: .bold)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.indigo)
+                    .background(Color.brandTint)
                     .foregroundColor(.white)
                     .cornerRadius(14)
             }
@@ -349,7 +349,7 @@ struct RaceLobbyView: View {
                         .scaledFont(size: 20, weight: .semibold)
                     Text("Можно сыграть с ботом или подождать ещё")
                         .foregroundColor(Color.brandMuted)
-                    onlineButton("Сыграть с ботом", color: .indigo) {
+                    onlineButton("Сыграть с ботом", color: Color.brandTint) {
                         leaveOnline()
                         startSolo(.bot(botLevel))
                     }
@@ -368,7 +368,7 @@ struct RaceLobbyView: View {
             case .failed(let message):
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 40))
-                    .foregroundColor(.orange)
+                    .foregroundColor(Color.brandTint)
                 Text(message)
                     .scaledFont(size: 17, weight: .semibold)
                     .multilineTextAlignment(.center)
@@ -450,7 +450,7 @@ struct RaceLobbyView: View {
                     .scaledFont(size: 17, weight: .bold)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.indigo)
+                    .background(Color.brandTint)
                     .foregroundColor(.white)
                     .cornerRadius(14)
             }

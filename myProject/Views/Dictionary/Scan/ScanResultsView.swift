@@ -389,7 +389,7 @@ struct ScanResultsView: View {
         if !entry.note.isEmpty { parts.append(entry.note) }
         return Text("✦ " + (parts.isEmpty ? "ИИ" : parts.joined(separator: " · ")))
             .font(.caption)
-            .foregroundStyle(.indigo)
+            .foregroundStyle(Color.brandTint)
     }
 
     /// showsExample — пример из текста: у выражений по нему видно, в том ли значении оно стоит
@@ -404,7 +404,7 @@ struct ScanResultsView: View {
                 if aiBase[candidate.id] != nil {
                     Text("✦ в тексте: \(candidate.extracted.surface) — ИИ узнал слово базы")
                         .font(.caption)
-                        .foregroundStyle(.indigo)
+                        .foregroundStyle(Color.brandTint)
                 }
                 if showsExample {
                     Text(Word.attributedExample(candidate.extracted.example))
@@ -421,7 +421,7 @@ struct ScanResultsView: View {
             Spacer()
             Text(word.cefrLevel)
                 .font(.caption.bold())
-                .foregroundStyle(.indigo)
+                .foregroundStyle(Color.brandTint)
         }
     }
 

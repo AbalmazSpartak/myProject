@@ -147,7 +147,7 @@ struct RaceWordSourcePicker: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: icon)
-                    .foregroundColor(.indigo)
+                    .foregroundColor(Color.brandTint)
                     .frame(width: 24)
                 Text(title)
                     .foregroundColor(.brandDark)
@@ -158,7 +158,7 @@ struct RaceWordSourcePicker: View {
                 }
                 if selection == source.storedValue {
                     Image(systemName: "checkmark")
-                        .foregroundColor(.indigo)
+                        .foregroundColor(Color.brandTint)
                         .fontWeight(.bold)
                 }
             }

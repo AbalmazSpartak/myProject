@@ -102,10 +102,10 @@ struct TrainingFilterMenu: View {
                     .scaledFont(size: 11, weight: .bold)
             }
             .scaledFont(size: 14, weight: .bold, design: .rounded)
-            .foregroundColor(isMistakes ? .orange : tint)
+            .foregroundColor(isMistakes ? Color.brandTint : tint)
             .padding(.horizontal, 12)
             .padding(.vertical, 7)
-            .background((isMistakes ? Color.orange : backgroundTint ?? tint).opacity(backgroundOpacity))
+            .background((isMistakes ? Color.brandTint : backgroundTint ?? tint).opacity(backgroundOpacity))
             .cornerRadius(10)
         }
     }

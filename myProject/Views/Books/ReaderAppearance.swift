@@ -504,7 +504,7 @@ struct ReaderAppearanceSheet: View {
             if night.contrast < 3 {
                 Label("Текст почти сливается с фоном — измените яркость текста или фона", systemImage: "exclamationmark.triangle.fill")
                     .scaledFont(size: 13)
-                    .foregroundColor(.orange)
+                    .foregroundColor(Color.brandTint)
             }
         }
         .padding(14)

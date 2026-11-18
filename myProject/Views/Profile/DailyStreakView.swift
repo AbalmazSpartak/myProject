@@ -11,7 +11,7 @@ struct DailyStreakCard: View {
             HStack(alignment: .center, spacing: 16) {
                 Image(systemName: "flame.fill")
                     .scaledFont(size: 40)
-                    .foregroundStyle(current > 0 ? Color.orange : Color.brandMuted.opacity(0.5))
+                    .foregroundStyle(current > 0 ? Color.brandTint : Color.brandMuted.opacity(0.5))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Серия дней")
@@ -30,7 +30,7 @@ struct DailyStreakCard: View {
                         .foregroundColor(Color.brandMuted)
                     Text("\(max(best, current)) \(Self.daysNoun(max(best, current)))")
                         .scaledFont(size: 16, weight: .bold, design: .rounded)
-                        .foregroundColor(.orange)
+                        .foregroundColor(Color.brandTint)
                 }
             }
 
@@ -53,7 +53,7 @@ struct DailyStreakCard: View {
         return VStack(spacing: 6) {
             ZStack {
                 Circle()
-                    .fill(day.isDone ? Color.orange : Color.brandFill)
+                    .fill(day.isDone ? Color.brandTint : Color.brandFill)
                 if day.isDone {
                     Image(systemName: "checkmark")
                         .scaledFont(size: 13, weight: .bold)
@@ -61,7 +61,7 @@ struct DailyStreakCard: View {
                 }
             }
             .frame(width: 32, height: 32)
-            .overlay(Circle().strokeBorder(isToday && !day.isDone ? Color.orange : .clear, lineWidth: 2))
+            .overlay(Circle().strokeBorder(isToday && !day.isDone ? Color.brandTint : .clear, lineWidth: 2))
 
             Text(day.date.formatted(.dateTime.weekday(.short)))
                 .scaledFont(size: 12, weight: isToday ? .bold : .regular)

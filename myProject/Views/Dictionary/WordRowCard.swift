@@ -22,10 +22,10 @@ struct WordRowCard: View {
                     if !word.transcription.isEmpty {
                         Text(word.cefrLevel)
                             .scaledFont(size: 11, weight: .bold, design: .rounded)
-                            .foregroundColor(.indigo)
+                            .foregroundColor(Color.brandTint)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(Color.indigo.opacity(0.12))
+                            .background(Color.brandTint.opacity(0.12))
                             .cornerRadius(6)
                     }
 
@@ -58,7 +58,7 @@ struct WordRowCard: View {
                 TextToSpeechManager.shared.speak(word.english)
             }) {
                 Image(systemName: "speaker.wave.2.fill")
-                    .foregroundColor(.orange)
+                    .foregroundColor(Color.brandTint)
                     .scaledFont(size: 18)
             }
             .buttonStyle(.plain)

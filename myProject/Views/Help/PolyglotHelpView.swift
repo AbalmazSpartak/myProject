@@ -23,14 +23,14 @@ struct PolyglotHelpView: View {
                     HelpBullet("Пока так устроены уроки 1–4.")
                 }
 
-                HelpCard(title: "Баллы", icon: "star.circle.fill", color: .orange) {
+                HelpCard(title: "Баллы", icon: "star.circle.fill", color: Color.brandTint) {
                     HelpBullet("+10 баллов за фразу, собранную верно с первой попытки.")
                     HelpBullet("+5 бонусом за каждые 5 верных ответов подряд. Ошибка обнуляет серию, но баллы не снимает.")
                     HelpBullet("Счёт раунда виден вверху, под номером фразы. В итоге — баллы за раунд и отметка, если это лучший раунд в уроке.")
                     HelpBullet("Общий счёт всех уроков — вверху списка уроков.")
                 }
 
-                HelpCard(title: "Освоение темы", icon: "chart.bar.fill", color: .indigo) {
+                HelpCard(title: "Освоение темы", icon: "chart.bar.fill", color: Color.brandTint) {
                     HelpParagraph("Показывает, насколько уверенно вы владеете темой урока. Считается по последним трём раундам: доля фраз, собранных верно с первой попытки. Старые неудачи со временем перестают влиять.")
                     HelpBullet("☆☆☆ «Знакомство» — до 40%.")
                     HelpBullet("★☆☆ «Практика» — 40–69%.")

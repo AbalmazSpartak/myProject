@@ -119,7 +119,7 @@ struct GameRecordsCard: View {
                 .scaledFont(size: 20, weight: .semibold, design: .serif)
                 .foregroundColor(.brandDark)
 
-            row(icon: "gamecontroller.fill", color: .indigo, title: "Тетрис слов", subtitle: "лучший результат",
+            row(icon: "gamecontroller.fill", color: Color.brandTint, title: "Тетрис слов", subtitle: "лучший результат",
                 values: tetrisHighScore > 0 ? ["\(tetrisHighScore.formatted()) \(Self.noun(tetrisHighScore, "очко", "очка", "очков"))"] : [])
 
             row(icon: "car.fill", color: .green, title: "Гонка слов", subtitle: "лучшее время", values: raceRecords)

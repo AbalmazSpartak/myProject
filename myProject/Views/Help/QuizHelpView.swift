@@ -10,7 +10,7 @@ struct QuizHelpView: View {
                     HelpStep(number: 3, text: "Правильный вариант подсветится зелёным, ошибочный — красным. Нажмите «Следующее слово».")
                 }
 
-                HelpCard(title: "Ошибки", icon: "exclamationmark.triangle.fill", color: .orange) {
+                HelpCard(title: "Ошибки", icon: "exclamationmark.triangle.fill", color: Color.brandTint) {
                     HelpBullet("Слово, на котором вы ошиблись, попадает в «Работу над ошибками» — общую для всех тренировок.")
                     HelpBullet("Правильный ответ на такое слово убирает его из ошибок.")
                 }
@@ -22,7 +22,7 @@ struct QuizHelpView: View {
                     HelpParagraph("Режим переключается кнопкой в правом верхнем углу. Под ней — счёт текущей сессии.")
                 }
 
-                HelpCard(title: "Полезно знать", icon: "info.circle.fill", color: .indigo) {
+                HelpCard(title: "Полезно знать", icon: "info.circle.fill", color: Color.brandTint) {
                     HelpBullet("Одно написание — разные слова (speed: «скорость» и «мчаться»): глагол показан с to — «to speed», а перевод другого значения никогда не попадает в варианты, чтобы правильный ответ был один.")
                     HelpBullet("Направление (англ ➔ рус или рус ➔ англ) меняется в профиле: ⚙️ → «Обучение».")
                     HelpBullet("Ответы засчитываются в статистику «Викторины» в профиле.")

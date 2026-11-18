@@ -113,7 +113,7 @@ struct WordSearchView: View {
                         Text(word.partOfSpeech).font(.subheadline).italic().foregroundStyle(Color.brandMuted)
                     }
                     Spacer()
-                    Text(word.cefrLevel).font(.caption.bold()).foregroundStyle(.indigo)
+                    Text(word.cefrLevel).font(.caption.bold()).foregroundStyle(Color.brandTint)
                 }
                 Text(word.russian).font(.subheadline).foregroundStyle(Color.brandMuted)
                 if !word.example.isEmpty {

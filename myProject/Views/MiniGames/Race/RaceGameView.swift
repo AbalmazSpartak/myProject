@@ -52,7 +52,7 @@ struct RaceGameView<Manager: RaceTransport>: View {
             if isDisconnected {
                 Label("Связь потеряна — соперники больше не видны", systemImage: "wifi.exclamationmark")
                     .scaledFont(size: 14, weight: .semibold)
-                    .foregroundColor(.orange)
+                    .foregroundColor(Color.brandTint)
             }
 
             Spacer()
@@ -60,7 +60,7 @@ struct RaceGameView<Manager: RaceTransport>: View {
             if let countdown, !raceEnded {
                 Text("\(countdown)")
                     .scaledFont(size: 96, weight: .bold, design: .rounded)
-                    .foregroundColor(.indigo)
+                    .foregroundColor(Color.brandTint)
                     .contentTransition(.numericText())
                     .animation(.snappy, value: countdown)
                 Spacer()
@@ -229,7 +229,7 @@ struct RaceGameView<Manager: RaceTransport>: View {
             ZStack(alignment: .leading) {
                 Capsule().fill(Color.brandFill).frame(height: 24)
                 Image(systemName: "car.fill")
-                    .foregroundColor(player.isMe ? .indigo : Color.brandMuted)
+                    .foregroundColor(player.isMe ? Color.brandTint : Color.brandMuted)
                     .opacity(player.isGhost ? 0.35 : 1)
                     .offset(x: progress * (geo.size.width - 24))
             }
@@ -250,7 +250,7 @@ struct RaceGameView<Manager: RaceTransport>: View {
             if let note = manager.resultNote {
                 Text(note)
                     .scaledFont(size: 15, weight: .semibold)
-                    .foregroundColor(.indigo)
+                    .foregroundColor(Color.brandTint)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
             }
@@ -275,7 +275,7 @@ struct RaceGameView<Manager: RaceTransport>: View {
                         .scaledFont(size: 16, weight: .bold)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.indigo)
+                        .background(Color.brandTint)
                         .foregroundColor(.white)
                         .cornerRadius(14)
                 }

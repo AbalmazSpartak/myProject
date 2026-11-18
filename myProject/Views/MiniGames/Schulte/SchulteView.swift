@@ -35,8 +35,8 @@ struct SchulteView: View {
     @AppStorage("schulte_dot") private var dot = "green"
 
     private static let dotColors: [(key: String, color: Color, name: String)] = [
-        ("green", .green, "Зелёная"), ("red", .red, "Красная"), ("blue", .blue, "Синяя"),
-        ("orange", .orange, "Оранжевая"), ("purple", .purple, "Фиолетовая"), ("black", .black, "Чёрная"),
+        ("green", .green, "Зелёная"), ("red", .red, "Красная"), ("blue", Color.brandTint, "Синяя"),
+        ("orange", Color.brandTint, "Оранжевая"), ("purple", .purple, "Фиолетовая"), ("black", .black, "Чёрная"),
     ]
 
     private var dotColor: Color? {
@@ -329,7 +329,7 @@ struct SchulteView: View {
             if isRecord {
                 Text("Новый рекорд!")
                     .scaledFont(size: 20, weight: .bold)
-                    .foregroundColor(.orange)
+                    .foregroundColor(Color.brandTint)
             }
             Text(SchulteRecords.format(result))
                 .scaledFont(size: 52, weight: .bold, design: .rounded)

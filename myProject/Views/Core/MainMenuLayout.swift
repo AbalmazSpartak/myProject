@@ -49,12 +49,12 @@ enum MenuSection: String, CaseIterable {
 
     var color: Color {
         switch self {
-        case .flashcards: return .blue
+        case .flashcards: return Color.brandTint
         case .quiz: return .purple
         case .cloze: return .pink
         case .inputCards: return Color.brandTint
-        case .dictionary: return .orange
-        case .tetris: return .indigo
+        case .dictionary: return Color.brandTint
+        case .tetris: return Color.brandTint
         case .race: return .green
         case .help: return Color.brandMuted
         case .community: return Color.brandTint
@@ -62,7 +62,7 @@ enum MenuSection: String, CaseIterable {
         case .polyglot: return .red
         case .review: return .mint
         case .schulte: return Color.brandTint
-        case .speak: return .orange
+        case .speak: return Color.brandTint
         }
     }
 
@@ -120,12 +120,12 @@ enum MenuPalette {
     ]
 
     static let colors: [(name: String, color: Color)] = [
-        ("blue", .blue), ("purple", .purple), ("pink", .pink), ("red", .red),
-        ("orange", .orange), ("green", .green), ("teal", Color.brandTint), ("indigo", .indigo)
+        ("blue", Color.brandTint), ("purple", .purple), ("pink", .pink), ("red", .red),
+        ("orange", Color.brandTint), ("green", .green), ("teal", Color.brandTint), ("indigo", Color.brandTint)
     ]
 
     static func color(named name: String) -> Color {
-        colors.first { $0.name == name }?.color ?? .blue
+        colors.first { $0.name == name }?.color ?? Color.brandTint
     }
 }
 

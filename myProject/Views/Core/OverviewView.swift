@@ -108,7 +108,7 @@ struct OverviewView: View {
                 HStack(spacing: 7) {
                     ForEach(sections.indices, id: \.self) { index in
                         Circle()
-                            .fill(index == (focusPage ?? 0) ? Color.orange : Color.brandFill)
+                            .fill(index == (focusPage ?? 0) ? Color.brandTint : Color.brandFill)
                             .frame(width: 7, height: 7)
                     }
                 }
@@ -139,7 +139,7 @@ struct OverviewView: View {
                     } label: {
                         Text(action.title)
                             .scaledFont(size: 16, weight: .semibold)
-                            .foregroundColor(.orange)
+                            .foregroundColor(Color.brandTint)
                     }
                     .buttonStyle(.plain)
                 }
@@ -278,7 +278,7 @@ private struct FocusCard: View {
         VStack(alignment: .leading, spacing: 14) {
             Label("Фокус дня".uppercased(), systemImage: "sparkles")
                 .scaledFont(size: 14, weight: .bold)
-                .foregroundColor(.orange)
+                .foregroundColor(Color.brandTint)
             Text(isSpacedRepetition ? "Интервальное повторение" : section.title)
                 .scaledFont(size: 24, weight: .semibold, design: .serif)
                 .foregroundColor(.brandDark)
@@ -298,7 +298,7 @@ private struct FocusCard: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color.orange, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .background(Color.brandTint, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .buttonStyle(.plain)
             // Норма новых слов — только у интервального повторения; у остальных на её месте пусто
@@ -314,7 +314,7 @@ private struct FocusCard: View {
     private var newWordsProgress: some View {
         VStack(alignment: .leading, spacing: 6) {
             ProgressView(value: Double(min(introducedToday, max(dailyLimit, 1))), total: Double(max(dailyLimit, 1)))
-                .tint(.orange)
+                .tint(Color.brandTint)
             Text("Новые слова сегодня: \(introducedToday) из \(dailyLimit)")
                 .scaledFont(size: 13)
                 .foregroundColor(Color.brandMuted)

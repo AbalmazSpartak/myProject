@@ -114,7 +114,7 @@ struct ObjectResultsView: View {
                     Text(word?.english ?? guess.english).font(.headline)
                     Text(guess.isConfident ? "уверенно" : "возможно")
                         .font(.caption.bold())
-                        .foregroundStyle(guess.isConfident ? .green : .orange)
+                        .foregroundStyle(guess.isConfident ? .green : Color.brandTint)
                 }
                 if let word {
                     Text(word.russian).foregroundStyle(Color.brandMuted)
@@ -127,7 +127,7 @@ struct ObjectResultsView: View {
             if let word {
                 Text(word.cefrLevel)
                     .font(.caption.bold())
-                    .foregroundStyle(.indigo)
+                    .foregroundStyle(Color.brandTint)
             } else {
                 Text("новое")
                     .font(.caption.bold())

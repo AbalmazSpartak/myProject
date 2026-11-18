@@ -181,8 +181,8 @@ struct CommunityView: View {
     // Заглушка: жанровые карточки без постеров
     private static let movieGenres: [(name: String, icon: String, color: Color)] = [
         ("Фэнтези", "sparkles", .purple),
-        ("Фантастика", "globe.americas.fill", .indigo),
-        ("Комедии", "face.smiling.inverse", .orange),
+        ("Фантастика", "globe.americas.fill", Color.brandTint),
+        ("Комедии", "face.smiling.inverse", Color.brandTint),
         ("Драмы", "theatermasks.fill", .red),
         ("Мультфильмы", "film.fill", Color.brandTint)
     ]
@@ -209,9 +209,9 @@ struct CommunityView: View {
     private static let musicGenres: [(name: String, icon: String, color: Color)] = [
         ("Поп", "music.mic", .pink),
         ("Рок", "guitars.fill", .red),
-        ("Хип-хоп", "headphones", .indigo),
+        ("Хип-хоп", "headphones", Color.brandTint),
         ("Баллады", "music.note", Color.brandTint),
-        ("Классика хитов", "opticaldisc.fill", .orange)
+        ("Классика хитов", "opticaldisc.fill", Color.brandTint)
     ]
 
     private var musicRibbon: some View {
@@ -278,7 +278,7 @@ struct TopicCard: View {
                 if !topic.ratingSummary.isEmpty {
                     Text(topic.ratingSummary)
                         .scaledFont(size: 12, weight: .semibold)
-                        .foregroundColor(.orange)
+                        .foregroundColor(Color.brandTint)
                 }
                 if !topic.words.isEmpty {
                     Label("\(topic.words.count) \(DailyStudyCard.wordsNoun(topic.words.count))", systemImage: "text.book.closed")

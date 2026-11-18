@@ -131,7 +131,7 @@ struct InputFlashcardsView: View {
                             if translationMode == "en_ru" && !word.displayTranscription.isEmpty {
                                 Text(word.displayTranscription)
                                     .scaledFont(size: 16, weight: .semibold, design: .rounded)
-                                    .foregroundColor(.orange)
+                                    .foregroundColor(Color.brandTint)
                             }
                             PartOfSpeechBadge(word: word)
                         }
@@ -182,7 +182,7 @@ struct InputFlashcardsView: View {
                                 Text(homographNote != nil ? "Почти!" : isCorrect ? "Правильно!" : "Неверно")
                                     .scaledFont(size: 18, weight: .bold, design: .rounded)
                             }
-                            .foregroundColor(homographNote != nil ? .orange : isCorrect ? .green : .red)
+                            .foregroundColor(homographNote != nil ? Color.brandTint : isCorrect ? .green : .red)
                             
                             if let homographNote {
                                 Text(homographNote)

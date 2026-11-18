@@ -209,7 +209,7 @@ private struct SectionTopicRow: View {
                     if !topic.ratingSummary.isEmpty {
                         Text(topic.ratingSummary)
                             .scaledFont(size: 12, weight: .semibold)
-                            .foregroundColor(.orange)
+                            .foregroundColor(Color.brandTint)
                     }
                 }
             }

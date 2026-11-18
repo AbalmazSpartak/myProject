@@ -165,7 +165,7 @@ struct WordLookupView: View {
             if let baseWord {
                 HStack(spacing: 8) {
                     Text("Из базы")
-                    Text(baseWord.cefrLevel).bold().foregroundColor(.indigo)
+                    Text(baseWord.cefrLevel).bold().foregroundColor(Color.brandTint)
                 }
                 .scaledFont(size: 12, weight: .semibold)
                 .foregroundColor(Color.brandMuted)

@@ -9,7 +9,7 @@ struct FlashcardsHelpView: View {
                     HelpParagraph("Расписание повторений рассчитывает алгоритм FSRS. Он подбирает интервалы так, чтобы вы вспоминали слово примерно в 90% случаев.")
                 }
 
-                HelpCard(title: "Как заниматься", icon: "list.number", color: .blue) {
+                HelpCard(title: "Как заниматься", icon: "list.number", color: Color.brandTint) {
                     HelpBullet("Одно написание — разные слова (speed: «скорость» и «мчаться»): глагол показан с to — «to speed», под словом — часть речи и форма из примера («в примере: speeding»).")
                     HelpStep(number: 1, text: "Посмотрите на слово и постарайтесь вспомнить перевод — лучше вслух.")
                     HelpStep(number: 2, text: "Нажмите «Показать ответ» и сверьтесь.")
@@ -18,8 +18,8 @@ struct FlashcardsHelpView: View {
 
                 HelpCard(title: "Кнопки оценки", icon: "hand.tap.fill", color: .purple) {
                     HelpRating(title: "Снова", color: .red, text: "Не вспомнили. Слово вернётся через 5 минут и попадёт в «Работу над ошибками».")
-                    HelpRating(title: "Трудно", color: .orange, text: "Вспомнили с большим усилием. Следующий интервал будет коротким.")
-                    HelpRating(title: "Хорошо", color: .blue, text: "Вспомнили после небольшой паузы. Интервал заметно вырастет, слово уйдёт из ошибок.")
+                    HelpRating(title: "Трудно", color: Color.brandTint, text: "Вспомнили с большим усилием. Следующий интервал будет коротким.")
+                    HelpRating(title: "Хорошо", color: Color.brandTint, text: "Вспомнили после небольшой паузы. Интервал заметно вырастет, слово уйдёт из ошибок.")
                     HelpRating(title: "Легко", color: .green, text: "Вспомнили сразу. Интервал вырастет сильнее всего.")
                     HelpParagraph("Чем честнее оценка, тем точнее расписание. Если завышать её, трудные слова будут появляться слишком редко.")
                 }
@@ -31,14 +31,14 @@ struct FlashcardsHelpView: View {
                     HelpParagraph("Режим переключается кнопкой в правом верхнем углу. Оценки в любом режиме влияют на расписание слова.")
                 }
 
-                HelpCard(title: "Полезно знать", icon: "info.circle.fill", color: .indigo) {
+                HelpCard(title: "Полезно знать", icon: "info.circle.fill", color: Color.brandTint) {
                     HelpBullet("Кнопка с динамиком озвучивает английское слово.")
                     HelpBullet("Вместе с ответом показывается картинка к слову — она помогает связать слово с образом. Картинка загружается из интернета один раз и дальше доступна без сети.")
                     HelpBullet("Если картинка не подходит, нажмите ↻ — появится другая, или 👁 — чтобы скрыть её для этого слова.")
                     HelpBullet("Картинки можно отключить в профиле: ⚙️ → «Обучение» → «Картинки к словам».")
                 }
 
-                HelpCard(title: "Советы", icon: "star.fill", color: .orange) {
+                HelpCard(title: "Советы", icon: "star.fill", color: Color.brandTint) {
                     HelpBullet("Занимайтесь каждый день понемногу — 10–15 минут эффективнее, чем час раз в неделю.")
                     HelpBullet("Начинайте с режима «На повторение», пока он не опустеет.")
                     HelpBullet("Не подглядывайте в ответ, пока не попробуете вспомнить сами.")
@@ -126,7 +126,7 @@ struct HelpStep: View {
                 .scaledFont(size: 13, weight: .bold, design: .rounded)
                 .foregroundColor(.white)
                 .frame(width: 22, height: 22)
-                .background(Circle().fill(Color.blue))
+                .background(Circle().fill(Color.brandTint))
             HelpParagraph(text)
         }
     }

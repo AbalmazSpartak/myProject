@@ -43,7 +43,7 @@ struct ReportWordView: View {
                         Section {
                             Label(state == .sent ? "Отправлено — спасибо!" : "Сохранено, отправится, когда появится интернет",
                                   systemImage: state == .sent ? "checkmark.circle.fill" : "clock.fill")
-                                .foregroundColor(state == .sent ? .green : .orange)
+                                .foregroundColor(state == .sent ? .green : Color.brandTint)
                         }
                     }
                 }
