@@ -51,23 +51,29 @@ struct ContentView: View {
         }
     }
 
-    /// «Обучение» — минимум для запоминания слов: Словарь, Карточки и Профиль
+    /// «Обучение» — минимум для запоминания слов: Обзор (три раздела), Словарь и Профиль
     private var learningTabs: some View {
         TabView(selection: $selectedTab) {
+            NavigationStack {
+                LearningOverviewView(open: { activeScreen = $0 })
+                    .readableColumn()
+                    .modeSwitcherInset()
+                    .toolbar(.hidden, for: .navigationBar)
+                    // Раздел открывается переходом на весь экран: свайп от левого края возвращает на «Обзор»
+                    .navigationDestination(item: $activeScreen) { screen in
+                        destination(for: screen)
+                            .toolbar(.hidden, for: .navigationBar)
+                            .toolbar(.hidden, for: .tabBar)
+                    }
+            }
+            .tabItem { Label("Обзор", systemImage: "house") }
+            .tag(0)
+
             DictionaryView(showsBackButton: false)
                 .readableColumn()
                 .modeSwitcherInset()
                 .tabItem { Label("Словарь", systemImage: "books.vertical") }
-                .tag(0)
-
-            NavigationStack {
-                FlashcardsView()
-                    .readableColumn()
-                    .modeSwitcherInset()
-                    .toolbar(.hidden, for: .navigationBar)
-            }
-            .tabItem { Label("Карточки", systemImage: "rectangle.stack") }
-            .tag(1)
+                .tag(1)
 
             NavigationStack {
                 ProfileView(showsBackButton: false)
