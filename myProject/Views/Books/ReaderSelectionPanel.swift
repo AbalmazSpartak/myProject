@@ -170,6 +170,12 @@ struct ReaderSelectionPanel: View {
                 if isSingleWord, let onOpenCard {
                     action("Карточка", icon: "text.book.closed", action: onOpenCard)
                 }
+                // ВРЕМЕННО: толкование из словаря iPhone и для английских книг — посмотреть, как работает (в неанглийских оно есть всегда)
+                if isEnglish, isSingleWord {
+                    action("Толкование", icon: "text.magnifyingglass") {
+                        definedWord = DefinedWord(term: text.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters)))
+                    }
+                }
                 action("Озвучить", icon: "speaker.wave.2") {
                     if isEnglish {
                         TextToSpeechManager.shared.speak(text)
