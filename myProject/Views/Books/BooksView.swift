@@ -18,6 +18,7 @@ struct BooksView: View {
     @State private var errorMessage: String?
     @State private var bookToDelete: Book?
     @State private var isShowingSettings = false
+    @State private var searchText = ""
     @AppStorage("books_tab") private var tab: LibraryTab = .recent
 
     private let columns = [GridItem(.adaptive(minimum: 150), spacing: 16)]
@@ -49,7 +50,7 @@ struct BooksView: View {
                         }
                     }
                     .tag(LibraryTab.recent)
-                    grid(books, withAddCard: true)
+                    grid(books, withAddCard: true, withSearch: true)
                         .tag(LibraryTab.mine)
                     subscriptions
                         .tag(LibraryTab.subscriptions)
@@ -111,24 +112,72 @@ struct BooksView: View {
             .sorted { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }
     }
 
-    /// withAddCard — первой карточкой «＋ Добавить книгу» (в «Моих книгах»)
-    private func grid(_ items: [Book], withAddCard: Bool = false) -> some View {
-        ScrollView {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 22) {
-                if withAddCard {
-                    AddBookCard { isImporting = true }
+    /// withAddCard — первой карточкой «＋ Добавить книгу» (в «Моих книгах»); withSearch — сверху поле поиска по названию и автору
+    private func grid(_ items: [Book], withAddCard: Bool = false, withSearch: Bool = false) -> some View {
+        let searching = withSearch && !Self.normalized(searchText).isEmpty
+        let shown = searching ? filtered(items) : items
+        return ScrollView {
+            VStack(spacing: 16) {
+                if withSearch, !items.isEmpty { searchField }
+                if searching, shown.isEmpty {
+                    ContentUnavailableView.search(text: searchText)
+                        .padding(.top, 40)
                 }
-                ForEach(items) { book in
-                    BookCard(book: book) { openedBook = book }
-                        .contextMenu {
-                            Button(role: .destructive) { bookToDelete = book } label: {
-                                Label("Удалить книгу", systemImage: "trash")
+                LazyVGrid(columns: columns, alignment: .leading, spacing: 22) {
+                    // При поиске карточка «Добавить книгу» не нужна — только найденное
+                    if withAddCard, !searching {
+                        AddBookCard { isImporting = true }
+                    }
+                    ForEach(shown) { book in
+                        BookCard(book: book) { openedBook = book }
+                            .contextMenu {
+                                Button(role: .destructive) { bookToDelete = book } label: {
+                                    Label("Удалить книгу", systemImage: "trash")
+                                }
                             }
-                        }
+                    }
                 }
             }
             .padding(20)
         }
+        .scrollDismissesKeyboard(.interactively)
+    }
+
+    /// Поле поиска книг: плашка с лупой и крестиком очистки
+    private var searchField: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.gray)
+            TextField("Поиск книг", text: $searchText)
+                .scaledFont(size: 16)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .submitLabel(.search)
+            if !searchText.isEmpty {
+                Button { searchText = "" } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.gray)
+                }
+                .accessibilityLabel("Очистить поиск")
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    /// Книги, у которых название или автор содержат запрос
+    private func filtered(_ items: [Book]) -> [Book] {
+        let query = Self.normalized(searchText)
+        guard !query.isEmpty else { return items }
+        return items.filter { Self.normalized($0.title).contains(query) || Self.normalized($0.author).contains(query) }
+    }
+
+    /// Без регистра, ё как е, ’ как '
+    private static func normalized(_ text: String) -> String {
+        text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            .replacingOccurrences(of: "ё", with: "е")
+            .replacingOccurrences(of: "’", with: "'")
     }
 
     /// Источники книг; пока один — каталог Gutenberg
