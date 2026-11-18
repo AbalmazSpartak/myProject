@@ -328,7 +328,8 @@ struct WordLookupView: View {
                 .padding(.vertical, 12)
         }
         .buttonStyle(.borderedProminent)
-        .foregroundStyle(Color.brandOnTint)
+        .tint(Color.brandButton)
+                .foregroundStyle(Color.brandOnButton)
         .tint(isAdded ? .green : .brandDark)
         .disabled(isAdded || (baseWord == nil && translation.trimmingCharacters(in: .whitespaces).isEmpty))
     }

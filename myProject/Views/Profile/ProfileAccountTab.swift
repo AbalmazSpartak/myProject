@@ -62,7 +62,7 @@ struct ProfileAccountTab: View {
                                 .scaledFont(size: 14, weight: .semibold)
                                 .foregroundColor(.brandOnTint)
                                 .padding(.horizontal, 18).frame(height: 38)
-                                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.brandTint))
+                                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.brandButton))
                         }
                         .padding(.top, 6)
                     }

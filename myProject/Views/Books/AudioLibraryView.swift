@@ -131,7 +131,7 @@ struct AudioLibraryView: View {
             .font(.system(size: size * 0.38))
             .foregroundColor(.brandOnTint)
             .frame(width: size, height: size)
-            .background(Color.brandTint, in: Circle())
+            .background(Color.brandButton, in: Circle())
     }
 
     private func infoText(_ info: Info) -> String {

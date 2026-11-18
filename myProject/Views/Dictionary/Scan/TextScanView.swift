@@ -143,7 +143,8 @@ struct TextScanView: View {
                         .padding(.vertical, 14)
                 }
                 .buttonStyle(.borderedProminent)
-                .foregroundStyle(Color.brandOnTint)
+                .tint(Color.brandButton)
+                .foregroundStyle(Color.brandOnButton)
                 .tint(.orange)
                 .disabled(isRecognizing)
             }
@@ -174,7 +175,8 @@ struct TextScanView: View {
                         .padding(.vertical, 14)
                 }
                 .buttonStyle(.borderedProminent)
-                .foregroundStyle(Color.brandOnTint)
+                .tint(Color.brandButton)
+                .foregroundStyle(Color.brandOnButton)
                 .tint(.orange)
                 .disabled(liveText.isEmpty)
             }

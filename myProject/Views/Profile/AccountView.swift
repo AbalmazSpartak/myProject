@@ -122,7 +122,7 @@ struct AccountView: View {
             }
             .foregroundColor(.brandOnTint)
             .frame(maxWidth: .infinity, minHeight: 46)
-            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.brandTint.opacity(enabled ? 1 : 0.4)))
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.brandButton.opacity(enabled ? 1 : 0.4)))
         }
         .buttonStyle(.plain)
         .disabled(!enabled || isBusy)

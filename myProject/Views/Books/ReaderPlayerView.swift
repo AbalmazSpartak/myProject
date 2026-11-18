@@ -196,7 +196,7 @@ struct ReaderPlayerView: View {
             control("backward.fill", label: "Абзац назад") { speech.previousParagraph() }
             Button(action: onToggle) {
                 ZStack {
-                    Circle().fill(Color.brandTint)
+                    Circle().fill(Color.brandButton)
                     if speech.isPreparing {
                         ProgressView().tint(.brandOnTint)
                     } else {

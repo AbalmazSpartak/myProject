@@ -538,7 +538,8 @@ struct BookReaderView: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .foregroundStyle(Color.brandOnTint)
+                .tint(Color.brandButton)
+                .foregroundStyle(Color.brandOnButton)
                 .tint(Color.brandTint)
             } else {
                 Text("Конец книги")

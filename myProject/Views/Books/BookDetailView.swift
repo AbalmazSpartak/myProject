@@ -202,9 +202,9 @@ struct BookDetailView: View {
             } label: {
                 Text(isStarted ? "Продолжить" : "Читать")
                     .scaledFont(size: 17, weight: .semibold)
-                    .foregroundColor(.brandOnTint)
+                    .foregroundColor(.brandOnButton)
                     .frame(maxWidth: .infinity, minHeight: 48)
-                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.brandTint))
+                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.brandButton))
             }
             Button {
                 listensOnOpen = true
@@ -213,9 +213,10 @@ struct BookDetailView: View {
             } label: {
                 Label("Слушать", systemImage: "headphones")
                     .scaledFont(size: 17, weight: .semibold)
-                    .foregroundColor(.brandTint)
+                    // Значок и слово — одним цветом вместе с рамкой кнопки
+                    .foregroundColor(.brandButton)
                     .frame(maxWidth: .infinity, minHeight: 48)
-                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.brandTint, lineWidth: 1.5))
+                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.brandButton, lineWidth: 1.5))
             }
         }
         .buttonStyle(.plain)

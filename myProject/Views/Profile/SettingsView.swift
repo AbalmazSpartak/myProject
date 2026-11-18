@@ -9,6 +9,12 @@ struct SettingsView: View {
     @AppStorage("app_theme") private var selectedTheme: String = "system"
     @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
     @AppStorage(AppMode.askKey) private var asksMode = false
+    @AppStorage(AppPalette.accentKey) private var storedAccent = ""
+    @AppStorage(AppPalette.buttonKey) private var storedButton = ""
+    @AppStorage(AppPalette.backgroundKey) private var storedBackground = ""
+    @State private var pickedAccent: AppPalette.Accent?
+    @State private var pickedButton: AppPalette.Accent?
+    @State private var pickedBackground: AppPalette.Background?
     @AppStorage(AppMode.readerOnlyKey) private var readerOnly = false
 
     /// Третий вариант «Спрашивать» — режим остаётся прежним, а при запуске появляется выбор
@@ -82,6 +88,82 @@ struct SettingsView: View {
         }
     }
 
+    private var shownAccent: AppPalette.Accent { pickedAccent ?? AppPalette.accent }
+    private var shownButton: AppPalette.Accent { pickedButton ?? (storedButton.isEmpty ? shownAccent : AppPalette.button) }
+    private var shownBackground: AppPalette.Background { pickedBackground ?? AppPalette.background }
+    private var hasPaletteChanges: Bool {
+        shownAccent != AppPalette.accent || shownButton != (storedButton.isEmpty ? AppPalette.accent : AppPalette.button) || shownBackground != AppPalette.background
+    }
+
+    /// Готовые цвета: основной, кнопок и фон. Применяются кнопкой — приложение перестраивается целиком
+    @ViewBuilder
+    private var paletteSection: some View {
+        Section {
+            // Пока кнопки не выбирали отдельно, они идут за основным цветом
+            swatchRow("Основной цвет", selection: Binding(get: { shownAccent }, set: { pickedAccent = $0 }))
+            swatchRow("Цвет кнопок", selection: Binding(get: { shownButton }, set: { pickedButton = $0 }))
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Цвет фона")
+                HStack(spacing: 14) {
+                    ForEach(AppPalette.Background.allCases) { item in
+                        let isOn = shownBackground == item
+                        Button { pickedBackground = item } label: {
+                            VStack(spacing: 4) {
+                                Circle()
+                                    .fill(Color(UIColor(red: CGFloat(item.bg.0 >> 16 & 0xFF) / 255, green: CGFloat(item.bg.0 >> 8 & 0xFF) / 255, blue: CGFloat(item.bg.0 & 0xFF) / 255, alpha: 1)))
+                                    .frame(width: 34, height: 34)
+                                    .overlay(Circle().stroke(isOn ? Color.brandTint : Color.brandBorder, lineWidth: isOn ? 3 : 1))
+                                Text(item.title).scaledFont(size: 11).foregroundColor(isOn ? .brandDark : .brandMuted)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Фон: \(item.title)")
+                        .accessibilityAddTraits(isOn ? .isSelected : [])
+                    }
+                }
+            }
+            if hasPaletteChanges {
+                Button("Применить цвета") {
+                    storedAccent = shownAccent.rawValue
+                    if pickedButton != nil { storedButton = shownButton.rawValue }
+                    storedBackground = shownBackground.rawValue
+                    pickedAccent = nil; pickedButton = nil; pickedBackground = nil
+                }
+            }
+            if !storedAccent.isEmpty || !storedButton.isEmpty || !storedBackground.isEmpty {
+                Button("Вернуть цвета по умолчанию", role: .destructive) {
+                    storedAccent = ""; storedButton = ""; storedBackground = ""
+                    pickedAccent = nil; pickedButton = nil; pickedBackground = nil
+                }
+            }
+        } header: {
+            Text("Цвета приложения")
+        } footer: {
+            Text("Основной цвет — вкладки, значки и подсветка; цвет кнопок — «Читать», «Слушать», «Войти» и другие. После «Применить» приложение перерисуется.")
+        }
+    }
+
+    private func swatchRow(_ title: String, selection: Binding<AppPalette.Accent>) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+            HStack(spacing: 14) {
+                ForEach(AppPalette.Accent.allCases) { item in
+                    let isOn = selection.wrappedValue == item
+                    Button { selection.wrappedValue = item } label: {
+                        Circle()
+                            .fill(Color(UIColor(red: CGFloat(item.tint.0 >> 16 & 0xFF) / 255, green: CGFloat(item.tint.0 >> 8 & 0xFF) / 255, blue: CGFloat(item.tint.0 & 0xFF) / 255, alpha: 1)))
+                            .frame(width: 34, height: 34)
+                            .overlay(Circle().stroke(Color.brandDark, lineWidth: isOn ? 3 : 0).padding(-4))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(item.title)
+                    .accessibilityAddTraits(isOn ? .isSelected : [])
+                }
+            }
+            .padding(.vertical, 4)
+        }
+    }
+
     /// Тема и вид «Обзора»
     @ViewBuilder
     private var appearanceSection: some View {
@@ -112,8 +194,10 @@ struct SettingsView: View {
                         speechLink
                         modeSection
                         appearanceSection
+                        paletteSection
                     } else {
                         appearanceSection
+                        paletteSection
                         modeSection
                         speechLink
                     }
