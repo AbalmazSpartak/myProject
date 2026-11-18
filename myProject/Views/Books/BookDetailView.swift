@@ -75,22 +75,28 @@ struct BookDetailView: View {
     // MARK: - Обложка
 
     /// Обложка по центру на размытом фоне из неё же; по бокам — главы и прочитанное
+    private var backdropHeight: CGFloat { coverWidth * 1.5 * 0.62 + 40 }
+
+    private var backdrop: some View {
+        Group {
+            if let data = book.coverData, let image = UIImage(data: data) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .blur(radius: 28)
+                    .opacity(0.55)
+            } else {
+                Color.brown.opacity(0.35)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: backdropHeight, alignment: .center)
+        .clipped()
+    }
+
     private var top: some View {
         ZStack {
-            Group {
-                if let data = book.coverData, let image = UIImage(data: data) {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .blur(radius: 28)
-                        .opacity(0.55)
-                } else {
-                    Color.brown.opacity(0.35)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: coverWidth * 1.5 * 0.62 + 40, alignment: .center)
-            .clipped()
+            backdrop
             .frame(maxHeight: .infinity, alignment: .top)
             .mask(
                 LinearGradient(colors: [.black, .black, .clear], startPoint: .top, endPoint: .bottom)
@@ -111,6 +117,16 @@ struct BookDetailView: View {
             .padding(.top, 8)
         }
         .frame(maxWidth: .infinity)
+        // Если потянуть страницу вниз, фон продолжается до самого верха: над ним зеркальные копии, шов не виден.
+        // В background — на раскладку не влияет
+        .background(alignment: .top) {
+            VStack(spacing: 0) {
+                ForEach(0..<3, id: \.self) { index in
+                    backdrop.scaleEffect(x: 1, y: index % 2 == 0 ? -1 : 1)
+                }
+            }
+            .offset(y: -backdropHeight * 3)
+        }
     }
 
     private func stat(title: String, value: String) -> some View {
