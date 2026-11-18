@@ -28,8 +28,8 @@ struct ReaderTabsView: View {
 
             NavigationStack {
                 ReaderProfileView(
-                    openLibrary: { subscriptions in
-                        libraryTab = subscriptions ? .subscriptions : .mine
+                    openLibrary: { section in
+                        libraryTab = section
                         tab = .library
                     },
                     openBookmarks: { tab = .bookmarks }
@@ -63,7 +63,7 @@ private struct ReaderProfileView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var profiles: [UserProfile]
     @Query(sort: \Book.addedAt, order: .reverse) private var books: [Book]
-    let openLibrary: (_ subscriptions: Bool) -> Void
+    let openLibrary: (_ section: LibraryTab) -> Void
     let openBookmarks: () -> Void
 
     @State private var isShowingSettings = false
@@ -157,13 +157,10 @@ private struct ReaderProfileView: View {
                 .foregroundColor(.brandDark)
             // Четыре равные колонки на всю ширину — ряд по центру на любом экране
             HStack(spacing: 0) {
-                section("Читаю", icon: "book") { openLibrary(false) }
-                // Пока открывает последнюю книгу: «Слушать» — на её странице
-                section("Аудио", icon: "headphones") {
-                    if let book = shelf.first { openedBook = book } else { openLibrary(false) }
-                }
+                section("Читаю", icon: "book") { openLibrary(.mine) }
+                section("Аудио", icon: "headphones") { openLibrary(.audio) }
                 section("Закладки", icon: "bookmark") { openBookmarks() }
-                section("Подписки", icon: "arrow.down.circle") { openLibrary(true) }
+                section("Подписки", icon: "arrow.down.circle") { openLibrary(.subscriptions) }
             }
         }
         .frame(maxWidth: .infinity)
@@ -193,7 +190,7 @@ private struct ReaderProfileView: View {
                     .scaledFont(size: 22, weight: .bold, design: .serif)
                     .foregroundColor(.brandDark)
                 Spacer()
-                Button { openLibrary(false) } label: {
+                Button { openLibrary(.mine) } label: {
                     Image(systemName: "chevron.right")
                         .scaledFont(size: 14, weight: .bold)
                         .foregroundColor(.brandDark)

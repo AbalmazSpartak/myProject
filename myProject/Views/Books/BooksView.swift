@@ -14,6 +14,7 @@ struct BooksView: View {
     var hasTabBar = false
 
     @State private var openedBook: Book?
+    @State private var listenBook: Book?
     @State private var isImporting = false
     @State private var isShowingCatalog = false
     @State private var isParsing = false
@@ -43,6 +44,8 @@ struct BooksView: View {
                 Group {
                     grid(sortedBooks, withAddCard: true, withSearch: true)
                         .tag(LibraryTab.mine)
+                    AudioLibraryView(books: books) { listenBook = $0 }
+                        .tag(LibraryTab.audio)
                     subscriptions
                         .tag(LibraryTab.subscriptions)
                 }
@@ -64,6 +67,10 @@ struct BooksView: View {
         }
         .navigationDestination(item: $openedBook) { book in
             BookDetailView(book: book)
+                .toolbar(.hidden, for: .tabBar)
+        }
+        .navigationDestination(item: $listenBook) { book in
+            BookDetailView(book: book, startsListening: true)
                 .toolbar(.hidden, for: .tabBar)
         }
         .fileImporter(isPresented: $isImporting, allowedContentTypes: UTType.bookFiles) { result in
@@ -292,13 +299,14 @@ struct BooksView: View {
 
 /// Разделы библиотеки на плашке
 enum LibraryTab: String, CaseIterable, Identifiable {
-    case mine, subscriptions
+    case mine, audio, subscriptions
 
     var id: Self { self }
 
     var title: String {
         switch self {
         case .mine: "Мои книги"
+        case .audio: "Аудио"
         case .subscriptions: "Подписки"
         }
     }

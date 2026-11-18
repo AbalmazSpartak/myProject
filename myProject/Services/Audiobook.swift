@@ -97,6 +97,18 @@ nonisolated enum AudiobookStore {
         try? folder.setResourceValues(values)
     }
 
+    /// Сколько глав записано (самым полным из голосов) и сколько места занимает озвучка; nil — озвучки нет
+    static func summary(book: UUID) -> (chapters: Int, bytes: Int64)? {
+        let manager = FileManager.default
+        guard let voices = try? manager.contentsOfDirectory(at: bookFolder(book), includingPropertiesForKeys: nil) else { return nil }
+        var most = 0
+        for voice in voices {
+            let files = (try? manager.contentsOfDirectory(atPath: voice.path)) ?? []
+            most = max(most, files.filter { $0.hasPrefix("ch") && $0.hasSuffix(".json") }.count)
+        }
+        return most > 0 ? (most, size(book: book)) : nil
+    }
+
     /// Сколько байт занимает озвучка книги (всеми голосами)
     static func size(book: UUID) -> Int64 {
         let folder = bookFolder(book)

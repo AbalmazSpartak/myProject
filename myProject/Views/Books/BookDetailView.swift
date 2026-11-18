@@ -4,6 +4,8 @@ import SwiftUI
 /// Открывается нажатием на книгу в библиотеке; читалка — следующим шагом
 struct BookDetailView: View {
     @Bindable var book: Book
+    /// Открыта кнопкой «Слушать» из раздела «Аудио»: сразу открыть читалку и включить озвучку
+    var startsListening = false
 
     @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
     @State private var details: Details?
@@ -17,6 +19,7 @@ struct BookDetailView: View {
     @State private var audioSize: Int64 = 0
     @State private var isConfirmingDelete = false
     @State private var isShowingChapters = false
+    @State private var didAutoListen = false
 
     /// Что нужно разобрать из текста книги: делается один раз, в фоне
     private struct Details {
@@ -69,7 +72,16 @@ struct BookDetailView: View {
             BookDictionaryView(book: book)
                 .appThemedColorScheme()
         }
-        .task { await loadDetails() }
+        .task {
+            await loadDetails()
+            // Один раз: после возврата из читалки страница не должна открыть её снова
+            if startsListening, !didAutoListen {
+                didAutoListen = true
+                listensOnOpen = true
+                listenChapter = nil
+                isReading = true
+            }
+        }
     }
 
     // MARK: - Обложка
