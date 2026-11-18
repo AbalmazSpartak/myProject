@@ -19,7 +19,8 @@ struct BooksView: View {
     @State private var bookToDelete: Book?
     @State private var isShowingSettings = false
     @State private var searchText = ""
-    @AppStorage("books_tab") private var tab: LibraryTab = .recent
+    @AppStorage("books_tab") private var tab: LibraryTab = .mine
+    @AppStorage("books_sort") private var sort: BookSort = .opened
 
     private let columns = [GridItem(.adaptive(minimum: 150), spacing: 16)]
 
@@ -38,19 +39,7 @@ struct BooksView: View {
             // Разделы листаются и свайпом, плашка переключается вместе с ними
             TabView(selection: $tab) {
                 Group {
-                    Group {
-                        if books.isEmpty {
-                            TabPlaceholder(icon: "books.vertical.fill", title: "Здесь будут ваши книги",
-                                           text: "Добавьте книгу в «Мои книги» или скачайте бесплатную в «Подписках».")
-                        } else if recentBooks.isEmpty {
-                            TabPlaceholder(icon: "clock",
-                                           text: "Откройте книгу — она появится здесь.")
-                        } else {
-                            grid(recentBooks)
-                        }
-                    }
-                    .tag(LibraryTab.recent)
-                    grid(books, withAddCard: true, withSearch: true)
+                    grid(sortedBooks, withAddCard: true, withSearch: true)
                         .tag(LibraryTab.mine)
                     subscriptions
                         .tag(LibraryTab.subscriptions)
@@ -106,10 +95,19 @@ struct BooksView: View {
         }
     }
 
-    /// Открытые хоть раз — последняя прочитанная сверху
-    private var recentBooks: [Book] {
-        books.filter { $0.lastOpenedAt != nil }
-            .sorted { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }
+    /// Книги в выбранном порядке; books уже идут от новых добавленных к старым — при равенстве порядок остаётся таким
+    private var sortedBooks: [Book] {
+        switch sort {
+        case .added:
+            return books
+        case .opened:
+            // Открытые — последняя прочитанная сверху, потом неоткрытые по дате добавления
+            return books.sorted { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }
+        case .title:
+            return books.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+        case .progress:
+            return books.sorted { $0.progress > $1.progress }
+        }
     }
 
     /// withAddCard — первой карточкой «＋ Добавить книгу» (в «Моих книгах»); withSearch — сверху поле поиска по названию и автору
@@ -143,8 +141,26 @@ struct BooksView: View {
         .scrollDismissesKeyboard(.interactively)
     }
 
-    /// Поле поиска книг: плашка с лупой и крестиком очистки
+    /// Поле поиска книг: плашка с лупой и крестиком очистки, рядом — выбор порядка
     private var searchField: some View {
+        HStack(spacing: 10) {
+            searchBox
+            Menu {
+                Picker("Порядок", selection: $sort) {
+                    ForEach(BookSort.allCases) { Text($0.title).tag($0) }
+                }
+            } label: {
+                Image(systemName: "arrow.up.arrow.down")
+                    .scaledFont(size: 16)
+                    .foregroundColor(.brandDark)
+                    .frame(width: 44, height: 44)
+                    .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+            .accessibilityLabel("Порядок книг: \(sort.title)")
+        }
+    }
+
+    private var searchBox: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(.gray)
@@ -271,15 +287,30 @@ struct BooksView: View {
 
 /// Разделы библиотеки на плашке
 enum LibraryTab: String, CaseIterable, Identifiable {
-    case recent, mine, subscriptions
+    case mine, subscriptions
 
     var id: Self { self }
 
     var title: String {
         switch self {
-        case .recent: "Недавние"
         case .mine: "Мои книги"
         case .subscriptions: "Подписки"
+        }
+    }
+}
+
+/// Порядок книг в «Моих книгах»
+enum BookSort: String, CaseIterable, Identifiable {
+    case opened, added, title, progress
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .opened: "Недавно открытые"
+        case .added: "Недавно добавленные"
+        case .title: "По алфавиту"
+        case .progress: "По прогрессу чтения"
         }
     }
 }
