@@ -66,7 +66,7 @@ struct AudioLibraryView: View {
                         .tracking(0.5)
                         .foregroundColor(.gray)
                     Text(book.title)
-                        .scaledFont(size: 18, weight: .bold, design: .serif)
+                        .scaledFont(size: 18, weight: .bold)
                         .foregroundColor(.brandDark)
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)

@@ -367,7 +367,7 @@ struct TabPlaceholder: View {
                 .foregroundColor(.brown.opacity(0.6))
             if let title {
                 Text(title)
-                    .scaledFont(size: 22, weight: .semibold, design: .serif)
+                    .scaledFont(size: 20, weight: .bold)
                     .foregroundColor(.brandDark)
                     .multilineTextAlignment(.center)
             }

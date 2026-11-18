@@ -116,7 +116,7 @@ private struct ReaderProfileView: View {
                     .scaledFont(size: 13)
                     .foregroundColor(.gray)
                 Text(profile?.name ?? "")
-                    .scaledFont(size: 22, weight: .bold, design: .serif)
+                    .scaledFont(size: 20, weight: .bold)
                     .foregroundColor(.brandDark)
                     .lineLimit(1)
             }
@@ -143,7 +143,7 @@ private struct ReaderProfileView: View {
                 .clipShape(Circle())
         } else {
             Text(String((profile?.name ?? "").prefix(1)).uppercased())
-                .scaledFont(size: 20, weight: .bold, design: .serif)
+                .scaledFont(size: 20, weight: .bold)
                 .foregroundColor(.brandDark)
                 .frame(width: 48, height: 48)
                 .background(Color.brandFill, in: Circle())
@@ -153,7 +153,7 @@ private struct ReaderProfileView: View {
     private var sections: some View {
         VStack(spacing: 14) {
             Text("Разделы")
-                .scaledFont(size: 22, weight: .bold, design: .serif)
+                .scaledFont(size: 20, weight: .bold)
                 .foregroundColor(.brandDark)
             // Четыре равные колонки на всю ширину — ряд по центру на любом экране
             HStack(spacing: 0) {
@@ -187,7 +187,7 @@ private struct ReaderProfileView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text("Мои книги")
-                    .scaledFont(size: 22, weight: .bold, design: .serif)
+                    .scaledFont(size: 20, weight: .bold)
                     .foregroundColor(.brandDark)
                 Spacer()
                 Button { openLibrary(.mine) } label: {
