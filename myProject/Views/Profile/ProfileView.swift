@@ -30,41 +30,14 @@ struct ProfileView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Шапка: кнопки по краям, заголовок поверх — по центру экрана, сколько бы места ни заняла «‹ Обзор»
-                HStack {
-                    if showsBackButton {
-                        Button(action: { dismiss() }) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "chevron.left")
-                                Text("Обзор")
-                            }
-                            .scaledFont(size: 17, weight: .semibold)
-                            .foregroundColor(.brandDark)
-                            .fixedSize()
-                        }
-                    }
-                    
-                    Spacer()
-                    
-                    HStack(spacing: 14) {
-                        HelpButton(topic: .profile)
-                        Button(action: { showSettings = true }) {
-                            Image(systemName: "gearshape.fill")
-                                .scaledFont(size: 22)
-                                .foregroundColor(Color.brandMuted)
-                        }
-                    }
-                }
-                .frame(minHeight: 30)
-                .overlay {
-                    Text("Профиль")
-                        .scaledFont(size: 20, weight: .bold)
-                        .foregroundColor(.brandDark)
-                        .allowsHitTesting(false)
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
-                
+                // Заголовок — как в «Чтении»; настройки и справка — в «Аккаунт → Все настройки»
+                Text("Профиль")
+                    .scaledFont(size: 34, weight: .semibold, design: .serif)
+                    .foregroundColor(.brandDark)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+
                 ProfileSectionTabs(selection: $section)
 
                 switch section {

@@ -1,20 +1,16 @@
 import SwiftUI
 import SwiftData
 
-/// Вкладка «Аккаунт» профиля по макету «22 · Профиль»: карточка аккаунта, внутри — разделы «Чтение | Обучение»,
+/// Вкладка «Аккаунт» профиля по макету «22 · Профиль»: карточка аккаунта, блок текущего режима (по переключателю сверху),
 /// «Общее» и выход. Цифры успехов вынесены на вкладку «Статистика»
 struct ProfileAccountTab: View {
-    private enum Part: String, CaseIterable, Identifiable {
-        case reading = "Чтение", learning = "Обучение"
-        var id: String { rawValue }
-    }
-
     @Environment(\.modelContext) private var modelContext
     @Query private var profiles: [UserProfile]
     @Query(sort: \Book.addedAt, order: .reverse) private var books: [Book]
     @AppStorage("app_theme") private var theme = "system"
     @State private var account = Account.shared
-    @State private var part = Part.reading
+    /// Блок режима — по переключателю сверху, без своих вкладок: один переключатель на экране
+    @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
     @State private var showPersonalData = false
     @State private var showSettings = false
     @State private var askSignOut = false
@@ -29,8 +25,7 @@ struct ProfileAccountTab: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             accountCard
-            partTabs
-            switch part {
+            switch mode {
             case .reading: readingPart
             case .learning: learningPart
             }
@@ -38,7 +33,6 @@ struct ProfileAccountTab: View {
             general
             if account.isSignedIn { signOutButton }
         }
-        .onAppear { part = AppMode.current == .learning ? .learning : .reading }
         .navigationDestination(item: $openedBook) { book in
             BookDetailView(book: book).toolbar(.hidden, for: .tabBar)
         }
@@ -102,32 +96,7 @@ struct ProfileAccountTab: View {
         .background(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.brandBorder, lineWidth: 1.5))
     }
 
-    // MARK: Чтение | Обучение внутри профиля
-
-    private var partTabs: some View {
-        HStack(spacing: 0) {
-            ForEach(Part.allCases) { item in
-                Button {
-                    guard part != item else { return }
-                    Haptics.tap()
-                    part = item
-                } label: {
-                    Text(item.rawValue)
-                        .scaledFont(size: 15, weight: part == item ? .semibold : .medium)
-                        .foregroundColor(part == item ? .brandDark : .brandMuted)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 12).padding(.bottom, 10)
-                        .overlay(alignment: .bottom) {
-                            Rectangle().fill(part == item ? Color.brandTint : .clear).frame(height: 2)
-                        }
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(part == item ? .isSelected : [])
-            }
-        }
-        .overlay(alignment: .bottom) { Rectangle().fill(Color.brandBorder).frame(height: 1) }
-        .padding(.top, 4)
-    }
+    // MARK: Блок режима
 
     private var readingPart: some View {
         VStack(alignment: .leading, spacing: 12) {
