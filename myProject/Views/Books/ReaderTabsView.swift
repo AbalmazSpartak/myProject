@@ -1,10 +1,10 @@
 import SwiftUI
 import SwiftData
 
-/// Режим «Чтение»: нижняя панель — Главная, Библиотека, Закладки, Профиль.
-/// «Главная» и «Закладки» пока заглушки, «Профиль» — временный макет (потом разделим по назначению)
+/// Режим «Чтение» (LexiStream): нижняя панель — Библиотека, Аудио, Закладки, Профиль; сверху — переключатель режимов.
+/// «Закладки» пока заглушка, «Профиль» — временный макет (потом разделим по назначению)
 struct ReaderTabsView: View {
-    enum Tab: Hashable { case home, library, bookmarks, profile }
+    enum Tab: Hashable { case library, audio, bookmarks, profile }
 
     @State private var tab: Tab = .library
     /// Тот же ключ, что у библиотеки: «Профиль» может открыть её сразу на «Подписках»
@@ -12,35 +12,40 @@ struct ReaderTabsView: View {
 
     var body: some View {
         TabView(selection: $tab) {
-            ReaderSoonView(icon: "house", title: "Главная",
-                           text: "Скоро: здесь будет то, с чего удобно начать чтение.")
-                .tabItem { Label("Главная", systemImage: "house") }
-                .tag(Tab.home)
-
-            NavigationStack { BooksView(isHome: true, hasTabBar: true) }
-                .tabItem { Label("Библиотека", systemImage: "books.vertical") }
+            NavigationStack { BooksView(isHome: true, hasTabBar: true).modeSwitcherInset() }
+                .tabItem { Label("Библиотека", systemImage: "book") }
                 .tag(Tab.library)
+
+            NavigationStack { BooksView(isHome: true, hasTabBar: true, fixedTab: .audio).modeSwitcherInset() }
+                .tabItem { Label("Аудио", systemImage: "headphones") }
+                .tag(Tab.audio)
 
             ReaderSoonView(icon: "bookmark", title: "Закладки",
                            text: "Скоро: закладки и заметки из всех книг — в одном месте.")
+                .modeSwitcherInset()
                 .tabItem { Label("Закладки", systemImage: "bookmark") }
                 .tag(Tab.bookmarks)
 
             NavigationStack {
                 ReaderProfileView(
                     openLibrary: { section in
-                        libraryTab = section
-                        tab = .library
+                        if section == .audio {
+                            tab = .audio
+                        } else {
+                            libraryTab = section
+                            tab = .library
+                        }
                     },
                     openBookmarks: { tab = .bookmarks }
                 )
+                .modeSwitcherInset()
             }
             .tabItem { Label("Профиль", systemImage: "person") }
             .tag(Tab.profile)
         }
         .onChange(of: tab) { _, _ in Haptics.tap() }
         .tint(.brandTint)
-        .toolbarBackground(Color.brandFill, for: .tabBar)
+        .toolbarBackground(Color.brandBackground, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
     }
 }
@@ -88,6 +93,9 @@ private struct ReaderProfileView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                Text("Профиль")
+                    .scaledFont(size: 34, weight: .semibold, design: .serif)
+                    .foregroundColor(.brandDark)
                 header
                 sections
                 booksShelf

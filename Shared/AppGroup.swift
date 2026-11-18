@@ -3,7 +3,7 @@ import SwiftData
 
 /// Общая папка приложения и виджета: база слов и настройки, которые нужны обоим
 enum AppGroup {
-    nonisolated static let id = "group.com.personalteam.myProject"
+    nonisolated static let id = "group.com.personalteam.lexistream"
 
     /// Настройки, общие с виджетом. Без доступа к группе — обычные настройки приложения
     nonisolated static var defaults: UserDefaults {

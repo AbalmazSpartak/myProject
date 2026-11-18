@@ -54,8 +54,9 @@ struct ContentView: View {
         TabView(selection: $selectedTab) {
             NavigationStack {
                 // «Сообщество» с «Обзора» — вкладка, а не вторая копия поверх «Обзора»: у него своя история переходов
-                OverviewView(open: { $0 == .community ? (selectedTab = 1) : (activeScreen = $0) },
+                OverviewView(open: { $0 == .community ? (selectedTab = 3) : (activeScreen = $0) },
                              openProfile: { activeScreen = .profile })
+                    .modeSwitcherInset()
                     .navigationBarHidden(true)
                     // Разделы открываются переходом: свайп от левого края возвращает на «Обзор»
                     .navigationDestination(item: $activeScreen) { screen in
@@ -65,22 +66,34 @@ struct ContentView: View {
                             .toolbar(.hidden, for: .tabBar)
                     }
             }
-            .tabItem { Label("Обзор", systemImage: "safari.fill") }
+            .tabItem { Label("Обзор", systemImage: "house") }
             .tag(0)
-
-            // Сообщество — вкладкой: темы открываются переходом внутри её стека
-            CommunityView(showsBackButton: false)
-            .tabItem { Label("Сообщество", systemImage: "person.3.fill") }
-            .tag(1)
 
             DictionaryView(showsBackButton: false)
                 .readableColumn()
-                .tabItem { Label("Словарь", systemImage: "book.closed.fill") }
-                .tag(2)
+                .modeSwitcherInset()
+                .tabItem { Label("Словарь", systemImage: "books.vertical") }
+                .tag(1)
+
+            // Карточки — вкладкой, как в дизайне LexiStream
+            NavigationStack {
+                FlashcardsView()
+                    .readableColumn()
+                    .modeSwitcherInset()
+                    .toolbar(.hidden, for: .navigationBar)
+            }
+            .tabItem { Label("Карточки", systemImage: "rectangle.stack") }
+            .tag(2)
+
+            // Сообщество — вкладкой: темы открываются переходом внутри её стека
+            CommunityView(showsBackButton: false)
+                .modeSwitcherInset()
+                .tabItem { Label("Сообщество", systemImage: "person.3") }
+                .tag(3)
         }
         .onChange(of: selectedTab) { _, _ in Haptics.tap() }
         .tint(.brandTint)
-        .toolbarBackground(Color.brandFill, for: .tabBar)
+        .toolbarBackground(Color.brandBackground, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
     }
 
@@ -131,7 +144,7 @@ struct ContentView: View {
             // Сюда не попадаем: «Сообщество» открывается вкладкой (см. OverviewView open) — на всякий случай переключаем
             Color.clear.onAppear {
                 activeScreen = nil
-                selectedTab = 1
+                selectedTab = 3
             }
         case .books:
             BooksView()

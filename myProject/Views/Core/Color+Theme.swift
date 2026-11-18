@@ -11,27 +11,34 @@ extension Color {
         Color(UIColor { $0.userInterfaceStyle == .dark ? dark : light })
     }
 
-    /// Основной текст — почти чёрный с тёплым оттенком
-    static let brandDark = themed(light: rgb(0x1F1B16), dark: rgb(0xEDE6D8))
+    // LexiStream: палитра с холста агента-дизайнера — тёплая бумага и один тёмно-бирюзовый акцент
 
-    /// Фон экранов — тёплый кремовый
-    static let brandBackground = themed(light: rgb(0xF3EEE3), dark: rgb(0x1A1714))
+    /// Основной текст
+    static let brandDark = themed(light: rgb(0x1F2421), dark: rgb(0xE9E6DD))
 
-    /// Фон полей ввода
-    static let brandInputBg = themed(light: rgb(0xEAE3D5), dark: rgb(0x2E2A25))
+    /// Фон экранов — тёплая бумага
+    static let brandBackground = themed(light: rgb(0xFAF7F0), dark: rgb(0x141617))
 
-    /// Фон карточек — тёплый белый
-    static let cardBackground = themed(light: rgb(0xFBF8F2), dark: rgb(0x26221E))
+    /// Фон полей ввода и переключателей
+    static let brandInputBg = themed(light: rgb(0xEDE7D9), dark: rgb(0x2C3032))
+
+    /// Фон карточек
+    static let cardBackground = themed(light: rgb(0xFFFFFF), dark: rgb(0x202324))
 
     /// Подложки: блоки групп, плашки иконок, полосы прогресса
-    static let brandFill = themed(light: rgb(0xE8E1D3), dark: rgb(0x35302A))
+    static let brandFill = themed(light: rgb(0xEDE7D9), dark: rgb(0x2C3032))
 
-    /// Цвет элементов управления (переключатели, выбранная вкладка): днём — как текст,
-    /// ночью — шалфейный, иначе включённый переключатель светлый с белым кружком и не читается
-    static let brandTint = themed(light: rgb(0x1F1B16), dark: rgb(0x8FA67F))
+    /// Цвет элементов управления (переключатели, выбранная вкладка, главные кнопки)
+    static let brandTint = themed(light: rgb(0x1F6F63), dark: rgb(0x6FC2B3))
 
-    /// Приглушённый шалфейно-зелёный акцент, как блок с примером на макете
-    static let brandAccent = themed(light: rgb(0xC5D0B8), dark: rgb(0x3E4A37))
+    /// Мягкий бирюзовый акцент: плашки, подсветка
+    static let brandAccent = themed(light: rgb(0xDCEDE8), dark: rgb(0x1F3A36))
+
+    /// Линии-разделители
+    static let brandBorder = themed(light: rgb(0xE6E0D2), dark: rgb(0x34383A))
+
+    /// Приглушённый текст подписей
+    static let brandMuted = themed(light: rgb(0x5F6560), dark: rgb(0xA4A9A5))
 }
 
 extension View {

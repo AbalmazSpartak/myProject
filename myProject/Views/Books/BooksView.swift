@@ -12,6 +12,8 @@ struct BooksView: View {
     var isHome = false
     /// Внутри нижней панели «Чтения»: настройки открываются из «Профиля», шестерёнки здесь нет
     var hasTabBar = false
+    /// Раздел зафиксирован (отдельная вкладка «Аудио»): плашка разделов скрыта
+    var fixedTab: LibraryTab? = nil
 
     @State private var openedBook: Book?
     @State private var listenBook: Book?
@@ -31,6 +33,16 @@ struct BooksView: View {
         VStack(spacing: 0) {
             header
 
+            if let fixedTab {
+                Group {
+                    switch fixedTab {
+                    case .mine: grid(sortedBooks, withAddCard: true, withSearch: true)
+                    case .audio: AudioLibraryView(books: books) { listenBook = $0 }
+                    case .subscriptions: subscriptions
+                    }
+                }
+                .frame(maxHeight: .infinity)
+            } else {
             // Вкладки — и в пустой библиотеке: сразу видно, где будут книги и откуда их взять
             Picker("Раздел", selection: $tab.animation()) {
                 ForEach(LibraryTab.allCases) { Text($0.title).tag($0) }
@@ -55,6 +67,7 @@ struct BooksView: View {
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
+            }
         }
         .background(Color.brandBackground.ignoresSafeArea())
         .safeAreaInset(edge: .bottom) { AudiobookRecordingBar() }
@@ -271,12 +284,26 @@ struct BooksView: View {
         }
         .padding(.horizontal, 16)
         .padding(.top, 8)
+        .frame(minHeight: isHome ? 52 : nil)
         .overlay {
-            Text(isHome ? "Библиотека" : "Книги")
-                .scaledFont(size: 20, weight: .bold)
-                .foregroundColor(.brandDark)
+            if isHome {
+                // Крупный заголовок слева, как в дизайне LexiStream
+                HStack {
+                    Text(fixedTab == .audio ? "Аудио" : "Библиотека")
+                        .scaledFont(size: 34, weight: .semibold, design: .serif)
+                        .foregroundColor(.brandDark)
+                        .padding(.leading, 20)
+                    Spacer()
+                }
                 .padding(.top, 8)
                 .allowsHitTesting(false)
+            } else {
+                Text("Книги")
+                    .scaledFont(size: 20, weight: .bold)
+                    .foregroundColor(.brandDark)
+                    .padding(.top, 8)
+                    .allowsHitTesting(false)
+            }
         }
     }
 

@@ -9,7 +9,7 @@ final class Account {
 
     nonisolated private static let baseURL = URL(string: "https://wordlearner-account.abalmazspartak.workers.dev")!
     private static let emailKey = "account_email"
-    nonisolated private static let keychainService = "com.personalteam.myProject.account"
+    nonisolated private static let keychainService = "com.personalteam.lexistream.account"
 
     private(set) var email: String?
 
