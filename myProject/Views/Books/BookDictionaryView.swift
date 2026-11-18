@@ -24,7 +24,7 @@ struct BookDictionaryView: View {
                     VStack(spacing: 14) {
                         ProgressView()
                         Text("Ищу самые частые слова книги…")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.brandMuted)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.brandBackground)

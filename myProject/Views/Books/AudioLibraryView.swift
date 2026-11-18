@@ -44,7 +44,7 @@ struct AudioLibraryView: View {
                 Text("ОЗВУЧЕНО")
                     .scaledFont(size: 12, weight: .medium)
                     .tracking(0.5)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                     .padding(.top, 12)
                 ForEach(audioBooks) { book in
                     row(book)
@@ -64,7 +64,7 @@ struct AudioLibraryView: View {
                     Text("ПРОДОЛЖИТЬ СЛУШАТЬ")
                         .scaledFont(size: 12, weight: .medium)
                         .tracking(0.5)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                     Text(book.title)
                         .scaledFont(size: 18, weight: .bold)
                         .foregroundColor(.brandDark)
@@ -72,7 +72,7 @@ struct AudioLibraryView: View {
                         .lineLimit(2)
                     Text("Прочитано \(Int((book.progress * 100).rounded()))%")
                         .scaledFont(size: 13)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                     ProgressView(value: book.progress)
                         .tint(.brandTint)
                 }
@@ -98,13 +98,13 @@ struct AudioLibraryView: View {
                     if !book.author.isEmpty {
                         Text(book.author)
                             .scaledFont(size: 13)
-                            .foregroundColor(.gray)
+                            .foregroundColor(Color.brandMuted)
                             .lineLimit(1)
                     }
                     if let info = infos[book.id] {
                         Text(infoText(info))
                             .scaledFont(size: 12)
-                            .foregroundColor(.gray)
+                            .foregroundColor(Color.brandMuted)
                     }
                 }
                 Spacer(minLength: 0)
@@ -129,7 +129,7 @@ struct AudioLibraryView: View {
     private func playButton(size: CGFloat) -> some View {
         Image(systemName: "play.fill")
             .font(.system(size: size * 0.38))
-            .foregroundColor(.white)
+            .foregroundColor(.brandOnTint)
             .frame(width: size, height: size)
             .background(Color.brandTint, in: Circle())
     }

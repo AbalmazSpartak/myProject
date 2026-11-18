@@ -16,7 +16,7 @@ struct PersonalDataView: View {
                     HStack(spacing: 16) {
                         ZStack {
                             Circle()
-                                .fill(Color.teal.opacity(0.15))
+                                .fill(Color.brandTint.opacity(0.15))
                                 .frame(width: 60, height: 60)
 
                             if let data = profile.avatarData, let uiImage = UIImage(data: data) {
@@ -28,7 +28,7 @@ struct PersonalDataView: View {
                             } else {
                                 Image(systemName: "person.fill")
                                     .scaledFont(size: 30)
-                                    .foregroundColor(.teal)
+                                    .foregroundColor(Color.brandTint)
                             }
                         }
 
@@ -38,13 +38,13 @@ struct PersonalDataView: View {
                             PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
                                 Text(photoButtonTitle)
                                     .scaledFont(size: 15, weight: .semibold)
-                                    .foregroundColor(.teal)
+                                    .foregroundColor(Color.brandTint)
                             }
                             .buttonStyle(.borderless)
 
                             Button("Выбрать аватарку") { isChoosingAvatar = true }
                                 .scaledFont(size: 15, weight: .semibold)
-                                .foregroundColor(.teal)
+                                .foregroundColor(Color.brandTint)
                                 .buttonStyle(.borderless)
 
                             if profile.avatarData != nil {

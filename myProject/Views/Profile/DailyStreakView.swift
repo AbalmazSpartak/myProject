@@ -11,7 +11,7 @@ struct DailyStreakCard: View {
             HStack(alignment: .center, spacing: 16) {
                 Image(systemName: "flame.fill")
                     .scaledFont(size: 40)
-                    .foregroundStyle(current > 0 ? Color.orange : Color.gray.opacity(0.5))
+                    .foregroundStyle(current > 0 ? Color.orange : Color.brandMuted.opacity(0.5))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Серия дней")
@@ -27,7 +27,7 @@ struct DailyStreakCard: View {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("Рекорд")
                         .scaledFont(size: 11, weight: .medium)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                     Text("\(max(best, current)) \(Self.daysNoun(max(best, current)))")
                         .scaledFont(size: 16, weight: .bold, design: .rounded)
                         .foregroundColor(.orange)
@@ -65,7 +65,7 @@ struct DailyStreakCard: View {
 
             Text(day.date.formatted(.dateTime.weekday(.short)))
                 .scaledFont(size: 12, weight: isToday ? .bold : .regular)
-                .foregroundColor(isToday ? .brandDark : .gray)
+                .foregroundColor(isToday ? .brandDark : Color.brandMuted)
         }
     }
 

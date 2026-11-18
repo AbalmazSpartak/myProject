@@ -73,7 +73,7 @@ struct PolyglotExerciseView<Scheme: View>: View {
                 VStack(spacing: 2) {
                     Text("\(index + 1) из \(tasks.count)")
                         .scaledFont(size: 15, weight: .semibold, design: .rounded)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                     Text("\(points) \(PolyglotProgress.pointsNoun(points))")
                         .scaledFont(size: 13, weight: .bold, design: .rounded)
                         .foregroundColor(.orange)
@@ -155,7 +155,7 @@ struct PolyglotExerciseView<Scheme: View>: View {
             if picked.isEmpty {
                 Text("Нажимайте на слова по порядку")
                     .scaledFont(size: 14)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
         }
     }
@@ -265,7 +265,7 @@ struct PolyglotExerciseView<Scheme: View>: View {
 
                 Text("Верно с первого раза: \(correctCount) из \(tasks.count) · \(percent)%")
                     .scaledFont(size: 17)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
 
                 if let level = lessonProgress.level, let mastery = lessonProgress.mastery {
                     masteryCard(level: level, mastery: mastery, best: lessonProgress.bestPoints)
@@ -306,7 +306,7 @@ struct PolyglotExerciseView<Scheme: View>: View {
             HStack {
                 Text("Освоение темы")
                     .scaledFont(size: 15, weight: .semibold)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                 Spacer()
                 Text(level.stars)
                     .scaledFont(size: 18)
@@ -325,7 +325,7 @@ struct PolyglotExerciseView<Scheme: View>: View {
                 .tint(.orange)
             Text("\(Int((mastery * 100).rounded()))% верных за последние раунды · лучший раунд \(best) \(PolyglotProgress.pointsNoun(best))")
                 .scaledFont(size: 13)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
         }
         .padding(16)
         .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.cardBackground))

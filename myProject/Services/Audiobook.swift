@@ -332,7 +332,7 @@ struct AudiobookRecordingBar: View {
                         .foregroundColor(.brandTint)
                 }
                 .scaledFont(size: 13)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
             }
             .padding(14)
             .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.cardBackground))

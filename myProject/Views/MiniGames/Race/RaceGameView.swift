@@ -122,7 +122,7 @@ struct RaceGameView<Manager: RaceTransport>: View {
                 .minimumScaleFactor(0.6)
             Text(mode == .typeEnglish ? "Наберите по-английски" : "Наберите перевод")
                 .scaledFont(size: 14)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
 
             TextField(mode == .typeEnglish ? "по-английски" : "перевод", text: $typed)
                 .scaledFont(size: 22, weight: .semibold)
@@ -152,7 +152,7 @@ struct RaceGameView<Manager: RaceTransport>: View {
             } else {
                 Button("Пропустить ›", action: skipWord)
                     .scaledFont(size: 15, weight: .semibold)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
         }
         .padding()
@@ -229,7 +229,7 @@ struct RaceGameView<Manager: RaceTransport>: View {
             ZStack(alignment: .leading) {
                 Capsule().fill(Color.brandFill).frame(height: 24)
                 Image(systemName: "car.fill")
-                    .foregroundColor(player.isMe ? .indigo : .gray)
+                    .foregroundColor(player.isMe ? .indigo : Color.brandMuted)
                     .opacity(player.isGhost ? 0.35 : 1)
                     .offset(x: progress * (geo.size.width - 24))
             }
@@ -237,7 +237,7 @@ struct RaceGameView<Manager: RaceTransport>: View {
         .frame(height: 24)
         .overlay(alignment: .trailing) {
             Text(player.hasLeft ? "\(player.name) · вышел" : player.name)
-                .scaledFont(size: 11).foregroundColor(.gray).padding(.trailing, 4)
+                .scaledFont(size: 11).foregroundColor(Color.brandMuted).padding(.trailing, 4)
         }
         .opacity(player.hasLeft ? 0.5 : 1)
     }
@@ -263,7 +263,7 @@ struct RaceGameView<Manager: RaceTransport>: View {
                         Text(player.name)
                         Spacer()
                         Text("\(player.correctCount)/\(words.count)" + (player.finishTime.map { " · " + Self.seconds($0) } ?? ""))
-                            .foregroundColor(.gray)
+                            .foregroundColor(Color.brandMuted)
                     }
                     .padding(.horizontal)
                 }
@@ -298,7 +298,7 @@ struct RaceGameView<Manager: RaceTransport>: View {
                         .scaledFont(size: 16, weight: .bold)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(isHost ? Color.green : Color.gray.opacity(0.3))
+                        .background(isHost ? Color.green : Color.brandFill)
                         .foregroundColor(.white)
                         .cornerRadius(14)
                 }

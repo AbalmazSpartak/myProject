@@ -30,7 +30,7 @@ struct GutenbergCatalogView: View {
                 }
                 if !isLoading && entries.isEmpty {
                     Text(query.isEmpty ? "Каталог недоступен — проверьте интернет." : "Ничего не нашлось. Попробуйте название или автора на английском.")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.brandMuted)
                         .listRowBackground(Color.clear)
                 }
             }
@@ -52,7 +52,7 @@ struct GutenbergCatalogView: View {
             .safeAreaInset(edge: .bottom) {
                 Text("Project Gutenberg — бесплатные книги, ставшие общественным достоянием.")
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.brandMuted)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 8)
@@ -80,7 +80,7 @@ struct GutenbergCatalogView: View {
                     .lineLimit(2)
                 Text(entry.author)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.brandMuted)
                     .lineLimit(1)
             }
             Spacer()
@@ -94,7 +94,7 @@ struct GutenbergCatalogView: View {
                 Button { Task { await download(entry) } } label: {
                     Image(systemName: "arrow.down.circle.fill")
                         .font(.title2)
-                        .foregroundColor(.brown)
+                        .foregroundColor(Color.brandTint)
                 }
                 .buttonStyle(.borderless)
                 .accessibilityLabel("Скачать")
@@ -133,7 +133,7 @@ private struct RemoteCover: View {
 
     var body: some View {
         ZStack {
-            Color.brown.opacity(0.25)
+            Color.brandTint.opacity(0.25)
             if let image {
                 Image(uiImage: image)
                     .resizable()

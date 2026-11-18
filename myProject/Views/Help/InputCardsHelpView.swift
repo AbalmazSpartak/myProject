@@ -8,7 +8,7 @@ struct InputCardsHelpView: View {
                     HelpParagraph("Самый строгий способ проверить себя: перевод нужно не узнать среди вариантов, а написать самому.")
                 }
 
-                HelpCard(title: "Как заниматься", icon: "list.number", color: .teal) {
+                HelpCard(title: "Как заниматься", icon: "list.number", color: Color.brandTint) {
                     HelpStep(number: 1, text: "Прочитайте слово — кнопка с динамиком его озвучит.")
                     HelpStep(number: 2, text: "Впишите перевод и нажмите «Проверить» (или «Ввод» на клавиатуре).")
                     HelpStep(number: 3, text: "После проверки появится пример с этим словом, а при ошибке — и правильный ответ. Нажмите «Следующее слово».")

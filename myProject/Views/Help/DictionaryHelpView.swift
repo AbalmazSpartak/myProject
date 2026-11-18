@@ -36,7 +36,7 @@ struct DictionaryHelpView: View {
                     HelpBullet("Если переименовать свой словарь так же, как называется другой ваш словарь, их можно объединить — слова перейдут без повторов.")
                 }
 
-                HelpCard(title: "Поиск 🔍", icon: "magnifyingglass", color: .teal) {
+                HelpCard(title: "Поиск 🔍", icon: "magnifyingglass", color: Color.brandTint) {
                     HelpParagraph("Ищет по всей базе — по английскому и по русскому, с начала слова и внутри него. Найденное слово можно сразу открыть для правки.")
                 }
 
@@ -68,7 +68,7 @@ struct DictionaryHelpView: View {
                     HelpBullet("Новые слова из такого словаря идут в «На повторение» первыми — от самых частых в файле, в пределах «Новых слов в день».")
                 }
 
-                HelpCard(title: "Полезно знать", icon: "info.circle.fill", color: .gray) {
+                HelpCard(title: "Полезно знать", icon: "info.circle.fill", color: Color.brandMuted) {
                     HelpBullet("Кнопка с динамиком озвучивает слово.")
                     HelpBullet("Какие слова попадают в тренировки, настраивается в профиле: ⚙️ → «Словари».")
                 }

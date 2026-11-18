@@ -24,7 +24,7 @@ struct FlashcardsHelpView: View {
                     HelpParagraph("Чем честнее оценка, тем точнее расписание. Если завышать её, трудные слова будут появляться слишком редко.")
                 }
 
-                HelpCard(title: "Режимы", icon: "line.3.horizontal.decrease.circle.fill", color: .teal) {
+                HelpCard(title: "Режимы", icon: "line.3.horizontal.decrease.circle.fill", color: Color.brandTint) {
                     HelpBullet("«На повторение» — слова, чей срок повторения подошёл, и немного новых: сколько именно, задаётся в профиле (⚙️ → «Новых слов в день»). Основной режим для ежедневных занятий.")
                     HelpBullet("«Работа над ошибками» — слова, на которых вы нажали «Снова».")
                     HelpBullet("«Все слова», категории и уровни A1–C2 — для тренировки по выбранной теме.")
@@ -110,7 +110,7 @@ struct HelpBullet: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text("•")
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
             HelpParagraph(text)
         }
     }

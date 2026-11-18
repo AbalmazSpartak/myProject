@@ -20,8 +20,7 @@ struct ReaderTabsView: View {
                 .tabItem { Label("Аудио", systemImage: "headphones") }
                 .tag(Tab.audio)
 
-            ReaderSoonView(icon: "bookmark", title: "Закладки",
-                           text: "Скоро: закладки и заметки из всех книг — в одном месте.")
+            ReaderMarksStubView()
                 .modeSwitcherInset()
                 .tabItem { Label("Закладки", systemImage: "bookmark") }
                 .tag(Tab.bookmarks)
@@ -50,16 +49,30 @@ struct ReaderTabsView: View {
     }
 }
 
-/// Вкладка, которой ещё нет: значок и пояснение
-private struct ReaderSoonView: View {
-    let icon: String
-    let title: String
-    let text: String
+/// «Закладки» и «Заметки» — заглушка по дизайну LexiStream: вкладки есть, функционала пока нет
+private struct ReaderMarksStubView: View {
+    private enum Section: String, CaseIterable { case bookmarks = "Закладки", notes = "Заметки" }
+    @State private var section = Section.bookmarks
 
     var body: some View {
-        TabPlaceholder(icon: icon, title: title, text: text)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.brandBackground.ignoresSafeArea())
+        VStack(spacing: 0) {
+            Text("Закладки и заметки")
+                .scaledFont(size: 34, weight: .semibold, design: .serif)
+                .foregroundColor(.brandDark)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+            Picker("Раздел", selection: $section) {
+                ForEach(Section.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            .padding(20)
+            TabPlaceholder(icon: section == .bookmarks ? "bookmark" : "note.text",
+                           title: section == .bookmarks ? "Закладок пока нет" : "Заметок пока нет",
+                           text: "Скоро: закладки и заметки из всех книг — в одном месте.")
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.brandBackground.ignoresSafeArea())
     }
 }
 
@@ -122,7 +135,7 @@ private struct ReaderProfileView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(greeting)
                     .scaledFont(size: 13)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                 Text(profile?.name ?? "")
                     .scaledFont(size: 20, weight: .bold)
                     .foregroundColor(.brandDark)
@@ -210,7 +223,7 @@ private struct ReaderProfileView: View {
             if shelf.isEmpty {
                 Text("Книг пока нет. Добавьте первую в «Библиотеке».")
                     .scaledFont(size: 15)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(alignment: .top, spacing: 14) {

@@ -62,12 +62,12 @@ struct ReviewSessionView: View {
             if word != nil {
                 Text("\(index + 1) из \(queue.count)")
                     .scaledFont(size: 15, weight: .semibold, design: .rounded)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
             Spacer()
             Text("✓ \(known.count)  ✗ \(unknown.count)")
                 .scaledFont(size: 14, weight: .semibold, design: .rounded)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
@@ -100,7 +100,7 @@ struct ReviewSessionView: View {
                         if showEnglish, !word.displayTranscription.isEmpty {
                             Text(word.displayTranscription)
                                 .scaledFont(size: 16, weight: .medium, design: .rounded)
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color.brandMuted)
                         }
                         PartOfSpeechBadge(word: word)
                     }
@@ -117,7 +117,7 @@ struct ReviewSessionView: View {
                         if !showEnglish, !word.displayTranscription.isEmpty {
                             Text(word.displayTranscription)
                                 .scaledFont(size: 15, weight: .medium, design: .rounded)
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color.brandMuted)
                         }
                         if !word.example.isEmpty {
                             Text(word.attributedExample)
@@ -182,7 +182,7 @@ struct ReviewSessionView: View {
                 .foregroundColor(.brandDark)
             Text("Знаю: \(known.count) · Не знаю: \(unknown.count)")
                 .scaledFont(size: 17)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
             Spacer()
             if index < queue.count {
                 bigButton("Ещё подход") {

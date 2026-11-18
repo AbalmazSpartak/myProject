@@ -9,8 +9,8 @@ extension PhonicsKind {
         case .magicE: return .green
         case .rVowel: return .orange
         case .consonantPair: return .purple
-        case .ending: return .teal
-        case .silent: return .gray
+        case .ending: return Color.brandTint
+        case .silent: return Color.brandMuted
         case .plain: return .clear
         }
     }
@@ -45,7 +45,7 @@ struct PhonicsLegend: View {
             .padding(.top, 2)
             Text("Нажмите на слово — карточка покажет, как его читать, и объяснит каждое сочетание.")
                 .scaledFont(size: 13)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
         }
         .padding(14)
         .background(Color.cardBackground)
@@ -57,7 +57,7 @@ struct PhonicsLegend: View {
         return HStack(alignment: .firstTextBaseline, spacing: 10) {
             Image(systemName: isOn ? "checkmark.square.fill" : "square")
                 .scaledFont(size: 20)
-                .foregroundColor(isOn ? .brown : .gray.opacity(0.6))
+                .foregroundColor(isOn ? Color.brandTint : Color.brandMuted.opacity(0.6))
             swatch(option)
                 .scaledFont(size: 16, weight: .semibold, design: .serif)
                 .foregroundColor(.brandDark)
@@ -69,7 +69,7 @@ struct PhonicsLegend: View {
                     .foregroundColor(.brandDark)
                 Text(detail(option))
                     .scaledFont(size: 12)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
             Spacer(minLength: 0)
         }
@@ -80,7 +80,7 @@ struct PhonicsLegend: View {
     private func swatch(_ option: PhonicsOption) -> some View {
         switch option {
         case .silent:
-            Text("k").foregroundColor(.gray.opacity(0.55)) + Text("nife")
+            Text("k").foregroundColor(Color.brandMuted.opacity(0.55)) + Text("nife")
         case .exception:
             Text("one").underline(pattern: .dot, color: PhonicsKind.exceptionColor)
         case .colloquial:
@@ -116,7 +116,7 @@ struct PhonicsLegend: View {
         Button(title) { selection = options }
             .scaledFont(size: 14, weight: .semibold)
             .buttonStyle(.bordered)
-            .tint(.brown)
+            .tint(Color.brandTint)
             .disabled(selection == options)
     }
 }
@@ -202,7 +202,7 @@ struct ReadingBreakdownView: View {
                     Label("Медленно", systemImage: "tortoise.fill")
                         .scaledFont(size: 14, weight: .semibold)
                 }
-                .tint(.brown)
+                .tint(Color.brandTint)
             }
 
             pronunciation(reading)
@@ -220,7 +220,7 @@ struct ReadingBreakdownView: View {
             if reading.isGuess {
                 Text("Слова нет в словаре произношения — разбор по общим правилам, звучание может отличаться. Послушайте озвучку.")
                     .scaledFont(size: 12)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
 
             topicLinks(reading)
@@ -249,7 +249,7 @@ struct ReadingBreakdownView: View {
                     .foregroundColor(.brandDark)
             }
             .scaledFont(size: 17, design: .serif)
-            .foregroundColor(.gray)
+            .foregroundColor(Color.brandMuted)
             if reading.isException {
                 Label("Читается не по правилам — красным отмечено, где именно", systemImage: "exclamationmark.triangle.fill")
                     .scaledFont(size: 13, weight: .semibold)
@@ -269,7 +269,7 @@ struct ReadingBreakdownView: View {
                 .foregroundColor(.brandDark)
             Text(chunk.phones.isEmpty ? " " : ReadingRules.ipa(chunk.phones))
                 .scaledFont(size: 11)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
@@ -282,7 +282,7 @@ struct ReadingBreakdownView: View {
     private func letters(_ chunk: PhonicsChunk) -> Text {
         chunk.range.reduce(Text("")) { text, index in
             let letter = Text(String(chunk.letters[chunk.letters.index(chunk.letters.startIndex, offsetBy: index - chunk.range.lowerBound)]))
-            return text + (chunk.silent.contains(index) ? letter.foregroundColor(.gray.opacity(0.45)).strikethrough() : letter.foregroundColor(.brandDark))
+            return text + (chunk.silent.contains(index) ? letter.foregroundColor(Color.brandMuted.opacity(0.45)).strikethrough() : letter.foregroundColor(.brandDark))
         }
     }
 
@@ -340,7 +340,7 @@ struct ReadingBreakdownView: View {
                 Label("Урок: «\(info.lesson.title)»", systemImage: "book.pages")
                     .scaledFont(size: 14, weight: .semibold)
             }
-            .tint(.brown)
+            .tint(Color.brandTint)
             practiceButton(reading)
         }
         .padding(12)
@@ -369,7 +369,7 @@ struct ReadingBreakdownView: View {
                                 Text(examples)
                                     .scaledFont(size: 12)
                                     .italic()
-                                    .foregroundColor(.gray)
+                                    .foregroundColor(Color.brandMuted)
                             }
                         }
                     }
@@ -401,7 +401,7 @@ struct ReadingBreakdownView: View {
                         Label("Подробнее: «\(link.title)»", systemImage: "book.pages")
                             .scaledFont(size: 14, weight: .semibold)
                     }
-                    .tint(.brown)
+                    .tint(Color.brandTint)
                 }
             }
         }

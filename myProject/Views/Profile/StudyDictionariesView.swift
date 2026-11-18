@@ -36,10 +36,10 @@ struct StudyDictionariesView: View {
                             Text("Только Oxford 5000")
                             Text("\(oxfordCount) из \(builtInWords.count) слов")
                                 .font(.footnote)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.brandMuted)
                         }
                     }
-                    .tint(.teal)
+                    .tint(Color.brandTint)
                 } footer: {
                     Text("Oxford 3000 и 5000 — официальные списки самых нужных слов английского от A1 до C1. Без галочки в тренировки входят и наши дополнения: фразовые глаголы, устойчивые выражения и предметы для фото-режима.")
                 }
@@ -146,12 +146,12 @@ struct StudyDictionariesView: View {
             HStack(spacing: 12) {
                 Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
                     .scaledFont(size: 20)
-                    .foregroundStyle(isOn ? Color.teal : Color.gray.opacity(0.5))
+                    .foregroundStyle(isOn ? Color.brandTint : Color.brandMuted.opacity(0.5))
                 Text(group.title)
                     .foregroundStyle(.primary)
                 Spacer()
                 Text("\(group.count)")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.brandMuted)
                     .monospacedDigit()
             }
         }

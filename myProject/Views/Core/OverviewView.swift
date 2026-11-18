@@ -108,7 +108,7 @@ struct OverviewView: View {
                 HStack(spacing: 7) {
                     ForEach(sections.indices, id: \.self) { index in
                         Circle()
-                            .fill(index == (focusPage ?? 0) ? Color.orange : Color.gray.opacity(0.3))
+                            .fill(index == (focusPage ?? 0) ? Color.orange : Color.brandFill)
                             .frame(width: 7, height: 7)
                     }
                 }
@@ -201,7 +201,7 @@ struct OverviewView: View {
 
     private func avatar(_ profile: UserProfile?) -> some View {
         ZStack {
-            Circle().fill(Color.teal.opacity(0.18))
+            Circle().fill(Color.brandTint.opacity(0.18))
             if let data = profile?.avatarData, let image = UIImage(data: data) {
                 Image(uiImage: image)
                     .resizable()
@@ -210,7 +210,7 @@ struct OverviewView: View {
             } else {
                 Image(systemName: "person.fill")
                     .font(.system(size: 26))
-                    .foregroundColor(.teal)
+                    .foregroundColor(Color.brandTint)
             }
         }
         .frame(width: 58, height: 58)
@@ -286,7 +286,7 @@ private struct FocusCard: View {
                 .minimumScaleFactor(0.7)
             Text(subtitle)
                 .scaledFont(size: 15)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
                 .lineLimit(1)
                 .truncationMode(.tail)
             Button {
@@ -317,7 +317,7 @@ private struct FocusCard: View {
                 .tint(.orange)
             Text("Новые слова сегодня: \(introducedToday) из \(dailyLimit)")
                 .scaledFont(size: 13)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
         }
     }
 
@@ -375,7 +375,7 @@ struct SavedTopicRow: View {
             HStack(spacing: 14) {
                 Image(systemName: "text.book.closed.fill")
                     .scaledFont(size: 22)
-                    .foregroundColor(.cyan)
+                    .foregroundColor(Color.brandTint)
                     .frame(width: 30)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(topic.title)
@@ -385,13 +385,13 @@ struct SavedTopicRow: View {
                     Text([topic.words.isEmpty ? topic.section : "\(topic.words.count) \(DailyStudyCard.wordsNoun(topic.words.count))",
                           topic.ratingSummary].filter { !$0.isEmpty }.joined(separator: " · "))
                         .scaledFont(size: 14)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .lineLimit(1)
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right")
                     .scaledFont(size: 14, weight: .semibold)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
             .padding(14)
             .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))

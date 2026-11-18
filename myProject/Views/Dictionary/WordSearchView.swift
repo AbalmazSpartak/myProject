@@ -57,10 +57,10 @@ struct WordSearchView: View {
                 Group {
                     if query.trimmingCharacters(in: .whitespaces).isEmpty {
                         Text("Введите слово на английском или русском. Всего слов: \(index.count)")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.brandMuted)
                     } else if results.isEmpty {
                         Text("Ничего не найдено")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.brandMuted)
                     } else {
                         Section(footer: footer) {
                             ForEach(results) { word in
@@ -110,14 +110,14 @@ struct WordSearchView: View {
                 HStack(spacing: 6) {
                     Text(word.english).font(.headline).foregroundStyle(.primary)
                     if !word.partOfSpeech.isEmpty {
-                        Text(word.partOfSpeech).font(.subheadline).italic().foregroundStyle(.secondary)
+                        Text(word.partOfSpeech).font(.subheadline).italic().foregroundStyle(Color.brandMuted)
                     }
                     Spacer()
                     Text(word.cefrLevel).font(.caption.bold()).foregroundStyle(.indigo)
                 }
-                Text(word.russian).font(.subheadline).foregroundStyle(.secondary)
+                Text(word.russian).font(.subheadline).foregroundStyle(Color.brandMuted)
                 if !word.example.isEmpty {
-                    Text(word.attributedExample).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                    Text(word.attributedExample).font(.caption).foregroundStyle(Color.brandMuted).lineLimit(2)
                 }
                 #if DEBUG
                 if copiedWordID == word.persistentModelID {
@@ -133,7 +133,7 @@ struct WordSearchView: View {
             Button { copyCSV(of: word) } label: {
                 Label("CSV", systemImage: "doc.on.doc")
             }
-            .tint(.teal)
+            .tint(Color.brandTint)
         }
         .contextMenu {
             Button { editingWord = word } label: { Label("Редактировать", systemImage: "pencil") }

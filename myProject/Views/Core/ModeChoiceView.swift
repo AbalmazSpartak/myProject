@@ -16,7 +16,7 @@ struct ModeChoiceView: View {
                 .multilineTextAlignment(.center)
             Text("Выбор можно поменять в Настройках, ничего не пропадёт.")
                 .scaledFont(size: 16)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
                 .multilineTextAlignment(.center)
 
             option(.learning, icon: "graduationcap.fill",
@@ -43,7 +43,7 @@ struct ModeChoiceView: View {
             HStack(spacing: 16) {
                 Image(systemName: icon)
                     .scaledFont(size: 28)
-                    .foregroundColor(.brown)
+                    .foregroundColor(Color.brandTint)
                     .frame(width: 44)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(option == .learning ? "Учить английский" : "Читать книги")
@@ -51,7 +51,7 @@ struct ModeChoiceView: View {
                         .foregroundColor(.brandDark)
                     Text(text)
                         .scaledFont(size: 14)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .multilineTextAlignment(.leading)
                 }
                 Spacer(minLength: 0)

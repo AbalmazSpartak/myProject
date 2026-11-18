@@ -62,7 +62,7 @@ struct InputFlashcardsView: View {
                         Text("Обзор")
                             .scaledFont(size: 17, weight: .semibold, design: .rounded)
                     }
-                    .foregroundColor(.teal)
+                    .foregroundColor(Color.brandTint)
                 }
                 
                 Spacer()
@@ -76,13 +76,13 @@ struct InputFlashcardsView: View {
                         counts: counts,
                         categories: categories,
                         icon: "folder.fill",
-                        tint: .teal,
+                        tint: Color.brandTint,
                         onSelect: changeFilter
                     )
                     
                     Text("Ввод: \(correctCount)/\(totalAnswered)")
                         .scaledFont(size: 13, weight: .bold, design: .rounded)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .padding(.trailing, 2)
                 }
             }
@@ -94,7 +94,7 @@ struct InputFlashcardsView: View {
             if isApproachFinished {
                 ApproachDoneCard(
                     summary: "Верно \(approachCorrect) из \(approachAnswered)",
-                    tint: .teal,
+                    tint: Color.brandTint,
                     onContinue: { withAnimation { generateSession() } },
                     onExit: { dismiss() }
                 )
@@ -102,11 +102,11 @@ struct InputFlashcardsView: View {
                 VStack(spacing: 12) {
                     Image(systemName: currentFilter == .mistakes ? "checkmark.circle.fill" : "keyboard")
                         .font(.system(size: 48))
-                        .foregroundColor(currentFilter == .mistakes ? .green : .gray)
+                        .foregroundColor(currentFilter == .mistakes ? .green : Color.brandMuted)
                     
                     Text(currentFilter == .mistakes ? "Отлично! У вас нет неисправленных ошибок." : "В выбранном разделе нет слов.")
                         .font(.system(.body, design: .rounded))
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .multilineTextAlignment(.center)
                 }
                 .padding(.horizontal, 40)
@@ -122,7 +122,7 @@ struct InputFlashcardsView: View {
                             Button(action: { TextToSpeechManager.shared.speak(word.english) }) {
                                 Image(systemName: "speaker.wave.2.bubble.fill")
                                     .scaledFont(size: 22)
-                                    .foregroundColor(.teal)
+                                    .foregroundColor(Color.brandTint)
                             }
                         }
                         
@@ -147,7 +147,7 @@ struct InputFlashcardsView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(translationMode == "en_ru" ? "Введите перевод на русский:" : "Введите перевод на английский:")
                             .scaledFont(size: 13, weight: .medium, design: .rounded)
-                            .foregroundColor(.gray)
+                            .foregroundColor(Color.brandMuted)
                         
                         TextField("Ваш перевод...", text: $userInput)
                             .scaledFont(size: 18, weight: .semibold, design: .rounded)
@@ -196,7 +196,7 @@ struct InputFlashcardsView: View {
                                 VStack(spacing: 4) {
                                     Text("Правильный ответ:")
                                         .scaledFont(size: 12, weight: .medium, design: .rounded)
-                                        .foregroundColor(.gray)
+                                        .foregroundColor(Color.brandMuted)
                                     
                                     Text(currentCorrectAnswerString)
                                         .scaledFont(size: 20, weight: .bold, design: .rounded)
@@ -208,7 +208,7 @@ struct InputFlashcardsView: View {
                                 (Text("Пример: ") + Text(word.attributedExample))
                                     .scaledFont(size: 13, weight: .regular, design: .rounded)
                                     .italic()
-                                    .foregroundColor(.gray)
+                                    .foregroundColor(Color.brandMuted)
                                     .multilineTextAlignment(.center)
                                     .padding(.horizontal, 12)
                             }
@@ -224,7 +224,7 @@ struct InputFlashcardsView: View {
                                     .scaledFont(size: 16, weight: .bold, design: .rounded)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
-                                    .background(userInput.trimmingCharacters(in: .whitespaces).isEmpty ? Color.teal.opacity(0.4) : Color.teal)
+                                    .background(userInput.trimmingCharacters(in: .whitespaces).isEmpty ? Color.brandTint.opacity(0.4) : Color.brandTint)
                                     .foregroundColor(.white)
                                     .cornerRadius(14)
                             }
@@ -235,7 +235,7 @@ struct InputFlashcardsView: View {
                                     .scaledFont(size: 16, weight: .bold, design: .rounded)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
-                                    .background(Color.teal)
+                                    .background(Color.brandTint)
                                     .foregroundColor(.white)
                                     .cornerRadius(14)
                             }
@@ -268,7 +268,7 @@ struct InputFlashcardsView: View {
     
     private var inputBorderColor: Color {
         guard showResult else {
-            return isInputFocused ? Color.teal : Color.brandDark.opacity(0.15)
+            return isInputFocused ? Color.brandTint : Color.brandDark.opacity(0.15)
         }
         return isCorrect ? Color.green : Color.red
     }

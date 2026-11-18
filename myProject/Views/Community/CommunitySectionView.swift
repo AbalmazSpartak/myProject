@@ -92,7 +92,7 @@ struct CommunitySectionView: View {
         VStack(spacing: 14) {
             Image(systemName: CommunitySectionRow.icon(for: section))
                 .scaledFont(size: 40)
-                .foregroundColor(.cyan)
+                .foregroundColor(Color.brandTint)
             Text("В разделе пока нет тем")
                 .scaledFont(size: 20, weight: .semibold, design: .serif)
                 .foregroundColor(.brandDark)
@@ -137,9 +137,9 @@ struct CommunitySectionRow: View {
             HStack(spacing: 14) {
                 Image(systemName: Self.icon(for: section))
                     .scaledFont(size: 20, weight: .semibold)
-                    .foregroundColor(.cyan)
+                    .foregroundColor(Color.brandTint)
                     .frame(width: 44, height: 44)
-                    .background(Circle().fill(Color.cyan.opacity(0.15)))
+                    .background(Circle().fill(Color.brandTint.opacity(0.15)))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(section)
                         .scaledFont(size: 17, weight: .semibold)
@@ -147,13 +147,13 @@ struct CommunitySectionRow: View {
                         .lineLimit(1)
                     Text(subtitle)
                         .scaledFont(size: 14)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .lineLimit(1)
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right")
                     .scaledFont(size: 14, weight: .semibold)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
             .padding(14)
             .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -196,7 +196,7 @@ private struct SectionTopicRow: View {
                 if !topic.text.isEmpty {
                     Text(topic.previewText)
                         .scaledFont(size: 14)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
                 }
@@ -204,7 +204,7 @@ private struct SectionTopicRow: View {
                     if !topic.words.isEmpty {
                         Label("\(topic.words.count) \(DailyStudyCard.wordsNoun(topic.words.count))", systemImage: "text.book.closed")
                             .scaledFont(size: 12, weight: .semibold)
-                            .foregroundColor(.cyan)
+                            .foregroundColor(Color.brandTint)
                     }
                     if !topic.ratingSummary.isEmpty {
                         Text(topic.ratingSummary)

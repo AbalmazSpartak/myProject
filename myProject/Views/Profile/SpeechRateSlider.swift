@@ -13,12 +13,12 @@ struct SpeechRateSlider: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
             HStack(spacing: 8) {
-                Image(systemName: "tortoise.fill").foregroundColor(.gray)
+                Image(systemName: "tortoise.fill").foregroundColor(Color.brandMuted)
                 Slider(value: $rate, in: SpeechSettings.rateRange, step: Self.step) {
                     Text(title)
                 }
                 .overlay { dots }
-                Image(systemName: "hare.fill").foregroundColor(.gray)
+                Image(systemName: "hare.fill").foregroundColor(Color.brandMuted)
             }
             // Место под точки, которые лежат под ползунком
             .padding(.bottom, 14)
@@ -38,7 +38,7 @@ struct SpeechRateSlider: View {
             let span = proxy.size.width - inset * 2
             ForEach(0..<Self.points, id: \.self) { index in
                 Circle()
-                    .fill(Color.gray.opacity(0.55))
+                    .fill(Color.brandFill)
                     .frame(width: 4, height: 4)
                     .position(x: inset + span * CGFloat(index) / CGFloat(Self.points - 1),
                               y: proxy.size.height / 2 + 18)

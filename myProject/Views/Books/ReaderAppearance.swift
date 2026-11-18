@@ -354,11 +354,11 @@ struct ReaderAppearanceSheet: View {
                         section("Правила чтения")
                         Toggle("Подсветка правил", isOn: phonicsOn)
                             .scaledFont(size: 16, weight: .semibold)
-                            .tint(.brown)
+                            .tint(Color.brandTint)
                         if phonicsMode == "off" {
                             Text("Подсветка сочетаний букв, которые читаются по особым правилам. Нажмите на слово — карточка покажет, как его читать.")
                                 .scaledFont(size: 13)
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color.brandMuted)
                         } else {
                             PhonicsLegend(selection: phonicsSelection)
                         }
@@ -382,7 +382,7 @@ struct ReaderAppearanceSheet: View {
                     }
                     Text("\(Int(fontSize)) пт")
                         .scaledFont(size: 13)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .frame(maxWidth: .infinity)
 
                     section("Шрифт")
@@ -441,14 +441,14 @@ struct ReaderAppearanceSheet: View {
             .padding(18)
             .background(style.background)
             .cornerRadius(16)
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.gray.opacity(0.3), lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.brandBorder, lineWidth: 1))
             .animation(.easeInOut(duration: 0.15), value: fontSize)
     }
 
     private func section(_ title: String) -> some View {
         Text(title)
             .scaledFont(size: 15, weight: .semibold)
-            .foregroundColor(.gray)
+            .foregroundColor(Color.brandMuted)
     }
 
     private func themeTile(_ item: ReaderTheme) -> some View {
@@ -464,7 +464,7 @@ struct ReaderAppearanceSheet: View {
                     .cornerRadius(12)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(theme == item ? Color.brandTint : Color.gray.opacity(0.3), lineWidth: theme == item ? 2.5 : 1)
+                            .stroke(theme == item ? Color.brandTint : Color.brandBorder, lineWidth: theme == item ? 2.5 : 1)
                     )
                 Text(item.title)
                     .scaledFont(size: 12, weight: theme == item ? .semibold : .regular)
@@ -494,7 +494,7 @@ struct ReaderAppearanceSheet: View {
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
                         .background(Capsule().fill(preset.palette.backgroundColor))
-                        .overlay(Capsule().stroke(Color.gray.opacity(0.3), lineWidth: 1))
+                        .overlay(Capsule().stroke(Color.brandBorder, lineWidth: 1))
                     }
                 }
             }
@@ -516,7 +516,7 @@ struct ReaderAppearanceSheet: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title)
                 .scaledFont(size: 14)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
             Slider(value: value, in: range)
                 .tint(.brandTint)
         }

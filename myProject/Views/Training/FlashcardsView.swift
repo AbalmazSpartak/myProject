@@ -83,7 +83,7 @@ struct FlashcardsView: View {
                 Spacer()
                 Text("Повторено: \(reviewedCount)")
                     .scaledFont(size: 13, weight: .bold, design: .rounded)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
             .padding(.horizontal, 24)
             .padding(.top, 12)
@@ -160,7 +160,7 @@ struct FlashcardsView: View {
                             VStack(spacing: 8) {
                                 Text("Как сложно было вспомнить?")
                                     .scaledFont(size: 12, weight: .medium, design: .rounded)
-                                    .foregroundColor(.gray)
+                                    .foregroundColor(Color.brandMuted)
                                 
                                 HStack(spacing: 8) {
                                     FSRSActionButton(title: "Снова", color: .red) {

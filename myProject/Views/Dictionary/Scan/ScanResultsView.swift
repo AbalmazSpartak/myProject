@@ -258,7 +258,7 @@ struct ScanResultsView: View {
                     HStack(spacing: 6) {
                         ProgressView()
                         Text("Перевожу…")
-                            .foregroundColor(.gray)
+                            .foregroundColor(Color.brandMuted)
                     }
                 } else {
                     Button("Сохранить (\(selected.count))", action: save)
@@ -323,13 +323,13 @@ struct ScanResultsView: View {
                 .foregroundColor(.brandDark)
             if total > Self.translationChunk {
                 ProgressView(value: Double(translatedCount), total: Double(total))
-                    .tint(.teal)
+                    .tint(Color.brandTint)
             } else {
                 ProgressView()
             }
             Text("Сохранить можно будет, когда закончу.")
                 .scaledFont(size: 13)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
         }
         .padding(.vertical, 4)
     }
@@ -370,13 +370,13 @@ struct ScanResultsView: View {
             VStack(alignment: .leading, spacing: 4) {
                 titleLine(english: entry?.lemma ?? word.lemma, partOfSpeech: entry?.pos ?? word.partOfSpeech, count: word.count)
                 TextField(translationState == .translating ? "переводится…" : "перевод", text: translationBinding(for: candidate))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.brandMuted)
                 if let entry {
                     aiCaption(entry, surface: word.surface)
                 }
                 Text(Word.attributedExample(word.example))
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.brandMuted)
                     .lineLimit(3)
             }
         }
@@ -400,7 +400,7 @@ struct ScanResultsView: View {
             VStack(alignment: .leading, spacing: 4) {
                 titleLine(english: word.english, partOfSpeech: word.partOfSpeech, count: candidate.extracted.count)
                 Text(word.russian)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.brandMuted)
                 if aiBase[candidate.id] != nil {
                     Text("✦ в тексте: \(candidate.extracted.surface) — ИИ узнал слово базы")
                         .font(.caption)
@@ -409,7 +409,7 @@ struct ScanResultsView: View {
                 if showsExample {
                     Text(Word.attributedExample(candidate.extracted.example))
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.brandMuted)
                         .lineLimit(3)
                 }
                 if word.state != .new {
@@ -428,9 +428,9 @@ struct ScanResultsView: View {
     private func titleLine(english: String, partOfSpeech: String, count: Int) -> some View {
         HStack(spacing: 6) {
             Text(english).font(.headline)
-            Text(partOfSpeech).font(.subheadline).italic().foregroundStyle(.secondary)
+            Text(partOfSpeech).font(.subheadline).italic().foregroundStyle(Color.brandMuted)
             if count > 1 {
-                Text("×\(count)").font(.caption).foregroundStyle(.secondary)
+                Text("×\(count)").font(.caption).foregroundStyle(Color.brandMuted)
             }
         }
     }
@@ -442,7 +442,7 @@ struct ScanResultsView: View {
         } label: {
             Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
                 .scaledFont(size: 22)
-                .foregroundStyle(isOn ? Color.teal : Color.gray.opacity(0.5))
+                .foregroundStyle(isOn ? Color.brandTint : Color.brandMuted.opacity(0.5))
         }
         .buttonStyle(.borderless)
     }

@@ -225,10 +225,10 @@ struct DictionaryView: View {
                                 VStack(spacing: 12) {
                                     Image(systemName: filter == .mistakes ? "checkmark.circle.fill" : "doc.text.magnifyingglass")
                                         .font(.system(size: 44))
-                                        .foregroundColor(filter == .mistakes ? .green : .gray)
+                                        .foregroundColor(filter == .mistakes ? .green : Color.brandMuted)
                                     Text(filter == .mistakes ? "В этом разделе нет ошибочных слов!" : "В выбранном разделе нет слов.")
                                         .scaledFont(size: 15, weight: .medium)
-                                        .foregroundColor(.gray)
+                                        .foregroundColor(Color.brandMuted)
                                 }
                                 .padding(.top, 30)
                             } else {
@@ -425,7 +425,7 @@ struct DictionaryView: View {
                     Spacer()
                     Image(systemName: isDropdownExpanded ? "chevron.up" : "chevron.down")
                         .scaledFont(size: 14, weight: .semibold)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                 }
                 .padding(16)
             }
@@ -510,7 +510,7 @@ struct DictionaryView: View {
                             Text("Управление папками...").scaledFont(size: 15, weight: .semibold)
                             Spacer()
                         }
-                        .foregroundColor(.gray).padding(.horizontal, 16).padding(.vertical, 12)
+                        .foregroundColor(Color.brandMuted).padding(.horizontal, 16).padding(.vertical, 12)
                     }
                 }
                 .padding(.bottom, 8)
@@ -606,7 +606,7 @@ struct DictionaryView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "text.book.closed.fill")
                         .scaledFont(size: 14)
-                        .foregroundColor(.teal)
+                        .foregroundColor(Color.brandTint)
                     Text("\(Self.shortName(list.name)) (\(list.words.count.formatted()))")
                         .scaledFont(size: 16, weight: isSelected ? .bold : .semibold)
                         .foregroundColor(isSelected ? .orange : .brandDark)
@@ -713,7 +713,7 @@ struct DictionaryView: View {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 15)
-                .background(canAddNewWord ? Color.orange : Color.gray.opacity(0.3))
+                .background(canAddNewWord ? Color.orange : Color.brandFill)
                 .cornerRadius(14)
             }
             .disabled(!canAddNewWord)
@@ -793,7 +793,7 @@ struct DictionaryView: View {
                             .foregroundColor(.brandDark)
                         Text(matchDetails(word))
                             .scaledFont(size: 12, weight: .medium, design: .rounded)
-                            .foregroundColor(.gray)
+                            .foregroundColor(Color.brandMuted)
                     }
                     Spacer()
                     matchAction(for: word)
@@ -803,7 +803,7 @@ struct DictionaryView: View {
             // Нужного значения нет (bank — «берег», а в базе только «банк») — своё слово, но только явно
             Button("Другое значение — добавить своё", action: addNewWord)
                 .scaledFont(size: 13, weight: .semibold, design: .rounded)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
                 .disabled(newRussian.trimmingCharacters(in: .whitespaces).isEmpty)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -823,7 +823,7 @@ struct DictionaryView: View {
             if word.lists.contains(where: { $0.id == list.id }) {
                 Text("уже в словаре")
                     .scaledFont(size: 12, weight: .medium, design: .rounded)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             } else {
                 Button("Добавить") { add(word, to: list) }
                     .scaledFont(size: 14, weight: .bold, design: .rounded)

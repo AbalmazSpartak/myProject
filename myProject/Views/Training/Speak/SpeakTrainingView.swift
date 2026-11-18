@@ -138,7 +138,7 @@ struct SpeakTrainingView: View {
                 if source == .saved {
                     Text(savedHint)
                         .scaledFont(size: 13)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .multilineTextAlignment(.center)
                 }
 
@@ -161,7 +161,7 @@ struct SpeakTrainingView: View {
 
                 Text("Распознавание проверяет, понятно ли слово на слух, а не каждый звук. Работает на телефоне, без интернета. Расписание повторений слов не меняется.")
                     .scaledFont(size: 13)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                     .multilineTextAlignment(.center)
             }
             .padding(24)
@@ -229,11 +229,11 @@ struct SpeakTrainingView: View {
                         if !word.displayTranscription.isEmpty {
                             Text(word.displayTranscription)
                                 .scaledFont(size: 17, design: .serif)
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color.brandMuted)
                         }
                         Text(word.russian)
                             .scaledFont(size: 16)
-                            .foregroundColor(.gray)
+                            .foregroundColor(Color.brandMuted)
                             .multilineTextAlignment(.center)
                     }
                     .padding(.top, 20)
@@ -300,7 +300,7 @@ struct SpeakTrainingView: View {
 
             Text(listening ? (checker.heard.isEmpty ? "Говорите…" : checker.heard) : (passed == nil ? "Нажмите и скажите слово" : " "))
                 .scaledFont(size: 15)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
                 .lineLimit(2)
         }
     }
@@ -330,7 +330,7 @@ struct SpeakTrainingView: View {
                 Button("Открыть настройки") {
                     if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
                 }
-                .tint(.brown)
+                .tint(Color.brandTint)
             }
         } else if checker.isUnavailable {
             Text("Распознавание речи сейчас недоступно. Проверьте, что в настройках iPhone есть английский язык для диктовки, и попробуйте ещё раз.")
@@ -404,7 +404,7 @@ struct SpeakTrainingView: View {
             VStack(spacing: 18) {
                 Text("С первой попытки")
                     .scaledFont(size: 16)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                 Text("\(firstTry) из \(outcomes.count)")
                     .scaledFont(size: 48, weight: .bold, design: .rounded)
                     .foregroundColor(.brandDark)
@@ -422,7 +422,7 @@ struct SpeakTrainingView: View {
                                 TextToSpeechManager.shared.speak(outcome.item.english)
                             } label: {
                                 Image(systemName: "speaker.wave.2.fill")
-                                    .foregroundColor(.brown)
+                                    .foregroundColor(Color.brandTint)
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("Послушать \(outcome.item.english)")
@@ -434,7 +434,7 @@ struct SpeakTrainingView: View {
                 }
                 Text("✅ — с первой попытки, ↪︎ — со второй и дальше, ✗ — не получилось")
                     .scaledFont(size: 12)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
 
                 Button(action: begin) {
                     Text("Ещё подход")

@@ -13,7 +13,7 @@ struct ListPhotosStrip: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(images.count == 1 ? "Фото скана" : "Фото скана · \(images.count)")
                 .scaledFont(size: 13, weight: .semibold)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.brandMuted)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
                     ForEach(images.indices, id: \.self) { index in

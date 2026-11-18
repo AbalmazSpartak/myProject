@@ -153,7 +153,7 @@ enum TableCellAppearance {
         switch tone {
         case .normal: return .brandDark
         case .red: return TopicText.highlight
-        case .gray: return .gray
+        case .gray: return Color.brandMuted
         }
     }
 
@@ -189,7 +189,7 @@ struct TopicAudioView: View {
             Button(action: play) {
                 Image(systemName: isPlaying ? "stop.circle.fill" : "play.circle.fill")
                     .scaledFont(size: 40)
-                    .foregroundColor(.cyan)
+                    .foregroundColor(Color.brandTint)
             }
             .buttonStyle(.plain)
             .disabled(!isPlayable)
@@ -209,11 +209,11 @@ struct TopicAudioView: View {
                 } else if let clip, let duration = AudioClipPlayer.duration(of: clip.data) {
                     Text(Self.format(duration))
                         .scaledFont(size: 13)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                 } else {
                     Text("Звук не прикреплён")
                         .scaledFont(size: 13)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                 }
             }
             Spacer(minLength: 0)

@@ -147,7 +147,7 @@ struct SettingsView: View {
                             HStack {
                                 Label("Аккаунт", systemImage: "person.crop.circle")
                                 Spacer()
-                                Text(Account.shared.email ?? "Войти").foregroundColor(.gray)
+                                Text(Account.shared.email ?? "Войти").foregroundColor(Color.brandMuted)
                             }
                         }
                     }

@@ -156,7 +156,7 @@ struct BookNamesView: View {
                 if !visible.isEmpty {
                     Text("Имена с большой буквы, которые встречаются в прочитанном — герои и места. Кто есть кто, программа не определяет. То, что дальше места, где вы остановились, не показывается.")
                         .scaledFont(size: 13)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .listRowBackground(Color.clear)
                 }
                 ForEach(visible, id: \.name.id) { item in
@@ -171,7 +171,7 @@ struct BookNamesView: View {
                                     .foregroundColor(.brandDark)
                                 Text("Упоминаний: \(item.count) · впервые: \(chapterTitle(item.name.first.chapter))")
                                     .scaledFont(size: 13)
-                                    .foregroundColor(.gray)
+                                    .foregroundColor(Color.brandMuted)
                                     .lineLimit(1)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)

@@ -98,7 +98,7 @@ struct BookDetailView: View {
                     .blur(radius: 28)
                     .opacity(0.55)
             } else {
-                Color.brown.opacity(0.35)
+                Color.brandTint.opacity(0.35)
             }
         }
         .frame(maxWidth: .infinity)
@@ -145,7 +145,7 @@ struct BookDetailView: View {
         VStack(spacing: 2) {
             Text(title)
                 .scaledFont(size: 12)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
             Text(value)
                 .scaledFont(size: 20, weight: .bold)
                 .foregroundColor(.brandDark)
@@ -165,10 +165,10 @@ struct BookDetailView: View {
             if !book.author.isEmpty {
                 Text(book.author)
                     .scaledFont(size: 16, weight: .medium)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
             ProgressView(value: book.progress)
-                .tint(.brown)
+                .tint(Color.brandTint)
                 .padding(.top, 8)
                 .padding(.horizontal, 30)
         }
@@ -202,7 +202,7 @@ struct BookDetailView: View {
             } label: {
                 Text(isStarted ? "Продолжить" : "Читать")
                     .scaledFont(size: 17, weight: .semibold)
-                    .foregroundColor(.white)
+                    .foregroundColor(.brandOnTint)
                     .frame(maxWidth: .infinity, minHeight: 48)
                     .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.brandTint))
             }
@@ -244,7 +244,7 @@ struct BookDetailView: View {
 
     private func row(_ title: String, _ value: String) -> some View {
         HStack {
-            Text(title).foregroundColor(.gray)
+            Text(title).foregroundColor(Color.brandMuted)
             Spacer()
             Text(value).foregroundColor(.brandDark)
         }
@@ -282,13 +282,13 @@ struct BookDetailView: View {
                         .tint(.brandTint)
                     Text("Записываю: \(job.chapterText.lowercased()) · \(Int(job.fraction * 100))%" + (job.remainingText.map { " · осталось \($0)" } ?? "") + ". Не закрывайте приложение, экран не погаснет.")
                         .scaledFont(size: 13)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                     audiobookButton("Остановить", systemImage: "stop.circle") { recorder.cancel() }
                     chaptersList(details)
                 } else if audiobookVoice == nil {
                     Text("Нужен нейросетевой голос: Настройки → Озвучка → Нейросетевой голос. Записанная озвучка читается им же.")
                         .scaledFont(size: 13)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                 } else {
                     let complete = recordedChapters >= details.chapters && details.chapters > 0
                     Text(audiobookStatus(details, complete: complete))
@@ -310,7 +310,7 @@ struct BookDetailView: View {
                     chaptersList(details)
                     Text("Книга читается записью без ожидания, подсветка предложений и скорость работают как обычно. Если сменить голос в «Озвучке», запись нужно сделать заново.")
                         .scaledFont(size: 13)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                 }
             } else {
                 ProgressView()
@@ -394,7 +394,7 @@ struct BookDetailView: View {
                     } else {
                         Image(systemName: isRecorded ? "play.circle" : "arrow.down.circle")
                             .scaledFont(size: 22)
-                            .foregroundColor(isRecorded || !isBusy ? .brandTint : .gray.opacity(0.5))
+                            .foregroundColor(isRecorded || !isBusy ? .brandTint : Color.brandMuted.opacity(0.5))
                     }
                 }
                 .frame(width: 32, height: 32)

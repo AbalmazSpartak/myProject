@@ -149,14 +149,14 @@ struct BookSearchView: View {
                     Text(isPaged ? "Слово подсветится на странице и останется на ней при листании. Уберёте его кнопкой внизу."
                                  : "Слово подсветится во всей главе. Уберёте его кнопкой внизу.")
                         .scaledFont(size: 14)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .listRowBackground(Color.clear)
                 } else if !results.isEmpty {
                     Text(results.count >= BookSearch.limit
                          ? "Показаны первые \(BookSearch.limit) совпадений"
                          : "Найдено: \(results.count)")
                         .scaledFont(size: 14)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .listRowBackground(Color.clear)
                 }
                 ForEach(onPage ? [] : groups) { group in

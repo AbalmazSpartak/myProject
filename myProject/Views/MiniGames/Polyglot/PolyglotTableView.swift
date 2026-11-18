@@ -94,7 +94,7 @@ struct PolyglotTableView: View {
                             if groupIndex > 0 { rule() }
                             ForEach(Array(group.rows.enumerated()), id: \.offset) { rowIndex, row in
                                 // Строки одного времени (DO и DOES) — через тонкую серую линию
-                                if rowIndex > 0 { Rectangle().fill(Color.gray.opacity(0.5)).frame(height: 1) }
+                                if rowIndex > 0 { Rectangle().fill(Color.brandFill).frame(height: 1) }
                                 tableRow(row)
                             }
                         }

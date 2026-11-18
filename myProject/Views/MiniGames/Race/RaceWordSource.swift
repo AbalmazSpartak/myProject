@@ -154,7 +154,7 @@ struct RaceWordSourcePicker: View {
                 Spacer()
                 if let count {
                     Text("\(count)")
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                 }
                 if selection == source.storedValue {
                     Image(systemName: "checkmark")

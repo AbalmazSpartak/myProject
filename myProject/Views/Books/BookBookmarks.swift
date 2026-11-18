@@ -80,12 +80,12 @@ struct BookBookmarksView: View {
                     .foregroundColor(.red.opacity(0.8))
                 Text(place.chapter)
                     .scaledFont(size: 13, weight: .semibold)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                     .lineLimit(1)
                 Spacer()
                 Text(bookmark.created.formatted(date: .abbreviated, time: .omitted))
                     .scaledFont(size: 12)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
             if !bookmark.note.isEmpty {
                 Text(bookmark.note)

@@ -9,7 +9,7 @@ struct PartOfSpeechBadge: View {
         if !text.isEmpty {
             Text(text)
                 .scaledFont(size: 13, weight: .semibold)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 3)
                 .background(Capsule().fill(Color.brandFill))

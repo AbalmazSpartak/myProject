@@ -52,16 +52,16 @@ enum MenuSection: String, CaseIterable {
         case .flashcards: return .blue
         case .quiz: return .purple
         case .cloze: return .pink
-        case .inputCards: return .teal
+        case .inputCards: return Color.brandTint
         case .dictionary: return .orange
         case .tetris: return .indigo
         case .race: return .green
-        case .help: return .gray
-        case .community: return .cyan
-        case .books: return .brown
+        case .help: return Color.brandMuted
+        case .community: return Color.brandTint
+        case .books: return Color.brandTint
         case .polyglot: return .red
         case .review: return .mint
-        case .schulte: return .cyan
+        case .schulte: return Color.brandTint
         case .speak: return .orange
         }
     }
@@ -121,7 +121,7 @@ enum MenuPalette {
 
     static let colors: [(name: String, color: Color)] = [
         ("blue", .blue), ("purple", .purple), ("pink", .pink), ("red", .red),
-        ("orange", .orange), ("green", .green), ("teal", .teal), ("indigo", .indigo)
+        ("orange", .orange), ("green", .green), ("teal", Color.brandTint), ("indigo", .indigo)
     ]
 
     static func color(named name: String) -> Color {

@@ -27,7 +27,7 @@ struct TopicView: View {
                 VStack(alignment: .leading, spacing: 18) {
                     Text(topic.section.uppercased())
                         .scaledFont(size: 13, weight: .bold)
-                        .foregroundColor(.cyan)
+                        .foregroundColor(Color.brandTint)
                     Text(topic.title)
                         .scaledFont(size: 30, weight: .semibold, design: .serif)
                         .foregroundColor(.brandDark)
@@ -122,7 +122,7 @@ struct TopicView: View {
                 .scaledFont(size: 15, weight: .semibold)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
-                .background(isSaved ? Color.cyan.opacity(0.18) : Color.cardBackground)
+                .background(isSaved ? Color.brandTint.opacity(0.18) : Color.cardBackground)
                 .foregroundColor(.brandDark)
                 .cornerRadius(20)
         }
@@ -150,8 +150,8 @@ struct TopicView: View {
                     .scaledFont(size: 16, weight: .semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
-                    .background(notAddedWords.isEmpty ? Color.gray.opacity(0.15) : Color.cyan.opacity(0.18))
-                    .foregroundColor(notAddedWords.isEmpty ? .gray : .brandDark)
+                    .background(notAddedWords.isEmpty ? Color.brandFill : Color.brandTint.opacity(0.18))
+                    .foregroundColor(notAddedWords.isEmpty ? Color.brandMuted : .brandDark)
                     .cornerRadius(12)
             }
             .disabled(notAddedWords.isEmpty)
@@ -171,14 +171,14 @@ struct TopicView: View {
                     .foregroundColor(.brandDark)
                 Text(item.russian)
                     .scaledFont(size: 15)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
             Spacer()
             Button {
                 TextToSpeechManager.shared.speak(item.english)
             } label: {
                 Image(systemName: "speaker.wave.2.fill")
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
             .buttonStyle(.borderless)
             .accessibilityLabel("Озвучить")
@@ -187,7 +187,7 @@ struct TopicView: View {
             } label: {
                 Image(systemName: isAdded ? "checkmark.circle.fill" : "plus.circle.fill")
                     .scaledFont(size: 24)
-                    .foregroundColor(isAdded ? .green : .cyan)
+                    .foregroundColor(isAdded ? .green : Color.brandTint)
             }
             .buttonStyle(.borderless)
             .disabled(isAdded)
@@ -226,7 +226,7 @@ private struct TopicRatingCard: View {
                     } label: {
                         Image(systemName: star <= topic.rating ? "star.fill" : "star")
                             .scaledFont(size: 28)
-                            .foregroundColor(star <= topic.rating ? .orange : .gray.opacity(0.5))
+                            .foregroundColor(star <= topic.rating ? .orange : Color.brandMuted.opacity(0.5))
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("\(star) из 5")

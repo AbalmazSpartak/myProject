@@ -41,7 +41,7 @@ struct WordOfDayRow: View {
                         .minimumScaleFactor(0.7)
                     Text(word.russian)
                         .scaledFont(size: 15)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .lineLimit(2)
                 }
                 Spacer(minLength: 0)

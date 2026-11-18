@@ -46,7 +46,7 @@ struct TopicTableEditor: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Как будет выглядеть")
                 .font(.footnote)
-                .foregroundColor(.secondary)
+                .foregroundColor(Color.brandMuted)
             TopicTableView(table: table)
         }
     }
@@ -81,7 +81,7 @@ struct TopicTableEditor: View {
                 if style.vertical {
                     Image(systemName: "arrow.down")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color.brandMuted)
                 }
                 Spacer(minLength: 0)
                 cellMenu(row: row, column: column, style: style)
@@ -148,7 +148,7 @@ struct TopicTableEditor: View {
         } label: {
             Image(systemName: style == TableCellStyle() ? "ellipsis.circle" : "ellipsis.circle.fill")
                 .font(.callout)
-                .foregroundColor(.secondary)
+                .foregroundColor(Color.brandMuted)
         }
         .accessibilityLabel("Ячейка: объединение и оформление")
     }
@@ -194,7 +194,7 @@ struct TopicTableEditor: View {
                 } label: {
                     Image(systemName: "paintbrush")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color.brandMuted)
                 }
                 .accessibilityLabel("Оформление столбца \(index + 1)")
                 Spacer(minLength: 0)
@@ -251,7 +251,7 @@ struct TopicAudioEditor: View {
         if recorder.isDenied {
             Text("Нет доступа к микрофону. Разрешите его в Настройках iPhone → WordLearner.")
                 .font(.footnote)
-                .foregroundColor(.secondary)
+                .foregroundColor(Color.brandMuted)
         }
         HStack {
             Button {
@@ -300,7 +300,7 @@ struct TopicAudioEditor: View {
         if attached != nil, !block.audioFileName.isEmpty {
             Text(block.audioFileName)
                 .font(.footnote)
-                .foregroundColor(.secondary)
+                .foregroundColor(Color.brandMuted)
         }
         Color.clear.frame(height: 0)
             .fileImporter(isPresented: $isImporting, allowedContentTypes: [.audio]) { result in

@@ -74,7 +74,7 @@ struct ReaderSelectionPanel: View {
                 Button(action: onClose) {
                     Image(systemName: "xmark.circle.fill")
                         .scaledFont(size: 22)
-                        .foregroundStyle(.gray)
+                        .foregroundStyle(Color.brandMuted)
                 }
                 .accessibilityLabel("Снять выделение")
             }
@@ -97,18 +97,18 @@ struct ReaderSelectionPanel: View {
             } else if rudeHidden {
                 Text("Переводчик iOS дал грубый перевод, он скрыт. Свой перевод можно ввести через «В словарь».")
                     .scaledFont(size: 13)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             } else if failed {
                 Text("Не удалось перевести — проверьте, скачан ли русский язык в настройках iPhone «Перевод».")
                     .scaledFont(size: 13)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
 
             if let passage {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("В переводе книги")
                         .scaledFont(size: 12, weight: .semibold)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                     Text(Self.marked(passage))
                         .scaledFont(size: 15, design: .serif)
                         .foregroundColor(.brandDark.opacity(0.85))
@@ -123,7 +123,7 @@ struct ReaderSelectionPanel: View {
                             .scaledFont(size: 13, weight: .semibold)
                             .lineLimit(1)
                     }
-                    .tint(.brown)
+                    .tint(Color.brandTint)
                 }
                 HStack(spacing: 8) {
                     TextField(isSingleWord ? "Перевод" : "Перевод фразы", text: $manualTranslation)
@@ -137,7 +137,7 @@ struct ReaderSelectionPanel: View {
                         .cornerRadius(10)
                     Button("Добавить", action: add)
                         .scaledFont(size: 15, weight: .semibold)
-                        .tint(.brown)
+                        .tint(Color.brandTint)
                         .disabled(dictionaryTranslation == nil)
                 }
             }
@@ -261,7 +261,7 @@ struct ReaderSelectionPanel: View {
         var result = AttributedString(passage.text)
         for highlight in passage.highlights {
             guard let range = Range(highlight, in: result) else { continue }
-            result[range].backgroundColor = Color.teal.opacity(0.25)
+            result[range].backgroundColor = Color.brandTint.opacity(0.25)
             result[range].inlinePresentationIntent = .stronglyEmphasized
         }
         return result

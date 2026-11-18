@@ -15,7 +15,7 @@ struct QuizHelpView: View {
                     HelpBullet("Правильный ответ на такое слово убирает его из ошибок.")
                 }
 
-                HelpCard(title: "Режимы", icon: "line.3.horizontal.decrease.circle.fill", color: .teal) {
+                HelpCard(title: "Режимы", icon: "line.3.horizontal.decrease.circle.fill", color: Color.brandTint) {
                     HelpBullet("«Все слова» — слова из словарей, выбранных в настройках, вперемешку.")
                     HelpBullet("«Работа над ошибками» — только слова с ошибками.")
                     HelpBullet("Темы и уровни A1–C2 — тренировка по выбранной теме или уровню.")

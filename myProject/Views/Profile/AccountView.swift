@@ -128,7 +128,7 @@ struct AccountView: View {
                 HStack {
                     Text("Почта")
                     Spacer()
-                    Text(account.email ?? "").foregroundColor(.gray)
+                    Text(account.email ?? "").foregroundColor(Color.brandMuted)
                 }
                 if isChangingPassword {
                     SecureField("Старый пароль", text: $oldPassword)

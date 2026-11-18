@@ -210,7 +210,7 @@ struct TetrisView: View {
                         if let highScore = userProfile?.tetrisHighScore, highScore > 0 {
                             Text("Рекорд: \(highScore)")
                                 .scaledFont(size: 14, weight: .semibold, design: .rounded)
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color.brandMuted)
                         }
                     }
                     .padding()
@@ -235,7 +235,7 @@ struct TetrisView: View {
                                 .foregroundColor(.brandDark)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
-                                .background(Color.gray.opacity(0.2))
+                                .background(Color.brandFill)
                                 .cornerRadius(14)
                         }
                     }
@@ -314,7 +314,7 @@ struct TetrisView: View {
             HStack(spacing: 6) {
                 Text("Далее")
                     .scaledFont(size: 12, weight: .semibold)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                 NextPiecePreview(shape: nextShape)
             }
 
@@ -342,7 +342,7 @@ struct TetrisView: View {
         } else {
             Text("🔥 \(answerStreak % Self.streakForBonus)/\(Self.streakForBonus)")
                 .scaledFont(size: 12, weight: .semibold, design: .rounded)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
         }
     }
 
@@ -414,7 +414,7 @@ struct TetrisView: View {
                 }
             }
         }
-        return Color.gray.opacity(0.15)
+        return Color.brandFill
     }
     
     // Позиция, куда фигура упадёт, если сбросить её сейчас
@@ -657,7 +657,7 @@ struct TetrisView: View {
         if option == selected {
             return .red
         }
-        return .gray
+        return Color.brandMuted
     }
     
     private func restartGame() {

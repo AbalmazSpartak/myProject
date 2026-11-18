@@ -86,7 +86,7 @@ struct LevelProgressCard: View {
 
             Text("\(item.percent)%")
                 .scaledFont(size: 16, weight: .bold, design: .rounded)
-                .foregroundColor(item.percent > 0 ? .brandDark : .gray)
+                .foregroundColor(item.percent > 0 ? .brandDark : Color.brandMuted)
                 .frame(minWidth: 48, alignment: .trailing)
         }
         .accessibilityElement(children: .ignore)
@@ -134,13 +134,13 @@ struct VocabularyStatusCard: View {
             if let hint {
                 Text(hint)
                     .scaledFont(size: 13)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                     .lineLimit(1)
             }
             Spacer(minLength: 8)
             Text("\(count)")
                 .scaledFont(size: 16, weight: .bold, design: .rounded)
-                .foregroundColor(count > 0 ? .brandDark : .gray)
+                .foregroundColor(count > 0 ? .brandDark : Color.brandMuted)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(title): \(count)")

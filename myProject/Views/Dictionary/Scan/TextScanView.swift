@@ -143,6 +143,7 @@ struct TextScanView: View {
                         .padding(.vertical, 14)
                 }
                 .buttonStyle(.borderedProminent)
+                .foregroundStyle(Color.brandOnTint)
                 .tint(.orange)
                 .disabled(isRecognizing)
             }
@@ -173,6 +174,7 @@ struct TextScanView: View {
                         .padding(.vertical, 14)
                 }
                 .buttonStyle(.borderedProminent)
+                .foregroundStyle(Color.brandOnTint)
                 .tint(.orange)
                 .disabled(liveText.isEmpty)
             }
@@ -309,7 +311,7 @@ struct TextScanView: View {
                 .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 12))
             Text("Можно поправить ошибки распознавания и убрать лишнее.")
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.brandMuted)
         }
         .padding(16)
         .background(Color.brandBackground)

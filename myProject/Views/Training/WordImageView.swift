@@ -36,7 +36,7 @@ struct WordImageView: View {
             Button(action: { word.isImageHidden = false }) {
                 Label("Показать картинку", systemImage: "photo")
                     .scaledFont(size: 12, weight: .semibold, design: .rounded)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
         } else if let data = word.imageData, let image = UIImage(data: data) {
             // Рамка задаёт размер, картинка заполняет её и обрезается: широкая картинка из интернета

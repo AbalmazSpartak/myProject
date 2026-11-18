@@ -126,7 +126,7 @@ struct SchulteView: View {
                 VStack(spacing: 4) {
                     Text(size == SchulteRecords.classicSize ? "Классическая таблица: 1–25" : "Числа от 1 до \(total)")
                         .scaledFont(size: 14)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                     if let best = SchulteRecords.best(size) {
                         Text("Рекорд: \(SchulteRecords.format(best))")
                             .scaledFont(size: 17, weight: .semibold)
@@ -166,7 +166,7 @@ struct SchulteView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Найдите")
                         .scaledFont(size: 13)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                     Text("\(next)")
                         .scaledFont(size: 34, weight: .bold, design: .rounded)
                         .foregroundColor(.brandDark)
@@ -182,7 +182,7 @@ struct SchulteView: View {
                     }
                     Text(mistakes == 0 ? "без ошибок" : "ошибок: \(mistakes)")
                         .scaledFont(size: 13)
-                        .foregroundColor(mistakes == 0 ? .gray : .red)
+                        .foregroundColor(mistakes == 0 ? Color.brandMuted : .red)
                 }
             }
             .padding(.horizontal, 20)
@@ -248,7 +248,7 @@ struct SchulteView: View {
             } label: {
                 Image(systemName: "nosign")
                     .scaledFont(size: 22)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                     .overlay(Circle().stroke(Color.brandDark, lineWidth: dot == "none" ? 2.5 : 0).padding(-3))
             }
             .buttonStyle(.plain)
@@ -336,7 +336,7 @@ struct SchulteView: View {
                 .foregroundColor(.brandDark)
             Text("\(size)×\(size) · \(mistakes == 0 ? "без ошибок" : "ошибок: \(mistakes)")")
                 .scaledFont(size: 16)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
             if let best = SchulteRecords.best(size), !isRecord {
                 Text("Рекорд: \(SchulteRecords.format(best))")
                     .scaledFont(size: 15, weight: .semibold)

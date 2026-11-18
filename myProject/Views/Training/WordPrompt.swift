@@ -46,7 +46,7 @@ struct ExampleFormHint: View {
         if let form = word.exampleForm {
             Text("в примере: \(form)")
                 .scaledFont(size: 13)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
                 .accessibilityLabel("В примере форма \(form)")
         }
     }

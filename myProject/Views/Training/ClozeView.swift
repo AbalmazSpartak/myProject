@@ -85,7 +85,7 @@ struct ClozeView: View {
 
             Text("Верно: \(correctCount)/\(totalAnswered)")
                 .scaledFont(size: 13, weight: .bold, design: .rounded)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
         }
         .padding(.horizontal, 20)
         .padding(.top, 10)
@@ -95,10 +95,10 @@ struct ClozeView: View {
         VStack(spacing: 12) {
             Image(systemName: "text.badge.xmark")
                 .font(.system(size: 48))
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
             Text("Нет слов с примерами в выбранных словарях.")
                 .font(.system(.body, design: .rounded))
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
                 .multilineTextAlignment(.center)
         }
         .padding(.horizontal, 40)
@@ -119,7 +119,7 @@ struct ClozeView: View {
                 if result == nil, word.exampleForm != nil {
                     Text("В пропуске — изменённая форма слова (-s, -ed, -ing…). Словарная форма тоже засчитается.")
                         .scaledFont(size: 13)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 16)
                 }
@@ -165,7 +165,7 @@ struct ClozeView: View {
                 Button(action: { withAnimation { showHint = true } }) {
                     Image(systemName: "lightbulb.fill")
                         .scaledFont(size: 20)
-                        .foregroundColor(showHint ? .gray.opacity(0.4) : .orange)
+                        .foregroundColor(showHint ? Color.brandMuted.opacity(0.4) : .orange)
                 }
                 .disabled(showHint)
                 .accessibilityLabel("Подсказка: первая буква")
@@ -317,7 +317,7 @@ private struct ClozeResultBanner: View {
             if result != .exact {
                 Text(result == .wrong ? "Правильно: \(answer)" : "В этом предложении нужна форма: \(answer)")
                     .scaledFont(size: 14, weight: .medium, design: .rounded)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
         }
     }

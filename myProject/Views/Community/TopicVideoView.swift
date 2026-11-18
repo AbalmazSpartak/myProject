@@ -88,7 +88,7 @@ struct TopicVideoView: View {
                                 .scaledFont(size: 16, weight: .semibold)
                             Text(url.host ?? raw)
                                 .scaledFont(size: 13)
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color.brandMuted)
                         }
                         Spacer()
                         Image(systemName: "arrow.up.right")
@@ -164,7 +164,7 @@ struct TopicVideoEditor: View {
             Label(YouTubeLink(raw) != nil ? "YouTube — плеер прямо в теме" : "Не YouTube — откроется в браузере",
                   systemImage: YouTubeLink(raw) != nil ? "checkmark.circle" : "safari")
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.brandMuted)
         }
     }
 }

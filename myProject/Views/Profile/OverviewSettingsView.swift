@@ -48,7 +48,7 @@ struct OverviewSettingsView: View {
                 Section {
                     if layout.quickAccess.isEmpty {
                         Text("Пусто — блок не показывается")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.brandMuted)
                     }
                     ForEach(layout.quickAccess, id: \.self) { section in
                         sectionRow(section)

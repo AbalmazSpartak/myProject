@@ -141,7 +141,7 @@ struct CommunityView: View {
                 .foregroundColor(.brandDark)
             Text("Создавайте темы с текстом и словами — их можно добавить себе в словарь. Пока темы хранятся только на этом телефоне.")
                 .scaledFont(size: 15)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
             ForEach(CommunitySections.all(from: topics), id: \.self) { section in
                 CommunitySectionRow(section: section, topics: topics.filter { $0.section == section }) {
                     path.append(.section(section))
@@ -156,14 +156,14 @@ struct CommunityView: View {
             HStack(spacing: 14) {
                 Image(systemName: "square.and.pencil")
                     .scaledFont(size: 24, weight: .semibold)
-                    .foregroundColor(.cyan)
+                    .foregroundColor(Color.brandTint)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(topics.isEmpty ? "Создать первую тему" : "Создать тему")
                         .scaledFont(size: 17, weight: .semibold)
                         .foregroundColor(.brandDark)
                     Text("В готовый раздел или в новый — например, «Сленг»")
                         .scaledFont(size: 13)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .multilineTextAlignment(.leading)
                 }
                 Spacer()
@@ -184,7 +184,7 @@ struct CommunityView: View {
         ("Фантастика", "globe.americas.fill", .indigo),
         ("Комедии", "face.smiling.inverse", .orange),
         ("Драмы", "theatermasks.fill", .red),
-        ("Мультфильмы", "film.fill", .teal)
+        ("Мультфильмы", "film.fill", Color.brandTint)
     ]
 
     private var moviesRibbon: some View {
@@ -210,7 +210,7 @@ struct CommunityView: View {
         ("Поп", "music.mic", .pink),
         ("Рок", "guitars.fill", .red),
         ("Хип-хоп", "headphones", .indigo),
-        ("Баллады", "music.note", .teal),
+        ("Баллады", "music.note", Color.brandTint),
         ("Классика хитов", "opticaldisc.fill", .orange)
     ]
 
@@ -271,7 +271,7 @@ struct TopicCard: View {
                     .multilineTextAlignment(.leading)
                 Text(topic.previewText)
                     .scaledFont(size: 13)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)
                 Spacer(minLength: 0)
@@ -283,7 +283,7 @@ struct TopicCard: View {
                 if !topic.words.isEmpty {
                     Label("\(topic.words.count) \(DailyStudyCard.wordsNoun(topic.words.count))", systemImage: "text.book.closed")
                         .scaledFont(size: 12, weight: .semibold)
-                        .foregroundColor(.cyan)
+                        .foregroundColor(Color.brandTint)
                 }
             }
             .padding(14)

@@ -54,7 +54,7 @@ struct DailyGoalCard: View {
                     .foregroundColor(.brandDark)
                 Text(limit > 0 ? "\(introduced) из \(limit) \(DailyStudyCard.wordsNoun(limit))" : "\(introduced) \(DailyStudyCard.wordsNoun(introduced)), без нормы")
                     .scaledFont(size: 14)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
             Spacer(minLength: 0)
             Image(systemName: "pencil.circle.fill")
@@ -82,7 +82,7 @@ struct DailyGoalCard: View {
                             .foregroundColor(.brandDark)
                         Text("/\(limit > 0 ? "\(limit)" : "∞")")
                             .scaledFont(size: 28, weight: .bold, design: .rounded)
-                            .foregroundColor(.gray)
+                            .foregroundColor(Color.brandMuted)
                         Image(systemName: "pencil")
                             .scaledFont(size: 22, weight: .semibold)
                             .foregroundColor(.brandTint)
@@ -360,7 +360,7 @@ struct DailyStudyCard: View {
                 Color.clear.frame(width: 1, height: 1)
             }
             .scaledFont(size: 15, weight: .semibold)
-            .foregroundColor(.gray)
+            .foregroundColor(Color.brandMuted)
 
             ForEach(FSRSRating.allCases.reversed(), id: \.self) { rating in
                 GridRow {

@@ -186,7 +186,7 @@ struct BooksView: View {
     private var searchBox: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
             TextField("Поиск книг", text: $searchText)
                 .scaledFont(size: 16)
                 .textInputAutocapitalization(.never)
@@ -195,7 +195,7 @@ struct BooksView: View {
             if !searchText.isEmpty {
                 Button { searchText = "" } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                 }
                 .accessibilityLabel("Очистить поиск")
             }
@@ -227,7 +227,7 @@ struct BooksView: View {
                     HStack(spacing: 14) {
                         Image(systemName: "books.vertical.fill")
                             .font(.system(size: 26))
-                            .foregroundColor(.brown)
+                            .foregroundColor(Color.brandTint)
                             .frame(width: 44)
                         VStack(alignment: .leading, spacing: 3) {
                             Text("Каталог бесплатных книг")
@@ -235,20 +235,20 @@ struct BooksView: View {
                                 .foregroundColor(.brandDark)
                             Text("Классика на английском — бесплатно")
                                 .scaledFont(size: 14)
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color.brandMuted)
                         }
                         Spacer()
                         Image(systemName: "chevron.right")
-                            .foregroundColor(.gray)
+                            .foregroundColor(Color.brandMuted)
                     }
                     .padding(16)
-                    .background(Color.brown.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .background(Color.brandTint.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
                 .buttonStyle(.plain)
 
                 Text("Скоро: другие каталоги и сайты")
                     .scaledFont(size: 14)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
             .padding(20)
         }
@@ -391,7 +391,7 @@ struct TabPlaceholder: View {
             Spacer()
             Image(systemName: icon)
                 .font(.system(size: 40))
-                .foregroundColor(.brown.opacity(0.6))
+                .foregroundColor(Color.brandTint.opacity(0.6))
             if let title {
                 Text(title)
                     .scaledFont(size: 20, weight: .bold)
@@ -400,7 +400,7 @@ struct TabPlaceholder: View {
             }
             Text(text)
                 .scaledFont(size: 16)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
                 .multilineTextAlignment(.center)
             Spacer()
         }
@@ -426,17 +426,17 @@ private struct AddBookCard: View {
                                 .scaledFont(size: 15, weight: .semibold)
                                 .multilineTextAlignment(.center)
                         }
-                        .foregroundColor(.brown)
+                        .foregroundColor(Color.brandTint)
                         .padding(12)
                     }
-                    .background(Color.brown.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .background(Color.brandTint.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                     .overlay {
                         RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .strokeBorder(Color.brown.opacity(0.45), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5]))
+                            .strokeBorder(Color.brandTint.opacity(0.45), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5]))
                     }
                 Text("EPUB, FB2, TXT")
                     .scaledFont(size: 13)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                     .lineLimit(1)
             }
         }
@@ -463,11 +463,11 @@ struct BookCard: View {
                 if !book.author.isEmpty {
                     Text(book.author)
                         .scaledFont(size: 13)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .lineLimit(1)
                 }
                 ProgressView(value: book.progress)
-                    .tint(.brown)
+                    .tint(Color.brandTint)
             }
         }
         .buttonStyle(.plain)
@@ -494,7 +494,7 @@ struct BookCover: View {
             }
         } else {
             ZStack {
-                LinearGradient(colors: [Color.brown.opacity(0.75), Color.brown.opacity(0.45)],
+                LinearGradient(colors: [Color.brandTint.opacity(0.75), Color.brandTint.opacity(0.45)],
                                startPoint: .topLeading, endPoint: .bottomTrailing)
                 Text(title)
                     .scaledFont(size: 17, weight: .semibold, design: .serif)

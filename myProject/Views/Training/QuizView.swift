@@ -82,7 +82,7 @@ struct QuizView: View {
                     
                     Text("Тест: \(correctCount)/\(totalAnswered)")
                         .scaledFont(size: 13, weight: .bold, design: .rounded)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .padding(.trailing, 2)
                 }
             }
@@ -102,11 +102,11 @@ struct QuizView: View {
                 VStack(spacing: 12) {
                     Image(systemName: currentFilter == .mistakes ? "checkmark.circle.fill" : "doc.text.magnifyingglass")
                         .font(.system(size: 48))
-                        .foregroundColor(currentFilter == .mistakes ? .green : .gray)
+                        .foregroundColor(currentFilter == .mistakes ? .green : Color.brandMuted)
                     
                     Text(currentFilter == .mistakes ? "Отлично! У вас нет неисправленных ошибок." : "В выбранном разделе нет слов.")
                         .font(.system(.body, design: .rounded))
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .multilineTextAlignment(.center)
                 }
                 .padding(.horizontal, 40)
@@ -310,7 +310,7 @@ struct QuizView: View {
         if selectedOption == option {
             return colorScheme == .dark ? Color(red: 1.0, green: 0.45, blue: 0.45) : .red
         }
-        return .gray.opacity(0.6)
+        return Color.brandFill
     }
     
     private func optionBorderColor(_ option: String) -> Color {

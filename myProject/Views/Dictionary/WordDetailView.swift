@@ -73,18 +73,18 @@ struct WordDetailView: View {
                 if !word.displayTranscription.isEmpty {
                     Text(word.displayTranscription)
                         .scaledFont(size: 17, design: .serif)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                 }
                 if !word.partOfSpeech.isEmpty {
                     Text(word.russianPartOfSpeech)
                         .scaledFont(size: 14)
                         .italic()
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                 }
                 badge(word.cefrLevel, color: .indigo)
                 if !word.isCustom, !word.tags.isEmpty {
                     let isOxford = word.tags == StudyScope.oxfordTag
-                    badge(isOxford ? "Oxford" : "доп.", color: isOxford ? .teal : .gray)
+                    badge(isOxford ? "Oxford" : "доп.", color: isOxford ? Color.brandTint : Color.brandMuted)
                 }
             }
         }
@@ -122,7 +122,7 @@ struct WordDetailView: View {
                 Label("Прослушать пример", systemImage: "play.circle")
                     .scaledFont(size: 15)
             }
-            .tint(.brown)
+            .tint(Color.brandTint)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -135,9 +135,9 @@ struct WordDetailView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Так же пишется")
                 .scaledFont(size: 13, weight: .semibold)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
             ForEach(others) { other in
-                (Text(other.russianPartOfSpeech).italic().foregroundColor(.gray) + Text(" — \(other.russian)"))
+                (Text(other.russianPartOfSpeech).italic().foregroundColor(Color.brandMuted) + Text(" — \(other.russian)"))
                     .scaledFont(size: 15)
                     .foregroundColor(.brandDark)
             }
@@ -154,7 +154,7 @@ struct WordDetailView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Изучение")
                 .scaledFont(size: 13, weight: .semibold)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
             if word.reps == 0 {
                 Text("Ещё не встречалось в тренировках")
                     .scaledFont(size: 15)
@@ -194,7 +194,7 @@ struct WordDetailView: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
-            .tint(.brown)
+            .tint(Color.brandTint)
             if !word.isCustom {
                 Button {
                     isReporting = true
@@ -203,7 +203,7 @@ struct WordDetailView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
-                .tint(.gray)
+                .tint(Color.brandMuted)
             }
         }
         .scaledFont(size: 15, weight: .semibold)

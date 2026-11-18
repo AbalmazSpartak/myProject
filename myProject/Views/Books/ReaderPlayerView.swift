@@ -97,7 +97,7 @@ struct ReaderPlayerView: View {
                     .blur(radius: 30)
                     .opacity(0.5)
             } else {
-                Color.brown.opacity(0.3)
+                Color.brandTint.opacity(0.3)
             }
         }
         .frame(height: 300)
@@ -144,7 +144,7 @@ struct ReaderPlayerView: View {
             }
             Text(chapterLabel)
                 .scaledFont(size: 14)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
         }
@@ -167,7 +167,7 @@ struct ReaderPlayerView: View {
                 Text(clock(seconds))
             }
             .scaledFont(size: 13)
-            .foregroundColor(.gray)
+            .foregroundColor(Color.brandMuted)
             .monospacedDigit()
         }
     }
@@ -198,11 +198,11 @@ struct ReaderPlayerView: View {
                 ZStack {
                     Circle().fill(Color.brandTint)
                     if speech.isPreparing {
-                        ProgressView().tint(.white)
+                        ProgressView().tint(.brandOnTint)
                     } else {
                         Image(systemName: speech.isPlaying ? "pause.fill" : "play.fill")
                             .scaledFont(size: 28)
-                            .foregroundColor(.white)
+                            .foregroundColor(.brandOnTint)
                     }
                 }
                 .frame(width: 68, height: 68)
@@ -220,7 +220,7 @@ struct ReaderPlayerView: View {
     private var preparingNote: some View {
         Text("Готовлю голос — в первый раз это дольше…")
             .scaledFont(size: 13)
-            .foregroundColor(.gray)
+            .foregroundColor(Color.brandMuted)
             .opacity(speech.isPreparing ? 1 : 0)
             .animation(.easeInOut(duration: 0.2), value: speech.isPreparing)
             .padding(.top, -10)

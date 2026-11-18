@@ -16,7 +16,7 @@ struct WordRowCard: View {
                         Text(word.partOfSpeech)
                             .scaledFont(size: 13, weight: .medium, design: .rounded)
                             .italic()
-                            .foregroundColor(.gray)
+                            .foregroundColor(Color.brandMuted)
                     }
 
                     if !word.transcription.isEmpty {
@@ -34,20 +34,20 @@ struct WordRowCard: View {
                         let isOxford = word.tags == StudyScope.oxfordTag
                         Text(isOxford ? "Oxford" : "доп.")
                             .scaledFont(size: 11, weight: .semibold, design: .rounded)
-                            .foregroundColor(isOxford ? .teal : .gray)
+                            .foregroundColor(isOxford ? Color.brandTint : Color.brandMuted)
                             .accessibilityLabel(isOxford ? "Из списка Oxford" : "Дополнительное слово, не из списка Oxford")
                     }
                 }
                 
                 Text(word.russian)
                     .scaledFont(size: 15, weight: .medium, design: .rounded)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                 
                 if !word.example.isEmpty {
                     Text(word.attributedExample)
                         .scaledFont(size: 13, weight: .regular, design: .rounded)
                         .italic()
-                        .foregroundColor(.gray.opacity(0.8))
+                        .foregroundColor(Color.brandMuted.opacity(0.8))
                         .padding(.top, 2)
                 }
             }
@@ -65,7 +65,7 @@ struct WordRowCard: View {
             
             Button(action: onEdit) {
                 Image(systemName: "ellipsis.circle")
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                     .scaledFont(size: 18)
             }
             .buttonStyle(.plain)

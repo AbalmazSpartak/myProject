@@ -130,19 +130,19 @@ struct ReviewSetupView: View {
                         HStack(spacing: 12) {
                             Image(systemName: stages.contains(stage) ? "checkmark.circle.fill" : "circle")
                                 .scaledFont(size: 22)
-                                .foregroundColor(stages.contains(stage) ? .brandTint : .gray.opacity(0.5))
+                                .foregroundColor(stages.contains(stage) ? .brandTint : Color.brandMuted.opacity(0.5))
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(stage.title)
                                     .scaledFont(size: 17, weight: .semibold)
                                     .foregroundColor(.brandDark)
                                 Text(stage.hint)
                                     .scaledFont(size: 13)
-                                    .foregroundColor(.gray)
+                                    .foregroundColor(Color.brandMuted)
                             }
                             Spacer()
                             Text("\(studied.filter(stage.contains).count)")
                                 .scaledFont(size: 15, weight: .semibold, design: .rounded)
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color.brandMuted)
                         }
                         .padding(.horizontal, 14)
                         .padding(.vertical, 11)
@@ -174,7 +174,7 @@ struct ReviewSetupView: View {
                         .foregroundColor(.brandDark)
                     Text(showEnglish ? "при показе слова" : "при показе ответа — чтобы не подсказывать")
                         .scaledFont(size: 13)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                 }
             }
             .tint(.brandTint)
@@ -194,11 +194,11 @@ struct ReviewSetupView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text("Части речи").scaledFont(size: 13, weight: .semibold).foregroundColor(.gray)
+            Text("Части речи").scaledFont(size: 13, weight: .semibold).foregroundColor(Color.brandMuted)
             chips(for: partOfSpeechCounts, key: Self.posKey(group:))
 
             if !topicCounts.isEmpty {
-                Text("Темы").scaledFont(size: 13, weight: .semibold).foregroundColor(.gray)
+                Text("Темы").scaledFont(size: 13, weight: .semibold).foregroundColor(Color.brandMuted)
                 chips(for: topicCounts, key: Self.topicKey(name:))
             }
         }
@@ -229,7 +229,7 @@ struct ReviewSetupView: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 Text(name)
-                Text("\(count)").foregroundColor(isOn ? .brandBackground.opacity(0.8) : .gray)
+                Text("\(count)").foregroundColor(isOn ? .brandBackground.opacity(0.8) : Color.brandMuted)
             }
             .scaledFont(size: 15, weight: .semibold)
             .foregroundColor(isOn ? .brandBackground : .brandDark)

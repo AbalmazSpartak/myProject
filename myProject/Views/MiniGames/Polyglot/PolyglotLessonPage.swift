@@ -35,7 +35,7 @@ struct PolyglotLessonPage<Content: View, Scheme: View>: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Урок \(number)")
                             .scaledFont(size: 14, weight: .semibold)
-                            .foregroundColor(.gray)
+                            .foregroundColor(Color.brandMuted)
                         Text(title)
                             .scaledFont(size: 30, design: .serif)
                             .foregroundColor(.brandDark)
@@ -125,7 +125,7 @@ struct PolyglotExamples: View {
                         .foregroundColor(.brandDark)
                     Text(russian)
                         .scaledFont(size: 14)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer()

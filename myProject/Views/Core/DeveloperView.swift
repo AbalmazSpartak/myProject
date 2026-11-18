@@ -89,7 +89,7 @@ struct DeveloperView: View {
                         Section {
                             Text(message)
                                 .font(.footnote)
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color.brandMuted)
                         }
                     }
                 }

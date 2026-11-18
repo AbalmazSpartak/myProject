@@ -93,7 +93,7 @@ struct WordLookupView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Разговорная форма · \(form.rule.title)")
                         .scaledFont(size: 12, weight: .semibold)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                     (Text(tapped.word) + Text(" = ") + Text(form.standard).bold() + Text(form.note.map { " (\($0))" } ?? ""))
                         .scaledFont(size: 15)
                         .foregroundColor(.brandDark)
@@ -104,7 +104,7 @@ struct WordLookupView: View {
                     .scaledFont(size: 14, weight: .semibold)
                     .multilineTextAlignment(.leading)
             }
-            .tint(.brown)
+            .tint(Color.brandTint)
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -145,7 +145,7 @@ struct WordLookupView: View {
                     }
                 }
                 .scaledFont(size: 14)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
             }
             Spacer()
             Button {
@@ -153,7 +153,7 @@ struct WordLookupView: View {
             } label: {
                 Image(systemName: "speaker.wave.2.fill")
                     .scaledFont(size: 22)
-                    .foregroundColor(.brown)
+                    .foregroundColor(Color.brandTint)
             }
             .accessibilityLabel("Озвучить")
         }
@@ -168,7 +168,7 @@ struct WordLookupView: View {
                     Text(baseWord.cefrLevel).bold().foregroundColor(.indigo)
                 }
                 .scaledFont(size: 12, weight: .semibold)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
                 Text(baseWord.russian)
                     .scaledFont(size: 20, design: .serif)
                     .foregroundColor(.brandDark)
@@ -176,7 +176,7 @@ struct WordLookupView: View {
                 Text(isTranslating ? "Перевожу…" : translationFailed ? "Переводчик недоступен — впишите перевод"
                      : translationDoubtful ? "Перевод под вопросом — проверьте" : "Перевод")
                     .scaledFont(size: 12, weight: .semibold)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                 TextField("перевод", text: $translation)
                     .scaledFont(size: 20, design: .serif)
                     .foregroundColor(.brandDark)
@@ -186,7 +186,7 @@ struct WordLookupView: View {
                         Label("Из перевода книги: «\(lemma)»", systemImage: "text.quote")
                             .scaledFont(size: 13, weight: .semibold)
                     }
-                    .tint(.brown)
+                    .tint(Color.brandTint)
                 }
             }
         }
@@ -201,7 +201,7 @@ struct WordLookupView: View {
         VStack(alignment: .leading, spacing: 6) {
             Label("В переводе книги", systemImage: "text.quote")
                 .scaledFont(size: 12, weight: .semibold)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
             Text(ReaderSelectionPanel.marked(passage))
                 .scaledFont(size: 16, design: .serif)
                 .foregroundColor(.brandDark)
@@ -242,7 +242,7 @@ struct WordLookupView: View {
                 }
             }
             .scaledFont(size: 12, weight: .semibold)
-            .foregroundColor(.gray)
+            .foregroundColor(Color.brandMuted)
             if let contextEnglish {
                 if let contextRussian {
                     Text(contextRussian)
@@ -252,18 +252,18 @@ struct WordLookupView: View {
                 Text(contextEnglish)
                     .scaledFont(size: 15, design: .serif)
                     .italic()
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                 if baseWord == nil, let contextRussian, contextRussian != translation {
                     Button("Взять этот перевод") { translation = contextRussian }
                         .scaledFont(size: 14, weight: .semibold)
-                        .tint(.brown)
+                        .tint(Color.brandTint)
                 }
             } else {
                 HStack(spacing: 8) {
                     ProgressView()
                     Text("Смотрю значение…")
                         .scaledFont(size: 15)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                 }
             }
         }
@@ -280,11 +280,11 @@ struct WordLookupView: View {
                 Label("Значение в этом предложении", systemImage: "sparkles")
                     .scaledFont(size: 15, weight: .semibold)
             }
-            .tint(.brown)
+            .tint(Color.brandTint)
             if let cloudMessage {
                 Text(cloudMessage)
                     .scaledFont(size: 13)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
         }
     }
@@ -314,7 +314,7 @@ struct WordLookupView: View {
                 }
             }
         }
-        .tint(.brown)
+        .tint(Color.brandTint)
     }
 
     private var addButton: some View {
@@ -328,6 +328,7 @@ struct WordLookupView: View {
                 .padding(.vertical, 12)
         }
         .buttonStyle(.borderedProminent)
+        .foregroundStyle(Color.brandOnTint)
         .tint(isAdded ? .green : .brandDark)
         .disabled(isAdded || (baseWord == nil && translation.trimmingCharacters(in: .whitespaces).isEmpty))
     }

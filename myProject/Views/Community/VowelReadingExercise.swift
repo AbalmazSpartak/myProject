@@ -116,7 +116,7 @@ struct VowelReadingExerciseView: View {
                 if task != nil {
                     Text("\(index + 1) из \(tasks.count)")
                         .scaledFont(size: 15, weight: .semibold, design: .rounded)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                 }
                 Spacer()
                 Color.clear.frame(width: 70, height: 1)
@@ -234,7 +234,7 @@ struct VowelReadingExerciseView: View {
                 .foregroundColor(.brandDark)
             Text("Верно: \(correctCount) из \(tasks.count)")
                 .scaledFont(size: 17)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
             Spacer()
             Button {
                 tasks = VowelReading.round()
@@ -292,11 +292,11 @@ struct TopicExerciseCard: View {
                         .foregroundColor(.brandDark)
                     Text("15 слов: выберите, как читается выделенная гласная")
                         .scaledFont(size: 14)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
-                Image(systemName: "chevron.right").foregroundColor(.gray)
+                Image(systemName: "chevron.right").foregroundColor(Color.brandMuted)
             }
             .padding(16)
             .background(Color.cardBackground)

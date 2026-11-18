@@ -21,7 +21,7 @@ struct NeuralVoiceHelpView: View {
                     HelpBullet("В памяти занимает около 700 МБ; через 10 минут без чтения выгружается.")
                 }
 
-                HelpCard(title: "Piper: голоса для книг на разных языках", icon: "books.vertical.fill", color: .brown) {
+                HelpCard(title: "Piper: голоса для книг на разных языках", icon: "books.vertical.fill", color: Color.brandTint) {
                     HelpBullet("Лёгкий голос для чтения книг вслух без пауз, без интернета, свободная лицензия. Для каждого языка — свой, скачивается отдельно (\(NeuralVoice.piperDownloadSize)).")
                     HelpBullet("Голос на язык один: когда скачиваете другой, прежний удаляется.")
                     HelpBullet("Если по-английски скачаны и Kokoro, и Piper, переключатель «Читает книги» выбирает, кто читает.")

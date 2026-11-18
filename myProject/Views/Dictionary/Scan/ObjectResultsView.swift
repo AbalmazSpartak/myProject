@@ -106,7 +106,7 @@ struct ObjectResultsView: View {
             } label: {
                 Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
                     .scaledFont(size: 22)
-                    .foregroundStyle(isOn ? Color.teal : Color.gray.opacity(0.5))
+                    .foregroundStyle(isOn ? Color.brandTint : Color.brandMuted.opacity(0.5))
             }
             .buttonStyle(.borderless)
             VStack(alignment: .leading, spacing: 4) {
@@ -117,10 +117,10 @@ struct ObjectResultsView: View {
                         .foregroundStyle(guess.isConfident ? .green : .orange)
                 }
                 if let word {
-                    Text(word.russian).foregroundStyle(.secondary)
+                    Text(word.russian).foregroundStyle(Color.brandMuted)
                 } else {
                     TextField(isTranslating ? "переводится…" : "перевод", text: translationBinding(for: guess))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.brandMuted)
                 }
             }
             Spacer()
@@ -131,7 +131,7 @@ struct ObjectResultsView: View {
             } else {
                 Text("новое")
                     .font(.caption.bold())
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.brandMuted)
             }
         }
     }

@@ -176,7 +176,7 @@ struct TopicEditorView: View {
                 .overlay(alignment: .topLeading) {
                     if block.wrappedValue.text.isEmpty {
                         Text("Текст")
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(Color.brandMuted)
                             .padding(.top, 8)
                             .padding(.leading, 5)
                             .allowsHitTesting(false)
@@ -190,7 +190,7 @@ struct TopicEditorView: View {
             TopicVideoEditor(block: block)
         case .exercise:
             Text("Тренировка встроенной темы — меняется вместе с приложением")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.brandMuted)
         }
     }
 

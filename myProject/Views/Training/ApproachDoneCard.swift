@@ -20,7 +20,7 @@ struct ApproachDoneCard: View {
                     .foregroundColor(.brandDark)
                 Text(summary)
                     .scaledFont(size: 16, weight: .medium, design: .rounded)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
 
             VStack(spacing: 10) {

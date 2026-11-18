@@ -12,7 +12,7 @@ struct VoiceProgressRow: View {
                 Spacer()
                 Text("\(Int(fraction * 100))%")
                     .monospacedDigit()
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
             ProgressView(value: fraction)
             Button("Отменить", role: .cancel) { NeuralVoice.shared.cancelDownload() }
@@ -114,7 +114,7 @@ struct BookLanguageVoiceView: View {
             }
             if voice.bookChoice(code) == choiceKey {
                 Label("Читает книги", systemImage: "checkmark")
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             } else {
                 Button("Читать книги этим голосом") { voice.setBookChoice(code, choiceKey) }
             }

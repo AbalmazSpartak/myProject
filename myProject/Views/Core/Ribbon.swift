@@ -158,13 +158,13 @@ struct StubView: View {
             VStack(spacing: 16) {
                 Image(systemName: "hammer.fill")
                     .font(.system(size: 48))
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                 Text(title)
                     .scaledFont(size: 26, weight: .semibold, design: .serif)
                     .foregroundColor(.brandDark)
                 Text(message)
                     .scaledFont(size: 17)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                     .multilineTextAlignment(.center)
             }
             .padding(.horizontal, 40)

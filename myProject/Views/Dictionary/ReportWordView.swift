@@ -22,7 +22,7 @@ struct ReportWordView: View {
                                 .foregroundColor(.brandDark)
                             Text("\(word.transcription.isEmpty ? "" : "[\(word.transcription)] · ")\(word.russian)")
                                 .scaledFont(size: 15)
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color.brandMuted)
                         }
                     }
                     Section("Что не так") {

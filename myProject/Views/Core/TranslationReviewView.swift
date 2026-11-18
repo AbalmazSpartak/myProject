@@ -11,7 +11,7 @@ struct TranslationReviewView: View {
         List {
             if lists.isEmpty {
                 Text("Своих словарей пока нет.")
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
             ForEach(lists) { list in
                 NavigationLink {
@@ -23,7 +23,7 @@ struct TranslationReviewView: View {
                         let newCount = list.words.filter(\.isCustom).count
                         Text("\((list.words.count - newCount).formatted()) из базы · \(newCount.formatted()) новых")
                             .scaledFont(size: 13)
-                            .foregroundColor(.gray)
+                            .foregroundColor(Color.brandMuted)
                     }
                 }
             }
@@ -98,13 +98,13 @@ private struct TranslationReviewListView: View {
                 if !word.partOfSpeech.isEmpty {
                     Text(word.partOfSpeech)
                         .scaledFont(size: 12)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                 }
                 Spacer()
                 if showsNew, let count = list.frequencies[WordList.frequencyKey(word)] {
                     Text("×\(count)")
                         .scaledFont(size: 12)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                 }
             }
             Text(word.russian)
@@ -113,7 +113,7 @@ private struct TranslationReviewListView: View {
             if !word.example.isEmpty {
                 Text(Self.plain(word.example))
                     .scaledFont(size: 13)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                     .lineLimit(2)
             }
         }

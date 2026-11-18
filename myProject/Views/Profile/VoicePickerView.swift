@@ -82,7 +82,7 @@ struct VoicePickerView: View {
                             .font(.headline)
                         Text("Настройки iPhone → Универсальный доступ → Устный контент → Голоса → Английский. Выберите голос с пометкой «Улучшенный» или «Премиум» и скачайте — без интернета он тоже будет работать. Затем вернитесь сюда.")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.brandMuted)
                     }
                     .padding(.vertical, 4)
                 } footer: {
@@ -127,7 +127,7 @@ struct VoicePickerView: View {
                 if let subtitle {
                     Text(subtitle)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.brandMuted)
                 }
             }
             Spacer()

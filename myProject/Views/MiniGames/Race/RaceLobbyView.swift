@@ -128,7 +128,7 @@ struct RaceLobbyView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Слова для гонки")
                         .scaledFont(size: 13)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                     Text(RaceWordSource(storedValue: wordSource).title(in: modelContext))
                         .scaledFont(size: 17, weight: .semibold)
                         .foregroundColor(.brandDark)
@@ -136,7 +136,7 @@ struct RaceLobbyView: View {
                 }
                 Spacer()
                 Image(systemName: "chevron.right")
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
             .padding(14)
             .background(Color.brandFill)
@@ -177,7 +177,7 @@ struct RaceLobbyView: View {
                  ? "Наберите слово — засчитывается, как только совпало. Регистр и ё/е не важны."
                  : "Нажмите на правильный перевод из трёх.")
                 .scaledFont(size: 13)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
         }
         .onChange(of: answerMode) { _, mode in hasGhost = RaceGhost.best(for: mode) != nil }
         .onAppear { hasGhost = RaceGhost.best(for: answerMode) != nil }
@@ -224,7 +224,7 @@ struct RaceLobbyView: View {
                  ? "Призрак едет точно как вы в лучшей гонке этого режима. Обгоните — и он станет новым рекордом."
                  : "Сначала пройдите гонку в этом режиме до конца — например, с ботом. Тогда появится призрак вашего рекорда.")
                 .scaledFont(size: 13)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
         }
     }
 
@@ -246,14 +246,14 @@ struct RaceLobbyView: View {
                 .foregroundColor(.brandDark)
             Text("Через интернет — с другом по коду комнаты или со случайным соперником")
                 .scaledFont(size: 14)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
 
             Button(action: findOpponent) {
                 Label("Найти соперника", systemImage: "globe")
                     .scaledFont(size: 17, weight: .bold)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.teal)
+                    .background(Color.brandTint)
                     .foregroundColor(.white)
                     .cornerRadius(14)
             }
@@ -344,23 +344,23 @@ struct RaceLobbyView: View {
                 if isSearchTimedOut {
                     Image(systemName: "person.crop.circle.badge.questionmark")
                         .font(.system(size: 44))
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                     Text("Никого нет онлайн")
                         .scaledFont(size: 20, weight: .semibold)
                     Text("Можно сыграть с ботом или подождать ещё")
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                     onlineButton("Сыграть с ботом", color: .indigo) {
                         leaveOnline()
                         startSolo(.bot(botLevel))
                     }
-                    onlineButton("Искать ещё", color: .teal, action: findOpponent)
+                    onlineButton("Искать ещё", color: Color.brandTint, action: findOpponent)
                 } else {
                     ProgressView()
                     Text("Ищем соперника…")
                         .scaledFont(size: 18, weight: .semibold)
                     Text("Как только кто-то тоже нажмёт «Найти соперника», гонка начнётся сама")
                         .scaledFont(size: 14)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .multilineTextAlignment(.center)
                 }
             case .inRoom(let code):
@@ -376,7 +376,7 @@ struct RaceLobbyView: View {
 
             Button("Назад", action: leaveOnline)
                 .scaledFont(size: 17, weight: .semibold)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
                 .padding(.top, 8)
         }
         .frame(maxWidth: .infinity)
@@ -393,7 +393,7 @@ struct RaceLobbyView: View {
         } else {
             Text("Код комнаты")
                 .scaledFont(size: 15)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
             Text(code)
                 .scaledFont(size: 48, weight: .bold, design: .monospaced)
                 .foregroundColor(.brandDark)
@@ -406,15 +406,15 @@ struct RaceLobbyView: View {
             }
 
             Text(others.isEmpty ? "Пока никого — ждём соперников" : "В комнате: \(others.joined(separator: ", "))")
-                .foregroundColor(others.isEmpty ? .gray : .green)
+                .foregroundColor(others.isEmpty ? Color.brandMuted : .green)
                 .multilineTextAlignment(.center)
 
             if online.isHost {
-                onlineButton("Начать гонку", color: others.isEmpty ? .gray.opacity(0.4) : .green, action: startOnlineRace)
+                onlineButton("Начать гонку", color: others.isEmpty ? Color.brandFill : .green, action: startOnlineRace)
                     .disabled(others.isEmpty)
             } else {
                 Text("Ждём, когда создатель начнёт гонку…")
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
         }
     }
@@ -440,7 +440,7 @@ struct RaceLobbyView: View {
                 .foregroundColor(.brandDark)
             Text("Нужно минимум 2 игрока на одном Wi-Fi")
                 .scaledFont(size: 14)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
             
             Button(action: {
                 mode = .hosting
@@ -482,7 +482,7 @@ struct RaceLobbyView: View {
                 .scaledFont(size: 16, weight: .semibold)
             
             Text("Подключились: \(manager.connectedPeers.count)")
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
             
             ForEach(manager.connectedPeers, id: \.self) { peer in
                 Text(peer.displayName)
@@ -493,7 +493,7 @@ struct RaceLobbyView: View {
                     .scaledFont(size: 17, weight: .bold)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(manager.connectedPeers.isEmpty ? Color.gray.opacity(0.3) : Color.green)
+                    .background(manager.connectedPeers.isEmpty ? Color.brandFill : Color.green)
                     .foregroundColor(.white)
                     .cornerRadius(14)
             }
@@ -510,7 +510,7 @@ struct RaceLobbyView: View {
         VStack(spacing: 16) {
             ProgressView()
             Text("Поиск комнат поблизости...")
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
             
             ForEach(manager.discoveredPeers, id: \.self) { peer in
                 Button(action: { manager.invite(peer: peer) }) {

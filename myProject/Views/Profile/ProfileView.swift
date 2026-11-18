@@ -52,7 +52,7 @@ struct ProfileView: View {
                         Button(action: { showSettings = true }) {
                             Image(systemName: "gearshape.fill")
                                 .scaledFont(size: 22)
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color.brandMuted)
                         }
                     }
                 }
@@ -70,7 +70,7 @@ struct ProfileView: View {
                 VStack(spacing: 12) {
                     ZStack {
                         Circle()
-                            .fill(Color.teal.opacity(0.15))
+                            .fill(Color.brandTint.opacity(0.15))
                             .frame(width: 90, height: 90)
                         
                         if let data = profile.avatarData, let uiImage = UIImage(data: data) {
@@ -82,7 +82,7 @@ struct ProfileView: View {
                         } else {
                             Image(systemName: "person.fill")
                                 .font(.system(size: 44))
-                                .foregroundColor(.teal)
+                                .foregroundColor(Color.brandTint)
                         }
                     }
                     
@@ -92,7 +92,7 @@ struct ProfileView: View {
                             .foregroundColor(.brandDark)
                         Image(systemName: "pencil")
                             .scaledFont(size: 14, weight: .semibold)
-                            .foregroundColor(.gray)
+                            .foregroundColor(Color.brandMuted)
                     }
                 }
                 .contentShape(Rectangle())
@@ -196,7 +196,7 @@ struct GameRecordsCard: View {
             row(icon: "character.bubble.fill", color: .red, title: "Step by Step", subtitle: polyglotSubtitle,
                 values: polyglot.totalPoints > 0 ? ["\(polyglot.totalPoints) \(PolyglotProgress.pointsNoun(polyglot.totalPoints))"] : [])
 
-            row(icon: "square.grid.3x3.fill", color: .cyan, title: "Таблицы Шульте", subtitle: "лучшее время",
+            row(icon: "square.grid.3x3.fill", color: Color.brandTint, title: "Таблицы Шульте", subtitle: "лучшее время",
                 values: SchulteRecords.sizes.compactMap { size in
                     SchulteRecords.best(size).map { "\(size)×\(size): \(SchulteRecords.format($0))" }
                 })
@@ -236,14 +236,14 @@ struct GameRecordsCard: View {
                     .foregroundColor(.brandDark)
                 Text(subtitle)
                     .scaledFont(size: 13)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 2) {
                 if values.isEmpty {
                     Text("ещё не играли")
                         .scaledFont(size: 14)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                 }
                 ForEach(values, id: \.self) { value in
                     Text(value)

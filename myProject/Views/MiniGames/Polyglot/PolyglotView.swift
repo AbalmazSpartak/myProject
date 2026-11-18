@@ -12,7 +12,7 @@ struct PolyglotView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Уроки по схемам: посмотрите правило, потом соберите фразы из карточек.")
                         .scaledFont(size: 15)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
 
                     if progress.totalPoints > 0 {
                         Label("\(progress.totalPoints) \(PolyglotProgress.pointsNoun(progress.totalPoints)) за уроки",
@@ -216,7 +216,7 @@ struct PolyglotView: View {
         } else {
             Text("Не начат")
                 .scaledFont(size: 13, weight: .semibold)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
                 .padding(.top, 4)
         }
     }
@@ -231,19 +231,19 @@ struct PolyglotView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Урок \(number)")
                     .scaledFont(size: 13, weight: .semibold)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                 Text(title)
                     .scaledFont(size: 19, weight: .semibold, design: .serif)
                     .foregroundColor(.brandDark)
                 Text(subtitle)
                     .scaledFont(size: 14)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
                     .fixedSize(horizontal: false, vertical: true)
                 lessonMastery(number)
             }
             Spacer(minLength: 0)
             Image(systemName: "chevron.right")
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
         }
         .padding(16)
         .background(Color.cardBackground)
@@ -278,7 +278,7 @@ struct PolyglotLessonView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Урок 1")
                             .scaledFont(size: 14, weight: .semibold)
-                            .foregroundColor(.gray)
+                            .foregroundColor(Color.brandMuted)
                         Text("Will / Do / Does / Did")
                             .scaledFont(size: 30, weight: .regular, design: .serif)
                             .foregroundColor(.brandDark)
@@ -367,7 +367,7 @@ struct PolyglotSchemeView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(row.form)
                                 .scaledFont(size: 12, weight: .semibold)
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color.brandMuted)
                             ForEach(row.lines, id: \.self) { line in
                                 Text(Self.marked(line))
                                     .scaledFont(size: 17, design: .serif)

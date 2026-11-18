@@ -41,7 +41,7 @@ struct TopicDiscussionView: View {
             if threads.isEmpty {
                 Text("Пока никто не написал. Начните обсуждение — вопрос, пример, своя подсказка.")
                     .scaledFont(size: 14)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
 
             let shown = limit.map { Array(threads.prefix($0)) } ?? threads
@@ -59,7 +59,7 @@ struct TopicDiscussionView: View {
                 Button { isShowingAll = true } label: {
                     Text("Все комментарии · \(topic.comments.count)")
                         .scaledFont(size: 15, weight: .semibold)
-                        .foregroundColor(.cyan)
+                        .foregroundColor(Color.brandTint)
                 }
                 .buttonStyle(.plain)
             }
@@ -98,14 +98,14 @@ struct TopicDiscussionView: View {
                     HStack(spacing: 6) {
                         Text(editing != nil ? "Изменение комментария" : "Ответ для \(target.authorName)")
                             .scaledFont(size: 13, weight: .semibold)
-                            .foregroundColor(.cyan)
+                            .foregroundColor(Color.brandTint)
                         Button {
                             replyTo = nil
                             editing = nil
                             draft = ""
                         } label: {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color.brandMuted)
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Отменить")
@@ -121,7 +121,7 @@ struct TopicDiscussionView: View {
                     Button(action: send) {
                         Image(systemName: "arrow.up.circle.fill")
                             .scaledFont(size: 30)
-                            .foregroundColor(trimmedDraft.isEmpty ? .gray.opacity(0.4) : .cyan)
+                            .foregroundColor(trimmedDraft.isEmpty ? Color.brandMuted.opacity(0.4) : Color.brandTint)
                     }
                     .buttonStyle(.plain)
                     .disabled(trimmedDraft.isEmpty)
@@ -131,7 +131,7 @@ struct TopicDiscussionView: View {
         } else {
             Label("Писать в обсуждении можно с подпиской", systemImage: "lock.fill")
                 .scaledFont(size: 14, weight: .semibold)
-                .foregroundColor(.gray)
+                .foregroundColor(Color.brandMuted)
                 .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(RoundedRectangle(cornerRadius: 12).fill(Color.brandFill))
@@ -171,7 +171,7 @@ struct TopicDiscussionView: View {
                         .foregroundColor(.brandDark)
                     Text(Self.relativeTime(comment.createdAt) + (comment.editedAt != nil ? " · изменён" : ""))
                         .scaledFont(size: 12)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                 }
                 Text(comment.text)
                     .scaledFont(size: 15)
@@ -186,7 +186,7 @@ struct TopicDiscussionView: View {
                         Label(comment.likeCount > 0 ? "\(comment.likeCount)" : "Нравится",
                               systemImage: comment.isLikedByMe ? "heart.fill" : "heart")
                             .scaledFont(size: 13, weight: .semibold)
-                            .foregroundColor(comment.isLikedByMe ? .red : .gray)
+                            .foregroundColor(comment.isLikedByMe ? .red : Color.brandMuted)
                     }
                     .buttonStyle(.plain)
                     if canPost {
@@ -198,7 +198,7 @@ struct TopicDiscussionView: View {
                         } label: {
                             Text("Ответить")
                                 .scaledFont(size: 13, weight: .semibold)
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color.brandMuted)
                         }
                         .buttonStyle(.plain)
                     }
@@ -239,9 +239,9 @@ struct TopicDiscussionView: View {
         } else {
             Text(String(comment.authorName.prefix(1)).uppercased())
                 .scaledFont(size: 14, weight: .bold)
-                .foregroundColor(.teal)
+                .foregroundColor(Color.brandTint)
                 .frame(width: 32, height: 32)
-                .background(Circle().fill(Color.teal.opacity(0.18)))
+                .background(Circle().fill(Color.brandTint.opacity(0.18)))
         }
     }
 

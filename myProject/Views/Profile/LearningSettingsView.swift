@@ -15,7 +15,7 @@ struct LearningSettingsView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Направление перевода")
                         .scaledFont(size: 14)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
 
                     Picker("Направление перевода", selection: $translationMode) {
                         Text("Англ ➔ Рус").tag("en_ru")
@@ -51,7 +51,7 @@ struct LearningSettingsView: View {
                     Toggle("Помогать улучшать словарь", isOn: $improveDictionary)
                     Text("Анонимно, без имени и почты: ваши правки слов из встроенного словаря, слова, добавленные из книг (с предложением), и слова, которые долго не запоминаются. По ним исправляются переводы для всех.")
                         .scaledFont(size: 12)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.brandMuted)
                         .textSelection(.enabled)
                 }
             } footer: {

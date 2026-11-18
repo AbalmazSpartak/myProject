@@ -538,7 +538,8 @@ struct BookReaderView: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.brown)
+                .foregroundStyle(Color.brandOnTint)
+                .tint(Color.brandTint)
             } else {
                 Text("Конец книги")
                     .foregroundColor(style.text.opacity(0.6))
@@ -563,7 +564,7 @@ struct BookReaderView: View {
                         Spacer()
                         if index == chapterIndex {
                             Image(systemName: "bookmark.fill")
-                                .foregroundColor(.brown)
+                                .foregroundColor(Color.brandTint)
                         }
                     }
                 }
@@ -1087,7 +1088,7 @@ extension BookReaderView {
             }
             for silent in highlight.silent {
                 guard let target = range(silent) else { continue }
-                word[target].foregroundColor = Color.gray.opacity(0.75)
+                word[target].foregroundColor = Color.brandMuted.opacity(0.75)
             }
             if highlight.isException, let target = range(NSRange(location: 0, length: (piece as NSString).length)) {
                 word[target].underlineStyle = Text.LineStyle(pattern: .dot, color: PhonicsKind.exceptionColor)
@@ -1322,11 +1323,11 @@ struct PageTranslationView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(item.original)
                                 .scaledFont(size: 14, design: .serif)
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color.brandMuted)
                             HStack(alignment: .top) {
                                 Text(item.translation ?? "В переводе этот абзац объединён с соседним.")
                                     .scaledFont(size: 17, design: .serif)
-                                    .foregroundColor(item.translation == nil ? .gray : .brandDark)
+                                    .foregroundColor(item.translation == nil ? Color.brandMuted : .brandDark)
                                     .italic(item.translation == nil)
                                 Spacer(minLength: 4)
                                 if item.translation != nil {
@@ -1335,7 +1336,7 @@ struct PageTranslationView: View {
                                     } label: {
                                         Image(systemName: "arrow.up.arrow.down.circle")
                                             .scaledFont(size: 18)
-                                            .foregroundColor(.gray)
+                                            .foregroundColor(Color.brandMuted)
                                     }
                                     .accessibilityLabel("Сдвинуть перевод")
                                 }

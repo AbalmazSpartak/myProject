@@ -45,7 +45,7 @@ struct NeuralVoiceSettingsView: View {
                                     ProgressView()
                                     Text("Готовлю голос…")
                                         .font(.footnote)
-                                        .foregroundColor(.gray)
+                                        .foregroundColor(Color.brandMuted)
                                 }
                             }
                         }
@@ -154,7 +154,7 @@ struct NeuralVoiceSettingsView: View {
             HStack(spacing: 10) {
                 ProgressView()
                 Text("Скачиваю и готовлю голос — несколько минут…")
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.brandMuted)
             }
         case .ready:
             Toggle("Загружать при запуске", isOn: $preloadKokoro)
