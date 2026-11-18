@@ -114,9 +114,7 @@ private struct ReaderProfileView: View {
                     .padding(.horizontal, -20)
                 switch section {
                 case .account:
-                    header
-                    sections
-                    booksShelf
+                    ProfileAccountTab()
                 case .stats:
                     readingStats
                 }
