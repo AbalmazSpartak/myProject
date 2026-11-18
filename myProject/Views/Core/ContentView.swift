@@ -33,49 +33,33 @@ struct ContentView: View {
     @State private var selectedTab = 0
     @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
     @AppStorage(AppMode.chosenKey) private var modeChosen = false
+    @AppStorage(AppMode.readerOnlyKey) private var readerOnly = false
     /// «Спрашивать при запуске» — читается один раз: включили в Настройках — спросит со следующего запуска
     @State private var asksOnLaunch = UserDefaults.standard.bool(forKey: AppMode.askKey)
 
     var body: some View {
         Group {
-            switch mode {
+            switch readerOnly ? AppMode.reading : mode {
             case .learning: learningTabs
             // «Чтение» — библиотека с нижней панелью (Главная, Библиотека, Закладки, Профиль), без тренировок и игр
             case .reading: ReaderTabsView()
             }
         }
-        .fullScreenCover(isPresented: Binding(get: { !modeChosen || asksOnLaunch }, set: { _ in })) {
+        .fullScreenCover(isPresented: Binding(get: { !readerOnly && (!modeChosen || asksOnLaunch) }, set: { _ in })) {
             ModeChoiceView { asksOnLaunch = false }
                 .appThemedColorScheme()
         }
     }
 
+    /// «Обучение» — минимум для запоминания слов: Словарь, Карточки и Профиль
     private var learningTabs: some View {
         TabView(selection: $selectedTab) {
-            NavigationStack {
-                // «Сообщество» с «Обзора» — вкладка, а не вторая копия поверх «Обзора»: у него своя история переходов
-                OverviewView(open: { $0 == .community ? (selectedTab = 3) : (activeScreen = $0) },
-                             openProfile: { activeScreen = .profile })
-                    .modeSwitcherInset()
-                    .navigationBarHidden(true)
-                    // Разделы открываются переходом: свайп от левого края возвращает на «Обзор»
-                    .navigationDestination(item: $activeScreen) { screen in
-                        destination(for: screen)
-                            .toolbar(.hidden, for: .navigationBar)
-                            // Внутри раздела — на весь экран, без вкладок
-                            .toolbar(.hidden, for: .tabBar)
-                    }
-            }
-            .tabItem { Label("Обзор", systemImage: "house") }
-            .tag(0)
-
             DictionaryView(showsBackButton: false)
                 .readableColumn()
                 .modeSwitcherInset()
                 .tabItem { Label("Словарь", systemImage: "books.vertical") }
-                .tag(1)
+                .tag(0)
 
-            // Карточки — вкладкой, как в дизайне LexiStream
             NavigationStack {
                 FlashcardsView()
                     .readableColumn()
@@ -83,13 +67,16 @@ struct ContentView: View {
                     .toolbar(.hidden, for: .navigationBar)
             }
             .tabItem { Label("Карточки", systemImage: "rectangle.stack") }
-            .tag(2)
+            .tag(1)
 
-            // Сообщество — вкладкой: темы открываются переходом внутри её стека
-            CommunityView(showsBackButton: false)
-                .modeSwitcherInset()
-                .tabItem { Label("Сообщество", systemImage: "person.3") }
-                .tag(3)
+            NavigationStack {
+                ProfileView(showsBackButton: false)
+                    .readableColumn()
+                    .modeSwitcherInset()
+                    .toolbar(.hidden, for: .navigationBar)
+            }
+            .tabItem { Label("Профиль", systemImage: "person") }
+            .tag(2)
         }
         .onChange(of: selectedTab) { _, _ in Haptics.tap() }
         .tint(.brandTint)

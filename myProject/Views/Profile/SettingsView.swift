@@ -9,6 +9,7 @@ struct SettingsView: View {
     @AppStorage("app_theme") private var selectedTheme: String = "system"
     @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
     @AppStorage(AppMode.askKey) private var asksMode = false
+    @AppStorage(AppMode.readerOnlyKey) private var readerOnly = false
 
     /// Третий вариант «Спрашивать» — режим остаётся прежним, а при запуске появляется выбор
     private var modeChoice: Binding<String> {
@@ -58,15 +59,21 @@ struct SettingsView: View {
     @ViewBuilder
     private var modeSection: some View {
         Section {
-            Picker("Режим", selection: modeChoice) {
-                ForEach(AppMode.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
-                Text("Спрашивать").tag("ask")
+            Toggle("Только читалка", isOn: Binding(get: { readerOnly },
+                                                   set: { readerOnly = $0; if $0 { mode = .reading } }))
+            if !readerOnly {
+                Picker("Режим", selection: modeChoice) {
+                    ForEach(AppMode.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
+                    Text("Спрашивать").tag("ask")
+                }
+                .pickerStyle(.segmented)
             }
-            .pickerStyle(.segmented)
         } header: {
             Text("Режим")
         } footer: {
-            Text(asksMode
+            Text(readerOnly
+                 ? "Приложение работает как читалка: библиотека, аудио и закладки. Раздел «Обучение» и переключатель режимов скрыты, слова и прогресс сохраняются."
+                 : asksMode
                  ? "При каждом запуске приложение спросит, что открыть: изучение слов или читалку."
                  : mode == .learning
                  ? "Слова, повторения, тренировки, игры и книги."

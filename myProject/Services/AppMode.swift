@@ -11,10 +11,15 @@ enum AppMode: String, CaseIterable {
     static let chosenKey = "app_mode_chosen"
     /// Спрашивать режим при каждом запуске
     static let askKey = "app_mode_ask"
+    /// «Только читалка»: режима «Обучение» и переключателя режимов нет, приложение — библиотека и читалка
+    static let readerOnlyKey = "app_reader_only"
+
+    static var isReaderOnly: Bool { UserDefaults.standard.bool(forKey: readerOnlyKey) }
 
     /// Текущий режим — для кода вне экранов (запуск, напоминания, сигналы словаря)
     static var current: AppMode {
-        UserDefaults.standard.string(forKey: storageKey).flatMap(AppMode.init(rawValue:)) ?? .learning
+        if isReaderOnly { return .reading }
+        return UserDefaults.standard.string(forKey: storageKey).flatMap(AppMode.init(rawValue:)) ?? .learning
     }
 
     var title: String {

@@ -4,8 +4,14 @@ import SwiftUI
 /// Читалка как отдельное приложение — то же самое без переключателя
 struct ModeSwitcher: View {
     @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
+    @AppStorage(AppMode.readerOnlyKey) private var readerOnly = false
 
     var body: some View {
+        // «Только читалка» — переключателя нет
+        if !readerOnly { switcher }
+    }
+
+    private var switcher: some View {
         HStack(spacing: 0) {
             segment(.reading, title: "Чтение")
             segment(.learning, title: "Обучение")
