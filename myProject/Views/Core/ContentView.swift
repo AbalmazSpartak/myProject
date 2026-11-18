@@ -40,8 +40,8 @@ struct ContentView: View {
         Group {
             switch mode {
             case .learning: learningTabs
-            // «Чтение» — сразу библиотека, без вкладок, тренировок и игр
-            case .reading: NavigationStack { BooksView(isHome: true) }
+            // «Чтение» — библиотека с нижней панелью (Главная, Библиотека, Закладки, Профиль), без тренировок и игр
+            case .reading: ReaderTabsView()
             }
         }
         .fullScreenCover(isPresented: Binding(get: { !modeChosen || asksOnLaunch }, set: { _ in })) {

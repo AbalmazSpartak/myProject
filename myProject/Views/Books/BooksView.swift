@@ -10,6 +10,8 @@ struct BooksView: View {
     @Query private var profiles: [UserProfile]
     /// Главный экран режима «Чтение»: вместо «‹ Обзор» — Настройки
     var isHome = false
+    /// Внутри нижней панели «Чтения»: настройки открываются из «Профиля», шестерёнки здесь нет
+    var hasTabBar = false
 
     @State private var openedBook: Book?
     @State private var isImporting = false
@@ -62,6 +64,7 @@ struct BooksView: View {
         }
         .navigationDestination(item: $openedBook) { book in
             BookDetailView(book: book)
+                .toolbar(.hidden, for: .tabBar)
         }
         .fileImporter(isPresented: $isImporting, allowedContentTypes: UTType.bookFiles) { result in
             if case .success(let url) = result {
@@ -249,12 +252,14 @@ struct BooksView: View {
             HStack(spacing: 16) {
                 HelpButton(topic: .books)
                 // Книга из «Файлов» — первая карточка «Моих книг», каталог — в «Подписках»
-                Button { isShowingSettings = true } label: {
-                    Image(systemName: "gearshape.fill")
-                        .scaledFont(size: 20)
-                        .foregroundColor(.brandDark)
+                if !hasTabBar {
+                    Button { isShowingSettings = true } label: {
+                        Image(systemName: "gearshape.fill")
+                            .scaledFont(size: 20)
+                            .foregroundColor(.brandDark)
+                    }
+                    .accessibilityLabel("Настройки")
                 }
-                .accessibilityLabel("Настройки")
             }
         }
         .padding(.horizontal, 16)
@@ -341,7 +346,7 @@ private struct BackSwipePriority: UIViewRepresentable {
 }
 
 /// Пустой раздел: значок, заголовок и пояснение
-private struct TabPlaceholder: View {
+struct TabPlaceholder: View {
     let icon: String
     var title: String?
     let text: String
@@ -406,7 +411,7 @@ private struct AddBookCard: View {
 }
 
 /// Обложка, автор и сколько прочитано
-private struct BookCard: View {
+struct BookCard: View {
     let book: Book
     let action: () -> Void
 
