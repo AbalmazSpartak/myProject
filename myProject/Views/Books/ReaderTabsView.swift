@@ -113,9 +113,7 @@ private struct ReaderProfileView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                Text("Профиль")
-                    .scaledFont(size: 34, weight: .semibold, design: .serif)
-                    .foregroundColor(.brandDark)
+                ProfileHeaderCard()
                 ProfileSectionTabs(selection: $section)
                     .padding(.horizontal, -20)
                 switch section {

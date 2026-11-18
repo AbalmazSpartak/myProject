@@ -11,7 +11,6 @@ struct ProfileAccountTab: View {
     @State private var account = Account.shared
     /// Блок режима — по переключателю сверху, без своих вкладок: один переключатель на экране
     @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
-    @State private var showPersonalData = false
     @State private var showSettings = false
     @State private var askSignOut = false
     @State private var openedBook: Book?
@@ -24,7 +23,6 @@ struct ProfileAccountTab: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            accountCard
             switch mode {
             case .reading: readingPart
             case .learning: learningPart
@@ -36,9 +34,6 @@ struct ProfileAccountTab: View {
         .navigationDestination(item: $openedBook) { book in
             BookDetailView(book: book).toolbar(.hidden, for: .tabBar)
         }
-        .sheet(isPresented: $showPersonalData) {
-            PersonalDataView(profile: profile).appThemedColorScheme()
-        }
         .sheet(isPresented: $showSettings) {
             SettingsView(profile: profile).appThemedColorScheme()
         }
@@ -48,52 +43,6 @@ struct ProfileAccountTab: View {
         } message: {
             Text("Слова и книги останутся на этом устройстве.")
         }
-    }
-
-    // MARK: Аккаунт
-
-    private var accountCard: some View {
-        VStack(spacing: 14) {
-            HStack(spacing: 14) {
-                avatar
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(profile.name).scaledFont(size: 18, weight: .semibold).foregroundColor(.brandDark).lineLimit(1)
-                    Text(account.email ?? "Вход не выполнен")
-                        .scaledFont(size: 13).foregroundColor(.brandMuted).lineLimit(1)
-                }
-                Spacer(minLength: 0)
-            }
-            HStack(spacing: 10) {
-                Button { showPersonalData = true } label: { outlined("Изменить", "pencil") }
-                NavigationLink { AccountView() } label: { outlined("Аккаунт", "person") }
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(16)
-        .card()
-    }
-
-    @ViewBuilder
-    private var avatar: some View {
-        if let data = profile.avatarData, let image = UIImage(data: data) {
-            Image(uiImage: image).resizable().scaledToFill().frame(width: 60, height: 60).clipShape(Circle())
-        } else {
-            Text(String(profile.name.prefix(1)).uppercased())
-                .scaledFont(size: 26, weight: .semibold, design: .serif)
-                .foregroundColor(.brandTint)
-                .frame(width: 60, height: 60)
-                .background(Color.brandAccent, in: Circle())
-        }
-    }
-
-    private func outlined(_ title: String, _ icon: String) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: icon).scaledFont(size: 15)
-            Text(title).scaledFont(size: 14, weight: .medium)
-        }
-        .foregroundColor(.brandDark)
-        .frame(maxWidth: .infinity, minHeight: 40)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.brandBorder, lineWidth: 1.5))
     }
 
     // MARK: Блок режима
@@ -242,4 +191,66 @@ private extension View {
         background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
     }
+}
+
+/// Карточка аккаунта наверху профиля (аватар, имя, почта, «Изменить» и «Аккаунт») — над вкладками «Аккаунт | Статистика»
+struct ProfileHeaderCard: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query private var profiles: [UserProfile]
+    @State private var account = Account.shared
+    @State private var showPersonalData = false
+
+    private var profile: UserProfile { profiles.first ?? UserProfile.ensureSingle(in: modelContext) }
+
+    var body: some View {
+        accountCard
+            .sheet(isPresented: $showPersonalData) {
+                PersonalDataView(profile: profile).appThemedColorScheme()
+            }
+    }
+
+    private var accountCard: some View {
+        VStack(spacing: 14) {
+            HStack(spacing: 14) {
+                avatar
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(profile.name).scaledFont(size: 18, weight: .semibold).foregroundColor(.brandDark).lineLimit(1)
+                    Text(account.email ?? "Вход не выполнен")
+                        .scaledFont(size: 13).foregroundColor(.brandMuted).lineLimit(1)
+                }
+                Spacer(minLength: 0)
+            }
+            HStack(spacing: 10) {
+                Button { showPersonalData = true } label: { outlined("Изменить", "pencil") }
+                NavigationLink { AccountView() } label: { outlined("Аккаунт", "person") }
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(16)
+        .card()
+    }
+
+    @ViewBuilder
+    private var avatar: some View {
+        if let data = profile.avatarData, let image = UIImage(data: data) {
+            Image(uiImage: image).resizable().scaledToFill().frame(width: 60, height: 60).clipShape(Circle())
+        } else {
+            Text(String(profile.name.prefix(1)).uppercased())
+                .scaledFont(size: 26, weight: .semibold, design: .serif)
+                .foregroundColor(.brandTint)
+                .frame(width: 60, height: 60)
+                .background(Color.brandAccent, in: Circle())
+        }
+    }
+
+    private func outlined(_ title: String, _ icon: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon).scaledFont(size: 15)
+            Text(title).scaledFont(size: 14, weight: .medium)
+        }
+        .foregroundColor(.brandDark)
+        .frame(maxWidth: .infinity, minHeight: 40)
+        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.brandBorder, lineWidth: 1.5))
+    }
+
 }

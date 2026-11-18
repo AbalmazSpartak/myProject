@@ -30,11 +30,7 @@ struct ProfileView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Заголовок — как в «Чтении»; настройки и справка — в «Аккаунт → Все настройки»
-                Text("Профиль")
-                    .scaledFont(size: 34, weight: .semibold, design: .serif)
-                    .foregroundColor(.brandDark)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                ProfileHeaderCard()
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
 
