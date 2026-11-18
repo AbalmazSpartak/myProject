@@ -7,6 +7,8 @@ struct ReaderTabsView: View {
     enum Tab: Hashable { case library, audio, bookmarks, profile }
 
     @State private var tab: Tab = .library
+    /// Общий с «Обучением» признак «открыт Профиль»: при смене режима остаёмся в нём
+    @Binding var onProfile: Bool
     /// Тот же ключ, что у библиотеки: «Профиль» может открыть её сразу на «Подписках»
     @AppStorage("books_tab") private var libraryTab: LibraryTab = .mine
 
@@ -42,7 +44,11 @@ struct ReaderTabsView: View {
             .tabItem { Label("Профиль", systemImage: "person") }
             .tag(Tab.profile)
         }
-        .onChange(of: tab) { _, _ in Haptics.tap() }
+        .onAppear { if onProfile { tab = .profile } }
+        .onChange(of: tab) { _, new in
+            Haptics.tap()
+            onProfile = new == .profile
+        }
         .tint(.brandTint)
         .toolbarBackground(Color.brandBackground, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)

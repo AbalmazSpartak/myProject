@@ -31,6 +31,8 @@ struct ContentView: View {
     
     @State private var activeScreen: ActiveScreen?
     @State private var selectedTab = 0
+    /// Открыт «Профиль» — при смене режима общий раздел остаётся открытым, а не прыгает на «Библиотеку» / «Обзор»
+    @State private var onProfile = false
     @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
     @AppStorage(AppMode.chosenKey) private var modeChosen = false
     @AppStorage(AppMode.readerOnlyKey) private var readerOnly = false
@@ -42,7 +44,7 @@ struct ContentView: View {
             switch readerOnly ? AppMode.reading : mode {
             case .learning: learningTabs
             // «Чтение» — библиотека с нижней панелью (Главная, Библиотека, Закладки, Профиль), без тренировок и игр
-            case .reading: ReaderTabsView()
+            case .reading: ReaderTabsView(onProfile: $onProfile)
             }
         }
         .fullScreenCover(isPresented: Binding(get: { !readerOnly && (!modeChosen || asksOnLaunch) }, set: { _ in })) {
@@ -84,7 +86,13 @@ struct ContentView: View {
             .tabItem { Label("Профиль", systemImage: "person") }
             .tag(2)
         }
-        .onChange(of: selectedTab) { _, _ in Haptics.tap() }
+        .onAppear {
+            if onProfile { selectedTab = 2 } else if selectedTab == 2 { selectedTab = 0 }
+        }
+        .onChange(of: selectedTab) { _, new in
+            Haptics.tap()
+            onProfile = new == 2
+        }
         .tint(.brandTint)
         .toolbarBackground(Color.brandBackground, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
