@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-@preconcurrency import Translation
 
 enum DictionaryFilter: Hashable {
     case general
@@ -13,15 +12,23 @@ enum DictionaryFilter: Hashable {
     case extra
 }
 
+/// С какого места открыть «Папки»
+enum FoldersStart: Identifiable {
+    case root, topics
+
+    var id: Self { self }
+}
+
+/// «Словарь» по дизайну LexiStream: чипы списка, папок и ошибок, поиск, состояния слов, список или таблица
 struct DictionaryView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    
+
     @Query(sort: \Category.name) private var categories: [Category]
     @Query(sort: \WordList.createdAt, order: .reverse) private var lists: [WordList]
     /// Читаем только слова выбранного раздела, запросом к базе. Все слова (10 000+ с книгами) не читаем:
     /// на iPhone 12 это ~2 с подвисания при первом открытии «Словаря». И не через @Query — тот перечитывает
-    /// при каждой перерисовке, то есть на каждую букву в форме добавления
+    /// при каждой перерисовке
     @State private var filteredWords: [Word] = []
     /// Список подгружается частями: «Общий» со словами из книг — тысячи слов (~0,8 с на iPhone 12 целиком)
     private static let pageSize = 100
@@ -32,19 +39,22 @@ struct DictionaryView: View {
     @State private var needsReload = true
     /// Вкладка «Словарь» живёт и под другими экранами — перечитывать базу на каждое сохранение стоит только на экране
     @State private var isOnScreen = false
-    /// Сколько слов в каждой теме — считается, только когда открыт список тем
-    @State private var categoryCounts: [UUID: Int] = [:]
+    /// Первое чтение прошло — до него не показываем «пустой словарь»
+    @State private var hasLoaded = false
     @State private var mistakeCount = 0
-    /// Такое же слово уже есть (в базе или среди своих) — при добавлении берём его, а не делаем дубль
-    @State private var existingMatches: [Word] = []
-    @AppStorage(StudyScope.storageKey) private var studyScope = StudyScope()
-    
+    /// Сколько слов в выбранном разделе (с учётом уровня) — число на чипе списка
+    @State private var totalCount = 0
+
     @State private var filter: DictionaryFilter
+    /// Фильтры под поиском: состояние слова и уровень
+    @State private var statusFilter: WordStatus?
+    @State private var levelFilter: String?
+    @AppStorage("dictionary_table_mode") private var tableMode = false
+    @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
 
     /// `initialFilter` — открыть сразу нужную подборку (например, из «Подборок сообщества»)
     /// Во вкладке «Словарь» возвращаться некуда; из подборки на «Обзоре» — кнопка «Обзор»
     private let showsBackButton: Bool
-
     private let backTitle: String
 
     init(initialFilter: DictionaryFilter = .general, showsBackButton: Bool = true, backTitle: String = "Обзор") {
@@ -52,75 +62,76 @@ struct DictionaryView: View {
         self.showsBackButton = showsBackButton
         self.backTitle = backTitle
     }
-    @State private var isDropdownExpanded = false
-    @State private var isShowingManageCategories = false
-    @State private var isShowingAddCategoryAlert = false
-    @State private var newCategoryName = ""
+
+    /// Открытые «Папки»: с начала или сразу на «Темах»
+    @State private var foldersStart: FoldersStart?
+    @State private var isShowingAddWord = false
+    @State private var isShowingSearch = false
+    @State private var isShowingScan = false
     @State private var wordToEdit: Word?
     /// Нажали на строку — карточка слова
     @State private var wordToShow: Word?
-    @State private var isShowingSearch = false
-    @State private var isShowingScan = false
-    @State private var listToRename: WordList?
-    @State private var listToDelete: WordList?
-    /// Идёт удаление словаря — в словаре из книги тысячи слов, это заметное время
-    @State private var isDeletingList = false
-    @State private var listName = ""
-    @State private var listMerge: ListMerge?
 
-    /// Переименование своего словаря в название другого своего словаря
-    private struct ListMerge {
-        let source: WordList
-        let target: WordList
-    }
-    
-    @State private var newEnglish = ""
-    @State private var newTranscription = ""
-    @State private var newRussian = ""
-    @State private var newExample = ""
-    @State private var newLevel: String = "A1"
-    /// Кнопка «Перевести» у нового слова — тот же переводчик и те же проверки, что у слов из книг
-    @State private var newTranslationConfig: TranslationSession.Configuration?
-    @State private var isTranslatingNew = false
-    @State private var newTranslationNote: String?
-    
+    // MARK: - Чтение слов
+
     private func reloadWords() {
-        mistakeCount = (try? modelContext.fetchCount(FetchDescriptor<Word>(predicate: #Predicate { $0.isMistake }))) ?? 0
-        if isDropdownExpanded { reloadCategoryCounts() }
+        mistakeCount = DictionaryCounts.mistakes(in: modelContext)
         refilter(keepingLoaded: true)
-        refreshExistingMatches()
+    }
+
+    /// Условие выбранного раздела
+    private func scopePredicate() -> Predicate<Word> {
+        switch filter {
+        case .general:
+            return #Predicate<Word> { $0.category == nil }
+        case .category(let category):
+            let catID = category.id
+            return #Predicate<Word> { $0.category?.id == catID }
+        case .list(let list):
+            let listID = list.id
+            return #Predicate<Word> { word in word.lists.contains { $0.id == listID } }
+        case .mistakes:
+            return #Predicate<Word> { $0.isMistake }
+        case .oxford(let level):
+            let oxford = StudyScope.oxfordTag
+            if let level {
+                return #Predicate<Word> { !$0.isCustom && $0.tags == oxford && $0.cefrLevel == level }
+            }
+            return #Predicate<Word> { !$0.isCustom && $0.tags == oxford }
+        case .extra:
+            let oxford = StudyScope.oxfordTag
+            return #Predicate<Word> { !$0.isCustom && $0.tags != oxford }
+        }
     }
 
     /// Первая часть слов раздела; при перечитывании — столько, сколько уже было загружено, чтобы список не прыгал
     private func refilter(keepingLoaded: Bool = false) {
-        let predicate: Predicate<Word>
-        switch filter {
-        case .general:
-            predicate = #Predicate { $0.category == nil }
-        case .category(let category):
-            let catID = category.id
-            predicate = #Predicate { $0.category?.id == catID }
-        case .list(let list):
-            let listID = list.id
-            predicate = #Predicate { word in word.lists.contains { $0.id == listID } }
-        case .mistakes:
-            predicate = #Predicate { $0.isMistake }
-        case .oxford(let level):
-            let oxford = StudyScope.oxfordTag
-            if let level {
-                predicate = #Predicate { !$0.isCustom && $0.tags == oxford && $0.cefrLevel == level }
-            } else {
-                predicate = #Predicate { !$0.isCustom && $0.tags == oxford }
-            }
-        case .extra:
-            let oxford = StudyScope.oxfordTag
-            predicate = #Predicate { !$0.isCustom && $0.tags != oxford }
+        var base = scopePredicate()
+        if let level = levelFilter {
+            base = StudyWords.all(base, #Predicate<Word> { $0.cefrLevel == level })
         }
-        let limit = keepingLoaded ? max(Self.pageSize, filteredWords.count) : Self.pageSize
-        pagePredicate = predicate
-        filteredWords = words(matching: predicate, limit: limit)
-        hasMoreWords = filteredWords.count == limit
+        totalCount = StudyWords.count(base, in: modelContext)
+
+        if statusFilter == .learning || statusFilter == .known {
+            // Состояние FSRS в запросе к базе не сравнить — берём начатые слова раздела (их сотни, а не тысячи)
+            // и отбираем по состоянию
+            let started = StudyWords.all(base, #Predicate<Word> { $0.reps > 0 })
+            let target = statusFilter
+            pagePredicate = nil
+            filteredWords = words(matching: started).filter { $0.studyStatus == target }
+            hasMoreWords = false
+        } else {
+            var predicate = base
+            if statusFilter == .new {
+                predicate = StudyWords.all(base, #Predicate<Word> { $0.reps == 0 })
+            }
+            let limit = keepingLoaded ? max(Self.pageSize, filteredWords.count) : Self.pageSize
+            pagePredicate = predicate
+            filteredWords = words(matching: predicate, limit: limit)
+            hasMoreWords = filteredWords.count == limit
+        }
         needsReload = false
+        hasLoaded = true
     }
 
     /// Сохранение добавило или удалило слова — список раздела под другой вкладкой устарел
@@ -147,152 +158,84 @@ struct DictionaryView: View {
         return (try? modelContext.fetch(descriptor)) ?? []
     }
 
-    /// Счётчики тем — запросом «сколько», без чтения самих слов (~1 мс на тему)
-    private func reloadCategoryCounts() {
-        var counts: [UUID: Int] = [:]
-        for category in categories {
-            let catID = category.id
-            counts[catID] = StudyWords.cachedCount("словарь|\(catID)", #Predicate<Word> { $0.category?.id == catID }, in: modelContext)
-        }
-        categoryCounts = counts
+    // MARK: - Названия
+
+    /// Длинное название словаря (книги) — первые 20 символов и «...»: «Adventures of Huckle...»
+    static func shortName(_ name: String, limit: Int = 20) -> String {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        guard trimmed.count > limit else { return trimmed }
+        return trimmed.prefix(limit).trimmingCharacters(in: .whitespaces) + "..."
     }
 
-    /// Слово с тем же написанием: как введено, строчными и с заглавной (April, I)
-    private func refreshExistingMatches() {
-        let typed = newEnglish.trimmingCharacters(in: .whitespaces)
-        guard !typed.isEmpty else {
-            existingMatches = []
-            return
+    private var filterTitle: String {
+        switch filter {
+        case .general: "Общий"
+        case .category(let category): category.name
+        case .list(let list): Self.shortName(list.name)
+        case .mistakes: "С ошибками"
+        case .oxford(let level): level.map { "Oxford · \($0)" } ?? "Oxford 5000"
+        case .extra: "Дополнения"
         }
-        let lower = typed.lowercased()
-        let capitalized = lower.prefix(1).uppercased() + lower.dropFirst()
-        existingMatches = words(matching: #Predicate { $0.english == typed || $0.english == lower || $0.english == capitalized })
     }
 
+    /// Новое слово попадает в открытую папку или словарь; из остальных разделов — в «Общий»
     private var addTargetName: String {
         if case .list(let list) = filter { return list.name }
         return currentCategoryForNewWord?.name ?? "Общий"
     }
 
     private var currentCategoryForNewWord: Category? {
-        if case .category(let cat) = filter {
-            return cat
-        }
+        if case .category(let category) = filter { return category }
         return nil
     }
-    
-    private var dropdownTitle: String {
-        switch filter {
-        case .general:
-            return "Общий словарь"
-        case .category(let category):
-            return category.name
-        case .list(let list):
-            return list.name
-        case .mistakes:
-            return "⚠️ Слова с ошибками (\(mistakeCount))"
-        case .oxford(let level):
-            return level.map { "Oxford 5000 · \($0)" } ?? "Oxford 5000"
-        case .extra:
-            return "Дополнения"
-        }
+
+    private var currentListForNewWord: WordList? {
+        if case .list(let list) = filter { return list }
+        return nil
     }
-    
+
+    /// Папки пользователя — без тем встроенной базы
+    private var userFolders: [Category] {
+        let names = DataPreloader.bundledTopicNames
+        return categories.filter { !names.contains($0.name) }
+    }
+
+    /// Совсем пустой «Общий»: показываем приглашение вместо списка
+    private var showsEmptyState: Bool {
+        hasLoaded && filteredWords.isEmpty && filter == .general && statusFilter == nil && levelFilter == nil
+    }
+
+    // MARK: - Экран
+
     var body: some View {
-        ZStack {
-            Color.brandBackground.ignoresSafeArea()
-            
-            VStack(spacing: 12) {
-                customHeader
-                
-                categoryDropdownCard
-                    .padding(.horizontal, 16)
-                
-                if !isDropdownExpanded {
-                    ScrollView {
-                        VStack(spacing: 12) {
-                            if case .list(let list) = filter, list.photosData != nil {
-                                ListPhotosStrip(list: list)
-                                    .padding(.top, 4)
-                            }
-                            // Встроенные словари только для чтения — добавлять в них нечего
-                            if !isBuiltInDictionary {
-                                addWordCard
-                                    .padding(.top, 4)
-                            }
-                            
-                            if filteredWords.isEmpty {
-                                VStack(spacing: 12) {
-                                    Image(systemName: filter == .mistakes ? "checkmark.circle.fill" : "doc.text.magnifyingglass")
-                                        .font(.system(size: 44))
-                                        .foregroundColor(filter == .mistakes ? .green : Color.brandMuted)
-                                    Text(filter == .mistakes ? "В этом разделе нет ошибочных слов!" : "В выбранном разделе нет слов.")
-                                        .scaledFont(size: 15, weight: .medium)
-                                        .foregroundColor(Color.brandMuted)
-                                }
-                                .padding(.top, 30)
-                            } else {
-                                LazyVStack(spacing: 12) {
-                                    ForEach(filteredWords) { word in
-                                        WordRowCard(word: word) {
-                                            wordToEdit = word
-                                        }
-                                        .contentShape(Rectangle())
-                                        .onTapGesture { wordToShow = word }
-                                        .contextMenu {
-                                            // Открыт свой словарь — слово можно убрать из него, не удаляя совсем
-                                            if case .list(let list) = filter {
-                                                Button(role: .destructive) {
-                                                    word.lists.removeAll { $0.id == list.id }
-                                                    try? modelContext.save()
-                                                } label: { Label("Удалить из словаря", systemImage: "minus.circle") }
-                                            }
-                                        }
-                                        .onAppear {
-                                            if word.id == filteredWords.last?.id { loadMoreWords() }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 20)
+        VStack(spacing: 0) {
+            header
+            if showsEmptyState {
+                emptyState
+            } else {
+                ScrollView {
+                    VStack(spacing: 0) {
+                        controls
+                        wordsList
                     }
-                    // Прокрутка списка тоже убирает клавиатуру
-                    .scrollDismissesKeyboard(.immediately)
-                } else {
-                    Spacer()
-                }
-            }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                // Нажатие мимо полей и кнопок — клавиатура прячется
-                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                if isDropdownExpanded {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        isDropdownExpanded = false
-                    }
+                    .padding(.bottom, 24)
                 }
             }
         }
+        .background(Color.brandBackground.ignoresSafeArea())
         .onAppear {
             isOnScreen = true
             // Ответы в тренировках меняют ошибки — их число и раздел «Ошибки» обновляем всегда, остальное — если менялся состав
             if needsReload || filter == .mistakes {
                 reloadWords()
             } else {
-                mistakeCount = (try? modelContext.fetchCount(FetchDescriptor<Word>(predicate: #Predicate { $0.isMistake }))) ?? 0
+                mistakeCount = DictionaryCounts.mistakes(in: modelContext)
             }
         }
         .onDisappear { isOnScreen = false }
         .onChange(of: filter) { _, _ in refilter() }
-        .onChange(of: isDropdownExpanded) { _, expanded in
-            if expanded { reloadCategoryCounts() }
-        }
-        .onChange(of: newEnglish) { _, _ in
-            refreshExistingMatches()
-            newTranslationNote = nil
-        }
+        .onChange(of: statusFilter) { _, _ in refilter() }
+        .onChange(of: levelFilter) { _, _ in refilter() }
         // Любое сохранение (правка, скан, удаление темы со словами) — перечитываем, чтобы не показать удалённые слова.
         // Не на экране — не перечитываем: тренировки сохраняют каждый ответ. Вернутся на «Словарь» — onAppear перечитает
         .onReceive(NotificationCenter.default.publisher(for: ModelContext.didSave)) { notification in
@@ -302,64 +245,18 @@ struct DictionaryView: View {
                 needsReload = true
             }
         }
-        .alert("Новая категория", isPresented: $isShowingAddCategoryAlert) {
-            TextField("Название категории", text: $newCategoryName)
-            Button("Отмена", role: .cancel) { newCategoryName = "" }
-            Button("Создать") {
-                let trimmed = newCategoryName.trimmingCharacters(in: .whitespaces)
-                if !trimmed.isEmpty {
-                    let newCat = Category(name: trimmed)
-                    modelContext.insert(newCat)
-                    filter = .category(newCat)
-                    newCategoryName = ""
-                }
-            }
+        .sheet(item: $foldersStart) { start in
+            FoldersView(filter: $filter, startsOnTopics: start == .topics)
+                .appThemedColorScheme()
         }
-        .alert("Переименовать словарь", isPresented: Binding(get: { listToRename != nil }, set: { if !$0 { listToRename = nil } })) {
-            TextField("Название", text: $listName)
-            Button("Отмена", role: .cancel) {}
-            Button("Сохранить") {
-                let trimmed = listName.trimmingCharacters(in: .whitespaces)
-                guard !trimmed.isEmpty, let list = listToRename else { return }
-                // Такое название уже у другого своего словаря — предлагаем объединить, а не заводить второй
-                if let existing = lists.first(where: {
-                    $0.id != list.id && $0.name.trimmingCharacters(in: .whitespaces).caseInsensitiveCompare(trimmed) == .orderedSame
-                }) {
-                    listMerge = ListMerge(source: list, target: existing)
-                } else {
-                    list.name = trimmed
-                }
-            }
-        }
-        .alert("Словарь «\(listMerge?.target.name ?? "")» уже есть", isPresented: Binding(get: { listMerge != nil }, set: { if !$0 { listMerge = nil } })) {
-            Button("Отмена", role: .cancel) {}
-            Button("Объединить") {
-                if let merge = listMerge { self.merge(merge.source, into: merge.target) }
-            }
-        } message: {
-            Text("Слова из «\(listMerge?.source.name ?? "")» перейдут в него, без повторов, а «\(listMerge?.source.name ?? "")» удалится.")
-        }
-        .alert("Удалить словарь «\(listToDelete?.name ?? "")»?", isPresented: Binding(get: { listToDelete != nil }, set: { if !$0 { listToDelete = nil } })) {
-            Button("Отмена", role: .cancel) {}
-            Button("Удалить", role: .destructive) {
-                if let list = listToDelete { delete(list) }
-            }
-        } message: {
-            Text("Новые слова, добавленные только в этот словарь, тоже удалятся. Слова из основной базы останутся в своих темах.")
-        }
-        .overlay {
-            if isDeletingList {
-                ProgressView("Удаляю словарь…")
-                    .padding(20)
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-            }
-        }
-        .sheet(isPresented: $isShowingManageCategories) {
-            ManageCategoriesView()
+        .sheet(isPresented: $isShowingAddWord, onDismiss: { try? modelContext.save() }) {
+            AddWordView(category: currentCategoryForNewWord, list: currentListForNewWord, targetName: addTargetName)
+                .appThemedColorScheme()
         }
         // Правка могла сменить тему или написание — сохраняем, список перечитается
         .sheet(item: $wordToEdit, onDismiss: { try? modelContext.save() }) { word in
             EditWordView(word: word)
+                .appThemedColorScheme()
         }
         .sheet(item: $wordToShow, onDismiss: { try? modelContext.save() }) { word in
             WordDetailView(word: word)
@@ -367,6 +264,7 @@ struct DictionaryView: View {
         }
         .sheet(isPresented: $isShowingSearch, onDismiss: { try? modelContext.save() }) {
             WordSearchView()
+                .appThemedColorScheme()
         }
         .fullScreenCover(isPresented: $isShowingScan) {
             TextScanView { list in
@@ -375,517 +273,278 @@ struct DictionaryView: View {
         }
     }
 
-    
-    private var customHeader: some View {
-        HStack {
+    private var header: some View {
+        HStack(spacing: 4) {
             if showsBackButton {
-                Button(action: { dismiss() }) {
-                    HStack(spacing: 4) { Image(systemName: "chevron.left"); Text(backTitle) }
-                    .scaledFont(size: 17, weight: .semibold)
-                    .foregroundColor(Color.brandTint)
-                }
+                LXBackButton(label: backTitle) { dismiss() }
             }
-            Spacer()
-            HStack(spacing: 18) {
-                HelpButton(topic: .dictionary)
-                Button(action: { isShowingSearch = true }) {
-                    Image(systemName: "magnifyingglass")
-                        .scaledFont(size: 20)
-                        .foregroundColor(Color.brandTint)
-                }
-                .accessibilityLabel("Поиск слов")
-                Button(action: { isShowingScan = true }) {
-                    Image(systemName: "text.viewfinder")
-                        .scaledFont(size: 20)
-                        .foregroundColor(Color.brandTint)
-                }
-                .accessibilityLabel("Слова из текста")
-                Button(action: { isShowingManageCategories = true }) {
-                    Image(systemName: "doc.badge.plus")
-                        .scaledFont(size: 20)
-                        .foregroundColor(Color.brandTint)
-                }
+            Text("Словарь")
+                .scaledFont(size: 32, weight: .medium, design: .serif)
+                .foregroundStyle(Color.brandDark)
+            Spacer(minLength: 8)
+            Button { tableMode.toggle() } label: {
+                LXIconLabel(systemImage: tableMode ? "list.bullet" : "tablecells",
+                            label: tableMode ? "Режим ленты" : "Режим таблицы")
+            }
+            .buttonStyle(.plain)
+            Menu {
+                Button { isShowingAddWord = true } label: { Label("Добавить слово", systemImage: "plus") }
+                Button { isShowingScan = true } label: { Label("Слова из текста", systemImage: "text.viewfinder") }
+            } label: {
+                LXIconLabel(systemImage: "plus", label: "Добавить", isSoft: true)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
+        .padding(.leading, showsBackButton ? 8 : 16)
+        .padding(.trailing, 8)
+        .frame(minHeight: 52)
     }
-    
-    private var categoryDropdownCard: some View {
+
+    /// Чипы списка, папок и ошибок, поиск, состояния слов и заголовок списка
+    private var controls: some View {
         VStack(spacing: 0) {
-            Button(action: { withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { isDropdownExpanded.toggle() } }) {
-                HStack(spacing: 12) {
-                    Image(systemName: dropdownIcon)
-                        .foregroundColor(Color.brandTint)
-                        .scaledFont(size: 18)
-                    Text(dropdownTitle)
-                        .scaledFont(size: 17, weight: .bold)
-                        .foregroundColor(.brandDark)
-                        .lineLimit(1)
-                    Spacer()
-                    Image(systemName: isDropdownExpanded ? "chevron.up" : "chevron.down")
-                        .scaledFont(size: 14, weight: .semibold)
-                        .foregroundColor(Color.brandMuted)
-                }
-                .padding(16)
-            }
-            if isDropdownExpanded {
-                VStack(spacing: 0) {
-                    ScrollView(.vertical, showsIndicators: true) {
-                        VStack(spacing: 0) {
-                            Button(action: { selectFilterAndClose(.general) }) {
-                                HStack {
-                                    Text("Общий").scaledFont(size: 16, weight: .bold).foregroundColor(filter == .general ? Color.brandTint : .brandDark)
-                                    Spacer()
-                                    if filter == .general { Image(systemName: "checkmark").scaledFont(size: 14, weight: .bold).foregroundColor(Color.brandTint) }
-                                }
-                                .padding(.horizontal, 16).padding(.vertical, 12)
-                            }
-                            // Слова с ошибками — сразу под «Общим»: к ним возвращаются чаще всего
-                            Button(action: { selectFilterAndClose(.mistakes) }) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "exclamationmark.triangle.fill")
-                                        .foregroundColor(Color.brandTint)
-                                        .scaledFont(size: 15)
-                                    Text("Слова с ошибками (\(mistakeCount))")
-                                        .scaledFont(size: 16, weight: .bold)
-                                        .foregroundColor(Color.brandTint)
-                                    Spacer()
-                                    if filter == .mistakes {
-                                        Image(systemName: "checkmark")
-                                            .scaledFont(size: 14, weight: .bold)
-                                            .foregroundColor(Color.brandTint)
-                                    }
-                                }
-                                .padding(.horizontal, 16).padding(.vertical, 12)
-                            }
-                            Divider().padding(.horizontal, 16)
-                            
-                            builtInRows
-                            Divider().padding(.horizontal, 16)
-
-                            if !lists.isEmpty {
-                                myListsRows
-                                Divider().padding(.horizontal, 16)
-                            }
-                            
-                            ForEach(categories) { category in
-                                let isSelected = filter == .category(category)
-                                Button(action: { selectFilterAndClose(.category(category)) }) {
-                                    HStack {
-                                        Text("\(category.name) (\(categoryCounts[category.id, default: 0]))")
-                                            .scaledFont(size: 16, weight: isSelected ? .bold : .semibold)
-                                            .foregroundColor(isSelected ? Color.brandTint : .brandDark)
-                                        Spacer()
-                                        if isSelected {
-                                            Image(systemName: "checkmark")
-                                                .scaledFont(size: 14, weight: .bold)
-                                                .foregroundColor(Color.brandTint)
-                                        }
-                                    }
-                                    .padding(.horizontal, 16).padding(.vertical, 12)
-                                }
-                            }
-                        }
-                    }
-                    .frame(maxHeight: 440)
-                    
-                    Divider().padding(.horizontal, 16)
-                    
-                    Button(action: { isDropdownExpanded = false; isShowingAddCategoryAlert = true }) {
-                        HStack(spacing: 10) {
-                            Image(systemName: "folder.badge.plus").scaledFont(size: 16)
-                            Text("Создать новую папку...").scaledFont(size: 15, weight: .semibold)
-                            Spacer()
-                        }
-                        .foregroundColor(Color(red: 0/255, green: 112/255, blue: 243/255))
-                        .padding(.horizontal, 16).padding(.vertical, 12)
-                    }
-                    Button(action: {
-                        isDropdownExpanded = false
-                        isShowingManageCategories = true
-                    }) {
-                        HStack(spacing: 10) {
-                            Image(systemName: "folder.badge.gearshape").scaledFont(size: 16)
-                            Text("Управление папками...").scaledFont(size: 15, weight: .semibold)
-                            Spacer()
-                        }
-                        .foregroundColor(Color.brandMuted).padding(.horizontal, 16).padding(.vertical, 12)
-                    }
-                }
-                .padding(.bottom, 8)
-            }
-        }
-        .background(Color.cardBackground)
-        .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 3)
-    }
-    
-    private var dropdownIcon: String {
-        switch filter {
-        case .mistakes: return "exclamationmark.triangle.fill"
-        case .list: return "text.book.closed.fill"
-        case .oxford, .extra: return "books.vertical.fill"
-        default: return "folder.fill"
-        }
-    }
-
-    /// Длинное название словаря (книги) — первые 20 символов и «...»: «Adventures of Huckle... (4 173)»
-    static func shortName(_ name: String, limit: Int = 20) -> String {
-        let trimmed = name.trimmingCharacters(in: .whitespaces)
-        guard trimmed.count > limit else { return trimmed }
-        return trimmed.prefix(limit).trimmingCharacters(in: .whitespaces) + "..."
-    }
-
-    /// Встроенные словари основной базы: Oxford 5000 (с уровнями) и наши дополнения. Не удаляются и не переименовываются
-    private var builtInRows: some View {
-        VStack(spacing: 0) {
-            builtInRow(.oxford(level: nil), title: "Oxford 5000", count: builtInCount(.oxford(level: nil)))
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    ForEach(CEFRLevel.allCases.map(\.rawValue).filter { builtInCount(.oxford(level: $0)) > 0 }, id: \.self) { level in
-                        let item = DictionaryFilter.oxford(level: level)
-                        Button { selectFilterAndClose(item) } label: {
-                            Text("\(level) · \(builtInCount(item).formatted())")
-                                .scaledFont(size: 13, weight: .semibold)
-                                .foregroundColor(filter == item ? .white : .brandDark)
-                                .padding(.horizontal, 10).padding(.vertical, 6)
-                                .background(filter == item ? Color.brandTint : Color.brandBackground)
-                                .cornerRadius(10)
+                    Menu {
+                        quickPickMenu
+                    } label: {
+                        LXChipLabel(title: filterTitle, detail: "· \(totalCount.formatted())", isOn: true, chevron: true)
+                    }
+                    .frame(maxWidth: 190)
+                    .padding(.vertical, 4)
+                    LXChip(title: "Папки", systemImage: "folder") { foldersStart = .root }
+                    LXChip(title: "С ошибками", systemImage: "flag", isOn: filter == .mistakes) {
+                        filter = filter == .mistakes ? .general : .mistakes
+                    }
+                }
+                .padding(.horizontal, 16)
+            }
+            .padding(.top, 2)
+
+            Button { isShowingSearch = true } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass").scaledFont(size: 17)
+                    Text("Искать в словаре").scaledFont(size: 16)
+                    Spacer()
+                }
+                .foregroundStyle(Color.brandMuted)
+                .padding(.horizontal, 14)
+                .frame(height: 48)
+                .background(Color.brandFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 16)
+            .padding(.top, 6)
+            .accessibilityLabel("Искать в словаре")
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    LXChip(title: "Все", isOn: statusFilter == nil) { statusFilter = nil }
+                    ForEach(WordStatus.allCases) { status in
+                        LXChip(title: status.title, status: status, isOn: statusFilter == status) {
+                            statusFilter = statusFilter == status ? nil : status
                         }
                     }
                 }
-                .padding(.horizontal, 16).padding(.bottom, 6)
+                .padding(.horizontal, 16)
             }
-            builtInRow(.extra, title: "Дополнения", count: builtInCount(.extra))
-        }
-    }
+            .padding(.top, 8)
 
-    private func builtInRow(_ item: DictionaryFilter, title: String, count: Int) -> some View {
-        let isSelected = filter == item
-        return Button(action: { selectFilterAndClose(item) }) {
-            HStack(spacing: 8) {
-                Image(systemName: "books.vertical.fill")
-                    .scaledFont(size: 14)
-                    .foregroundColor(Color.brandTint)
-                Text("\(title) (\(count.formatted()))")
-                    .scaledFont(size: 16, weight: isSelected ? .bold : .semibold)
-                    .foregroundColor(isSelected ? Color.brandTint : .brandDark)
+            HStack {
+                LXSectionLabel(text: "По алфавиту")
                 Spacer()
-                if isSelected {
-                    Image(systemName: "checkmark")
-                        .scaledFont(size: 14, weight: .bold)
-                        .foregroundColor(Color.brandTint)
-                }
+                levelMenu
             }
-            .padding(.horizontal, 16).padding(.vertical, 12)
+            .padding(.horizontal, 16)
+            .padding(.top, 6)
+            .frame(minHeight: 44)
         }
     }
 
-    /// Счётчики встроенных словарей — запомненные запросы «сколько»
-    private func builtInCount(_ item: DictionaryFilter) -> Int {
-        let oxford = StudyScope.oxfordTag
-        switch item {
-        case .oxford(let level?):
-            return StudyWords.cachedCount("словарь|oxford|\(level)",
-                                          #Predicate<Word> { !$0.isCustom && $0.tags == oxford && $0.cefrLevel == level }, in: modelContext)
-        case .oxford(nil):
-            return StudyWords.cachedCount("словарь|oxford", #Predicate<Word> { !$0.isCustom && $0.tags == oxford }, in: modelContext)
-        case .extra:
-            return StudyWords.cachedCount("словарь|extra", #Predicate<Word> { !$0.isCustom && $0.tags != oxford }, in: modelContext)
-        default:
-            return 0
+    /// Быстрый выбор списка; полный перечень — в «Папках»
+    @ViewBuilder
+    private var quickPickMenu: some View {
+        pickButton("Общий", systemImage: "book.closed", item: .general)
+        pickButton("Слова с ошибками (\(mistakeCount))", systemImage: "flag", item: .mistakes)
+        if !lists.isEmpty || !userFolders.isEmpty {
+            Divider()
+            ForEach(lists.prefix(6)) { list in
+                pickButton(Self.shortName(list.name), systemImage: "text.book.closed", item: .list(list))
+            }
+            ForEach(userFolders.prefix(6)) { folder in
+                pickButton(folder.name, systemImage: "folder", item: .category(folder))
+            }
+        }
+        Divider()
+        pickButton("Oxford 5000", systemImage: "books.vertical", item: .oxford(level: nil))
+        pickButton("Дополнения", systemImage: "books.vertical", item: .extra)
+        Button { foldersStart = .topics } label: { Label("Темы…", systemImage: "square.grid.2x2") }
+        Button { foldersStart = .root } label: { Label("Все папки…", systemImage: "folder.badge.gearshape") }
+    }
+
+    private func pickButton(_ title: String, systemImage: String, item: DictionaryFilter) -> some View {
+        Button { filter = item } label: {
+            Label(title, systemImage: filter == item ? "checkmark" : systemImage)
         }
     }
 
-    /// Свои словари (например, из скана текста) — над темами; долгое нажатие: переименовать или удалить
-    private var myListsRows: some View {
-        ForEach(lists) { list in
-            let isSelected = filter == .list(list)
-            Button(action: { selectFilterAndClose(.list(list)) }) {
-                HStack(spacing: 8) {
-                    Image(systemName: "text.book.closed.fill")
-                        .scaledFont(size: 14)
-                        .foregroundColor(Color.brandTint)
-                    Text("\(Self.shortName(list.name)) (\(list.words.count.formatted()))")
-                        .scaledFont(size: 16, weight: isSelected ? .bold : .semibold)
-                        .foregroundColor(isSelected ? Color.brandTint : .brandDark)
-                    Spacer()
-                    if isSelected {
-                        Image(systemName: "checkmark")
-                            .scaledFont(size: 14, weight: .bold)
-                            .foregroundColor(Color.brandTint)
-                    }
-                }
-                .padding(.horizontal, 16).padding(.vertical, 12)
-            }
-            .contextMenu {
-                Button {
-                    listName = list.name
-                    listToRename = list
-                } label: { Label("Переименовать", systemImage: "pencil") }
-                Button(role: .destructive) { listToDelete = list } label: { Label("Удалить", systemImage: "trash") }
-            }
-        }
-    }
-
-    /// Удаляет словарь и свои слова, которые были только в нём; встроенные слова остаются в своих темах
-    private func delete(_ list: WordList) {
-        isDeletingList = true
-        Task {
-            // Сначала кадр с «Удаляю словарь…», потом работа на главном потоке
-            try? await Task.sleep(for: .milliseconds(50))
-            let onlyHere = list.words.filter { $0.isCustom && $0.category == nil && $0.lists.count == 1 }
-            // Отвязываем все слова разом: при удалении по одному каждое перестраивало список слов словаря,
-            // и словарь из книги (тысячи слов) вешал приложение
-            list.words = []
-            for word in onlyHere { modelContext.delete(word) }
-            studyScope.enabledLists.remove(list.id)
-            if filter == .list(list) { filter = .general }
-            modelContext.delete(list)
-            try? modelContext.save()
-            isDeletingList = false
-        }
-    }
-
-    /// Переносит слова в другой свой словарь (без повторов) и удаляет исходный; сами слова не удаляются
-    private func merge(_ source: WordList, into target: WordList) {
-        for word in Array(source.words) where !word.lists.contains(where: { $0.id == target.id }) {
-            word.lists.append(target)
-        }
-        for photo in source.photos { target.addPhoto(photo) }
-        // Был включён в изучение — включаем словарь, в который перешли слова
-        if studyScope.enabledLists.remove(source.id) != nil {
-            studyScope.enabledLists.insert(target.id)
-        }
-        if filter == .list(source) { filter = .list(target) }
-        modelContext.delete(source)
-        try? modelContext.save()
-    }
-
-    private var isBuiltInDictionary: Bool {
-        switch filter {
-        case .oxford, .extra: return true
-        default: return false
-        }
-    }
-
-    private func selectFilterAndClose(_ selectedFilter: DictionaryFilter) {
-        withAnimation(.easeInOut(duration: 0.2)) {
-            filter = selectedFilter
-            isDropdownExpanded = false
-        }
-    }
-    
-    private var addWordCard: some View {
-        VStack(spacing: 14) {
-            customTextField(placeholder: "Слово на английском", text: $newEnglish)
-            if !existingMatches.isEmpty {
-                existingMatchesCard
-            }
-            customTextField(placeholder: "Транскрипция (необязательно)", text: $newTranscription)
-            HStack(spacing: 10) {
-                customTextField(placeholder: "Перевод на русский", text: $newRussian)
-                translateNewWordButton
-            }
-            if let newTranslationNote {
-                Text(newTranslationNote)
-                    .scaledFont(size: 13)
-                    .foregroundColor(Color.brandTint)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            customTextField(placeholder: "Пример фразы (необязательно)", text: $newExample)
-            
-            Picker("Уровень", selection: $newLevel) {
-                ForEach(CEFRLevel.allCases, id: \.rawValue) { level in
-                    Text(level.rawValue).tag(level.rawValue)
-                }
-            }
-            .pickerStyle(.segmented)
-            
-            Button(action: addNewWord) {
-                HStack(spacing: 6) {
-                    Image(systemName: "plus.circle.fill")
-                        .scaledFont(size: 16, weight: .bold)
-                    Text("Добавить в \(addTargetName)")
-                        .scaledFont(size: 16, weight: .bold, design: .rounded)
-                }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 15)
-                .background(canAddNewWord ? Color.brandTint : Color.brandFill)
-                .cornerRadius(14)
-            }
-            .disabled(!canAddNewWord)
-        }
-        .padding(18)
-        .background(Color.cardBackground)
-        .cornerRadius(20)
-        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
-        .translationTask(newTranslationConfig) { session in
-            await translateNewWord(with: session)
-        }
-    }
-
-    private var translateNewWordButton: some View {
-        Button {
-            newTranslationNote = nil
-            if newTranslationConfig == nil {
-                newTranslationConfig = TranslationSession.Configuration(source: Locale.Language(identifier: "en"),
-                                                                        target: Locale.Language(identifier: "ru"))
-            } else {
-                newTranslationConfig?.invalidate()
+    /// Уровень слов: A1–C2 или один
+    private var levelMenu: some View {
+        Menu {
+            levelButton("Все уровни", level: nil)
+            ForEach(CEFRLevel.allCases, id: \.rawValue) { level in
+                levelButton(level.rawValue, level: level.rawValue)
             }
         } label: {
-            Group {
-                if isTranslatingNew {
-                    ProgressView()
-                } else {
-                    Image(systemName: "character.bubble")
-                        .scaledFont(size: 20, weight: .semibold)
-                }
+            HStack(spacing: 4) {
+                Text(levelFilter ?? "A1–C2")
+                Image(systemName: "line.3.horizontal.decrease")
             }
-            .foregroundColor(Color.brandTint)
-            .frame(width: 48, height: 48)
-            .background(Color.brandTint.opacity(0.12))
-            .cornerRadius(12)
+            .scaledFont(size: 13, weight: .medium)
+            .foregroundStyle(levelFilter == nil ? Color.brandMuted : Color.brandTint)
+            .frame(minHeight: 44)
         }
-        .disabled(newEnglish.trimmingCharacters(in: .whitespaces).isEmpty || isTranslatingNew)
-        .accessibilityLabel("Перевести")
+        .accessibilityLabel("Уровень слов")
     }
 
-    private func translateNewWord(with session: TranslationSession) async {
-        let word = newEnglish.trimmingCharacters(in: .whitespaces)
-        guard !word.isEmpty else { return }
-        isTranslatingNew = true
-        defer { isTranslatingNew = false }
-        do {
-            let result = try await WordTranslator.translate(word, session: session)
-            newRussian = result.text
-            if result.doubtful {
-                newTranslationNote = result.text.isEmpty
-                    ? "Подходящего перевода нет — впишите свой."
-                    : "Перевод под вопросом — проверьте."
+    private func levelButton(_ title: String, level: String?) -> some View {
+        Button { levelFilter = level } label: {
+            if levelFilter == level {
+                Label(title, systemImage: "checkmark")
+            } else {
+                Text(title)
             }
-        } catch {
-            newTranslationNote = "Переводчик недоступен — проверьте, скачан ли русский язык в настройках iPhone «Перевод»."
         }
     }
-    
-    private var canAddNewWord: Bool {
-        !newEnglish.trimmingCharacters(in: .whitespaces).isEmpty
-            && !newRussian.trimmingCharacters(in: .whitespaces).isEmpty
-            && existingMatches.isEmpty
-    }
 
-    /// Вместо дубля — взять слово из базы: в свой словарь добавить ссылку, в темах — открыть правку
-    private var existingMatchesCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Уже есть")
-                .scaledFont(size: 14, weight: .bold, design: .rounded)
-                .foregroundColor(Color.brandTint)
-
-            ForEach(existingMatches.prefix(3)) { word in
-                HStack(alignment: .center, spacing: 8) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("\(word.english)\(word.partOfSpeech.isEmpty ? "" : " (\(word.partOfSpeech))") — \(word.russian)")
-                            .scaledFont(size: 15, weight: .semibold, design: .rounded)
-                            .foregroundColor(.brandDark)
-                        Text(matchDetails(word))
-                            .scaledFont(size: 12, weight: .medium, design: .rounded)
-                            .foregroundColor(Color.brandMuted)
-                    }
-                    Spacer()
-                    matchAction(for: word)
-                }
-            }
-
-            // Нужного значения нет (bank — «берег», а в базе только «банк») — своё слово, но только явно
-            Button("Другое значение — добавить своё", action: addNewWord)
-                .scaledFont(size: 13, weight: .semibold, design: .rounded)
-                .foregroundColor(Color.brandMuted)
-                .disabled(newRussian.trimmingCharacters(in: .whitespaces).isEmpty)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(Color.brandTint.opacity(0.08))
-        .cornerRadius(12)
-    }
-
-    private func matchDetails(_ word: Word) -> String {
-        let place = word.category.map { "тема «\($0.name)»" } ?? (word.isCustom ? "ваше слово" : "Общий")
-        return "\(word.cefrLevel) · \(place)"
-    }
+    // MARK: - Список
 
     @ViewBuilder
-    private func matchAction(for word: Word) -> some View {
-        if case .list(let list) = filter {
-            if word.lists.contains(where: { $0.id == list.id }) {
-                Text("уже в словаре")
-                    .scaledFont(size: 12, weight: .medium, design: .rounded)
-                    .foregroundColor(Color.brandMuted)
-            } else {
-                Button("Добавить") { add(word, to: list) }
-                    .scaledFont(size: 14, weight: .bold, design: .rounded)
-                    .foregroundColor(Color.brandTint)
+    private var wordsList: some View {
+        if filteredWords.isEmpty {
+            VStack(spacing: 12) {
+                Image(systemName: filter == .mistakes ? "checkmark.circle" : "tray")
+                    .scaledFont(size: 40)
+                    .foregroundStyle(filter == .mistakes ? Color.statusKnown : Color.brandMuted)
+                Text(filter == .mistakes ? "Слов с ошибками нет" : "В этом разделе пока нет слов")
+                    .scaledFont(size: 15, weight: .medium)
+                    .foregroundStyle(Color.brandMuted)
             }
+            .frame(maxWidth: .infinity)
+            .padding(.top, 48)
         } else {
-            Button("Открыть") { wordToEdit = word }
-                .scaledFont(size: 14, weight: .bold, design: .rounded)
-                .foregroundColor(Color.brandTint)
+            if tableMode { LXTableHeader() }
+            LazyVStack(spacing: 0) {
+                ForEach(filteredWords) { word in
+                    Group {
+                        if tableMode { LXTableRow(word: word) } else { LXWordRow(word: word) }
+                    }
+                    .onTapGesture { wordToShow = word }
+                    .contextMenu {
+                        Button { wordToEdit = word } label: { Label("Изменить", systemImage: "pencil") }
+                        // Открыт свой словарь — слово можно убрать из него, не удаляя совсем
+                        if case .list(let list) = filter {
+                            Button(role: .destructive) {
+                                word.lists.removeAll { $0.id == list.id }
+                                try? modelContext.save()
+                            } label: { Label("Удалить из словаря", systemImage: "minus.circle") }
+                        }
+                    }
+                    .onAppear {
+                        if word.id == filteredWords.last?.id { loadMoreWords() }
+                    }
+                }
+            }
         }
     }
 
-    /// Ссылка на существующее слово в своём словаре — без копии
-    private func add(_ word: Word, to list: WordList) {
-        word.lists.append(list)
-        try? modelContext.save()
-        clearNewWordForm()
-    }
-
-    private func customTextField(placeholder: String, text: Binding<String>) -> some View {
-        TextField(placeholder, text: text)
-            .scaledFont(size: 16, weight: .medium, design: .rounded)
+    /// Пустой словарь: приглашение читать, выбрать слова по уровню или сфотографировать текст
+    private var emptyState: some View {
+        VStack(spacing: 0) {
+            Spacer(minLength: 0)
+            VStack(spacing: 0) {
+                OpenBookIllustration()
+                    .frame(width: 160, height: 120)
+                Text("Здесь появятся ваши слова")
+                    .scaledFont(size: 28, weight: .medium, design: .serif)
+                    .foregroundStyle(Color.brandDark)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 20)
+                Text("Читайте книгу и касайтесь незнакомых слов. Каждое сохранится сюда вместе с примером и названием книги.")
+                    .scaledFont(size: 15)
+                    .foregroundStyle(Color.brandMuted)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+                    .padding(.top, 10)
+            }
+            .padding(.horizontal, 32)
+            Spacer(minLength: 0)
+            VStack(spacing: 8) {
+                LXButton(title: "Открыть читалку", systemImage: "book.closed") { mode = .reading }
+                LXButton(title: "Выбрать слова по уровню", style: .soft) { foldersStart = .root }
+                LXButton(title: "Сканировать текст", systemImage: "text.viewfinder", style: .text) { isShowingScan = true }
+            }
             .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            .background(Color.brandFill)
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.brandDark.opacity(0.25), lineWidth: 1.5)
-            )
-    }
-
-    private func addNewWord() {
-        let trimmedEng = newEnglish.trimmingCharacters(in: .whitespaces)
-        let trimmedRus = newRussian.trimmingCharacters(in: .whitespaces)
-
-        guard !trimmedEng.isEmpty && !trimmedRus.isEmpty else { return }
-
-        let word = Word(
-            english: trimmedEng,
-            russian: trimmedRus,
-            transcription: Word.bareTranscription(newTranscription),
-            example: newExample.trimmingCharacters(in: .whitespaces),
-            category: currentCategoryForNewWord,
-            cefrLevel: newLevel,
-            isCustom: true
-        )
-        
-        modelContext.insert(word)
-        if case .list(let list) = filter {
-            word.lists.append(list)
+            .padding(.bottom, 16)
         }
-        try? modelContext.save()
-        clearNewWordForm()
+    }
+}
+
+/// Раскрытая книга с закладкой — картинка пустого словаря (холст «Словарь»)
+struct OpenBookIllustration: View {
+    var body: some View {
+        ZStack {
+            Self.book.fill(Color.brandAccent)
+            Self.book.stroke(Color.brandTint, style: Self.style)
+            Self.spine.stroke(Color.brandTint, style: Self.style)
+            Self.lines.stroke(Color.brandTint, style: Self.style)
+            Self.bookmark.stroke(Color.statusLearning, style: Self.style)
+        }
+        .accessibilityLabel("Раскрытая книга")
     }
 
-    private func clearNewWordForm() {
-        newEnglish = ""
-        newTranscription = ""
-        newRussian = ""
-        newExample = ""
-        newTranslationNote = nil
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    private static let style = StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round)
+
+    private static var book: Path {
+        var p = Path()
+        p.move(to: CGPoint(x: 80, y: 28))
+        p.addCurve(to: CGPoint(x: 18, y: 20), control1: CGPoint(x: 64, y: 16), control2: CGPoint(x: 38, y: 14))
+        p.addLine(to: CGPoint(x: 18, y: 94))
+        p.addCurve(to: CGPoint(x: 80, y: 102), control1: CGPoint(x: 38, y: 88), control2: CGPoint(x: 64, y: 90))
+        p.addCurve(to: CGPoint(x: 142, y: 94), control1: CGPoint(x: 96, y: 90), control2: CGPoint(x: 122, y: 88))
+        p.addLine(to: CGPoint(x: 142, y: 20))
+        p.addCurve(to: CGPoint(x: 80, y: 28), control1: CGPoint(x: 122, y: 14), control2: CGPoint(x: 96, y: 16))
+        p.closeSubpath()
+        return p
+    }
+
+    private static var spine: Path {
+        var p = Path()
+        p.move(to: CGPoint(x: 80, y: 28))
+        p.addLine(to: CGPoint(x: 80, y: 102))
+        return p
+    }
+
+    private static var lines: Path {
+        var p = Path()
+        for (start, end, c1, c2) in [
+            (CGPoint(x: 34, y: 40), CGPoint(x: 66, y: 43), CGPoint(x: 44, y: 38), CGPoint(x: 56, y: 39)),
+            (CGPoint(x: 34, y: 54), CGPoint(x: 66, y: 57), CGPoint(x: 44, y: 52), CGPoint(x: 56, y: 53)),
+            (CGPoint(x: 94, y: 43), CGPoint(x: 126, y: 40), CGPoint(x: 104, y: 39), CGPoint(x: 116, y: 38)),
+            (CGPoint(x: 94, y: 57), CGPoint(x: 126, y: 54), CGPoint(x: 104, y: 53), CGPoint(x: 116, y: 52))
+        ] {
+            p.move(to: start)
+            p.addCurve(to: end, control1: c1, control2: c2)
+        }
+        return p
+    }
+
+    private static var bookmark: Path {
+        var p = Path()
+        p.move(to: CGPoint(x: 112, y: 14))
+        p.addLine(to: CGPoint(x: 112, y: 36))
+        p.addLine(to: CGPoint(x: 120, y: 30))
+        p.addLine(to: CGPoint(x: 128, y: 36))
+        p.addLine(to: CGPoint(x: 128, y: 16))
+        return p
     }
 }

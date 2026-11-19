@@ -1,20 +1,24 @@
 import SwiftUI
 import SwiftData
 
-/// Словарь → поиск слова по всей базе и его правка
+/// Поиск слова по всей базе (по английскому и русскому) по дизайну LexiStream; нажатие открывает карточку слова
 struct WordSearchView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    /// Недавние запросы — через перевод строки, новые впереди
+    @AppStorage("dictionary_recent_queries") private var recentRaw = ""
+    @FocusState private var isFocused: Bool
 
     @State private var query = ""
     @State private var results: [Word] = []
     @State private var index: [SearchEntry] = []
-    @State private var editingWord: Word?
+    @State private var wordToShow: Word?
     #if DEBUG
     @State private var copiedWordID: PersistentIdentifier?
     #endif
 
     private let resultLimit = 100
+    private let recentLimit = 8
 
     /// Слово с заранее приведёнными к нижнему регистру полями — чтобы не делать это на каждое нажатие клавиши
     private struct SearchEntry {
@@ -25,6 +29,10 @@ struct WordSearchView: View {
 
     private static func normalized(_ text: String) -> String {
         text.lowercased().replacingOccurrences(of: "ё", with: "е")
+    }
+
+    private var recent: [String] {
+        recentRaw.split(separator: "\n").map(String.init)
     }
 
     /// Читаем слова из базы один раз, а не через @Query: тот перечитывает все слова при каждой перерисовке (~0,6 с на букву)
@@ -51,95 +59,134 @@ struct WordSearchView: View {
         results = Array((prefix + contains).prefix(resultLimit))
     }
 
+    private func remember(_ text: String) {
+        let text = text.trimmingCharacters(in: .whitespaces)
+        guard !text.isEmpty else { return }
+        var items = recent.filter { $0.caseInsensitiveCompare(text) != .orderedSame }
+        items.insert(text, at: 0)
+        recentRaw = items.prefix(recentLimit).joined(separator: "\n")
+    }
+
     var body: some View {
-        NavigationStack {
-            List {
-                Group {
-                    if query.trimmingCharacters(in: .whitespaces).isEmpty {
-                        Text("Введите слово на английском или русском. Всего слов: \(index.count)")
-                            .foregroundStyle(Color.brandMuted)
-                    } else if results.isEmpty {
-                        Text("Ничего не найдено")
-                            .foregroundStyle(Color.brandMuted)
-                    } else {
-                        Section(footer: footer) {
-                            ForEach(results) { word in
-                                row(for: word)
-                            }
-                        }
-                    }
-                }
-                // Строки — тёплого цвета карточек, а не системного серого
-                .listRowBackground(Color.cardBackground)
+        VStack(spacing: 0) {
+            HStack(spacing: 4) {
+                searchField
+                LXTextButton(title: "Отмена") { dismiss() }
             }
-            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Поиск слова")
-            .autocorrectionDisabled()
-            .textInputAutocapitalization(.never)
-            .brandListBackground()
-            .navigationTitle("Поиск слов")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Готово") { dismiss() }.bold()
-                }
+            .padding(.leading, 16)
+            .padding(.trailing, 4)
+            .padding(.top, 14)
+            .padding(.bottom, 6)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) { content }
+                    .padding(.bottom, 24)
             }
-            .onChange(of: query) { updateResults() }
-            .task { rebuildIndex() }
-            // Слово могли удалить в правке — перестраиваем список, чтобы не показать удалённое
-            .onReceive(NotificationCenter.default.publisher(for: ModelContext.didSave)) { _ in rebuildIndex() }
-            .sheet(item: $editingWord, onDismiss: rebuildIndex) { word in
-                EditWordView(word: word)
-            }
+            .scrollDismissesKeyboard(.immediately)
+        }
+        .background(Color.brandBackground.ignoresSafeArea())
+        .onChange(of: query) { updateResults() }
+        .task {
+            rebuildIndex()
+            isFocused = true
+        }
+        // Слово могли удалить в правке — перестраиваем список, чтобы не показать удалённое
+        .onReceive(NotificationCenter.default.publisher(for: ModelContext.didSave)) { _ in rebuildIndex() }
+        .sheet(item: $wordToShow, onDismiss: rebuildIndex) { word in
+            WordDetailView(word: word)
+                .appThemedColorScheme()
         }
     }
 
+    private var searchField: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass").scaledFont(size: 17)
+            TextField("Поиск слова", text: $query)
+                .scaledFont(size: 16)
+                .foregroundStyle(Color.brandDark)
+                .focused($isFocused)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .submitLabel(.search)
+                .onSubmit { remember(query) }
+            if !query.isEmpty {
+                Button { query = "" } label: {
+                    Image(systemName: "xmark.circle").scaledFont(size: 17)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Очистить")
+            }
+        }
+        .foregroundStyle(Color.brandMuted)
+        .padding(.horizontal, 14)
+        .frame(height: 48)
+        .background(Color.brandFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
     @ViewBuilder
-    private var footer: some View {
-        if results.count == resultLimit {
-            Text("Показаны первые \(resultLimit). Уточните запрос.")
+    private var content: some View {
+        if query.trimmingCharacters(in: .whitespaces).isEmpty {
+            if !recent.isEmpty {
+                LXSectionLabel(text: "Недавние запросы")
+                    .padding(.horizontal, 20)
+                    .padding(.top, 14)
+                    .padding(.bottom, 6)
+                FlowLayout(spacing: 8, centered: false) {
+                    ForEach(recent, id: \.self) { item in
+                        LXChip(title: item) { query = item }
+                    }
+                }
+                .padding(.horizontal, 16)
+            }
+            Text("Введите слово на английском или русском. Всего слов: \(index.count.formatted())")
+                .scaledFont(size: 14)
+                .foregroundStyle(Color.brandMuted)
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+        } else if results.isEmpty {
+            Text("Ничего не найдено")
+                .scaledFont(size: 15)
+                .foregroundStyle(Color.brandMuted)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 48)
         } else {
-            #if DEBUG
-            Text("Правка меняет слово только на этом устройстве. Чтобы она не потерялась при обновлении words.csv, скопируйте CSV-строку (свайп влево) в мастер-базу.")
-            #endif
+            LXSectionLabel(text: "Найдено")
+                .padding(.horizontal, 20)
+                .padding(.top, 14)
+                .padding(.bottom, 6)
+            LazyVStack(spacing: 0) {
+                ForEach(results) { word in row(for: word) }
+            }
+            if results.count == resultLimit {
+                Text("Показаны первые \(resultLimit). Уточните запрос.")
+                    .scaledFont(size: 13)
+                    .foregroundStyle(Color.brandMuted)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 12)
+            }
         }
     }
 
     private func row(for word: Word) -> some View {
-        Button { editingWord = word } label: {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    Text(word.english).font(.headline).foregroundStyle(.primary)
-                    if !word.partOfSpeech.isEmpty {
-                        Text(word.partOfSpeech).font(.subheadline).italic().foregroundStyle(Color.brandMuted)
-                    }
-                    Spacer()
-                    Text(word.cefrLevel).font(.caption.bold()).foregroundStyle(Color.brandTint)
-                }
-                Text(word.russian).font(.subheadline).foregroundStyle(Color.brandMuted)
-                if !word.example.isEmpty {
-                    Text(word.attributedExample).font(.caption).foregroundStyle(Color.brandMuted).lineLimit(2)
-                }
-                #if DEBUG
+        LXWordRow(word: word)
+            .onTapGesture {
+                remember(query)
+                wordToShow = word
+            }
+            #if DEBUG
+            .overlay(alignment: .bottomTrailing) {
                 if copiedWordID == word.persistentModelID {
                     Label("CSV-строка скопирована", systemImage: "checkmark")
-                        .font(.caption.bold())
-                        .foregroundStyle(.green)
+                        .scaledFont(size: 12, weight: .bold)
+                        .foregroundStyle(Color.statusKnown)
+                        .padding(.trailing, 16)
+                        .padding(.bottom, 4)
                 }
-                #endif
             }
-        }
-        #if DEBUG
-        .swipeActions(edge: .trailing) {
-            Button { copyCSV(of: word) } label: {
-                Label("CSV", systemImage: "doc.on.doc")
+            .contextMenu {
+                Button { copyCSV(of: word) } label: { Label("Скопировать CSV-строку", systemImage: "doc.on.doc") }
             }
-            .tint(Color.brandTint)
-        }
-        .contextMenu {
-            Button { editingWord = word } label: { Label("Редактировать", systemImage: "pencil") }
-            Button { copyCSV(of: word) } label: { Label("Скопировать CSV-строку", systemImage: "doc.on.doc") }
-        }
-        #endif
+            #endif
     }
 
     #if DEBUG

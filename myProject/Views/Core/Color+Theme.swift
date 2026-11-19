@@ -53,6 +53,14 @@ extension Color {
 
     /// Мягкий акцентный фон: плашки, подсветка
     nonisolated static var brandAccent: Color { themed(light: rgb(AppPalette.accent.soft.0), dark: rgb(AppPalette.accent.soft.1)) }
+
+    /// Текст и значки на мягком акцентном фоне (выбранные чипы, плашки)
+    nonisolated static var brandOnSoft: Color { themed(light: rgb(AppPalette.accent.onSoft.0), dark: rgb(AppPalette.accent.onSoft.1)) }
+
+    /// Состояния слова в словаре (холст «Словарь»): новое — синее, учу — янтарное, знаю — основной цвет; значки ещё и разной формы
+    nonisolated static let statusNew = themed(light: rgb(0x2F5D8A), dark: rgb(0x8DB6E0))
+    nonisolated static let statusLearning = themed(light: rgb(0x8A4F05), dark: rgb(0xE3A857))
+    nonisolated static var statusKnown: Color { brandTint }
 }
 
 /// Готовые цвета приложения: основной, кнопок и фон. Выбор — Настройки → «Цвета приложения»; тёмные варианты подобраны заранее
@@ -95,6 +103,17 @@ nonisolated enum AppPalette {
             case .clay: (0xF6E3DA, 0x4D2E22)
             case .forest: (0xE4EFDC, 0x2B3E22)
             case .ocean: (0xDCEBF3, 0x1F3846)
+            }
+        }
+        /// Текст на мягком фоне (день, ночь)
+        var onSoft: Pair {
+            switch self {
+            case .teal: (0x14524A, 0xBFE6DE)
+            case .indigo: (0x2A3375, 0xCDD3FA)
+            case .plum: (0x6A2A50, 0xF2CBE0)
+            case .clay: (0x7C3A25, 0xF6CDBD)
+            case .forest: (0x2B4E1F, 0xCDEBBE)
+            case .ocean: (0x14506A, 0xBEE3F5)
             }
         }
     }

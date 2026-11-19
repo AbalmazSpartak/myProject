@@ -9,6 +9,11 @@ final class DataPreloader {
     /// Темы прошлой загруженной версии: так переименованную тему отличаем от папки пользователя
     private static let bundledTopicsKey = "bundled_topics"
 
+    /// Названия тем встроенной базы — всё остальное среди папок пользователь создал сам (в «Папках» их можно переименовать и удалить)
+    static var bundledTopicNames: Set<String> {
+        Set(UserDefaults.standard.stringArray(forKey: bundledTopicsKey) ?? []).union(TopicSections.topicNames)
+    }
+
     /// Первый запуск — грузим words.csv целиком; файл обновился — сливаем, сохраняя прогресс и свои слова
     static func syncBundledWords(context: ModelContext) {
         guard let url = Bundle.main.url(forResource: "words", withExtension: "csv"),

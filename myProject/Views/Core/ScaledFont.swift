@@ -58,6 +58,11 @@ enum AppFonts {
         let traits: [UIFontDescriptor.TraitKey: Any] = [.weight: uiWeight(weight)]
         var attrs: [UIFontDescriptor.AttributeName: Any] = [.family: family, .traits: traits]
         if italic { attrs[.face] = "Italic" }
+        // У Newsreader нет кириллицы: русские буквы берём из системного шрифта с засечками (New York), а не без засечек
+        if design == .serif,
+           let fallback = UIFont.systemFont(ofSize: size, weight: uiWeight(weight)).fontDescriptor.withDesign(.serif) {
+            attrs[.cascadeList] = [fallback]
+        }
         let font = UIFont(descriptor: UIFontDescriptor(fontAttributes: attrs), size: size)
         guard font.familyName == family else { return .system(size: size, weight: weight, design: design) }
         return Font(font)
