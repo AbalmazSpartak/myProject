@@ -134,9 +134,12 @@ struct WordLookupView: View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(lemma.isEmpty ? tapped.word : lemma)
-                    .scaledFont(size: 32, weight: .semibold, design: .serif)
+                    .scaledFont(size: 28, weight: .semibold, design: .serif)
                     .foregroundColor(.brandDark)
                 HStack(spacing: 8) {
+                    if let transcription = baseWord?.displayTranscription, !transcription.isEmpty {
+                        Text(transcription)
+                    }
                     if !lemma.isEmpty, lemma.caseInsensitiveCompare(tapped.word) != .orderedSame {
                         Text("в тексте: \(tapped.word)")
                     }
@@ -151,10 +154,13 @@ struct WordLookupView: View {
             Button {
                 TextToSpeechManager.shared.speak(lemma.isEmpty ? tapped.word : lemma)
             } label: {
-                Image(systemName: "speaker.wave.2.fill")
-                    .scaledFont(size: 22)
-                    .foregroundColor(Color.brandTint)
+                Image(systemName: "speaker.wave.2")
+                    .scaledFont(size: 20)
+                    .foregroundStyle(Color.brandOnSoft)
+                    .frame(width: 44, height: 44)
+                    .background(Circle().fill(Color.brandAccent))
             }
+            .buttonStyle(.plain)
             .accessibilityLabel("Озвучить")
         }
     }
@@ -192,8 +198,8 @@ struct WordLookupView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.cardBackground)
-        .cornerRadius(14)
+        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
     }
 
     /// «В переводе книги» — то же место у переводчика книги, перевод слова подсвечен
@@ -208,8 +214,8 @@ struct WordLookupView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.cardBackground)
-        .cornerRadius(14)
+        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
     }
 
     /// Словарь приложения слова не знает (Hatter) — ищем в переводе книги его перевод из базы или переводчика (шляпник ≈ шляпочник)
@@ -269,8 +275,8 @@ struct WordLookupView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.cardBackground)
-        .cornerRadius(14)
+        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
     }
 
     /// ИИ-подсказка с сервера — только по нажатию: каждая тратит дневной запас
@@ -318,20 +324,10 @@ struct WordLookupView: View {
     }
 
     private var addButton: some View {
-        Button(action: add) {
-            Label(isAdded ? "В словаре «\(bookTitle)»" : "В словарь «\(bookTitle)»",
-                  systemImage: isAdded ? "checkmark.circle.fill" : "plus.circle.fill")
-                .scaledFont(size: 16, weight: .semibold)
-                .foregroundStyle(isAdded ? Color.white : Color.brandBackground)
-                .lineLimit(2)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-        }
-        .buttonStyle(.borderedProminent)
-        .tint(Color.brandButton)
-                .foregroundStyle(Color.brandOnButton)
-        .tint(isAdded ? .green : .brandDark)
-        .disabled(isAdded || (baseWord == nil && translation.trimmingCharacters(in: .whitespaces).isEmpty))
+        LXButton(title: isAdded ? "В словаре «\(bookTitle)»" : "В словарь «\(bookTitle)»",
+                 systemImage: isAdded ? "checkmark.circle" : "plus",
+                 isEnabled: !(isAdded || (baseWord == nil && translation.trimmingCharacters(in: .whitespaces).isEmpty)),
+                 action: add)
     }
 
     /// Предложение с выделенным словом — пример для карточки

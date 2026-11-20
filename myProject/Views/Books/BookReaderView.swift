@@ -278,9 +278,18 @@ struct BookReaderView: View {
         .animation(.easeInOut(duration: 0.25), value: isShowingPlayer)
         // Нижняя панель — вместе с шапкой; поверх страницы, не сдвигая текст
         .overlay(alignment: .bottom) {
-            if !isChromeHidden, !isShowingPlayer, !chapters.isEmpty {
-                bottomBar
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            if !isShowingPlayer, !chapters.isEmpty {
+                VStack(spacing: 0) {
+                    // Озвучка идёт — мини-плеер над нижней панелью: пауза, прогресс главы, скорость
+                    if speech.isPlaying || speech.isPreparing || speech.paragraph != nil {
+                        miniPlayer
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                    if !isChromeHidden {
+                        bottomBar
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                }
             }
         }
         .overlay(alignment: .bottom) {
@@ -749,6 +758,49 @@ struct BookReaderView: View {
         .padding(.bottom, 8)
         .frame(maxWidth: .infinity)
         .background(style.background.shadow(color: .black.opacity(0.12), radius: 6, y: -2).ignoresSafeArea(edges: .bottom))
+    }
+
+    /// Мини-плеер по холсту: кнопка паузы, полоса прогресса главы с подписью, скорость. Нажатие на полосу — полный плеер
+    private var miniPlayer: some View {
+        let count = max(chapter?.paragraphs.count ?? 1, 1)
+        let fraction = min(Double(speech.paragraph ?? 0) / Double(count), 1)
+        return HStack(spacing: 12) {
+            Button(action: toggleReading) {
+                Group {
+                    if speech.isPreparing {
+                        ProgressView().tint(Color.brandOnButton)
+                    } else {
+                        Image(systemName: speech.isPlaying ? "pause.fill" : "play.fill")
+                            .scaledFont(size: 18)
+                            .foregroundStyle(Color.brandOnButton)
+                    }
+                }
+                .frame(width: 44, height: 44)
+                .background(Circle().fill(Color.brandButton))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(speech.isPlaying ? "Пауза" : "Читать вслух")
+            Button { isShowingPlayer = true } label: {
+                VStack(alignment: .leading, spacing: 5) {
+                    ProgressView(value: fraction)
+                        .tint(Color.brandButton)
+                    Text("Озвучка · \(chapterHeadline)")
+                        .scaledFont(size: 11)
+                        .foregroundStyle(Color.brandMuted)
+                        .lineLimit(1)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Открыть плеер")
+            Text(speechSpeed == 1 ? "1×" : "\(speechSpeed.formatted(.number.locale(Locale(identifier: "ru_RU"))))×")
+                .scaledFont(size: 13, weight: .semibold)
+                .foregroundStyle(Color.brandOnSoft)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 8)
+        .background(Color.brandFill)
+        .overlay(alignment: .top) { LXDivider() }
     }
 
     private func barButton(_ icon: String, _ title: String, action: @escaping () -> Void) -> some View {
