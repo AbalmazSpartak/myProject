@@ -152,7 +152,7 @@ struct LiveAudioCard: View {
         }
         isSearching = true
         defer { isSearching = false }
-        found = await LiveAudioLookup.recordings(for: book)
+        found = await LiveAudioLookup.recordings(for: book) ?? []
     }
 
     private func info(_ audiobook: LibriVox.Audiobook) -> String {

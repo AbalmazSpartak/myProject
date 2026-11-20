@@ -14,10 +14,11 @@ enum LiveAudioLookup {
         gutenbergID.flatMap { cache[$0] }
     }
 
-    static func recordings(for book: Book) async -> [LibriVox.Audiobook] {
+    /// nil — LibriVox не ответил (не запоминаем, в следующий раз спросим снова)
+    static func recordings(for book: Book) async -> [LibriVox.Audiobook]? {
         guard let id = book.gutenbergID else { return [] }
         if let cached = cache[id] { return cached }
-        let found = (try? await LibriVox.recordings(gutenbergID: id, title: book.title)) ?? []
+        guard let found = try? await LibriVox.recordings(gutenbergID: id, title: book.title) else { return nil }
         cache[id] = found
         return found
     }
@@ -111,7 +112,7 @@ extension NeuralVoice {
 }
 
 /// Кнопка «Голос ▾» в плеерах: два голоса — по умолчанию (нейроголос из «Озвучки») и живой (запись LibriVox).
-/// Живой записи у книги нет — кнопки нет
+/// Видна всегда; пока запись ищется или её нет — пункт «Живой голос» с пояснением
 struct BookVoiceMenu: View {
     let book: Book
     let language: String
@@ -119,7 +120,11 @@ struct BookVoiceMenu: View {
     let onNeural: (String) -> Void
     let onLive: (LibriVox.Audiobook) -> Void
 
-    @State private var live: LibriVox.Audiobook?
+    private enum LiveState {
+        case searching, found(LibriVox.Audiobook), none, failed
+    }
+
+    @State private var live: LiveState = .searching
 
     /// Нейроголос, выбранный в «Озвучке»
     private var defaultChoice: String { NeuralVoice.shared.bookChoice(language) }
@@ -130,32 +135,39 @@ struct BookVoiceMenu: View {
     }
 
     var body: some View {
-        Group {
-            if let live {
-                Menu {
-                    Button { onNeural(defaultChoice) } label: {
-                        checked("Голос по умолчанию · \(NeuralVoice.shared.bookVoiceTitle(language))", !isLive)
-                    }
-                    Button { onLive(live) } label: {
-                        checked("Живой голос · \(live.readerText.capitalizedFirst)", isLive)
-                    }
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: isLive ? "person.wave.2" : "waveform")
-                        Text(isLive ? "Живой голос" : "Голос по умолчанию")
-                            .lineLimit(1)
-                        Image(systemName: "chevron.down")
-                            .font(.caption.weight(.semibold))
-                    }
-                    .scaledFont(size: 14, weight: .medium)
-                    .foregroundStyle(Color.brandTint)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 7)
-                    .background(Capsule().fill(Color.brandFill))
-                }
-                .accessibilityLabel(isLive ? "Голос: живой" : "Голос: по умолчанию")
+        Menu {
+            Button { onNeural(defaultChoice) } label: {
+                checked("Голос по умолчанию · \(NeuralVoice.shared.bookVoiceTitle(language))", !isLive)
             }
+            switch live {
+            case .found(let audiobook):
+                Button { onLive(audiobook) } label: {
+                    checked("Живой голос · \(audiobook.readerText.capitalizedFirst)", isLive)
+                }
+            case .searching:
+                Text("Живой голос — ищу запись…")
+            case .none:
+                Text(book.gutenbergID == nil ? "Живой голос — только для книг из каталога" : "Живой голос — для этой книги записи нет")
+            case .failed:
+                Button { Task { await load() } } label: {
+                    Label("Живой голос — LibriVox не ответил. Попробовать снова", systemImage: "arrow.clockwise")
+                }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: isLive ? "person.wave.2" : "waveform")
+                Text(isLive ? "Живой голос" : "Голос по умолчанию")
+                    .lineLimit(1)
+                Image(systemName: "chevron.down")
+                    .font(.caption.weight(.semibold))
+            }
+            .scaledFont(size: 14, weight: .medium)
+            .foregroundStyle(Color.brandTint)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 7)
+            .background(Capsule().fill(Color.brandFill))
         }
+        .accessibilityLabel(isLive ? "Голос: живой" : "Голос: по умолчанию")
         .task { await load() }
     }
 
@@ -167,11 +179,22 @@ struct BookVoiceMenu: View {
     /// Выбранная для книги запись, иначе лучшая найденная (первой идёт та, где читает один человек)
     private func load() async {
         if let saved = LiveAudioStore.audiobook(book: book.id) {
-            live = saved
+            live = .found(saved)
             return
         }
-        guard book.gutenbergID != nil else { return }
-        live = LiveAudioLookup.cached(gutenbergID: book.gutenbergID)?.first
-        if live == nil { live = await LiveAudioLookup.recordings(for: book).first }
+        guard book.gutenbergID != nil else {
+            live = .none
+            return
+        }
+        if let cached = LiveAudioLookup.cached(gutenbergID: book.gutenbergID) {
+            live = cached.first.map(LiveState.found) ?? .none
+            return
+        }
+        live = .searching
+        guard let found = await LiveAudioLookup.recordings(for: book) else {
+            live = .failed
+            return
+        }
+        live = found.first.map(LiveState.found) ?? .none
     }
 }
