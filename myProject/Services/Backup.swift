@@ -137,7 +137,7 @@ enum BackupError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .unreadable: return "Это не резервная копия WordLearner или файл повреждён."
+        case .unreadable: return "Это не резервная копия LexiStream или файл повреждён."
         case .newerVersion: return "Копия сделана в более новой версии приложения — обновите приложение."
         }
     }
@@ -244,7 +244,7 @@ enum Backup {
     }
 
     static func fileName(for date: Date = Date()) -> String {
-        "WordLearner-\(date.formatted(.iso8601.year().month().day()))"
+        "LexiStream-\(date.formatted(.iso8601.year().month().day()))"
     }
 
     // MARK: - Восстановление: текущее заменяется тем, что в копии

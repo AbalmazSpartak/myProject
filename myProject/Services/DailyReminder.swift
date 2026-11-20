@@ -58,7 +58,7 @@ enum DailyReminder {
         let center = UNUserNotificationCenter.current()
         for (weekday, identifier) in zip(1...7, identifiers) {
             let content = UNMutableNotificationContent()
-            content.title = "WordLearner"
+            content.title = "LexiStream"
             content.body = message(weekday: weekday)
             content.sound = .default
 

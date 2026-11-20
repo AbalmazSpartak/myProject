@@ -21,6 +21,8 @@ struct ClozeView: View {
     @State private var isApproachFinished = false
     @State private var approachAnswered = 0
     @State private var approachCorrect = 0
+    /// Слова с ошибками в этом подходе — в итоге «Вернутся позже»
+    @State private var missed: [Word] = []
 
     @FocusState private var isInputFocused: Bool
 
@@ -40,22 +42,24 @@ struct ClozeView: View {
         VStack(spacing: 0) {
             header
 
-            Spacer()
-
             if isApproachFinished {
-                ApproachDoneCard(
-                    summary: "Верно \(approachCorrect) из \(approachAnswered)",
-                    tint: .pink,
+                TrainingSummary(
+                    subtitle: "Верно \(approachCorrect) из \(approachAnswered).",
+                    tiles: [
+                        .init(symbol: "checkmark.circle", color: .statusKnown, value: approachCorrect, title: "Верно"),
+                        .init(symbol: "xmark.circle", color: .statusLearning, value: approachAnswered - approachCorrect, title: "Ошибки")
+                    ],
+                    laterTitle: "Вернутся позже",
+                    later: missed,
                     onContinue: { withAnimation { startSession() } },
                     onExit: { dismiss() }
                 )
+                .transition(.opacity)
             } else if let word = currentWord, let parts = word.clozeParts {
                 card(for: word, parts: parts)
             } else {
-                emptyState
+                TrainingEmpty(systemImage: "text.badge.xmark", text: "Нет слов с примерами в выбранных словарях")
             }
-
-            Spacer()
         }
         .background(Color.brandBackground.ignoresSafeArea())
         .onAppear {
@@ -68,133 +72,100 @@ struct ClozeView: View {
 
     private var header: some View {
         HStack {
-            Button(action: { dismiss() }) {
-                HStack(spacing: 4) {
-                    Image(systemName: "chevron.left")
-                        .scaledFont(size: 16, weight: .semibold)
-                    Text("Обзор")
-                        .scaledFont(size: 17, weight: .semibold, design: .rounded)
-                }
-                .foregroundColor(.pink)
-            }
-
             Spacer()
-
             HelpButton(topic: .cloze)
-                .padding(.trailing, 8)
-
-            Text("Верно: \(correctCount)/\(totalAnswered)")
-                .scaledFont(size: 13, weight: .bold, design: .rounded)
-                .foregroundColor(Color.brandMuted)
+            LXTextButton(title: "Закончить", isMuted: true) { dismiss() }
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 10)
-    }
-
-    private var emptyState: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "text.badge.xmark")
-                .font(.system(size: 48))
-                .foregroundColor(Color.brandMuted)
-            Text("Нет слов с примерами в выбранных словарях.")
-                .font(.system(.body, design: .rounded))
-                .foregroundColor(Color.brandMuted)
-                .multilineTextAlignment(.center)
-        }
-        .padding(.horizontal, 40)
+        .padding(.horizontal, 16)
+        .padding(.top, 6)
+        .frame(minHeight: 52)
     }
 
     private func card(for word: Word, parts: (before: String, answer: String, after: String)) -> some View {
-        VStack(spacing: 20) {
-            ClozeSentence(parts: parts, revealed: result != nil, showHint: showHint)
-                .padding(.top, 28)
-                .padding(.horizontal, 20)
-
-            VStack(spacing: 4) {
-                Text(word.russian)
-                    .scaledFont(size: 18, weight: .semibold, design: .rounded)
-                    .foregroundColor(.brandDark)
-                PartOfSpeechBadge(word: word)
-                // Само слово не подсказываем — только что в пропуске оно в изменённой форме
-                if result == nil, word.exampleForm != nil {
-                    Text("В пропуске — изменённая форма слова (-s, -ed, -ing…). Словарная форма тоже засчитается.")
-                        .scaledFont(size: 13)
-                        .foregroundColor(Color.brandMuted)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 16)
+        VStack(spacing: 0) {
+            TrainingCard(score: totalAnswered == 0 ? "" : "Верно \(correctCount) из \(totalAnswered)", level: word.cefrLevel) {
+                ScrollView {
+                    VStack(spacing: 14) {
+                        ClozeSentence(parts: parts, revealed: result != nil, showHint: showHint)
+                            .padding(.top, 20)
+                        VStack(spacing: 4) {
+                            Text(word.russian)
+                                .scaledFont(size: 18, weight: .semibold)
+                                .foregroundStyle(Color.brandDark)
+                            PartOfSpeechBadge(word: word)
+                            // Само слово не подсказываем — только что в пропуске оно в изменённой форме
+                            if result == nil, word.exampleForm != nil {
+                                Text("В пропуске — изменённая форма слова (-s, -ed, -ing…). Словарная форма тоже засчитается.")
+                                    .scaledFont(size: 13)
+                                    .foregroundStyle(Color.brandMuted)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 8)
+                            }
+                        }
+                        if let result {
+                            ClozeResultBanner(result: result, answer: parts.answer)
+                                .transition(.opacity)
+                                .padding(.top, 6)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
                 }
+                .scrollBounceBehavior(.basedOnSize)
             }
+            .padding(.horizontal, 16)
 
-            Divider().padding(.horizontal, 10)
-
-            answerField(answer: parts.answer, word: word)
-
-            if let result {
-                ClozeResultBanner(result: result, answer: parts.answer)
-                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
+            VStack(spacing: 10) {
+                answerField(answer: parts.answer, word: word)
+                actionButton(answer: parts.answer, word: word)
             }
-
-            actionButton(answer: parts.answer, word: word)
+            .padding(.horizontal, 16)
+            .padding(.top, 14)
+            .padding(.bottom, 12)
         }
-        .frame(maxWidth: .infinity)
-        .background(Color.cardBackground)
-        .cornerRadius(28)
-        .shadow(color: colorScheme == .dark ? Color.black.opacity(0.35) : Color.black.opacity(0.04), radius: 14, x: 0, y: 6)
-        .padding(.horizontal, 20)
     }
 
     private func answerField(answer: String, word: Word) -> some View {
         HStack(spacing: 10) {
-            TextField("Впишите слово...", text: $userInput)
-                .scaledFont(size: 18, weight: .semibold, design: .rounded)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
-                .background(Color.brandFill)
-                .cornerRadius(14)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(borderColor, lineWidth: 2)
-                )
-                .focused($isInputFocused)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .disabled(result != nil)
-                .onSubmit { result == nil ? check(answer: answer, word: word) : next() }
+            LXField(label: "Пропущенное слово") {
+                TextField("Впишите слово", text: $userInput)
+                    .scaledFont(size: 18, weight: .medium)
+                    .foregroundStyle(Color.brandDark)
+                    .focused($isInputFocused)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .submitLabel(result == nil ? .done : .next)
+                    .disabled(result != nil)
+                    .onSubmit { result == nil ? check(answer: answer, word: word) : next() }
+            }
+            .overlay {
+                if result != nil || isInputFocused {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(borderColor, lineWidth: 1.5)
+                }
+            }
 
             if result == nil {
-                Button(action: { withAnimation { showHint = true } }) {
-                    Image(systemName: "lightbulb.fill")
-                        .scaledFont(size: 20)
-                        .foregroundColor(showHint ? Color.brandMuted.opacity(0.4) : Color.brandTint)
+                Button { withAnimation { showHint = true } } label: {
+                    LXIconLabel(systemImage: "lightbulb", label: "Подсказка: первая буква", isSoft: !showHint)
+                        .opacity(showHint ? 0.4 : 1)
                 }
+                .buttonStyle(.plain)
                 .disabled(showHint)
-                .accessibilityLabel("Подсказка: первая буква")
             }
         }
-        .padding(.horizontal, 16)
     }
 
     private func actionButton(answer: String, word: Word) -> some View {
         let isEmpty = userInput.trimmingCharacters(in: .whitespaces).isEmpty
-        return Button(action: { result == nil ? check(answer: answer, word: word) : next() }) {
-            Text(result == nil ? "Проверить" : "Дальше")
-                .scaledFont(size: 16, weight: .bold, design: .rounded)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(result == nil && isEmpty ? Color.pink.opacity(0.4) : Color.pink)
-                .foregroundColor(.white)
-                .cornerRadius(14)
+        return LXButton(title: result == nil ? "Проверить" : "Дальше", isEnabled: !(result == nil && isEmpty)) {
+            result == nil ? check(answer: answer, word: word) : next()
         }
-        .disabled(result == nil && isEmpty)
-        .padding(.horizontal, 16)
-        .padding(.bottom, 20)
     }
 
     private var borderColor: Color {
         switch result {
-        case nil: return isInputFocused ? .pink : Color.brandDark.opacity(0.15)
-        case .wrong: return .red
-        default: return .green
+        case nil: return Color.brandTint
+        case .wrong: return Color.statusLearning
+        default: return Color.statusKnown
         }
     }
 
@@ -206,6 +177,7 @@ struct ClozeView: View {
         isApproachFinished = false
         approachAnswered = 0
         approachCorrect = 0
+        missed = []
         resetQuestion()
     }
 
@@ -229,6 +201,8 @@ struct ClozeView: View {
         if outcome != .wrong {
             correctCount += 1
             approachCorrect += 1
+        } else {
+            missed.append(word)
         }
         DailyStudy.record(word, rating: outcome == .wrong ? .again : .good)
         UINotificationFeedbackGenerator().notificationOccurred(outcome == .wrong ? .error : .success)
@@ -279,22 +253,22 @@ private struct ClozeSentence: View {
 
     var body: some View {
         (Text(parts.before) + middle + Text(parts.after))
-            .scaledFont(size: 22, weight: .regular, design: .serif)
-            .foregroundColor(.primary)
+            .scaledFont(size: 26, weight: .regular, design: .serif)
+            .foregroundColor(.brandDark)
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
     }
 
     private var middle: Text {
         if revealed {
-            return Text(parts.answer).bold().foregroundColor(.pink)
+            return Text(parts.answer).bold().foregroundColor(.brandTint)
         }
         // Длина пропуска подсказывает длину слова; с подсказкой видна первая буква
         let blankLength = max(5, parts.answer.count)
         let blank = showHint
             ? String(parts.answer.prefix(1)) + String(repeating: "_", count: blankLength - 1)
             : String(repeating: "_", count: blankLength)
-        return Text(blank).bold().foregroundColor(.pink)
+        return Text(blank).bold().foregroundColor(.brandTint)
     }
 }
 
@@ -307,16 +281,16 @@ private struct ClozeResultBanner: View {
     var body: some View {
         VStack(spacing: 6) {
             HStack(spacing: 8) {
-                Image(systemName: result == .wrong ? "xmark.circle.fill" : "checkmark.circle.fill")
+                Image(systemName: result == .wrong ? "xmark.circle" : "checkmark.circle.fill")
                     .scaledFont(size: 22)
                 Text(title)
-                    .scaledFont(size: 18, weight: .bold, design: .rounded)
+                    .scaledFont(size: 18, weight: .semibold)
             }
-            .foregroundColor(result == .wrong ? .red : .green)
+            .foregroundStyle(result == .wrong ? Color.statusLearning : Color.statusKnown)
 
             if result != .exact {
                 Text(result == .wrong ? "Правильно: \(answer)" : "В этом предложении нужна форма: \(answer)")
-                    .scaledFont(size: 14, weight: .medium, design: .rounded)
+                    .scaledFont(size: 14, weight: .medium)
                     .foregroundColor(Color.brandMuted)
             }
         }
@@ -324,8 +298,8 @@ private struct ClozeResultBanner: View {
 
     private var title: String {
         switch result {
-        case .exact: return "Правильно!"
-        case .baseForm: return "Почти!"
+        case .exact: return "Верно"
+        case .baseForm: return "Почти"
         case .wrong: return "Неверно"
         }
     }

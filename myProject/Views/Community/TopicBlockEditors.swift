@@ -249,7 +249,7 @@ struct TopicAudioEditor: View {
     @ViewBuilder
     private var recordingControls: some View {
         if recorder.isDenied {
-            Text("Нет доступа к микрофону. Разрешите его в Настройках iPhone → WordLearner.")
+            Text("Нет доступа к микрофону. Разрешите его в Настройках iPhone → LexiStream.")
                 .font(.footnote)
                 .foregroundColor(Color.brandMuted)
         }
