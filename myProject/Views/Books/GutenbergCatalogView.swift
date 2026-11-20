@@ -8,6 +8,30 @@ enum CatalogKind: String, CaseIterable, Identifiable {
     var title: String { self == .books ? "Книги" : "Аудиокниги" }
 }
 
+/// Порядок аудиокниг. У LibriVox нет популярности и оценок — сортируем по тому, что есть
+enum AudioSort: String, CaseIterable, Identifiable {
+    case recommended, shorter, longer, title, newest
+    var id: Self { self }
+    var title: String {
+        switch self {
+        case .recommended: "Рекомендуемые"
+        case .shorter: "Короче"
+        case .longer: "Длиннее"
+        case .title: "По названию"
+        case .newest: "Новые записи"
+        }
+    }
+    var icon: String {
+        switch self {
+        case .recommended: "star"
+        case .shorter: "clock"
+        case .longer: "clock.fill"
+        case .title: "textformat"
+        case .newest: "sparkles"
+        }
+    }
+}
+
 /// Каталог Project Gutenberg: самые популярные книги или поиск; книга скачивается в библиотеку одной кнопкой.
 /// «Аудиокниги» — записи LibriVox: в библиотеку ложится текст из Gutenberg вместе с живой озвучкой
 struct GutenbergCatalogView: View {
@@ -31,6 +55,7 @@ struct GutenbergCatalogView: View {
     @State private var pendingReader: LibriVox.Audiobook?
     /// Меняется после выбора записи — строки перечитывают, какая запись у книги
     @State private var audioVersion = 0
+    @AppStorage("audio_catalog_sort") private var audioSort: AudioSort = .recommended
 
     var body: some View {
         NavigationStack {
@@ -103,6 +128,18 @@ struct GutenbergCatalogView: View {
             }
             .task { await load() }
             .toolbar {
+                if kind == .audiobooks {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Menu {
+                            Picker("Сортировка", selection: $audioSort) {
+                                ForEach(AudioSort.allCases) { Label($0.title, systemImage: $0.icon).tag($0) }
+                            }
+                        } label: {
+                            Image(systemName: "arrow.up.arrow.down")
+                        }
+                        .accessibilityLabel("Сортировка: \(audioSort.title)")
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Готово") { dismiss() }
                         .fontWeight(.bold)
@@ -196,10 +233,52 @@ struct GutenbergCatalogView: View {
                 .foregroundStyle(Color.brandMuted)
                 .listRowBackground(Color.clear)
         } else {
-            ForEach(audiobooks) { audiobook in
+            ForEach(sortedAudiobooks) { audiobook in
                 audiobookRow(audiobook)
                     .listRowBackground(Color.cardBackground)
             }
+        }
+    }
+
+    /// Сколько человек читает: в готовом списке чтецы не записаны — там везде один
+    private static func readerCount(_ audiobook: LibriVox.Audiobook) -> Int { max(audiobook.readers.count, 1) }
+
+    private var sortedAudiobooks: [LibriVox.Audiobook] {
+        _ = audioVersion
+        // Какая запись выбрана у книг из библиотеки: номер Gutenberg → номер записи LibriVox
+        var mine: [Int: Int] = [:]
+        for book in books {
+            if let id = book.gutenbergID, let saved = LiveAudioStore.audiobook(book: book.id) { mine[id] = saved.id }
+        }
+        func isMine(_ audiobook: LibriVox.Audiobook) -> Bool { audiobook.gutenbergID.map { mine[$0] == audiobook.id } ?? false }
+        let list = audiobooks
+        switch audioSort {
+        case .recommended:
+            // Записи одной книги — вместе; книги, где запись уже у вас, — первыми; внутри книги: ваша, потом один чтец
+            var groupOrder: [Int: Int] = [:]
+            for (index, audiobook) in list.enumerated() {
+                let key = audiobook.gutenbergID ?? -audiobook.id
+                if groupOrder[key] == nil { groupOrder[key] = index }
+            }
+            let mineGroups = Set(list.filter(isMine).compactMap(\.gutenbergID))
+            return list.sorted { a, b in
+                let ka = a.gutenbergID ?? -a.id, kb = b.gutenbergID ?? -b.id
+                let ga = (mineGroups.contains(ka) ? 0 : 1, groupOrder[ka] ?? 0)
+                let gb = (mineGroups.contains(kb) ? 0 : 1, groupOrder[kb] ?? 0)
+                if ga != gb { return ga < gb }
+                return (isMine(a) ? 0 : 1, Self.readerCount(a), a.id) < (isMine(b) ? 0 : 1, Self.readerCount(b), b.id)
+            }
+        case .shorter:
+            return list.sorted { ($0.seconds, $0.id) < ($1.seconds, $1.id) }
+        case .longer:
+            return list.sorted { ($0.seconds, $1.id) > ($1.seconds, $0.id) }
+        case .title:
+            return list.sorted {
+                let order = $0.title.localizedCaseInsensitiveCompare($1.title)
+                return order == .orderedSame ? Self.readerCount($0) < Self.readerCount($1) : order == .orderedAscending
+            }
+        case .newest:
+            return list.sorted { $0.id > $1.id }
         }
     }
 
