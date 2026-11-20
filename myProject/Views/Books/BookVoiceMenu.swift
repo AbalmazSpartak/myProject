@@ -110,7 +110,8 @@ extension NeuralVoice {
     }
 }
 
-/// Кнопка «Голос ▾» в плеерах: нейроголоса и живые записи LibriVox этой книги — переключиться одним нажатием
+/// Кнопка «Голос ▾» в плеерах: два голоса — по умолчанию (нейроголос из «Озвучки») и живой (запись LibriVox).
+/// Живой записи у книги нет — кнопки нет
 struct BookVoiceMenu: View {
     let book: Book
     let language: String
@@ -118,70 +119,44 @@ struct BookVoiceMenu: View {
     let onNeural: (String) -> Void
     let onLive: (LibriVox.Audiobook) -> Void
 
-    @State private var recordings: [LibriVox.Audiobook] = []
-    @State private var saved: LibriVox.Audiobook?
-    @State private var isSearching = false
+    @State private var live: LibriVox.Audiobook?
 
-    private var neural: [(id: String, title: String)] { NeuralVoice.shared.bookChoices(language: language) }
-
-    /// Сохранённая запись — первой, потом остальные найденные
-    private var live: [LibriVox.Audiobook] {
-        guard let saved else { return recordings }
-        return [saved] + recordings.filter { $0.id != saved.id }
-    }
-
-    var body: some View {
-        Menu {
-            Section("Нейросетевой голос") {
-                ForEach(neural, id: \.id) { choice in
-                    Button { onNeural(choice.id) } label: {
-                        checked(choice.title, current == .neural(choice.id))
-                    }
-                }
-            }
-            if !live.isEmpty || isSearching {
-                Section("Живой голос · LibriVox") {
-                    ForEach(live) { audiobook in
-                        Button { onLive(audiobook) } label: {
-                            checked("\(audiobook.readerText.capitalizedFirst) · \(LibriVox.durationText(audiobook.seconds))",
-                                    current == .live(audiobook.id))
-                        }
-                    }
-                    if isSearching { Text("Ищу записи…") }
-                }
-            }
-        } label: {
-            HStack(spacing: 6) {
-                Image(systemName: isLive ? "person.wave.2" : "waveform")
-                Text(currentTitle)
-                    .lineLimit(1)
-                Image(systemName: "chevron.down")
-                    .font(.caption.weight(.semibold))
-            }
-            .scaledFont(size: 14, weight: .medium)
-            .foregroundStyle(Color.brandTint)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 7)
-            .background(Capsule().fill(Color.brandFill))
-        }
-        .accessibilityLabel("Голос: \(currentTitle)")
-        .task { await load() }
-    }
+    /// Нейроголос, выбранный в «Озвучке»
+    private var defaultChoice: String { NeuralVoice.shared.bookChoice(language) }
 
     private var isLive: Bool {
         if case .live = current { return true }
         return false
     }
 
-    private var currentTitle: String {
-        switch current {
-        case .neural(let id):
-            return neural.first { $0.id == id }?.title.components(separatedBy: " · ").prefix(2).joined(separator: " · ")
-                ?? NeuralVoice.shared.bookVoiceTitle(language)
-        case .live(let id):
-            let reader = live.first { $0.id == id }?.readers.first
-            return reader.map { "Живой голос · \($0)" } ?? "Живой голос"
+    var body: some View {
+        Group {
+            if let live {
+                Menu {
+                    Button { onNeural(defaultChoice) } label: {
+                        checked("Голос по умолчанию · \(NeuralVoice.shared.bookVoiceTitle(language))", !isLive)
+                    }
+                    Button { onLive(live) } label: {
+                        checked("Живой голос · \(live.readerText.capitalizedFirst)", isLive)
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: isLive ? "person.wave.2" : "waveform")
+                        Text(isLive ? "Живой голос" : "Голос по умолчанию")
+                            .lineLimit(1)
+                        Image(systemName: "chevron.down")
+                            .font(.caption.weight(.semibold))
+                    }
+                    .scaledFont(size: 14, weight: .medium)
+                    .foregroundStyle(Color.brandTint)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(Capsule().fill(Color.brandFill))
+                }
+                .accessibilityLabel(isLive ? "Голос: живой" : "Голос: по умолчанию")
+            }
         }
+        .task { await load() }
     }
 
     @ViewBuilder
@@ -189,15 +164,14 @@ struct BookVoiceMenu: View {
         if isOn { Label(title, systemImage: "checkmark") } else { Text(title) }
     }
 
+    /// Выбранная для книги запись, иначе лучшая найденная (первой идёт та, где читает один человек)
     private func load() async {
-        saved = LiveAudioStore.audiobook(book: book.id)
-        if let cached = LiveAudioLookup.cached(gutenbergID: book.gutenbergID) {
-            recordings = cached
+        if let saved = LiveAudioStore.audiobook(book: book.id) {
+            live = saved
             return
         }
         guard book.gutenbergID != nil else { return }
-        isSearching = true
-        recordings = await LiveAudioLookup.recordings(for: book)
-        isSearching = false
+        live = LiveAudioLookup.cached(gutenbergID: book.gutenbergID)?.first
+        if live == nil { live = await LiveAudioLookup.recordings(for: book).first }
     }
 }
