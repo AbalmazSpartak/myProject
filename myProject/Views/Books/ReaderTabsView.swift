@@ -85,18 +85,23 @@ private struct ReaderProfileView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+            // Отступы — как у профиля «Обучения»: карточка на 8 ниже переключателя, промежутки 20
+            VStack(alignment: .leading, spacing: 20) {
                 ProfileHeaderCard()
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
                 ProfileSectionTabs(selection: $section)
-                    .padding(.horizontal, -20)
-                switch section {
-                case .account:
-                    ProfileAccountTab()
-                case .stats:
-                    readingStats
+                Group {
+                    switch section {
+                    case .account:
+                        ProfileAccountTab()
+                    case .stats:
+                        readingStats
+                    }
                 }
+                .padding(.horizontal, 20)
+                Spacer().frame(height: 20)
             }
-            .padding(20)
         }
         .background(Color.brandBackground.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
