@@ -53,7 +53,7 @@ struct SpeechSettingsView: View {
                 Label("Прослушать", systemImage: "speaker.wave.2.fill")
             }
         } header: {
-            Text("Слова")
+            SettingsView.header("Слова")
         } footer: {
             Text("Как приложение произносит слова: в карточках, тренировках и при нажатии на слово.")
                 .textSelection(.enabled)
@@ -116,7 +116,7 @@ struct SpeechSettingsView: View {
                 }
             }
         } header: {
-            Text("Книги")
+            SettingsView.header("Книги")
         } footer: {
             Text("Как читаются книги вслух. Голос и скорость выбираются для каждого языка книги отдельно от слов.")
                 .textSelection(.enabled)

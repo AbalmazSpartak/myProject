@@ -31,7 +31,7 @@ struct BackupSection: View {
     @State private var message: String?
 
     var body: some View {
-        Section(header: Text("Резервная копия"),
+        Section(header: SettingsView.header("Резервная копия"),
                 footer: Text("Копия — один файл: сохраните его в iCloud Drive, Google Drive (если установлено приложение) или на iPhone. В копию входят прогресс слов, свои слова и словари, профиль, статистика, настройки и ваши темы. Картинки к словам загружаются заново сами.")) {
             Toggle("Включить книги и аудио", isOn: $includeMedia)
 

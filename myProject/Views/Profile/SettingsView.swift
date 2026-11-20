@@ -31,6 +31,24 @@ struct SettingsView: View {
     /// Пользователь запретил уведомления — подсказываем, где их включить
     @State private var notificationsDenied = false
 
+    /// Заголовок раздела по холсту: мелкие прописные, приглушённые
+    static func header(_ text: String) -> some View {
+        Text(text.uppercased())
+            .tracking(0.5)
+            .scaledFont(size: 12, weight: .semibold)
+            .foregroundStyle(Color.brandMuted)
+            .textCase(nil)
+    }
+
+    /// Строка-ссылка со значком основного цвета
+    private func link(_ title: String, systemImage: String) -> some View {
+        Label {
+            Text(title)
+        } icon: {
+            Image(systemName: systemImage).foregroundStyle(Color.brandTint)
+        }
+    }
+
     /// Обучение: перевод, подход, словари, перевод слов из книг — на отдельном экране
     @ViewBuilder
     private var learningLink: some View {
@@ -38,7 +56,7 @@ struct SettingsView: View {
             NavigationLink {
                 LearningSettingsView()
             } label: {
-                Label("Обучение", systemImage: "graduationcap.fill")
+                link("Обучение", systemImage: "graduationcap")
             }
         } footer: {
             Text("Раздел, где вы настраиваете занятия: направление перевода, размер подхода, словари, перевод слов из книг.")
@@ -53,7 +71,7 @@ struct SettingsView: View {
             NavigationLink {
                 SpeechSettingsView(mode: mode)
             } label: {
-                Label("Озвучка", systemImage: "speaker.wave.2.fill")
+                link("Озвучка", systemImage: "speaker.wave.2")
             }
         } footer: {
             Text("Раздел, где вы настраиваете, как приложение произносит слова и читает книги вслух.")
@@ -75,7 +93,7 @@ struct SettingsView: View {
                 .pickerStyle(.segmented)
             }
         } header: {
-            Text("Режим")
+            Self.header("Режим")
         } footer: {
             Text(readerOnly
                  ? "Приложение работает как читалка: библиотека, аудио и закладки. Раздел «Обучение» и переключатель режимов скрыты, слова и прогресс сохраняются."
@@ -137,7 +155,7 @@ struct SettingsView: View {
                 }
             }
         } header: {
-            Text("Цвета приложения")
+            Self.header("Цвета приложения")
         } footer: {
             Text("Основной цвет — вкладки, значки и подсветка; цвет кнопок — «Читать», «Слушать», «Войти» и другие. После «Применить» приложение перерисуется.")
         }
@@ -167,7 +185,7 @@ struct SettingsView: View {
     /// Тема и вид «Обзора»
     @ViewBuilder
     private var appearanceSection: some View {
-        Section(header: Text("Оформление")) {
+        Section(header: Self.header("Оформление")) {
             Picker("Тема оформления", selection: $selectedTheme) {
                 Text("Системная").tag("system")
                 Text("Светлая").tag("light")
@@ -213,7 +231,7 @@ struct SettingsView: View {
                             DatePicker("Время", selection: reminderDate, displayedComponents: .hourAndMinute)
                         }
                     } header: {
-                        Text("Напоминание")
+                        Self.header("Напоминание")
                     } footer: {
                         Text(notificationsDenied
                              ? "Уведомления запрещены — включите их в Настройках iPhone → WordLearner → Уведомления."
@@ -229,7 +247,7 @@ struct SettingsView: View {
                             AccountView()
                         } label: {
                             HStack {
-                                Label("Аккаунт", systemImage: "person.crop.circle")
+                                link("Аккаунт", systemImage: "person.crop.circle")
                                 Spacer()
                                 Text(Account.shared.email ?? "Войти").foregroundColor(Color.brandMuted)
                             }
@@ -250,14 +268,22 @@ struct SettingsView: View {
                 .listRowBackground(Color.cardBackground)
             }
             .brandListBackground()
+            .tint(Color.brandTint)
+            .listRowSeparatorTint(Color.brandBorder)
             .navigationTitle("Настройки")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Настройки")
+                        .scaledFont(size: 20, weight: .semibold, design: .serif)
+                        .foregroundStyle(Color.brandDark)
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Готово") {
                         dismiss()
                     }
-                    .fontWeight(.bold)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.brandTint)
                 }
             }
         }

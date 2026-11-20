@@ -58,7 +58,7 @@ struct NeuralVoiceSettingsView: View {
                         Button("Удалить голос", role: .destructive) { isConfirmingRemove = true }
                     }
                 } header: {
-                    Text("Голос Kokoro")
+                    SettingsView.header("Голос Kokoro")
                 } footer: {
                     Text("Звучит живее системного")
                         .textSelection(.enabled)
@@ -68,7 +68,7 @@ struct NeuralVoiceSettingsView: View {
                     Section {
                         kokoroMLStatus
                     } header: {
-                        Text("Нейроядро Kokoro — для озвучки книг")
+                        SettingsView.header("Нейроядро Kokoro — для озвучки книг")
                     } footer: {
                         Text("Английские книги без пауз, подсвечивается каждое слово. Скачивается отдельно (\(KokoroML.downloadSize)).")
                             .textSelection(.enabled)
