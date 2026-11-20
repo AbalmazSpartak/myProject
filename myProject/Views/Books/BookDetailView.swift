@@ -35,23 +35,23 @@ struct BookDetailView: View {
     /// Средняя скорость чтения про себя, слов в минуту
     private static let wordsPerMinute = 220.0
 
-    private var coverWidth: CGFloat { PadLayout.isPad ? 200 : 150 }
+    private var coverWidth: CGFloat { PadLayout.isPad ? 200 : 168 }
 
     private var isStarted: Bool { book.position > 0 }
 
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                top
-                VStack(spacing: 20) {
+                cover
+                VStack(spacing: 0) {
                     titleBlock
-                    chips
-                    actions
-                    aboutCard
-                    audiobookCard
-                    if mode == .learning { dictionaryButton }
+                    chips.padding(.top, 14)
+                    actions.padding(.top, 18)
+                    aboutRows.padding(.top, 14)
+                    audiobookCard.padding(.top, 18)
+                    if mode == .learning { dictionaryButton.padding(.top, 12) }
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 24)
                 .padding(.top, 20)
                 .padding(.bottom, 40)
                 .frame(maxWidth: PadLayout.columnWidth)
@@ -84,113 +84,55 @@ struct BookDetailView: View {
         }
     }
 
-    // MARK: - Обложка
+    // MARK: - Обложка (по холсту «Страница книги»: по центру, без размытого фона)
 
-    /// Обложка по центру на размытом фоне из неё же; по бокам — главы и прочитанное
-    private var backdropHeight: CGFloat { coverWidth * 1.5 * 0.62 + 40 }
-
-    private var backdrop: some View {
-        Group {
-            if let data = book.coverData, let image = UIImage(data: data) {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .blur(radius: 28)
-                    .opacity(0.55)
-            } else {
-                Color.brandTint.opacity(0.35)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: backdropHeight, alignment: .center)
-        .clipped()
-    }
-
-    private var top: some View {
-        ZStack {
-            backdrop
-            .frame(maxHeight: .infinity, alignment: .top)
-            .mask(
-                LinearGradient(colors: [.black, .black, .clear], startPoint: .top, endPoint: .bottom)
-            )
-            .ignoresSafeArea(edges: .top)
-
-            HStack(alignment: .bottom, spacing: 0) {
-                stat(title: "Глав", value: details.map { "\($0.realChapters)" } ?? "—")
-                Color.clear
-                    .aspectRatio(2.0 / 3.0, contentMode: .fit)
-                    .frame(width: coverWidth)
-                    .overlay { BookCover(data: book.coverData, title: book.title) }
-                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                    .shadow(color: .black.opacity(0.25), radius: 12, x: 0, y: 6)
-                stat(title: "Прочитано", value: "\(Int((book.progress * 100).rounded()))%")
-            }
-            .padding(.horizontal, 12)
+    private var cover: some View {
+        Color.clear
+            .aspectRatio(2.0 / 3.0, contentMode: .fit)
+            .frame(width: coverWidth)
+            .overlay { BookCover(data: book.coverData, title: book.title) }
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .shadow(color: .black.opacity(0.25), radius: 12, x: 0, y: 8)
             .padding(.top, 8)
-        }
-        .frame(maxWidth: .infinity)
-        // Если потянуть страницу вниз, фон продолжается до самого верха: над ним зеркальные копии, шов не виден.
-        // В background — на раскладку не влияет
-        .background(alignment: .top) {
-            VStack(spacing: 0) {
-                ForEach(0..<3, id: \.self) { index in
-                    backdrop.scaleEffect(x: 1, y: index % 2 == 0 ? -1 : 1)
-                }
-            }
-            .offset(y: -backdropHeight * 3)
-        }
-    }
-
-    private func stat(title: String, value: String) -> some View {
-        VStack(spacing: 2) {
-            Text(title)
-                .scaledFont(size: 12)
-                .foregroundColor(Color.brandMuted)
-            Text(value)
-                .scaledFont(size: 20, weight: .bold)
-                .foregroundColor(.brandDark)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.bottom, 12)
     }
 
     // MARK: - Название и кнопки
 
     private var titleBlock: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 4) {
             Text(book.title)
-                .scaledFont(size: 24, weight: .bold, design: .serif)
-                .foregroundColor(.brandDark)
+                .scaledFont(size: 28, weight: .semibold, design: .serif)
+                .foregroundStyle(Color.brandDark)
                 .multilineTextAlignment(.center)
             if !book.author.isEmpty {
                 Text(book.author)
-                    .scaledFont(size: 16, weight: .medium)
-                    .foregroundColor(Color.brandMuted)
+                    .scaledFont(size: 14)
+                    .foregroundStyle(Color.brandMuted)
             }
-            ProgressView(value: book.progress)
-                .tint(Color.brandTint)
-                .padding(.top, 8)
-                .padding(.horizontal, 30)
         }
     }
 
-    /// Язык и сколько читать осталось
+    /// Язык, сколько прочитано, сколько читать осталось
     private var chips: some View {
-        HStack(spacing: 10) {
+        FlowLayout(spacing: 8) {
             if let details {
-                chip(Self.languageName(details.language))
-                chip(remainingText(details))
+                chip(Self.languageName(details.language), isSoft: true)
+            }
+            chip("Прочитано \(Int((book.progress * 100).rounded()))%", isSoft: false)
+            if let details {
+                chip(remainingText(details), isSoft: false)
             }
         }
+        .frame(maxWidth: .infinity)
     }
 
-    private func chip(_ text: String) -> some View {
+    private func chip(_ text: String, isSoft: Bool) -> some View {
         Text(text)
-            .scaledFont(size: 14, weight: .medium)
-            .foregroundColor(.brandDark)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .background(Capsule().fill(Color.brandFill))
+            .scaledFont(size: 12, weight: isSoft ? .semibold : .regular)
+            .foregroundStyle(isSoft ? Color.brandOnSoft : Color.brandMuted)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 5)
+            .background(Capsule().fill(isSoft ? Color.brandAccent : Color.brandFill))
     }
 
     private var actions: some View {
@@ -200,11 +142,11 @@ struct BookDetailView: View {
                 listenChapter = nil
                 isReading = true
             } label: {
-                Text(isStarted ? "Продолжить" : "Читать")
-                    .scaledFont(size: 17, weight: .semibold)
-                    .foregroundColor(.brandOnButton)
-                    .frame(maxWidth: .infinity, minHeight: 48)
-                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.brandButton))
+                Label(isStarted ? "Продолжить" : "Читать", systemImage: "book.closed")
+                    .scaledFont(size: 16, weight: .semibold)
+                    .foregroundStyle(Color.brandOnButton)
+                    .frame(maxWidth: .infinity, minHeight: 52)
+                    .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.brandButton))
             }
             Button {
                 listensOnOpen = true
@@ -212,11 +154,12 @@ struct BookDetailView: View {
                 isReading = true
             } label: {
                 Label("Слушать", systemImage: "headphones")
-                    .scaledFont(size: 17, weight: .semibold)
+                    .scaledFont(size: 16, weight: .semibold)
                     // Значок и слово — одним цветом вместе с рамкой кнопки
-                    .foregroundColor(.brandButton)
-                    .frame(maxWidth: .infinity, minHeight: 48)
-                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.brandButton, lineWidth: 1.5))
+                    .foregroundStyle(Color.brandButton)
+                    .frame(maxWidth: .infinity, minHeight: 52)
+                    .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.cardBackground))
+                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.brandButton, lineWidth: 1.5))
             }
         }
         .buttonStyle(.plain)
@@ -224,43 +167,38 @@ struct BookDetailView: View {
 
     // MARK: - О книге
 
-    private var aboutCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("О книге")
-                .scaledFont(size: 17, weight: .semibold)
-                .foregroundColor(.brandDark)
+    /// Строки со справкой, как на холсте: слева название, справа значение, между ними тонкие линии
+    private var aboutRows: some View {
+        VStack(spacing: 0) {
             if let details {
                 row("Язык", Self.languageName(details.language))
+                LXDivider()
                 row("Глав", "\(details.realChapters)")
+                LXDivider()
+                row("Слов в книге", details.words.formatted())
+                LXDivider()
                 row("Всего читать", duration(minutes: Double(details.words) / Self.wordsPerMinute))
             } else {
                 ProgressView()
                     .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
             }
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.cardBackground))
+        .frame(maxWidth: .infinity)
     }
 
     private func row(_ title: String, _ value: String) -> some View {
         HStack {
-            Text(title).foregroundColor(Color.brandMuted)
+            Text(title).foregroundStyle(Color.brandDark)
             Spacer()
-            Text(value).foregroundColor(.brandDark)
+            Text(value).foregroundStyle(Color.brandMuted)
         }
-        .scaledFont(size: 15)
+        .scaledFont(size: 14)
+        .padding(.vertical, 13)
     }
 
     private var dictionaryButton: some View {
-        Button { isShowingDictionary = true } label: {
-            Label("Слова из книги", systemImage: "text.book.closed")
-                .scaledFont(size: 16, weight: .semibold)
-                .foregroundColor(.brandTint)
-                .frame(maxWidth: .infinity, minHeight: 46)
-                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.cardBackground))
-        }
-        .buttonStyle(.plain)
+        LXButton(title: "Слова из книги", systemImage: "text.book.closed", style: .soft) { isShowingDictionary = true }
     }
 
     // MARK: - Озвучка
@@ -274,9 +212,7 @@ struct BookDetailView: View {
 
     private var audiobookCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Озвучка")
-                .scaledFont(size: 17, weight: .semibold)
-                .foregroundColor(.brandDark)
+            LXSectionLabel(text: "Озвучка")
             if let details {
                 if recorder.isRecording(book.id), let job = recorder.job {
                     ProgressView(value: job.fraction)
@@ -298,7 +234,7 @@ struct BookDetailView: View {
                     if let failure = recorder.failure, failure.bookID == book.id {
                         Text(failure.text)
                             .scaledFont(size: 13)
-                            .foregroundColor(.red)
+                            .foregroundStyle(Color.statusLearning)
                     }
                     if !complete {
                         audiobookButton(recordedChapters == 0 ? "Записать озвучку" : "Продолжить запись", systemImage: "arrow.down.circle") {
@@ -320,7 +256,8 @@ struct BookDetailView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.cardBackground))
+        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color.cardBackground))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
         .confirmationDialog("Удалить озвучку этой книги?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
             Button("Удалить", role: .destructive) {
                 AudiobookStore.delete(book: book.id)
@@ -422,7 +359,7 @@ struct BookDetailView: View {
         Button(role: role, action: action) {
             Label(title, systemImage: systemImage)
                 .scaledFont(size: 16, weight: .semibold)
-                .foregroundColor(role == .destructive ? .red : .brandTint)
+                .foregroundColor(role == .destructive ? Color.statusLearning : .brandTint)
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.brandFill))
         }
