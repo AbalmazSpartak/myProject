@@ -30,6 +30,9 @@ struct FlashcardsView: View {
     @State private var isApproachFinished = false
     @State private var approachAnswered = 0
     @State private var approachCorrect = 0
+    /// Сколько ответов каждой оценки в этом подходе и какие слова вернутся позже
+    @State private var ratingCounts: [FSRSRating: Int] = [:]
+    @State private var returnLater: [Word] = []
     @AppStorage(DailyNewWords.limitKey) private var newWordsPerDay = DailyNewWords.defaultLimit
     private let fsrs = FSRSCalculator()
     
@@ -51,20 +54,6 @@ struct FlashcardsView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Button(action: { dismiss() }) {
-                    HStack(spacing: 5) {
-                        Image(systemName: "chevron.left")
-                        Text("Обзор")
-                    }
-                    .scaledFont(size: 16, weight: .semibold, design: .rounded)
-                    .foregroundColor(Color.brandTint)
-                }
-                
-                Spacer()
-
-                HelpButton(topic: .flashcards)
-                    .padding(.trailing, 8)
-
                 TrainingFilterMenu(
                     current: currentFilter,
                     counts: counts,
@@ -72,138 +61,52 @@ struct FlashcardsView: View {
                     includesDue: true,
                     icon: "clock.badge.checkmark.fill",
                     tint: Color.brandTint,
-                    backgroundOpacity: 0.1,
+                    usesChipStyle: true,
                     onSelect: changeFilter
                 )
-            }
-            .padding(.horizontal, 24)
-            .padding(.top, 10)
-            
-            HStack {
+
                 Spacer()
-                Text("Повторено: \(reviewedCount)")
-                    .scaledFont(size: 13, weight: .bold, design: .rounded)
-                    .foregroundColor(Color.brandMuted)
+
+                HelpButton(topic: .flashcards)
+
+                LXTextButton(title: "Закончить", isMuted: true) { dismiss() }
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 12)
-            
-            Spacer()
-            
+            .padding(.horizontal, 16)
+            .padding(.top, 6)
+            .frame(minHeight: 52)
+
             if isApproachFinished {
-                ApproachDoneCard(
-                    summary: "Вспомнили \(approachCorrect) из \(approachAnswered)",
-                    tint: Color.brandTint,
+                FlashcardsSummary(
+                    counts: ratingCounts,
+                    total: approachAnswered,
+                    returnLater: returnLater,
                     onContinue: { withAnimation { generateSession() } },
                     onExit: { dismiss() }
                 )
+                .transition(.opacity)
             } else if sessionWords.isEmpty {
-                VStack(spacing: 16) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 60))
-                        .foregroundColor(.green)
-                    
-                    Text(currentFilter == .due ? "Отлично! Все запланированные слова повторены!" : "В выбранном разделе нет слов.")
-                        .scaledFont(size: 18, weight: .bold, design: .rounded)
-                        .foregroundColor(.brandDark)
+                Spacer()
+                VStack(spacing: 14) {
+                    Image(systemName: "checkmark.circle")
+                        .scaledFont(size: 56)
+                        .foregroundStyle(Color.statusKnown)
+
+                    Text(currentFilter == .due ? "Все запланированные слова повторены" : "В выбранном разделе нет слов")
+                        .scaledFont(size: 26, weight: .medium, design: .serif)
+                        .foregroundStyle(Color.brandDark)
                         .multilineTextAlignment(.center)
                 }
                 .padding(.horizontal, 40)
+                Spacer()
             } else if let word = currentWord {
-                VStack(spacing: 24) {
-                    VStack(spacing: 10) {
-                        HStack(spacing: 12) {
-                            Text(currentQuestion)
-                                .scaledFont(size: 34, weight: .semibold, design: .serif)
-                                .foregroundColor(.brandDark)
-                                .multilineTextAlignment(.center)
-                            
-                            Button(action: { TextToSpeechManager.shared.speak(word.english) }) {
-                                Image(systemName: "speaker.wave.2.bubble.fill")
-                                    .font(.title2)
-                                    .foregroundColor(Color.brandTint)
-                            }
-                        }
-                        
-                        // Транскрипция и часть речи — одной строкой; без транскрипции — только часть речи
-                        HStack(spacing: 8) {
-                            if translationMode == "en_ru" && !word.displayTranscription.isEmpty {
-                                Text(word.displayTranscription)
-                                    .scaledFont(size: 16, weight: .medium, design: .rounded)
-                                    .foregroundColor(Color.brandTint)
-                            }
-                            PartOfSpeechBadge(word: word)
-                        }
-                        if translationMode == "en_ru" {
-                            ExampleFormHint(word: word)
-                        }
-                    }
-                    .padding(.top, 28)
-                    .onChange(of: word.persistentModelID, initial: true) {
-                        homographs = Homographs.others(of: word, in: modelContext)
-                    }
-                    
-                    Divider()
-                        .padding(.horizontal, 20)
-                    
-                    if isAnswerRevealed {
-                        VStack(spacing: 20) {
-                            if showWordImages {
-                                WordImageView(word: word)
-                            }
+                card(for: word)
+                    .padding(.horizontal, 16)
 
-                            Text(currentAnswer)
-                                .scaledFont(size: 28, weight: .regular, design: .serif)
-                                .foregroundColor(Color.brandTint)
-                                .multilineTextAlignment(.center)
-                            
-                            VStack(spacing: 8) {
-                                Text("Как сложно было вспомнить?")
-                                    .scaledFont(size: 12, weight: .medium, design: .rounded)
-                                    .foregroundColor(Color.brandMuted)
-                                
-                                HStack(spacing: 8) {
-                                    FSRSActionButton(title: "Снова", color: .red) {
-                                        processRating(.again)
-                                    }
-                                    FSRSActionButton(title: "Трудно", color: Color.brandTint) {
-                                        processRating(.hard)
-                                    }
-                                    FSRSActionButton(title: "Хорошо", color: Color.brandTint) {
-                                        processRating(.good)
-                                    }
-                                    FSRSActionButton(title: "Легко", color: .green) {
-                                        processRating(.easy)
-                                    }
-                                }
-                            }
-                        }
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
-                    } else {
-                        Button(action: {
-                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                                isAnswerRevealed = true
-                            }
-                        }) {
-                            Text("Показать ответ")
-                                .scaledFont(size: 16, weight: .bold, design: .rounded)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(Color.brandTint)
-                                .foregroundColor(.white)
-                                .cornerRadius(16)
-                        }
-                    }
-                }
-                .padding(20)
-                .frame(maxWidth: .infinity)
-                .background(Color.cardBackground)
-                .cornerRadius(24)
-                .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 6)
-                .padding(.horizontal, 20)
+                bottomControls
+                    .padding(.horizontal, 16)
+                    .padding(.top, 14)
+                    .padding(.bottom, 12)
             }
-            
-            Spacer()
         }
         .background(Color.brandBackground.ignoresSafeArea())
         // «Озвучивать слово сразу» (⚙️ → «Озвучка»): англ ➔ рус — как только слово показано
@@ -227,7 +130,151 @@ struct FlashcardsView: View {
             await WordImageLoader.loadIfNeeded(word)
         }
     }
-    
+
+    // MARK: - Карточка
+
+    private func card(for word: Word) -> some View {
+        VStack(spacing: 0) {
+            if isAnswerRevealed {
+                cardBack(word)
+            } else {
+                cardFront(word)
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+        .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 6)
+        .onChange(of: word.persistentModelID, initial: true) {
+            homographs = Homographs.others(of: word, in: modelContext)
+        }
+    }
+
+    /// Состояние слова слева и уровень справа
+    private func cardHeader(_ word: Word) -> some View {
+        HStack {
+            let status = word.studyStatus
+            Label(status.title, systemImage: status.symbol)
+                .scaledFont(size: 13, weight: .medium)
+                .foregroundStyle(status.color)
+            Spacer()
+            LevelBadge(level: word.cefrLevel)
+        }
+    }
+
+    /// Лицо: слово, транскрипция, озвучка, пример
+    private func cardFront(_ word: Word) -> some View {
+        VStack(spacing: 0) {
+            cardHeader(word)
+
+            VStack(spacing: 6) {
+                Spacer(minLength: 0)
+                Text(currentQuestion)
+                    .scaledFont(size: 56, weight: .medium, design: .serif)
+                    .foregroundStyle(Color.brandDark)
+                    .multilineTextAlignment(.center)
+                    .minimumScaleFactor(0.5)
+                    .lineLimit(2)
+                // Транскрипция и часть речи — одной строкой; без транскрипции — только часть речи
+                HStack(spacing: 8) {
+                    if translationMode == "en_ru" && !word.displayTranscription.isEmpty {
+                        Text(word.displayTranscription)
+                            .scaledFont(size: 17)
+                            .foregroundStyle(Color.brandMuted)
+                    }
+                    PartOfSpeechBadge(word: word)
+                }
+                if translationMode == "en_ru" {
+                    ExampleFormHint(word: word)
+                }
+                Button { TextToSpeechManager.shared.speak(word.english) } label: {
+                    Image(systemName: "speaker.wave.2")
+                        .scaledFont(size: 24)
+                        .foregroundStyle(Color.brandOnSoft)
+                        .frame(width: 56, height: 56)
+                        .background(Circle().fill(Color.brandAccent))
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 8)
+                .accessibilityLabel("Озвучить слово")
+                Spacer(minLength: 0)
+            }
+            .frame(maxWidth: .infinity)
+
+            // В режиме «рус → англ» пример на английском выдал бы ответ
+            if translationMode == "en_ru", !word.example.isEmpty {
+                FlashcardExample(word: word)
+            }
+        }
+    }
+
+    /// Оборот: слово сверху, перевод крупно, картинка, пример
+    private func cardBack(_ word: Word) -> some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 4) {
+                Text(word.english)
+                    .scaledFont(size: 22, weight: .medium, design: .serif)
+                    .foregroundStyle(Color.brandDark)
+                    .lineLimit(1)
+                Button { TextToSpeechManager.shared.speak(word.english) } label: {
+                    Image(systemName: "speaker.wave.2")
+                        .scaledFont(size: 17)
+                        .foregroundStyle(Color.brandDark)
+                        .frame(width: 44, height: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Озвучить слово")
+                Spacer()
+                LevelBadge(level: word.cefrLevel)
+            }
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text(currentAnswer)
+                        .scaledFont(size: 38, weight: .medium, design: .serif)
+                        .foregroundStyle(Color.brandDark)
+                        .lineSpacing(2)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    if showWordImages {
+                        WordImageView(word: word)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 8)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .frame(maxHeight: .infinity)
+
+            if !word.example.isEmpty {
+                FlashcardExample(word: word)
+            }
+        }
+    }
+
+    /// Под карточкой: «Показать перевод» или четыре оценки FSRS
+    @ViewBuilder
+    private var bottomControls: some View {
+        if isAnswerRevealed {
+            VStack(spacing: 8) {
+                Text("Как сложно было вспомнить?")
+                    .scaledFont(size: 12, weight: .medium)
+                    .foregroundStyle(Color.brandMuted)
+                HStack(spacing: 8) {
+                    FlashcardRatingButton(rating: .again) { processRating(.again) }
+                    FlashcardRatingButton(rating: .hard) { processRating(.hard) }
+                    FlashcardRatingButton(rating: .good) { processRating(.good) }
+                    FlashcardRatingButton(rating: .easy) { processRating(.easy) }
+                }
+            }
+            .transition(.opacity)
+        } else {
+            LXButton(title: "Показать перевод") {
+                withAnimation(.easeOut(duration: 0.2)) { isAnswerRevealed = true }
+            }
+        }
+    }
+
     private func changeFilter(to filter: TrainingFilter) {
         currentFilter = filter
         isAnswerRevealed = false
@@ -256,6 +303,8 @@ struct FlashcardsView: View {
         isApproachFinished = false
         approachAnswered = 0
         approachCorrect = 0
+        ratingCounts = [:]
+        returnLater = []
     }
     
     /// Слова подхода закончились: с лимитом — итог, без лимита («все») — сразу следующий круг
@@ -288,6 +337,10 @@ struct FlashcardsView: View {
         reviewedCount += 1
         approachAnswered += 1
         if rating != .again { approachCorrect += 1 }
+        ratingCounts[rating, default: 0] += 1
+        if (rating == .again || rating == .hard), !returnLater.contains(where: { $0.persistentModelID == word.persistentModelID }) {
+            returnLater.append(word)
+        }
         counts.refreshProgress(scope: studyScope, newWordsAllowance: newWordsAllowance, in: modelContext)
         profiles.first?.recordAnswer(.flashcards, translationMode: translationMode, isCorrect: rating != .again)
         DailyStudy.record(word, rating: rating)
@@ -297,25 +350,6 @@ struct FlashcardsView: View {
             finishApproach()
         } else {
             currentIndex += 1
-        }
-    }
-}
-
-// MARK: - Компонент кнопок FSRS
-struct FSRSActionButton: View {
-    let title: String
-    let color: Color
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .scaledFont(size: 13, weight: .bold, design: .rounded)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(color.opacity(0.15))
-                .foregroundColor(color)
-                .cornerRadius(12)
         }
     }
 }

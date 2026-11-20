@@ -18,6 +18,27 @@ enum TrainingFilter: Equatable {
         }
     }
 
+    /// Название для чипа: без значков и без числа; число — отдельно (detail)
+    func chipTitle() -> String {
+        switch self {
+        case .due: return "На повторение"
+        case .all: return "Все слова"
+        case .category(let category): return category.name
+        case .mistakes: return "Ошибки"
+        case .level(let level): return "Уровень \(level.rawValue)"
+        }
+    }
+
+    func chipDetail(counts: WordCounts) -> String? {
+        switch self {
+        case .due: return "\(counts.due)"
+        case .mistakes: return "\(counts.mistakes)"
+        case .level(let level): return counts.count(level: level).formatted()
+        case .category(let category): return counts.count(for: category).formatted()
+        case .all: return nil
+        }
+    }
+
     /// Слова сессии: на повторение — сначала слова по сроку, затем новые (не больше дневного остатка),
     /// остальные режимы — вперемешку
     func sessionWords(from words: [Word], newWordsAllowance: Int? = nil, now: Date = Date()) -> [Word] {
@@ -67,9 +88,30 @@ struct TrainingFilterMenu: View {
     /// Цвет фона кнопки, если отличается от цвета текста
     var backgroundTint: Color? = nil
     var backgroundOpacity = 0.12
+    /// Вид «Словаря»: чип на мягкой подложке с шевроном (карточки по холсту)
+    var usesChipStyle = false
     let onSelect: (TrainingFilter) -> Void
 
+    @State private var isSheetShown = false
+
     var body: some View {
+        if usesChipStyle {
+            Button { isSheetShown = true } label: {
+                LXChipLabel(title: current.chipTitle(), detail: current.chipDetail(counts: counts),
+                            isOn: true, chevron: true)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Что повторять: \(current.title(counts: counts))")
+            .sheet(isPresented: $isSheetShown) {
+                TrainingFilterSheet(current: current, counts: counts, categories: categories,
+                                    includesDue: includesDue, onSelect: onSelect)
+            }
+        } else {
+            menu
+        }
+    }
+
+    private var menu: some View {
         Menu {
             if includesDue {
                 Button("⏰ На повторение (FSRS)") { onSelect(.due) }

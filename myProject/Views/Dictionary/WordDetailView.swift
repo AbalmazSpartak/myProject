@@ -186,7 +186,7 @@ struct WordDetailView: View {
     }
 
     /// Пример с целевым словом на мягкой подложке (в базе — <b>слово</b>)
-    private static func highlighted(_ example: String) -> AttributedString {
+    static func highlighted(_ example: String) -> AttributedString {
         var result = AttributedString()
         var rest = Substring(example)
         while let open = rest.range(of: "<b>"),
@@ -341,7 +341,7 @@ struct WordDetailView: View {
             Spacer()
             if !word.isCustom {
                 Button { isReporting = true } label: {
-                    Label("Пожаловаться на ошибку", systemImage: "flag")
+                    Label("Сообщить об ошибке", systemImage: "flag")
                         .scaledFont(size: 14, weight: .medium)
                         .foregroundStyle(Color.brandMuted)
                         .frame(minHeight: 44)
