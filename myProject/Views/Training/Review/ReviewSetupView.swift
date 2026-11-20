@@ -98,62 +98,53 @@ struct ReviewSetupView: View {
     }
 
     private var header: some View {
-        HStack {
-            Button(action: { dismiss() }) {
-                HStack(spacing: 4) {
-                    Image(systemName: "chevron.left")
-                    Text("Обзор")
-                }
-                .scaledFont(size: 17, weight: .semibold)
-                .foregroundColor(.brandDark)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                LXTextButton(title: "Закрыть", isMuted: true) { dismiss() }
+                Spacer()
             }
-            Spacer()
+            .padding(.horizontal, 6)
             Text("Повторение")
-                .scaledFont(size: 20, weight: .bold)
-                .foregroundColor(.brandDark)
-            Spacer()
-            Color.clear.frame(width: 70, height: 1)
+                .scaledFont(size: 34, weight: .semibold, design: .serif)
+                .foregroundStyle(Color.brandDark)
+                .padding(.horizontal, 20)
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
-        .padding(.bottom, 4)
+        .padding(.top, 6)
     }
 
     // MARK: - Показать слова
 
     private var stagesSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             title("Показать слова")
-            VStack(spacing: 0) {
+            LXGroup {
                 ForEach(ReviewStage.allCases) { stage in
                     Button { toggle(stage) } label: {
                         HStack(spacing: 12) {
                             Image(systemName: stages.contains(stage) ? "checkmark.circle.fill" : "circle")
                                 .scaledFont(size: 22)
-                                .foregroundColor(stages.contains(stage) ? .brandTint : Color.brandMuted.opacity(0.5))
+                                .foregroundStyle(stages.contains(stage) ? Color.brandTint : Color.brandMuted.opacity(0.6))
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(stage.title)
-                                    .scaledFont(size: 17, weight: .semibold)
-                                    .foregroundColor(.brandDark)
+                                    .scaledFont(size: 16, weight: .semibold)
+                                    .foregroundStyle(Color.brandDark)
                                 Text(stage.hint)
                                     .scaledFont(size: 13)
-                                    .foregroundColor(Color.brandMuted)
+                                    .foregroundStyle(Color.brandMuted)
                             }
                             Spacer()
                             Text("\(studied.filter(stage.contains).count)")
-                                .scaledFont(size: 15, weight: .semibold, design: .rounded)
-                                .foregroundColor(Color.brandMuted)
+                                .scaledFont(size: 14)
+                                .foregroundStyle(Color.brandMuted)
                         }
                         .padding(.horizontal, 14)
-                        .padding(.vertical, 11)
+                        .frame(minHeight: 60)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    if stage != ReviewStage.allCases.last { Divider().padding(.leading, 48) }
+                    .accessibilityAddTraits(stages.contains(stage) ? .isSelected : [])
                 }
             }
-            .background(Color.cardBackground)
-            .cornerRadius(16)
         }
     }
 
@@ -179,8 +170,8 @@ struct ReviewSetupView: View {
             }
             .tint(.brandTint)
             .padding(14)
-            .background(Color.cardBackground)
-            .cornerRadius(16)
+            .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
         }
     }
 
@@ -194,7 +185,7 @@ struct ReviewSetupView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text("Части речи").scaledFont(size: 13, weight: .semibold).foregroundColor(Color.brandMuted)
+            Text("Части речи").scaledFont(size: 13, weight: .semibold).foregroundColor(Color.brandMuted).padding(.top, 4)
             chips(for: partOfSpeechCounts, key: Self.posKey(group:))
 
             if !topicCounts.isEmpty {
@@ -227,42 +218,28 @@ struct ReviewSetupView: View {
 
     private func chip(_ name: String, count: Int, isOn: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack(spacing: 6) {
-                Text(name)
-                Text("\(count)").foregroundColor(isOn ? .brandBackground.opacity(0.8) : Color.brandMuted)
-            }
-            .scaledFont(size: 15, weight: .semibold)
-            .foregroundColor(isOn ? .brandBackground : .brandDark)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 9)
-            .background(Capsule().fill(isOn ? Color.brandDark : Color.cardBackground))
+            LXChipLabel(title: name, detail: "\(count)", isOn: isOn)
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 
     // MARK: - Начать
 
     private var startButton: some View {
-        Button {
+        LXButton(title: selected.isEmpty ? "Нет слов для повторения" : "Начать · \(selected.count) \(DailyStudyCard.wordsNoun(selected.count))",
+                 isEnabled: !selected.isEmpty) {
             session = selected.shuffled()
-        } label: {
-            Text(selected.isEmpty ? "Нет слов для повторения" : "Начать · \(selected.count) \(DailyStudyCard.wordsNoun(selected.count))")
-                .scaledFont(size: 18, weight: .bold)
-                .foregroundColor(.brandBackground)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(Capsule().fill(Color.brandDark.opacity(selected.isEmpty ? 0.35 : 1)))
         }
-        .disabled(selected.isEmpty)
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 16)
+        .padding(.top, 10)
         .padding(.bottom, 12)
-        .background(LinearGradient(colors: [Color.brandBackground.opacity(0), Color.brandBackground], startPoint: .top, endPoint: .center))
+        .background(Color.brandBackground)
+        .overlay(alignment: .top) { LXDivider() }
     }
 
     private func title(_ text: String) -> some View {
-        Text(text)
-            .scaledFont(size: 20, weight: .semibold, design: .serif)
-            .foregroundColor(.brandDark)
+        LXSectionLabel(text: text)
     }
 
     // MARK: - Логика

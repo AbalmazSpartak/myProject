@@ -55,100 +55,96 @@ struct ReviewSessionView: View {
 
     private var header: some View {
         HStack {
-            Button("Закрыть") { dismiss() }
-                .scaledFont(size: 17, weight: .semibold)
-                .foregroundColor(.brandDark)
-            Spacer()
             if word != nil {
                 Text("\(index + 1) из \(queue.count)")
-                    .scaledFont(size: 15, weight: .semibold, design: .rounded)
-                    .foregroundColor(Color.brandMuted)
+                    .scaledFont(size: 15, weight: .semibold)
+                    .foregroundStyle(Color.brandMuted)
+                    .padding(.leading, 16)
             }
             Spacer()
-            Text("✓ \(known.count)  ✗ \(unknown.count)")
-                .scaledFont(size: 14, weight: .semibold, design: .rounded)
-                .foregroundColor(Color.brandMuted)
+            LXTextButton(title: "Закрыть", isMuted: true) { dismiss() }
+                .padding(.trailing, 6)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
+        .padding(.top, 6)
+        .frame(minHeight: 52)
     }
 
     // MARK: - Карточка
 
     private func card(_ word: Word) -> some View {
-        ScrollView {
-            VStack(spacing: 22) {
-                VStack(spacing: 8) {
-                    HStack(spacing: 12) {
-                        Text(showEnglish ? word.english : word.russian)
-                            .scaledFont(size: 34, weight: .semibold, design: .serif)
-                            .foregroundColor(.brandDark)
-                            .multilineTextAlignment(.center)
-                        if showEnglish || isRevealed {
-                            Button { TextToSpeechManager.shared.speak(word.english) } label: {
-                                Image(systemName: "speaker.wave.2.fill")
-                                    .scaledFont(size: 18, weight: .semibold)
-                                    .foregroundColor(.brandDark)
-                                    .frame(width: 40, height: 40)
-                                    .background(Circle().fill(Color.brandFill))
-                            }
-                            .accessibilityLabel("Произнести")
-                        }
-                    }
-                    // Транскрипция и часть речи — одной строкой; без транскрипции — только часть речи
-                    HStack(spacing: 8) {
-                        if showEnglish, !word.displayTranscription.isEmpty {
-                            Text(word.displayTranscription)
-                                .scaledFont(size: 16, weight: .medium, design: .rounded)
-                                .foregroundColor(Color.brandMuted)
-                        }
-                        PartOfSpeechBadge(word: word)
-                    }
-                }
-                .padding(.top, 30)
-
-                if isRevealed {
+        VStack(spacing: 0) {
+            TrainingCard(score: "Знаю \(known.count) · Не знаю \(unknown.count)", level: word.cefrLevel) {
+                ScrollView {
                     VStack(spacing: 16) {
-                        if showWordImages { WordImageView(word: word) }
-                        Text(showEnglish ? word.russian : word.english)
-                            .scaledFont(size: 26, weight: .regular, design: .serif)
-                            .foregroundColor(.brandDark)
-                            .multilineTextAlignment(.center)
-                        if !showEnglish, !word.displayTranscription.isEmpty {
-                            Text(word.displayTranscription)
-                                .scaledFont(size: 15, weight: .medium, design: .rounded)
-                                .foregroundColor(Color.brandMuted)
-                        }
-                        if !word.example.isEmpty {
-                            Text(word.attributedExample)
-                                .scaledFont(size: 16, design: .serif)
-                                .foregroundColor(.brandDark)
+                        VStack(spacing: 8) {
+                            Text(showEnglish ? word.english : word.russian)
+                                .scaledFont(size: 44, weight: .medium, design: .serif)
+                                .foregroundStyle(Color.brandDark)
                                 .multilineTextAlignment(.center)
-                                .padding(14)
-                                .frame(maxWidth: .infinity)
-                                .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.brandAccent))
+                                .minimumScaleFactor(0.5)
+                            // Транскрипция и часть речи — одной строкой; без транскрипции — только часть речи
+                            HStack(spacing: 8) {
+                                if showEnglish, !word.displayTranscription.isEmpty {
+                                    Text(word.displayTranscription)
+                                        .scaledFont(size: 17)
+                                        .foregroundStyle(Color.brandMuted)
+                                }
+                                PartOfSpeechBadge(word: word)
+                            }
+                            if showEnglish || isRevealed {
+                                Button { TextToSpeechManager.shared.speak(word.english) } label: {
+                                    Image(systemName: "speaker.wave.2")
+                                        .scaledFont(size: 20)
+                                        .foregroundStyle(Color.brandOnSoft)
+                                        .frame(width: 48, height: 48)
+                                        .background(Circle().fill(Color.brandAccent))
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("Произнести")
+                            }
                         }
-                        HStack(spacing: 12) {
-                            answerButton("Не знаю", color: FSRSRating.again.color) { answer(known: false) }
-                            answerButton("Знаю", color: FSRSRating.easy.color) { answer(known: true) }
+                        .padding(.top, 12)
+
+                        if isRevealed {
+                            VStack(spacing: 14) {
+                                if showWordImages { WordImageView(word: word) }
+                                Text(showEnglish ? word.russian : word.english)
+                                    .scaledFont(size: 30, weight: .medium, design: .serif)
+                                    .foregroundStyle(Color.brandDark)
+                                    .multilineTextAlignment(.center)
+                                if !showEnglish, !word.displayTranscription.isEmpty {
+                                    Text(word.displayTranscription)
+                                        .scaledFont(size: 15)
+                                        .foregroundStyle(Color.brandMuted)
+                                }
+                                if !word.example.isEmpty {
+                                    FlashcardExample(word: word)
+                                }
+                            }
+                            .transition(.opacity)
                         }
                     }
-                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    .frame(maxWidth: .infinity)
+                }
+                .scrollBounceBehavior(.basedOnSize)
+            }
+            .padding(.horizontal, 16)
+
+            Group {
+                if isRevealed {
+                    HStack(spacing: 10) {
+                        LXButton(title: "Не знаю", style: .outline) { answer(known: false) }
+                        LXButton(title: "Знаю") { answer(known: true) }
+                    }
                 } else {
-                    Button {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { isRevealed = true }
-                    } label: {
-                        Text("Показать ответ")
-                            .scaledFont(size: 18, weight: .bold)
-                            .foregroundColor(.brandBackground)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Capsule().fill(Color.brandDark))
+                    LXButton(title: "Показать ответ") {
+                        withAnimation(.easeOut(duration: 0.2)) { isRevealed = true }
                     }
-                    .padding(.top, 20)
                 }
             }
-            .padding(20)
+            .padding(.horizontal, 16)
+            .padding(.top, 14)
+            .padding(.bottom, 12)
         }
         .task(id: word.persistentModelID) {
             guard showWordImages else { return }
@@ -156,65 +152,29 @@ struct ReviewSessionView: View {
         }
     }
 
-    /// Как кнопки оценок в карточках: бледный фон и надпись цветом
-    private func answerButton(_ title: String, color: Color, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .scaledFont(size: 17, weight: .bold, design: .rounded)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(color.opacity(0.15))
-                .foregroundColor(color)
-                .cornerRadius(14)
-        }
-    }
-
     // MARK: - Итог подхода
 
     private var summary: some View {
-        VStack(spacing: 18) {
-            Spacer()
-            Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 52))
-                .foregroundColor(FSRSRating.easy.color)
-            Text(index >= queue.count ? "Повторение пройдено" : "Подход завершён")
-                .scaledFont(size: 26, design: .serif)
-                .foregroundColor(.brandDark)
-            Text("Знаю: \(known.count) · Не знаю: \(unknown.count)")
-                .scaledFont(size: 17)
-                .foregroundColor(Color.brandMuted)
-            Spacer()
-            if index < queue.count {
-                bigButton("Ещё подход") {
-                    isApproachDone = false
-                }
-            }
-            if !unknown.isEmpty {
-                bigButton("Повторить «Не знаю» · \(unknown.count)", secondary: index < queue.count) {
-                    queue = unknown.shuffled()
-                    index = 0
-                    known = []
-                    unknown = []
-                    isApproachDone = false
-                }
-            }
-            Button("Закончить") { dismiss() }
-                .scaledFont(size: 17, weight: .semibold)
-                .foregroundColor(.brandTint)
-                .padding(.bottom, 20)
-        }
-        .padding(.horizontal, 20)
-    }
-
-    private func bigButton(_ title: String, secondary: Bool = false, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .scaledFont(size: 18, weight: .bold)
-                .foregroundColor(secondary ? .brandDark : .brandBackground)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(Capsule().fill(secondary ? Color.brandFill : Color.brandDark))
-        }
+        TrainingSummary(
+            subtitle: index >= queue.count ? "Повторение пройдено." : "Подход завершён.",
+            tiles: [
+                .init(symbol: "checkmark.circle", color: .statusKnown, value: known.count, title: "Знаю"),
+                .init(symbol: "xmark.circle", color: .statusLearning, value: unknown.count, title: "Не знаю")
+            ],
+            laterTitle: "Не знаю",
+            later: unknown,
+            showsContinue: index < queue.count,
+            extraTitle: unknown.isEmpty ? nil : "Повторить «Не знаю» · \(unknown.count)",
+            onExtra: {
+                queue = unknown.shuffled()
+                index = 0
+                known = []
+                unknown = []
+                isApproachDone = false
+            },
+            onContinue: { isApproachDone = false },
+            onExit: { dismiss() }
+        )
     }
 
     // MARK: - Ответ

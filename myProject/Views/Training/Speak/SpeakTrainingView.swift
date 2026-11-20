@@ -93,29 +93,22 @@ struct SpeakTrainingView: View {
     private var header: some View {
         HStack {
             // Из тренировки и итога — к выбору слов, оттуда — на «Обзор»
-            Button {
+            LXTextButton(title: phase == .setup ? "Закрыть" : "Назад", isMuted: true) {
                 checker.cancel()
                 if phase == .setup { dismiss() } else { phase = .setup }
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "chevron.left")
-                    Text(phase == .setup ? "Обзор" : "Назад")
-                }
-                .scaledFont(size: 17, weight: .semibold)
-                .foregroundColor(.brandDark)
+            }
+            Spacer()
+            if phase == .practice {
+                Text("\(min(index + 1, words.count)) из \(words.count)")
+                    .scaledFont(size: 15, weight: .semibold)
+                    .foregroundStyle(Color.brandMuted)
             }
             Spacer()
             HelpButton(topic: .speak) { checker.cancel() }
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
-        .overlay {
-            Text(phase == .practice ? "\(min(index + 1, words.count)) из \(words.count)" : "Произнеси")
-                .scaledFont(size: 20, weight: .bold)
-                .foregroundColor(.brandDark)
-                .padding(.top, 8)
-                .allowsHitTesting(false)
-        }
+        .padding(.horizontal, 10)
+        .padding(.top, 6)
+        .frame(minHeight: 52)
     }
 
     // MARK: - Выбор слов
@@ -123,7 +116,11 @@ struct SpeakTrainingView: View {
     private var setup: some View {
         ScrollView {
             VStack(spacing: 20) {
-                Image(systemName: "mic.circle.fill")
+                Text("Произнеси")
+                    .scaledFont(size: 34, weight: .semibold, design: .serif)
+                    .foregroundStyle(Color.brandDark)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "mic.circle")
                     .scaledFont(size: 64)
                     .foregroundColor(Color.brandTint)
                 Text("Послушайте слово, произнесите его в микрофон — телефон распознает речь и скажет, понятно ли получилось.")
@@ -145,19 +142,11 @@ struct SpeakTrainingView: View {
                 if let emptyMessage {
                     Text(emptyMessage)
                         .scaledFont(size: 14)
-                        .foregroundColor(.red)
+                        .foregroundStyle(Color.statusLearning)
                         .multilineTextAlignment(.center)
                 }
 
-                Button(action: begin) {
-                    Text("Начать — \(Self.sessionLength) слов")
-                        .scaledFont(size: 18, weight: .bold)
-                        .foregroundStyle(Color.brandBackground)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.brandDark)
+                LXButton(title: "Начать — \(Self.sessionLength) слов", action: begin)
 
                 Text("Распознавание проверяет, понятно ли слово на слух, а не каждый звук. Работает на телефоне, без интернета. Расписание повторений слов не меняется.")
                     .scaledFont(size: 13)
@@ -223,7 +212,7 @@ struct SpeakTrainingView: View {
                 VStack(spacing: 18) {
                     VStack(spacing: 6) {
                         Text(word.english)
-                            .scaledFont(size: 38, weight: .semibold, design: .serif)
+                            .scaledFont(size: 44, weight: .medium, design: .serif)
                             .foregroundColor(.brandDark)
                             .multilineTextAlignment(.center)
                         if !word.displayTranscription.isEmpty {
@@ -257,10 +246,10 @@ struct SpeakTrainingView: View {
         Button(action: action) {
             Label(title, systemImage: icon)
                 .scaledFont(size: 15, weight: .semibold)
-                .foregroundColor(.brandDark)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .background(Capsule().fill(Color.cardBackground))
+                .foregroundStyle(Color.brandOnSoft)
+                .padding(.horizontal, 16)
+                .frame(minHeight: 44)
+                .background(Capsule().fill(Color.brandAccent))
         }
         .buttonStyle(.plain)
         .disabled(checker.phase == .listening)
@@ -280,15 +269,15 @@ struct SpeakTrainingView: View {
             } label: {
                 ZStack {
                     Circle()
-                        .fill(listening ? Color.red : Color.brandTint)
+                        .fill(listening ? Color.statusLearning : Color.brandTint)
                         .frame(width: 96, height: 96)
-                        .shadow(color: (listening ? Color.red : Color.brandTint).opacity(0.35), radius: listening ? 14 : 6)
+                        .shadow(color: (listening ? Color.statusLearning : Color.brandTint).opacity(0.35), radius: listening ? 14 : 6)
                     if checker.phase == .processing {
-                        ProgressView().tint(.white)
+                        ProgressView().tint(Color.brandOnButton)
                     } else {
                         Image(systemName: listening ? "stop.fill" : "mic.fill")
                             .scaledFont(size: 36, weight: .semibold)
-                            .foregroundColor(.white)
+                            .foregroundStyle(Color.brandOnButton)
                     }
                 }
                 .scaleEffect(listening ? 1.06 : 1)
@@ -325,7 +314,7 @@ struct SpeakTrainingView: View {
             VStack(spacing: 10) {
                 Text("Нужен доступ к микрофону и распознаванию речи.")
                     .scaledFont(size: 15, weight: .semibold)
-                    .foregroundColor(.red)
+                    .foregroundStyle(Color.statusLearning)
                     .multilineTextAlignment(.center)
                 Button("Открыть настройки") {
                     if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
@@ -335,19 +324,19 @@ struct SpeakTrainingView: View {
         } else if checker.isUnavailable {
             Text("Распознавание речи сейчас недоступно. Проверьте, что в настройках iPhone есть английский язык для диктовки, и попробуйте ещё раз.")
                 .scaledFont(size: 14)
-                .foregroundColor(.red)
+                .foregroundStyle(Color.statusLearning)
                 .multilineTextAlignment(.center)
         } else if let passed, checker.phase == .finished {
             VStack(spacing: 14) {
                 if passed {
-                    Label("Понятно! Так и звучит", systemImage: "checkmark.circle.fill")
-                        .scaledFont(size: 18, weight: .bold)
-                        .foregroundColor(.green)
+                    Label("Понятно, так и звучит", systemImage: "checkmark.circle.fill")
+                        .scaledFont(size: 18, weight: .semibold)
+                        .foregroundStyle(Color.statusKnown)
                 } else {
                     VStack(spacing: 4) {
-                        Label("Не совсем", systemImage: "xmark.circle.fill")
-                            .scaledFont(size: 18, weight: .bold)
-                            .foregroundColor(.red)
+                        Label("Не совсем", systemImage: "xmark.circle")
+                            .scaledFont(size: 18, weight: .semibold)
+                            .foregroundStyle(Color.statusLearning)
                         Text(checker.heard.isEmpty ? "Ничего не расслышал — говорите чуть громче и ближе к телефону" : "Услышано: «\(checker.heard)»")
                             .scaledFont(size: 15)
                             .foregroundColor(.brandDark)
@@ -358,29 +347,14 @@ struct SpeakTrainingView: View {
                                          showsPracticeButton: false)
                 }
 
-                HStack(spacing: 12) {
+                HStack(spacing: 10) {
                     if !passed {
-                        Button {
+                        LXButton(title: "Ещё раз", style: .outline) {
                             self.passed = nil
                             checker.reset()
-                        } label: {
-                            Text("Ещё раз")
-                                .scaledFont(size: 16, weight: .semibold)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
                         }
-                        .buttonStyle(.bordered)
-                        .tint(.brandDark)
                     }
-                    Button(action: nextWord) {
-                        Text(index + 1 < words.count ? "Дальше" : "Итог")
-                            .scaledFont(size: 16, weight: .bold)
-                            .foregroundStyle(Color.brandBackground)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.brandDark)
+                    LXButton(title: index + 1 < words.count ? "Дальше" : "Итог", action: nextWord)
                 }
             }
         }
@@ -404,52 +378,41 @@ struct SpeakTrainingView: View {
             VStack(spacing: 18) {
                 Text("С первой попытки")
                     .scaledFont(size: 16)
-                    .foregroundColor(Color.brandMuted)
+                    .foregroundStyle(Color.brandMuted)
                 Text("\(firstTry) из \(outcomes.count)")
-                    .scaledFont(size: 48, weight: .bold, design: .rounded)
-                    .foregroundColor(.brandDark)
+                    .scaledFont(size: 48, weight: .medium, design: .serif)
+                    .foregroundStyle(Color.brandDark)
 
-                VStack(spacing: 8) {
+                LXGroup {
                     ForEach(outcomes, id: \.item.id) { outcome in
-                        HStack {
-                            Image(systemName: outcome.firstTry ? "checkmark.circle.fill" : outcome.passed ? "arrow.uturn.right.circle.fill" : "xmark.circle.fill")
-                                .foregroundColor(outcome.firstTry ? .green : outcome.passed ? Color.brandTint : .red)
+                        HStack(spacing: 12) {
+                            Image(systemName: outcome.firstTry ? "checkmark.circle.fill" : outcome.passed ? "arrow.uturn.right.circle" : "xmark.circle")
+                                .scaledFont(size: 20)
+                                .foregroundStyle(outcome.firstTry ? Color.statusKnown : outcome.passed ? Color.brandTint : Color.statusLearning)
                             Text(outcome.item.english)
-                                .scaledFont(size: 17, weight: .semibold, design: .serif)
-                                .foregroundColor(.brandDark)
+                                .scaledFont(size: 19, weight: .medium, design: .serif)
+                                .foregroundStyle(Color.brandDark)
                             Spacer()
                             Button {
                                 TextToSpeechManager.shared.speak(outcome.item.english)
                             } label: {
-                                Image(systemName: "speaker.wave.2.fill")
-                                    .foregroundColor(Color.brandTint)
+                                LXIconLabel(systemImage: "speaker.wave.2", label: "Послушать \(outcome.item.english)", isSoft: true)
                             }
                             .buttonStyle(.plain)
-                            .accessibilityLabel("Послушать \(outcome.item.english)")
                         }
-                        .padding(12)
-                        .background(Color.cardBackground)
-                        .cornerRadius(12)
+                        .padding(.horizontal, 14)
+                        .frame(minHeight: 56)
                     }
                 }
-                Text("✅ — с первой попытки, ↪︎ — со второй и дальше, ✗ — не получилось")
+                Text("Галочка — с первой попытки, стрелка — со второй и дальше, крестик — не получилось")
                     .scaledFont(size: 12)
-                    .foregroundColor(Color.brandMuted)
+                    .foregroundStyle(Color.brandMuted)
+                    .multilineTextAlignment(.center)
 
-                Button(action: begin) {
-                    Text("Ещё подход")
-                        .scaledFont(size: 18, weight: .bold)
-                        .foregroundStyle(Color.brandBackground)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.brandDark)
-                Button("К выбору слов") { phase = .setup }
-                    .scaledFont(size: 16, weight: .semibold)
-                    .foregroundColor(.brandDark)
+                LXButton(title: "Ещё подход", action: begin)
+                LXButton(title: "К выбору слов", style: .outline) { phase = .setup }
             }
-            .padding(24)
+            .padding(20)
         }
     }
 }

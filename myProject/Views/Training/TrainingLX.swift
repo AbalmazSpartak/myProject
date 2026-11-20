@@ -136,6 +136,11 @@ struct TrainingSummary: View {
     let tiles: [Tile]
     let laterTitle: String
     let later: [Word]
+    /// false — «Ещё подход» не показываем (слова кончились)
+    var showsContinue = true
+    /// Дополнительная кнопка между «Ещё подход» и «Закончить», например «Повторить ошибки»
+    var extraTitle: String?
+    var onExtra: () -> Void = {}
     let onContinue: () -> Void
     let onExit: () -> Void
 
@@ -182,7 +187,12 @@ struct TrainingSummary: View {
         .scrollBounceBehavior(.basedOnSize)
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
-                LXButton(title: "Ещё подход", action: onContinue)
+                if showsContinue {
+                    LXButton(title: "Ещё подход", action: onContinue)
+                }
+                if let extraTitle {
+                    LXButton(title: extraTitle, style: showsContinue ? .soft : .primary, action: onExtra)
+                }
                 LXButton(title: "Закончить", style: .outline, action: onExit)
             }
             .padding(.horizontal, 16)
