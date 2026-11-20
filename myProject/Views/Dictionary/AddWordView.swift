@@ -15,6 +15,8 @@ struct AddWordView: View {
 
     @State private var english = ""
     @State private var transcription = ""
+    /// Подставлено из словаря: пока поле не правили руками, при смене слова оно обновляется
+    @State private var autoTranscription: String?
     @State private var russian = ""
     @State private var example = ""
     @State private var level = "A1"
@@ -109,6 +111,10 @@ struct AddWordView: View {
         .onChange(of: english) { _, _ in
             refreshExistingMatches()
             translationNote = nil
+        }
+        // Транскрипция сама: через полсекунды после остановки набора; вписанное руками не трогаем
+        .task(id: english.trimmingCharacters(in: .whitespaces)) {
+            await fillTranscription()
         }
         .translationTask(translationConfig) { session in
             await translate(with: session)
@@ -213,6 +219,23 @@ struct AddWordView: View {
 
     // MARK: - Действия
 
+    /// Подставляет транскрипцию из словаря, если поле пустое или в нём прежняя подстановка
+    private func fillTranscription() async {
+        let typed = english.trimmingCharacters(in: .whitespaces)
+        let canReplace = transcription.isEmpty || transcription == autoTranscription
+        guard canReplace else { return }
+        guard TranscriptionLookup.isLookupable(typed.lowercased()) else {
+            if transcription == autoTranscription { transcription = "" }
+            autoTranscription = nil
+            return
+        }
+        do { try await Task.sleep(for: .milliseconds(600)) } catch { return }
+        let found = await TranscriptionLookup.lookup(typed)
+        guard !Task.isCancelled, transcription.isEmpty || transcription == autoTranscription else { return }
+        transcription = found ?? ""
+        autoTranscription = found
+    }
+
     /// Слово с тем же написанием: как введено, строчными и с заглавной (April, I)
     private func refreshExistingMatches() {
         let typed = english.trimmingCharacters(in: .whitespaces)
@@ -258,6 +281,7 @@ struct AddWordView: View {
     private func finishAdding(_ added: String) {
         english = ""
         transcription = ""
+        autoTranscription = nil
         russian = ""
         example = ""
         partOfSpeech = ""
