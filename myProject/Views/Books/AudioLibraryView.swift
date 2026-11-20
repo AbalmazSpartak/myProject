@@ -34,6 +34,23 @@ struct AudioLibraryView: View {
     @State private var liveBook: Book?
     @State private var player = LiveAudioPlayer.shared
     @AppStorage("audio_library_sort") private var sort: AudioLibrarySort = .recent
+    @State private var searchText = ""
+
+    /// Без регистра, ё как е, ’ как ' — как поиск в «Моих книгах»
+    private static func normalized(_ text: String) -> String {
+        text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            .replacingOccurrences(of: "ё", with: "е")
+            .replacingOccurrences(of: "’", with: "'")
+    }
+
+    private var isSearching: Bool { !Self.normalized(searchText).isEmpty }
+
+    /// Книги, у которых название или автор содержат запрос
+    private func filtered(_ list: [Book]) -> [Book] {
+        let query = Self.normalized(searchText)
+        guard !query.isEmpty else { return list }
+        return list.filter { Self.normalized($0.title).contains(query) || Self.normalized($0.author).contains(query) }
+    }
 
     /// Доля скачанного: живой голос — главы на устройстве, записанная озвучка — записанные главы
     private func downloadedShare(_ book: Book) -> Double {
@@ -63,19 +80,40 @@ struct AudioLibraryView: View {
         }
     }
 
-    private var sortMenu: some View {
-        HStack {
-            Spacer()
+    /// Поле поиска и порядок — как в «Моих книгах»: плашка с лупой и крестиком, рядом квадратная кнопка ↕
+    private var searchField: some View {
+        HStack(spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(Color.brandMuted)
+                TextField("Поиск аудиокниг", text: $searchText)
+                    .scaledFont(size: 16)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .submitLabel(.search)
+                if !searchText.isEmpty {
+                    Button { searchText = "" } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(Color.brandMuted)
+                    }
+                    .accessibilityLabel("Очистить поиск")
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             Menu {
-                Picker("Сортировка", selection: $sort) {
+                Picker("Порядок", selection: $sort) {
                     ForEach(AudioLibrarySort.allCases) { Text($0.title).tag($0) }
                 }
             } label: {
-                Label(sort.title, systemImage: "arrow.up.arrow.down")
-                    .scaledFont(size: 13, weight: .semibold)
-                    .foregroundColor(.brandTint)
+                Image(systemName: "arrow.up.arrow.down")
+                    .scaledFont(size: 16)
+                    .foregroundColor(.brandDark)
+                    .frame(width: 44, height: 44)
+                    .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
-            .accessibilityLabel("Сортировка: \(sort.title)")
+            .accessibilityLabel("Порядок аудиокниг: \(sort.title)")
         }
     }
 
@@ -112,17 +150,22 @@ struct AudioLibraryView: View {
     private var content: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
-                if let first = audioBooks.first { continueCard(first) }
-                sortMenu
-                if !liveBooks.isEmpty {
+                searchField
+                if isSearching, filtered(liveBooks).isEmpty, filtered(audioBooks).isEmpty {
+                    ContentUnavailableView.search(text: searchText)
+                        .padding(.top, 24)
+                }
+                // Пока ищут — без «Продолжить слушать», только найденное
+                if !isSearching, let first = audioBooks.first { continueCard(first).padding(.top, 6) }
+                if !filtered(liveBooks).isEmpty {
                     sectionTitle("ЖИВОЙ ГОЛОС")
-                    ForEach(sorted(liveBooks)) { book in
+                    ForEach(sorted(filtered(liveBooks))) { book in
                         liveRow(book)
                     }
                 }
-                if !audioBooks.isEmpty {
+                if !filtered(audioBooks).isEmpty {
                     sectionTitle("ОЗВУЧЕНО")
-                    ForEach(sorted(audioBooks)) { book in
+                    ForEach(sorted(filtered(audioBooks))) { book in
                         row(book)
                     }
                 }
