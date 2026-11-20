@@ -16,15 +16,8 @@ struct SettingsView: View {
     @State private var pickedButton: AppPalette.Accent?
     @State private var pickedBackground: AppPalette.Background?
     @AppStorage(AppMode.readerOnlyKey) private var readerOnly = false
+    @AppStorage(AppMode.learningOnlyKey) private var learningOnly = false
 
-    /// Третий вариант «Спрашивать» — режим остаётся прежним, а при запуске появляется выбор
-    private var modeChoice: Binding<String> {
-        Binding(get: { asksMode ? "ask" : mode.rawValue },
-                set: { value in
-                    asksMode = value == "ask"
-                    if let chosen = AppMode(rawValue: value) { mode = chosen }
-                })
-    }
     @AppStorage(OverviewLayout.storageKey) private var overviewLayout = OverviewLayout.standard
     @AppStorage(DailyReminder.enabledKey) private var reminderEnabled = false
     @AppStorage(DailyReminder.timeKey) private var reminderTime = DailyReminder.defaultTime
@@ -79,29 +72,52 @@ struct SettingsView: View {
         }
     }
 
+    /// Как пользуюсь: читаю и учу слова / только читаю / только учу
+    private enum Usage: String, CaseIterable, Identifiable {
+        case both, reader, learning
+        var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .both: "Читаю и учу"
+            case .reader: "Читаю"
+            case .learning: "Учу"
+            }
+        }
+    }
+
+    private var usage: Binding<Usage> {
+        Binding(
+            get: { readerOnly ? .reader : (learningOnly ? .learning : .both) },
+            set: { value in
+                readerOnly = value == .reader
+                learningOnly = value == .learning
+                if value == .reader { mode = .reading }
+                if value == .learning { mode = .learning }
+            }
+        )
+    }
+
     /// Выбор режима приложения
     @ViewBuilder
     private var modeSection: some View {
         Section {
-            Toggle("Только читалка", isOn: Binding(get: { readerOnly },
-                                                   set: { readerOnly = $0; if $0 { mode = .reading } }))
-            if !readerOnly {
-                Picker("Режим", selection: modeChoice) {
-                    ForEach(AppMode.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
-                    Text("Спрашивать").tag("ask")
-                }
-                .pickerStyle(.segmented)
+            Picker("Как пользуюсь", selection: usage) {
+                ForEach(Usage.allCases) { Text($0.title).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            if !readerOnly && !learningOnly {
+                Toggle("Спрашивать при запуске", isOn: $asksMode)
             }
         } header: {
             Self.header("Режим")
         } footer: {
             Text(readerOnly
-                 ? "Приложение работает как читалка: библиотека, аудио и закладки. Раздел «Обучение» и переключатель режимов скрыты, слова и прогресс сохраняются."
+                 ? "Приложение работает как читалка: библиотека, аудио и закладки. Обучение и переключатель режимов скрыты, слова и прогресс сохраняются."
+                 : learningOnly
+                 ? "Слова, практика и словарь, без читалки и переключателя режимов. Книги и закладки сохраняются."
                  : asksMode
-                 ? "При каждом запуске приложение спросит, что открыть: изучение слов или читалку."
-                 : mode == .learning
-                 ? "Слова, повторения, тренировки, игры и книги."
-                 : "Только библиотека и читалка. Слова и прогресс сохраняются — вернуть «Изучение» можно в любой момент.")
+                 ? "При каждом запуске приложение спросит, как вы хотите пользоваться."
+                 : "Читалка и обучение вместе: режимы переключаются сверху.")
                 .textSelection(.enabled)
         }
     }

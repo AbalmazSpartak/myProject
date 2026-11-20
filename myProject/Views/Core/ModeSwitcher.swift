@@ -5,10 +5,11 @@ import SwiftUI
 struct ModeSwitcher: View {
     @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
     @AppStorage(AppMode.readerOnlyKey) private var readerOnly = false
+    @AppStorage(AppMode.learningOnlyKey) private var learningOnly = false
 
     var body: some View {
-        // «Только читалка» — переключателя нет
-        if !readerOnly { switcher }
+        // «Только читалка» или «Только обучение» — переключателя нет
+        if !readerOnly && !learningOnly { switcher }
     }
 
     private var switcher: some View {

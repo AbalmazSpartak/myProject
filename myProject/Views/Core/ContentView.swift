@@ -38,18 +38,19 @@ struct ContentView: View {
     @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
     @AppStorage(AppMode.chosenKey) private var modeChosen = false
     @AppStorage(AppMode.readerOnlyKey) private var readerOnly = false
+    @AppStorage(AppMode.learningOnlyKey) private var learningOnly = false
     /// «Спрашивать при запуске» — читается один раз: включили в Настройках — спросит со следующего запуска
     @State private var asksOnLaunch = UserDefaults.standard.bool(forKey: AppMode.askKey)
 
     var body: some View {
         Group {
-            switch readerOnly ? AppMode.reading : mode {
+            switch readerOnly ? AppMode.reading : (learningOnly ? AppMode.learning : mode) {
             case .learning: learningTabs
             // «Чтение» — библиотека с нижней панелью (Главная, Библиотека, Закладки, Профиль), без тренировок и игр
             case .reading: ReaderTabsView(onProfile: $onProfile)
             }
         }
-        .fullScreenCover(isPresented: Binding(get: { !readerOnly && (!modeChosen || asksOnLaunch) }, set: { _ in })) {
+        .fullScreenCover(isPresented: Binding(get: { !readerOnly && !learningOnly && (!modeChosen || asksOnLaunch) }, set: { _ in })) {
             ModeChoiceView { asksOnLaunch = false }
                 .appThemedColorScheme()
         }

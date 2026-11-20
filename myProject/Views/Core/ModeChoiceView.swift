@@ -1,28 +1,33 @@
 import SwiftUI
 
-/// Первый запуск: для чего приложение — учить английский или читать книги. Потом меняется в Настройках
+/// Вход в приложение: три пути — читаем и учим слова, только читаем, только учим английский. Потом меняется в Настройках
 struct ModeChoiceView: View {
     @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
     @AppStorage(AppMode.chosenKey) private var chosen = false
+    @AppStorage(AppMode.readerOnlyKey) private var readerOnly = false
+    @AppStorage(AppMode.learningOnlyKey) private var learningOnly = false
     /// Выбор сделан — закрыть экран (при «Спрашивать» он показывается на каждом запуске)
     var onChoose: () -> Void = {}
 
+    private enum Path { case both, reading, learning }
+
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(alignment: .leading, spacing: 14) {
             Spacer()
             Text("Как будете пользоваться?")
-                .scaledFont(size: 28, weight: .bold, design: .serif)
-                .foregroundColor(.brandDark)
-                .multilineTextAlignment(.center)
+                .scaledFont(size: 32, weight: .medium, design: .serif)
+                .foregroundStyle(Color.brandDark)
             Text("Выбор можно поменять в Настройках, ничего не пропадёт.")
                 .scaledFont(size: 16)
-                .foregroundColor(Color.brandMuted)
-                .multilineTextAlignment(.center)
+                .foregroundStyle(Color.brandMuted)
+                .padding(.bottom, 6)
 
-            option(.learning, icon: "graduationcap.fill",
-                   text: "Слова, повторения, тренировки, игры и книги с переводом по нажатию.")
-            option(.reading, icon: "books.vertical.fill",
-                   text: "Только библиотека и читалка: книги на английском и русском, толкование слов.")
+            option(.both, icon: "book.and.wrench", title: "Читаем и учим слова",
+                   text: "Книги с переводом по нажатию и тренировки слов. Режимы переключаются сверху.")
+            option(.reading, icon: "books.vertical", title: "Читаем",
+                   text: "Только библиотека и читалка: книги на английском и русском, озвучка, закладки и заметки.")
+            option(.learning, icon: "graduationcap", title: "Учим английский",
+                   text: "Слова, повторения и тренировки. Без читалки.")
             // Снизу места вдвое больше — выбор стоит выше середины экрана
             Spacer()
             Spacer()
@@ -33,32 +38,49 @@ struct ModeChoiceView: View {
         .background(Color.brandBackground.ignoresSafeArea())
     }
 
-    private func option(_ option: AppMode, icon: String, text: String) -> some View {
+    private func option(_ path: Path, icon: String, title: String, text: String) -> some View {
         Button {
             Haptics.tap()
-            mode = option
+            switch path {
+            case .both:
+                readerOnly = false
+                learningOnly = false
+                mode = .reading
+            case .reading:
+                readerOnly = true
+                learningOnly = false
+                mode = .reading
+            case .learning:
+                readerOnly = false
+                learningOnly = true
+                mode = .learning
+            }
             chosen = true
             onChoose()
         } label: {
             HStack(spacing: 16) {
                 Image(systemName: icon)
-                    .scaledFont(size: 28)
-                    .foregroundColor(Color.brandTint)
-                    .frame(width: 44)
+                    .scaledFont(size: 24)
+                    .foregroundStyle(Color.brandOnSoft)
+                    .frame(width: 52, height: 52)
+                    .background(Color.brandAccent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(option == .learning ? "Учить английский" : "Читать книги")
-                        .scaledFont(size: 19, weight: .semibold)
-                        .foregroundColor(.brandDark)
+                    Text(title)
+                        .scaledFont(size: 18, weight: .semibold)
+                        .foregroundStyle(Color.brandDark)
                     Text(text)
                         .scaledFont(size: 14)
-                        .foregroundColor(Color.brandMuted)
+                        .foregroundStyle(Color.brandMuted)
                         .multilineTextAlignment(.leading)
                 }
                 Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .scaledFont(size: 14, weight: .semibold)
+                    .foregroundStyle(Color.brandMuted)
             }
-            .padding(18)
-            .background(Color.cardBackground)
-            .cornerRadius(18)
+            .padding(16)
+            .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
         }
         .buttonStyle(.plain)
     }
