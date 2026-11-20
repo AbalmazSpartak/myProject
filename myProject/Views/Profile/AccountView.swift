@@ -108,6 +108,7 @@ struct AccountView: View {
             Image(systemName: icon).scaledFont(size: 16).foregroundColor(.brandMuted).frame(width: 22)
             content().scaledFont(size: 15).foregroundColor(.brandDark)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 14)
         .frame(height: 48)
         .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
