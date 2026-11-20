@@ -121,7 +121,7 @@ struct BookVoiceMenu: View {
     let onLive: (LibriVox.Audiobook) -> Void
 
     private enum LiveState {
-        case searching, found(LibriVox.Audiobook), none, failed
+        case searching, found([LibriVox.Audiobook]), none, failed
     }
 
     @State private var live: LiveState = .searching
@@ -140,9 +140,14 @@ struct BookVoiceMenu: View {
                 checked("Голос по умолчанию · \(NeuralVoice.shared.bookVoiceTitle(language))", !isLive)
             }
             switch live {
-            case .found(let audiobook):
-                Button { onLive(audiobook) } label: {
-                    checked("Живой голос · \(audiobook.readerText.capitalizedFirst)", isLive)
+            case .found(let recordings):
+                Section("Живой голос") {
+                    ForEach(recordings) { audiobook in
+                        Button { onLive(audiobook) } label: {
+                            checked("\(audiobook.readerText.capitalizedFirst) · \(LibriVox.durationText(audiobook.seconds))",
+                                    current == .live(audiobook.id))
+                        }
+                    }
                 }
             case .searching:
                 Text("Живой голос — ищу запись…")
@@ -176,25 +181,30 @@ struct BookVoiceMenu: View {
         if isOn { Label(title, systemImage: "checkmark") } else { Text(title) }
     }
 
-    /// Выбранная для книги запись, иначе лучшая найденная (первой идёт та, где читает один человек)
+    /// Все записи книги: выбранная — первой, дальше найденные (сначала те, где читает один человек)
     private func load() async {
-        if let saved = LiveAudioStore.audiobook(book: book.id) {
-            live = .found(saved)
-            return
+        let saved = LiveAudioStore.audiobook(book: book.id)
+        func merged(_ found: [LibriVox.Audiobook]) -> [LibriVox.Audiobook] {
+            guard let saved else { return found }
+            return [saved] + found.filter { $0.id != saved.id }
         }
+        if let saved { live = .found([saved]) }
         guard book.gutenbergID != nil else {
-            live = .none
+            if saved == nil { live = .none }
             return
         }
         if let cached = LiveAudioLookup.cached(gutenbergID: book.gutenbergID) {
-            live = cached.first.map(LiveState.found) ?? .none
+            let all = merged(cached)
+            live = all.isEmpty ? .none : .found(all)
             return
         }
-        live = .searching
+        if saved == nil { live = .searching }
         guard let found = await LiveAudioLookup.recordings(for: book) else {
-            live = .failed
+            // Выбранная запись есть — её и оставляем, без «не ответил»
+            if saved == nil { live = .failed }
             return
         }
-        live = found.first.map(LiveState.found) ?? .none
+        let all = merged(found)
+        live = all.isEmpty ? .none : .found(all)
     }
 }
