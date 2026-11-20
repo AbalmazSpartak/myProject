@@ -17,6 +17,13 @@ enum AppMode: String, CaseIterable {
     /// «Только обучение»: читалки и переключателя режимов нет, приложение — слова, практика и словарь
     static let learningOnlyKey = "app_learning_only"
 
+    /// «Перевод по нажатию»: нажатие на слово в книге открывает карточку с переводом. Включено по умолчанию, выключается в «Оформлении» читалки
+    static let tapTranslationKey = "reader_tap_translation"
+
+    static var tapTranslationEnabled: Bool {
+        UserDefaults.standard.object(forKey: tapTranslationKey) as? Bool ?? true
+    }
+
     static var isReaderOnly: Bool { UserDefaults.standard.bool(forKey: readerOnlyKey) }
     static var isLearningOnly: Bool { UserDefaults.standard.bool(forKey: learningOnlyKey) }
 

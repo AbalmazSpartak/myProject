@@ -303,6 +303,7 @@ struct ReaderAppearanceSheet: View {
     @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
     @AppStorage(ReaderSettings.layoutKey) private var layout = ReaderLayout.pages
     @AppStorage(ReaderSettings.pageTurnKey) private var pageTurn = ReaderPageTurn.slide
+    @AppStorage(AppMode.tapTranslationKey) private var tapTranslation = true
     @AppStorage(ReaderSettings.phonicsKey) private var phonicsMode = "off"
     @AppStorage(ReaderSettings.phonicsRulesKey) private var phonicsRules = ""
     @AppStorage(ReaderSettings.nightBrightnessKey) private var nightBrightness = NightPalette.standard.brightness
@@ -338,6 +339,16 @@ struct ReaderAppearanceSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
+                    section("Слова")
+                    Toggle("Перевод по нажатию", isOn: $tapTranslation)
+                        .scaledFont(size: 16, weight: .semibold)
+                        .tint(Color.brandTint)
+                    Text(tapTranslation
+                         ? "Нажмите на слово в тексте — откроется карточка с переводом и кнопкой «В словарь»."
+                         : "Выключено: нажатие на слово ничего не открывает. Слова можно выделить долгим нажатием.")
+                        .scaledFont(size: 13)
+                        .foregroundColor(Color.brandMuted)
+
                     section("Листание")
                     Picker("Листание", selection: $layout) {
                         ForEach(ReaderLayout.allCases) { Text($0.title).tag($0) }

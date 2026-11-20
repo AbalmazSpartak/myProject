@@ -53,7 +53,7 @@ struct BookDetailView: View {
                     bookWordsCard.padding(.top, 14)
                     aboutRows.padding(.top, 14)
                     audiobookCard.padding(.top, 18)
-                    if !AppMode.isReaderOnly { dictionaryButton.padding(.top, 12) }
+                    if AppMode.tapTranslationEnabled { dictionaryButton.padding(.top, 12) }
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 20)

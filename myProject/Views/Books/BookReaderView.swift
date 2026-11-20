@@ -480,7 +480,7 @@ struct BookReaderView: View {
                         Label("Добавить закладку", systemImage: "bookmark")
                     }
                 }
-                if isEnglish, !AppMode.isReaderOnly {
+                if isEnglish, AppMode.tapTranslationEnabled {
                     Button { isShowingDictionary = true } label: {
                         Label("Словарь из книги", systemImage: "text.book.closed")
                     }
@@ -1105,8 +1105,8 @@ struct BookReaderView: View {
             go(to: target)
             return
         }
-        // Только в «Читаем» (читалка без обучения) карточки слова нет; в «Читаем и учим» она работает и в режиме «Чтение»
-        guard !AppMode.isReaderOnly else { return }
+        // «Перевод по нажатию» выключен в «Оформлении» читалки — нажатие на слово ничего не делает
+        guard AppMode.tapTranslationEnabled else { return }
         // Перевод слова — чтение вслух на паузу, продолжится кнопкой ▶️
         speech.pause()
         let paragraph = chapter.paragraphs[parts[0]]

@@ -47,6 +47,12 @@ setFlags(reader: true, learning: true, mode: nil)
 expect(AppMode.current == .reading, "оба флага сразу: читалка важнее")
 setFlags(reader: false, learning: false, mode: nil)
 
+UserDefaults.standard.removeObject(forKey: AppMode.tapTranslationKey)
+expect(AppMode.tapTranslationEnabled, "перевод по нажатию включён по умолчанию")
+UserDefaults.standard.set(false, forKey: AppMode.tapTranslationKey)
+expect(!AppMode.tapTranslationEnabled, "перевод по нажатию можно выключить")
+UserDefaults.standard.removeObject(forKey: AppMode.tapTranslationKey)
+
 // MARK: - Транскрипция из словаря
 
 let sample = """
