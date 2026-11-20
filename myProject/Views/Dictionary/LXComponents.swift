@@ -343,11 +343,13 @@ struct LXButton: View {
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
-        .opacity(isEnabled ? 1 : 0.45)
+        // Выключенная главная кнопка — спокойная плашка с читаемой надписью, а не бледный цвет кнопки
+        .opacity(isEnabled || style == .primary || style == .soft ? 1 : 0.45)
     }
 
     private var foreground: Color {
-        switch style {
+        if !isEnabled, style == .primary || style == .soft { return .brandMuted }
+        return switch style {
         case .primary: .brandOnButton
         case .soft: .brandOnSoft
         case .outline: .brandDark
@@ -356,7 +358,8 @@ struct LXButton: View {
     }
 
     private var background: Color {
-        switch style {
+        if !isEnabled, style == .primary || style == .soft { return .brandFill }
+        return switch style {
         case .primary: .brandButton
         case .soft: .brandAccent
         case .outline, .text: .clear

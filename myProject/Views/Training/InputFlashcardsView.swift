@@ -76,7 +76,7 @@ struct InputFlashcardsView: View {
                 TrainingEmpty(systemImage: currentFilter == .mistakes ? "checkmark.circle" : "keyboard",
                               text: currentFilter == .mistakes ? "Неисправленных ошибок нет" : "В выбранном разделе нет слов")
             } else if let word = currentWord {
-                TrainingCard(score: "Верно \(correctCount) из \(totalAnswered)", level: word.cefrLevel) {
+                TrainingCard(score: totalAnswered == 0 ? "" : "Верно \(correctCount) из \(totalAnswered)", level: word.cefrLevel) {
                     ScrollView {
                         VStack(spacing: 16) {
                             TrainingQuestion(word: word, text: currentQuestion, isEnglish: translationMode == "en_ru")

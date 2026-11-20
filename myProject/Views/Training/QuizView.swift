@@ -75,7 +75,7 @@ struct QuizView: View {
                 TrainingEmpty(systemImage: currentFilter == .mistakes ? "checkmark.circle" : "doc.text.magnifyingglass",
                               text: currentFilter == .mistakes ? "Неисправленных ошибок нет" : "В выбранном разделе нет слов")
             } else if let word = currentWord {
-                TrainingCard(score: "Верно \(correctCount) из \(totalAnswered)", level: word.cefrLevel) {
+                TrainingCard(score: totalAnswered == 0 ? "" : "Верно \(correctCount) из \(totalAnswered)", level: word.cefrLevel) {
                     VStack {
                         Spacer(minLength: 0)
                         TrainingQuestion(word: word, text: currentQuestion, isEnglish: translationMode == "en_ru")
