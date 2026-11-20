@@ -163,7 +163,11 @@ struct ScanResultsView: View {
                 Section {
                     TextField("Название", text: $listName)
                 } header: {
-                    Text("Новый словарь")
+                    Text("НАЗВАНИЕ СЛОВАРЯ")
+                        .tracking(0.6)
+                        .scaledFont(size: 12, weight: .semibold)
+                        .foregroundStyle(Color.brandMuted)
+                        .textCase(nil)
                 } footer: {
                     VStack(alignment: .leading, spacing: 4) {
                         if let existing = existingList {
@@ -250,23 +254,9 @@ struct ScanResultsView: View {
             .listRowBackground(Color.cardBackground)
         }
         .brandListBackground()
-        .navigationTitle("Найдено слов: \(candidates.count)")
+        .navigationTitle("Слова из текста")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-                if translationState == .translating {
-                    HStack(spacing: 6) {
-                        ProgressView()
-                        Text("Перевожу…")
-                            .foregroundColor(Color.brandMuted)
-                    }
-                } else {
-                    Button("Сохранить (\(selected.count))", action: save)
-                        .bold()
-                        .disabled(!canSave)
-                }
-            }
-        }
+        .safeAreaInset(edge: .bottom) { bottomBar }
         .translationTask(translationConfig) { session in
             await translate(with: session)
         }
@@ -299,18 +289,54 @@ struct ScanResultsView: View {
 
     // MARK: - Строки
 
+    /// Внизу: в какой словарь и главная кнопка (по холсту «Слова со сканера»)
+    private var bottomBar: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "folder").scaledFont(size: 14)
+                Text("Добавить в:")
+                Text(listName.trimmingCharacters(in: .whitespaces))
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.brandDark)
+                    .lineLimit(1)
+            }
+            .scaledFont(size: 13)
+            .foregroundStyle(Color.brandMuted)
+            if translationState == .translating {
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text("Перевожу, сохранить можно будет после перевода")
+                        .scaledFont(size: 13)
+                        .foregroundStyle(Color.brandMuted)
+                }
+            }
+            LXButton(title: "Добавить выбранные (\(selected.count))", isEnabled: canSave, action: save)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 10)
+        .padding(.bottom, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.brandBackground)
+        .overlay(alignment: .top) { LXDivider() }
+    }
+
     private func sectionHeader(_ title: String, items: [ScanCandidate]) -> some View {
         let allOn = items.allSatisfy { selected.contains($0.id) }
         return HStack {
-            Text("\(title) — \(items.count)")
+            Text("\(title.uppercased()) · \(items.count)")
+                .tracking(0.6)
+                .scaledFont(size: 12, weight: .semibold)
+                .foregroundStyle(Color.brandMuted)
             Spacer()
             Button(allOn ? "Снять все" : "Выбрать все") {
                 let ids = Set(items.map(\.id))
                 if allOn { selected.subtract(ids) } else { selected.formUnion(ids) }
             }
-            .font(.caption)
-            .textCase(nil)
+            .scaledFont(size: 14, weight: .semibold)
+            .foregroundStyle(Color.brandTint)
+            .frame(minHeight: 44)
         }
+        .textCase(nil)
     }
 
     private var translationProgress: some View {
@@ -370,6 +396,7 @@ struct ScanResultsView: View {
             VStack(alignment: .leading, spacing: 4) {
                 titleLine(english: entry?.lemma ?? word.lemma, partOfSpeech: entry?.pos ?? word.partOfSpeech, count: word.count)
                 TextField(translationState == .translating ? "переводится…" : "перевод", text: translationBinding(for: candidate))
+                    .scaledFont(size: 15)
                     .foregroundStyle(Color.brandMuted)
                 if let entry {
                     aiCaption(entry, surface: word.surface)
@@ -413,24 +440,24 @@ struct ScanResultsView: View {
                         .lineLimit(3)
                 }
                 if word.state != .new {
-                    Text("уже учите")
-                        .font(.caption.bold())
-                        .foregroundStyle(.green)
+                    Label("уже учите", systemImage: word.studyStatus.symbol)
+                        .scaledFont(size: 12, weight: .semibold)
+                        .foregroundStyle(word.studyStatus.color)
                 }
             }
             Spacer()
-            Text(word.cefrLevel)
-                .font(.caption.bold())
-                .foregroundStyle(Color.brandTint)
+            LevelBadge(level: word.cefrLevel)
         }
     }
 
     private func titleLine(english: String, partOfSpeech: String, count: Int) -> some View {
         HStack(spacing: 6) {
-            Text(english).font(.headline)
-            Text(partOfSpeech).font(.subheadline).italic().foregroundStyle(Color.brandMuted)
+            Text(english)
+                .scaledFont(size: 21, weight: .medium, design: .serif)
+                .foregroundStyle(Color.brandDark)
+            Text(partOfSpeech).scaledFont(size: 14).italic().foregroundStyle(Color.brandMuted)
             if count > 1 {
-                Text("×\(count)").font(.caption).foregroundStyle(Color.brandMuted)
+                Text("×\(count)").scaledFont(size: 12).foregroundStyle(Color.brandMuted)
             }
         }
     }
@@ -442,9 +469,12 @@ struct ScanResultsView: View {
         } label: {
             Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
                 .scaledFont(size: 22)
-                .foregroundStyle(isOn ? Color.brandTint : Color.brandMuted.opacity(0.5))
+                .foregroundStyle(isOn ? Color.brandTint : Color.brandMuted.opacity(0.6))
+                .frame(minWidth: 32, minHeight: 44)
         }
         .buttonStyle(.borderless)
+        .accessibilityLabel(candidate.extracted.lemma)
+        .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 
     // MARK: - Перевод
