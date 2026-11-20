@@ -52,6 +52,10 @@ struct BookReaderView: View {
     /// Язык книги — определяется при открытии
     @State private var language = BookLanguage.english
     @State private var isShowingContents = false
+    /// Заметка к выделенному месту: фраза уже выбрана, ждём описание
+    private struct NoteDraft { let text: String; let paragraph: Int }
+    @State private var noteDraft: NoteDraft?
+    @State private var noteText = ""
     /// «Меню чтения» — лист снизу; что открывает другой экран, делается после его закрытия
     @State private var isShowingMenu = false
     @State private var pendingMenuAction: (() -> Void)?
@@ -157,6 +161,11 @@ struct BookReaderView: View {
                     onPageTurn: { setChromeHidden(true) },
                     onTap: handleTap,
                     onSelectionStart: { setChromeHidden(true) },
+                    onNote: { text, paragraph in
+                        guard chapterStarts.indices.contains(chapterIndex) else { return }
+                        noteText = ""
+                        noteDraft = NoteDraft(text: text, paragraph: chapterStarts[chapterIndex] + paragraph)
+                    },
                     onPrevious: { go(to: chapterIndex - 1, atEnd: true) },
                     onNext: { go(to: chapterIndex + 1) }
                 )
@@ -341,6 +350,13 @@ struct BookReaderView: View {
             BookBookmarksView(bookmarks: bookmarks, chapters: chapters, chapterStarts: chapterStarts,
                           onSelect: { open($0.paragraph) }, onDelete: removeBookmark)
                 .appThemedColorScheme()
+        }
+        .alert("Заметка", isPresented: Binding(get: { noteDraft != nil }, set: { if !$0 { noteDraft = nil } })) {
+            TextField("Описание (можно пусто)", text: $noteText)
+            Button("Отмена", role: .cancel) {}
+            Button("Сохранить", action: saveNote)
+        } message: {
+            Text("«\(String((noteDraft?.text ?? "").prefix(140)))»")
         }
         .alert("Закладка", isPresented: $isAddingBookmark) {
             TextField("Заметка (можно пусто)", text: $bookmarkNote)
@@ -869,6 +885,16 @@ struct BookReaderView: View {
         let start = chapterStarts[chapterIndex]
         let range = style.layout == .pages ? pageParagraphs.range.map { (start + $0.lowerBound)...(start + $0.upperBound) } : nil
         return bookmarks.first { range?.contains($0.paragraph) ?? ($0.paragraph == book.position) }
+    }
+
+    private func saveNote() {
+        guard let draft = noteDraft else { return }
+        var list = book.notes
+        list.append(BookNote(paragraph: draft.paragraph, text: draft.text,
+                             note: noteText.trimmingCharacters(in: .whitespacesAndNewlines)))
+        book.notes = list
+        noteDraft = nil
+        Haptics.tap()
     }
 
     private func addBookmark() {

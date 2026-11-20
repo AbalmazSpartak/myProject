@@ -25,6 +25,8 @@ final class Book {
     @Attribute(.externalStorage) var alignmentData: Data?
     /// Закладки — JSON массива BookBookmark
     var bookmarksData: Data?
+    /// Заметки — JSON массива BookNote: выделенная фраза и описание
+    var notesData: Data?
 
     init(_ parsed: ParsedBook, gutenbergID: Int? = nil) {
         title = parsed.title

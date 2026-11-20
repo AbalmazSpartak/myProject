@@ -20,13 +20,34 @@ struct ReaderBookmarksTab: View {
     }
 
     @Environment(\.modelContext) private var modelContext
-    @Query(filter: #Predicate<Book> { $0.bookmarksData != nil }, sort: \Book.title) private var books: [Book]
+    @Query(filter: #Predicate<Book> { $0.bookmarksData != nil || $0.notesData != nil }, sort: \Book.title) private var allBooks: [Book]
 
     @State private var section = Section.bookmarks
     /// nil — «Все книги»
     @State private var bookFilter: UUID?
     @State private var places: [UUID: Places] = [:]
     @State private var openedBook: Book?
+    /// Править описание заметки
+    @State private var editingNote: NoteEntry?
+    @State private var editText = ""
+
+    /// Заметка вместе с книгой
+    private struct NoteEntry: Identifiable {
+        let book: Book
+        let note: BookNote
+        var id: UUID { note.id }
+    }
+
+    /// Книги раздела: с закладками на вкладке «Закладки», с заметками — на «Заметки»
+    private var books: [Book] {
+        allBooks.filter { section == .bookmarks ? !$0.bookmarks.isEmpty : !$0.notes.isEmpty }
+    }
+
+    private var noteEntries: [NoteEntry] {
+        books.filter { bookFilter == nil || $0.id == bookFilter }
+            .flatMap { book in book.notes.map { NoteEntry(book: book, note: $0) } }
+            .sorted { $0.note.created > $1.note.created }
+    }
 
     private var entries: [Entry] {
         books.filter { bookFilter == nil || $0.id == bookFilter }
@@ -45,7 +66,7 @@ struct ReaderBookmarksTab: View {
                         ForEach(Section.allCases, id: \.self) { Text($0.rawValue).tag($0) }
                     }
                     .pickerStyle(.segmented)
-                    if section == .bookmarks, books.count > 1 { bookChips }
+                    if books.count > 1 { bookChips }
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
@@ -59,8 +80,12 @@ struct ReaderBookmarksTab: View {
                         list
                     }
                 case .notes:
-                    TabPlaceholder(icon: "note.text", title: "Заметок пока нет",
-                                   text: "Скоро: выделенные места из книг с вашими пояснениями.")
+                    if noteEntries.isEmpty {
+                        TabPlaceholder(icon: "note.text", title: "Заметок пока нет",
+                                       text: "В читалке выделите фразу долгим нажатием и выберите «Заметка».")
+                    } else {
+                        notesList
+                    }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -71,7 +96,13 @@ struct ReaderBookmarksTab: View {
                     .toolbar(.hidden, for: .navigationBar)
                     .toolbar(.hidden, for: .tabBar)
             }
-            .task(id: books.map(\.id)) { loadPlaces() }
+            .task(id: allBooks.map(\.id)) { loadPlaces() }
+            .onChange(of: section) { _, _ in bookFilter = nil }
+            .alert("Описание заметки", isPresented: Binding(get: { editingNote != nil }, set: { if !$0 { editingNote = nil } })) {
+                TextField("Описание", text: $editText)
+                Button("Отмена", role: .cancel) {}
+                Button("Сохранить") { saveEdit() }
+            }
         }
     }
 
@@ -147,6 +178,98 @@ struct ReaderBookmarksTab: View {
         .accessibilityHint("Открыть книгу на этом месте")
     }
 
+    private var notesList: some View {
+        ScrollView {
+            VStack(spacing: 12) {
+                ForEach(noteEntries) { entry in noteCard(entry) }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            .padding(.bottom, 24)
+        }
+    }
+
+    /// Карточка заметки по холсту: выделенная фраза на мягкой подложке, описание, глава · % · дата
+    private func noteCard(_ entry: NoteEntry) -> some View {
+        let percent = Int((Double(entry.note.paragraph) / Double(max(entry.book.paragraphCount, 1)) * 100).rounded())
+        var place = [DictionaryView.shortName(entry.book.title, limit: 24)]
+        if let chapter = chapterTitle(forParagraph: entry.note.paragraph, in: entry.book) { place.append(chapter) }
+        place.append("\(percent)%")
+        place.append(dateText(entry.note.created))
+        return Button {
+            entry.book.position = entry.note.paragraph
+            try? modelContext.save()
+            openedBook = entry.book
+        } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(entry.note.text)
+                    .scaledFont(size: 17, design: .serif)
+                    .foregroundStyle(Color.brandOnSoft)
+                    .padding(.horizontal, 3)
+                    .background(Color.brandAccent, in: RoundedRectangle(cornerRadius: 3))
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(5)
+                if entry.note.note.isEmpty {
+                    Label("Добавить описание", systemImage: "pencil")
+                        .scaledFont(size: 13, weight: .medium)
+                        .foregroundStyle(Color.brandTint)
+                        .frame(minHeight: 36, alignment: .leading)
+                } else {
+                    Text(entry.note.note)
+                        .scaledFont(size: 14)
+                        .foregroundStyle(Color.brandDark)
+                        .multilineTextAlignment(.leading)
+                }
+                Text(place.joined(separator: " · "))
+                    .scaledFont(size: 12)
+                    .foregroundStyle(Color.brandMuted)
+                    .lineLimit(1)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .contextMenu {
+            Button {
+                editText = entry.note.note
+                editingNote = entry
+            } label: { Label("Изменить описание", systemImage: "pencil") }
+            Button(role: .destructive) { removeNote(entry) } label: {
+                Label("Удалить заметку", systemImage: "trash")
+            }
+        }
+        .accessibilityHint("Открыть книгу на этом месте")
+    }
+
+    private func saveEdit() {
+        guard let entry = editingNote else { return }
+        var list = entry.book.notes
+        if let index = list.firstIndex(where: { $0.id == entry.note.id }) {
+            list[index].note = editText.trimmingCharacters(in: .whitespacesAndNewlines)
+            entry.book.notes = list
+            try? modelContext.save()
+        }
+        editingNote = nil
+    }
+
+    private func removeNote(_ entry: NoteEntry) {
+        var list = entry.book.notes
+        list.removeAll { $0.id == entry.note.id }
+        entry.book.notes = list
+        try? modelContext.save()
+    }
+
+    private func chapterTitle(forParagraph paragraph: Int, in book: Book) -> String? {
+        guard let place = places[book.id],
+              let index = place.starts.lastIndex(where: { $0 <= paragraph }),
+              place.titles.indices.contains(index) else { return nil }
+        return place.titles[index]
+    }
+
     // MARK: - Данные
 
     /// Заметка к закладке, а если её нет — глава, где закладка стоит
@@ -164,10 +287,7 @@ struct ReaderBookmarksTab: View {
     }
 
     private func chapterTitle(for entry: Entry) -> String? {
-        guard let place = places[entry.book.id],
-              let index = place.starts.lastIndex(where: { $0 <= entry.bookmark.paragraph }),
-              place.titles.indices.contains(index) else { return nil }
-        return place.titles[index]
+        chapterTitle(forParagraph: entry.bookmark.paragraph, in: entry.book)
     }
 
     private func dateText(_ date: Date) -> String {
@@ -178,7 +298,7 @@ struct ReaderBookmarksTab: View {
 
     /// Главы книг с закладками: JSON книги разбирается один раз на книгу
     private func loadPlaces() {
-        for book in books where places[book.id] == nil {
+        for book in allBooks where places[book.id] == nil {
             let chapters = book.chapters
             var start = 0
             let starts = chapters.map { chapter -> Int in

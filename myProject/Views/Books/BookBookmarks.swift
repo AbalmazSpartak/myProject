@@ -16,6 +16,23 @@ extension Book {
     }
 }
 
+/// Заметка в книге: выделенная фраза, абзац от начала книги и описание читателя
+nonisolated struct BookNote: Codable, Identifiable, Hashable, Sendable {
+    var id = UUID()
+    var paragraph: Int
+    var text: String
+    var note = ""
+    var created = Date()
+}
+
+extension Book {
+    /// Заметки по порядку в книге
+    var notes: [BookNote] {
+        get { notesData.flatMap { try? JSONDecoder().decode([BookNote].self, from: $0) } ?? [] }
+        set { notesData = newValue.isEmpty ? nil : try? JSONEncoder().encode(newValue.sorted { $0.paragraph < $1.paragraph }) }
+    }
+}
+
 /// Ленточка закладки в углу страницы
 struct BookmarkRibbon: View {
     var body: some View {

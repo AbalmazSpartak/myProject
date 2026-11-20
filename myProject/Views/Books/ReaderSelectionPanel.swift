@@ -20,6 +20,8 @@ struct ReaderSelectionPanel: View {
     let passageLookup: () -> BookPassage?
     /// У одного слова — «Карточка»: полная карточка слова, как при нажатии
     var onOpenCard: (() -> Void)?
+    /// «Заметка» к выделенному месту: читалка спрашивает описание и сохраняет
+    var onNote: (() -> Void)?
     let onClose: () -> Void
 
     @AppStorage(ReaderSelectionPanel.systemTranslatorKey) private var usesSystemTranslator = false
@@ -186,6 +188,9 @@ struct ReaderSelectionPanel: View {
                 action(copied ? "Скопировано" : "Копировать", icon: "doc.on.doc") {
                     UIPasteboard.general.string = text
                     copied = true
+                }
+                if let onNote {
+                    action("Заметка", icon: "note.text.badge.plus", action: onNote)
                 }
                 if isEnglish && fitsDictionary {
                     action(isAdded ? "В словаре" : "В словарь", icon: isAdded ? "checkmark.circle.fill" : "plus.circle",

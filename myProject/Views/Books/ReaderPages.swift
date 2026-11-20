@@ -192,6 +192,8 @@ struct ReaderPagedText: View, Equatable {
     let onTap: (URL) -> Void
     /// Слово выделено — читалка прячет шапку и нижнюю панель, иначе панель действий оказывается под ними
     var onSelectionStart: () -> Void = {}
+    /// «Заметка» из панели выделения: выделенный текст и абзац главы
+    var onNote: (String, Int) -> Void = { _, _ in }
     let onPrevious: () -> Void
     let onNext: () -> Void
 
@@ -257,7 +259,11 @@ struct ReaderPagedText: View, Equatable {
                                              onOpenCard: NSEqualRanges(selection.range, selection.anchor) ? {
                                                  openWord(selected)
                                                  clearSelection()
-                                             } : nil) {
+                                             } : nil,
+                                             onNote: {
+                                                 onNote(layout.string(selected), layout.firstParagraphPart(of: selected)?.paragraph ?? 0)
+                                                 clearSelection()
+                                             }) {
                             clearSelection()
                         }
                             .padding(.horizontal, 12)
