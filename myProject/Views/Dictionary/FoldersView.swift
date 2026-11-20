@@ -325,7 +325,7 @@ struct FoldersView: View {
         }
         let folder = Category(name: name)
         modelContext.insert(folder)
-        try? modelContext.save()
+        modelContext.saveReporting()
         select(.category(folder))
     }
 
@@ -339,7 +339,7 @@ struct FoldersView: View {
             listMerge = ListMerge(source: list, target: existing)
         } else {
             list.name = name
-            try? modelContext.save()
+            modelContext.saveReporting()
         }
     }
 
@@ -350,7 +350,7 @@ struct FoldersView: View {
             notice = "Папка «\(name)» уже есть. Выберите другое название."
         } else {
             folder.name = name
-            try? modelContext.save()
+            modelContext.saveReporting()
         }
     }
 
@@ -358,7 +358,7 @@ struct FoldersView: View {
     private func deleteFolder(_ folder: Category) {
         if filter == .category(folder) { filter = .general }
         modelContext.delete(folder)
-        try? modelContext.save()
+        modelContext.saveReporting()
         reloadCounts()
     }
 
@@ -376,7 +376,7 @@ struct FoldersView: View {
             studyScope.enabledLists.remove(list.id)
             if filter == .list(list) { filter = .general }
             modelContext.delete(list)
-            try? modelContext.save()
+            modelContext.saveReporting()
             isDeletingList = false
             reloadCounts()
         }
@@ -394,7 +394,7 @@ struct FoldersView: View {
         }
         if filter == .list(source) { filter = .list(target) }
         modelContext.delete(source)
-        try? modelContext.save()
+        modelContext.saveReporting()
     }
 
     // MARK: - Привязки окон подтверждений

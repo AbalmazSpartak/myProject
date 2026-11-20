@@ -240,7 +240,7 @@ extension DataPreloader {
             context.delete(category)
         }
 
-        try? context.save()
+        context.saveReporting()
         UserDefaults.standard.removeObject(forKey: bundledHashKey)
         syncBundledWords(context: context)
     }
@@ -273,6 +273,6 @@ extension DataPreloader {
             }
             context.delete(fragment)
         }
-        try? context.save()
+        context.saveReporting()
     }
 }

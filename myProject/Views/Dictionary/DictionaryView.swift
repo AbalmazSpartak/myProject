@@ -249,20 +249,20 @@ struct DictionaryView: View {
             FoldersView(filter: $filter, startsOnTopics: start == .topics)
                 .appThemedColorScheme()
         }
-        .sheet(isPresented: $isShowingAddWord, onDismiss: { try? modelContext.save() }) {
+        .sheet(isPresented: $isShowingAddWord, onDismiss: { modelContext.saveReporting() }) {
             AddWordView(category: currentCategoryForNewWord, list: currentListForNewWord, targetName: addTargetName)
                 .appThemedColorScheme()
         }
         // Правка могла сменить тему или написание — сохраняем, список перечитается
-        .sheet(item: $wordToEdit, onDismiss: { try? modelContext.save() }) { word in
+        .sheet(item: $wordToEdit, onDismiss: { modelContext.saveReporting() }) { word in
             EditWordView(word: word)
                 .appThemedColorScheme()
         }
-        .sheet(item: $wordToShow, onDismiss: { try? modelContext.save() }) { word in
+        .sheet(item: $wordToShow, onDismiss: { modelContext.saveReporting() }) { word in
             WordDetailView(word: word)
                 .appThemedColorScheme()
         }
-        .sheet(isPresented: $isShowingSearch, onDismiss: { try? modelContext.save() }) {
+        .sheet(isPresented: $isShowingSearch, onDismiss: { modelContext.saveReporting() }) {
             WordSearchView()
                 .appThemedColorScheme()
         }
@@ -445,7 +445,7 @@ struct DictionaryView: View {
                         if case .list(let list) = filter {
                             Button(role: .destructive) {
                                 word.lists.removeAll { $0.id == list.id }
-                                try? modelContext.save()
+                                modelContext.saveReporting()
                             } label: { Label("Удалить из словаря", systemImage: "minus.circle") }
                         }
                     }

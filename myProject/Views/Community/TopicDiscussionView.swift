@@ -151,7 +151,7 @@ struct TopicDiscussionView: View {
             modelContext.insert(comment)
             comment.topic = topic
         }
-        try? modelContext.save()
+        modelContext.saveReporting()
         Haptics.tap()
         draft = ""
         replyTo = nil
@@ -181,7 +181,7 @@ struct TopicDiscussionView: View {
                     Button {
                         Haptics.tap()
                         comment.isLikedByMe.toggle()
-                        try? modelContext.save()
+                        modelContext.saveReporting()
                     } label: {
                         Label(comment.likeCount > 0 ? "\(comment.likeCount)" : "Нравится",
                               systemImage: comment.isLikedByMe ? "heart.fill" : "heart")
@@ -253,7 +253,7 @@ struct TopicDiscussionView: View {
         if replyTo?.id == comment.id { replyTo = nil }
         if editing?.id == comment.id { editing = nil; draft = "" }
         modelContext.delete(comment)
-        try? modelContext.save()
+        modelContext.saveReporting()
     }
 
     private static func relativeTime(_ date: Date) -> String {

@@ -138,7 +138,7 @@ struct DeveloperView: View {
         for word in allWords where word.state != .new {
             word.dueDate = word.dueDate.addingTimeInterval(interval)
         }
-        try? modelContext.save()
+        modelContext.saveReporting()
         lastActionMessage = "dueDate сдвинут на \(days) дн. у \(allWords.filter { $0.state != .new }.count) слов."
     }
     
@@ -153,7 +153,7 @@ struct DeveloperView: View {
             word.lastReview = nil
             word.isMistake = false
         }
-        try? modelContext.save()
+        modelContext.saveReporting()
         lastActionMessage = "FSRS-прогресс сброшен у \(allWords.count) слов."
     }
     
@@ -161,7 +161,7 @@ struct DeveloperView: View {
         for word in allWords { modelContext.delete(word) }
         for category in categories { modelContext.delete(category) }
         for profile in profiles { modelContext.delete(profile) }
-        try? modelContext.save()
+        modelContext.saveReporting()
         lastActionMessage = "База полностью очищена."
     }
     private func generateTestWords(count: Int) {
@@ -189,7 +189,7 @@ struct DeveloperView: View {
             )
             modelContext.insert(word)
         }
-        try? modelContext.save()
+        modelContext.saveReporting()
         lastActionMessage = "Добавлено \(count) тестовых слов."
     }
 
@@ -200,7 +200,7 @@ struct DeveloperView: View {
         if let testCategory = categories.first(where: { $0.name == "Тестовые данные" }) {
             modelContext.delete(testCategory)
         }
-        try? modelContext.save()
+        modelContext.saveReporting()
         lastActionMessage = "Тестовые слова удалены."
     }
 }

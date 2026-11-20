@@ -114,7 +114,7 @@ struct EditWordView: View {
         .onDisappear {
             guard deleteOnClose else { return }
             modelContext.delete(word)
-            try? modelContext.save()
+            modelContext.saveReporting()
         }
         .onAppear {
             if !word.isCustom, original == nil { original = DictionarySignals.fields(of: word) }
@@ -185,7 +185,7 @@ struct EditWordView: View {
                     LXButton(title: word.lists.count == 1 ? "Удалить из словаря" : "Удалить из словаря «\(DictionaryView.shortName(list.name))»",
                              style: .outline) {
                         word.lists.removeAll { $0.id == list.id }
-                        try? modelContext.save()
+                        modelContext.saveReporting()
                     }
                 }
                 Text("Слово и его прогресс останутся — пропадёт только из выбранного словаря.")

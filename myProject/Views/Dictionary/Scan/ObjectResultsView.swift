@@ -201,7 +201,7 @@ struct ObjectResultsView: View {
                 word.lists.append(list)
             }
         }
-        try? modelContext.save()
+        modelContext.saveReporting()
         onSave(list)
     }
 }

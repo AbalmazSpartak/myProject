@@ -189,7 +189,7 @@ struct ReviewSessionView: View {
             unknown.append(word)
             word.isMistake = true
             DailyStudy.record(word, rating: .again)
-            try? modelContext.save()
+            modelContext.saveReporting()
         }
         Haptics.tap()
         isRevealed = false

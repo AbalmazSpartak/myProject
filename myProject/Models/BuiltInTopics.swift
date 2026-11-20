@@ -39,7 +39,7 @@ enum BuiltInTopics {
             }
         }
         for removed in byID.values { context.delete(removed) }
-        try? context.save()
+        context.saveReporting()
     }
 
     // MARK: - Сборка блоков

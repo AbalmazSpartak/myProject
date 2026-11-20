@@ -1030,7 +1030,7 @@ struct BookReaderView: View {
             return shifted
         }
         book.bookmarks = bookmarks
-        try? modelContext.save()
+        modelContext.saveReporting()
         chapters = kept
         numbering = ChapterNumbering(titles: kept.map(\.title))
         var start = 0
@@ -1048,7 +1048,7 @@ struct BookReaderView: View {
     private func saveBookmarks() {
         book.bookmarks = bookmarks
         bookmarks = book.bookmarks
-        try? modelContext.save()
+        modelContext.saveReporting()
     }
 
     /// Переход к абзацу книги: другая глава открывается на нём, в открытой — прокрутка или листание к нему
@@ -1109,7 +1109,7 @@ struct BookReaderView: View {
         }.value
         book.translationData = try? JSONEncoder().encode(translation)
         book.alignmentData = try? JSONEncoder().encode(aligned)
-        try? modelContext.save()
+        modelContext.saveReporting()
         loadTranslation()
         updateChapterTranslations()
         showsParallel = true
@@ -1135,7 +1135,7 @@ struct BookReaderView: View {
         let shifted = ParallelText.shift(alignment, chapter: chapterIndex, from: paragraph, by: delta,
                                          translationCount: translationParagraphs.count)
         book.alignmentData = try? JSONEncoder().encode(shifted)
-        try? modelContext.save()
+        modelContext.saveReporting()
         self.alignment = shifted
         updateChapterTranslations()
         translationVersion += 1
@@ -1143,7 +1143,7 @@ struct BookReaderView: View {
 
     private func removeTranslation() {
         book.setTranslation(nil)
-        try? modelContext.save()
+        modelContext.saveReporting()
         loadTranslation()
         updateChapterTranslations()
         translationVersion += 1

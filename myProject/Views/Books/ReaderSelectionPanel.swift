@@ -310,7 +310,7 @@ struct ReaderSelectionPanel: View {
         // Слово из словаря приложения — ссылкой со своим прогрессом, а не копией
         if isSingleWord, let baseWord, translation == baseWord.russian {
             if !baseWord.lists.contains(where: { $0.id == list.id }) { baseWord.lists.append(list) }
-            try? modelContext.save()
+            modelContext.saveReporting()
             isAdded = true
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             return
@@ -320,7 +320,7 @@ struct ReaderSelectionPanel: View {
                         example: "<b>\(phrase)</b>", cefrLevel: CEFRLevel.c1.rawValue, partOfSpeech: "phrase", isCustom: true)
         modelContext.insert(word)
         word.lists.append(list)
-        try? modelContext.save()
+        modelContext.saveReporting()
         isAdded = true
         isEnteringTranslation = false
         UINotificationFeedbackGenerator().notificationOccurred(.success)

@@ -283,7 +283,7 @@ struct TopicEditorView: View {
             clip.topic = topic
         }
         AudioClipPlayer.shared.stop()
-        try? modelContext.save()
+        modelContext.saveReporting()
         dismiss()
     }
 }

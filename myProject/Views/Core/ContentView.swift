@@ -64,7 +64,7 @@ struct ContentView: View {
                         let parsed = try await Task.detached(priority: .userInitiated) { try BookImport.parse(url) }.value
                         let book = Book(parsed)
                         modelContext.insert(book)
-                        try? modelContext.save()
+                        modelContext.saveReporting()
                         widgetListens = false
                         widgetBook = book
                     } catch {
@@ -80,6 +80,11 @@ struct ContentView: View {
             var descriptor = FetchDescriptor<Book>(predicate: #Predicate { $0.id == id })
             descriptor.fetchLimit = 1
             widgetBook = try? modelContext.fetch(descriptor).first
+        }
+        .alert("Не удалось сохранить", isPresented: Binding(get: { SaveIssue.shared.message != nil }, set: { if !$0 { SaveIssue.shared.message = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(SaveIssue.shared.message ?? "")
         }
         .alert("Не получилось", isPresented: Binding(get: { importError != nil }, set: { if !$0 { importError = nil } })) {
             Button("OK", role: .cancel) {}

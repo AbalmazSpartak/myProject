@@ -63,7 +63,7 @@ struct TopicView: View {
             Button("Отмена", role: .cancel) {}
             Button("Удалить", role: .destructive) {
                 modelContext.delete(topic)
-                try? modelContext.save()
+                modelContext.saveReporting()
                 dismiss()
             }
         } message: {
@@ -115,7 +115,7 @@ struct TopicView: View {
         let isSaved = topic.savedAt != nil
         return Button {
             topic.savedAt = isSaved ? nil : Date()
-            try? modelContext.save()
+            modelContext.saveReporting()
         } label: {
             Label(isSaved ? "В ваших подборках" : "В мои подборки",
                   systemImage: isSaved ? "bookmark.fill" : "bookmark")
@@ -222,7 +222,7 @@ private struct TopicRatingCard: View {
                     Button {
                         Haptics.tap()
                         topic.rating = topic.rating == star ? 0 : star
-                        try? modelContext.save()
+                        modelContext.saveReporting()
                     } label: {
                         Image(systemName: star <= topic.rating ? "star.fill" : "star")
                             .scaledFont(size: 28)
@@ -242,7 +242,7 @@ private struct TopicRatingCard: View {
                     Button {
                         Haptics.tap()
                         topic.toggle(reaction)
-                        try? modelContext.save()
+                        modelContext.saveReporting()
                     } label: {
                         Text("\(reaction.emoji) \(reaction.title)")
                             .scaledFont(size: 15, weight: .semibold)

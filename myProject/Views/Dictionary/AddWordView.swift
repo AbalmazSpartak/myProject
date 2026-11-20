@@ -119,7 +119,7 @@ struct AddWordView: View {
         .translationTask(translationConfig) { session in
             await translate(with: session)
         }
-        .sheet(item: $wordToOpen, onDismiss: { try? modelContext.save() }) { word in
+        .sheet(item: $wordToOpen, onDismiss: { modelContext.saveReporting() }) { word in
             EditWordView(word: word)
                 .appThemedColorScheme()
         }
@@ -252,7 +252,7 @@ struct AddWordView: View {
     /// Ссылка на существующее слово в своём словаре — без копии
     private func add(_ word: Word, to list: WordList) {
         word.lists.append(list)
-        try? modelContext.save()
+        modelContext.saveReporting()
         finishAdding(word.english)
     }
 
@@ -273,7 +273,7 @@ struct AddWordView: View {
         )
         modelContext.insert(word)
         if let list { word.lists.append(list) }
-        try? modelContext.save()
+        modelContext.saveReporting()
         finishAdding(trimmedEnglish)
     }
 

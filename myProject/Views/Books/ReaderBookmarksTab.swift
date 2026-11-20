@@ -144,7 +144,7 @@ struct ReaderBookmarksTab: View {
         Button {
             // Как «слушать с главы»: читалка открывается там, где стоит закладка
             entry.book.position = entry.bookmark.paragraph
-            try? modelContext.save()
+            modelContext.saveReporting()
             openedBook = entry.book
         } label: {
             HStack(spacing: 12) {
@@ -198,7 +198,7 @@ struct ReaderBookmarksTab: View {
         place.append(dateText(entry.note.created))
         return Button {
             entry.book.position = entry.note.paragraph
-            try? modelContext.save()
+            modelContext.saveReporting()
             openedBook = entry.book
         } label: {
             VStack(alignment: .leading, spacing: 8) {
@@ -251,7 +251,7 @@ struct ReaderBookmarksTab: View {
         if let index = list.firstIndex(where: { $0.id == entry.note.id }) {
             list[index].note = editText.trimmingCharacters(in: .whitespacesAndNewlines)
             entry.book.notes = list
-            try? modelContext.save()
+            modelContext.saveReporting()
         }
         editingNote = nil
     }
@@ -260,7 +260,7 @@ struct ReaderBookmarksTab: View {
         var list = entry.book.notes
         list.removeAll { $0.id == entry.note.id }
         entry.book.notes = list
-        try? modelContext.save()
+        modelContext.saveReporting()
     }
 
     private func chapterTitle(forParagraph paragraph: Int, in book: Book) -> String? {
@@ -320,6 +320,6 @@ struct ReaderBookmarksTab: View {
         var list = entry.book.bookmarks
         list.removeAll { $0.id == entry.bookmark.id }
         entry.book.bookmarks = list
-        try? modelContext.save()
+        modelContext.saveReporting()
     }
 }

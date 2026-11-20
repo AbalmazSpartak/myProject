@@ -390,7 +390,7 @@ struct GutenbergCatalogView: View {
                     book.coverData = await RemoteImage.data(item.coverURL)
                 }
                 modelContext.insert(book)
-                try? modelContext.save()
+                modelContext.saveReporting()
             }
             try LiveAudioStore.save(audiobook, book: book.id)
             audioVersion += 1
@@ -406,7 +406,7 @@ struct GutenbergCatalogView: View {
         do {
             let parsed = try await GutenbergCatalog.downloadBook(entry)
             modelContext.insert(Book(parsed, gutenbergID: entry.id))
-            try? modelContext.save()
+            modelContext.saveReporting()
         } catch {
             errorMessage = "Не удалось скачать «\(entry.title)». " + GutenbergCatalog.failureText(error, action: "Скачать книгу")
         }

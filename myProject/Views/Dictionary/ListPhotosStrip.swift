@@ -51,7 +51,7 @@ struct ListPhotosStrip: View {
         guard photos.indices.contains(index) else { return }
         photos.remove(at: index)
         list.photos = photos
-        try? modelContext.save()
+        modelContext.saveReporting()
     }
 
     private struct PhotoIndex: Identifiable {

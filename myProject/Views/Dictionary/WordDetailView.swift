@@ -62,7 +62,7 @@ struct WordDetailView: View {
             guard showWordImages else { return }
             await WordImageLoader.loadIfNeeded(word)
         }
-        .sheet(isPresented: $isEditing, onDismiss: { try? modelContext.save() }) {
+        .sheet(isPresented: $isEditing, onDismiss: { modelContext.saveReporting() }) {
             EditWordView(word: word)
                 .appThemedColorScheme()
         }
@@ -312,7 +312,7 @@ struct WordDetailView: View {
             isConfirmingReset = true
             return
         }
-        try? modelContext.save()
+        modelContext.saveReporting()
     }
 
     private func resetProgress() {
@@ -324,7 +324,7 @@ struct WordDetailView: View {
         word.dueDate = Date()
         word.lastReview = nil
         word.isMistake = false
-        try? modelContext.save()
+        modelContext.saveReporting()
     }
 
     // MARK: - Действия

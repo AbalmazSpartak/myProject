@@ -12,7 +12,9 @@ struct MyApp: App {
     @AppStorage(AppPalette.backgroundKey) private var paletteBackground = ""
 
     // Создаем ModelContainer один раз и храним его в свойстве
-    private var container: ModelContainer
+    private var container: ModelContainer?
+    /// Если база не открылась — вместо падения показываем экран с причиной и копией данных
+    private var startupError: String?
 
     init() {
         AppFonts.register()
@@ -42,19 +44,25 @@ struct MyApp: App {
                 await Self.prepareLearning(context: mainContext)
             }
         } catch {
-            fatalError("Не удалось запустить хранилище SwiftData: \(error)")
+            self.container = nil
+            self.startupError = String(describing: error)
         }
     }
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                // Цвета читаются при отрисовке — после «Применить» в Настройках корень строится заново
-                .id("\(paletteAccent)|\(paletteButton)|\(paletteBackground)")
-                .modelContext(container.mainContext)
-                .appThemedColorScheme()
-                // Текст растёт по «Размеру текста» iPhone, но не до самых огромных размеров, где ломаются шапки и карточки
-                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+            if let container {
+                ContentView()
+                    // Цвета читаются при отрисовке — после «Применить» в Настройках корень строится заново
+                    .id("\(paletteAccent)|\(paletteButton)|\(paletteBackground)")
+                    .modelContext(container.mainContext)
+                    .appThemedColorScheme()
+                    // Текст растёт по «Размеру текста» iPhone, но не до самых огромных размеров, где ломаются шапки и карточки
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+            } else {
+                StartupFailureView(error: startupError ?? "неизвестная ошибка")
+                    .appThemedColorScheme()
+            }
         }
         .onChange(of: scenePhase) { _, phase in
             switch phase {
@@ -65,6 +73,7 @@ struct MyApp: App {
                 if mode == .learning { NeuralVoice.shared.warmUp() }
                 // Сообщения об ошибках и сигналы словаря, сохранённые без интернета; новые правки словаря
                 Task {
+                    guard let container else { return }
                     await WordReports.flush()
                     await DictionarySignals.flush()
                     if mode == .learning { await DictionaryPatch.sync(context: container.mainContext) }
@@ -78,6 +87,7 @@ struct MyApp: App {
             DailyReminder.refresh()
             // Из «Чтения» в «Изучение» — догоняем то, что при запуске пропустили
             guard mode == .learning else { return }
+            guard let container else { return }
             Task { await Self.prepareLearning(context: container.mainContext) }
         }
     }
@@ -95,7 +105,7 @@ struct MyApp: App {
     /// Виджет оценил слова, пока приложение было в фоне. Слова в памяти — со старым расписанием,
     /// и сохранение приложения затёрло бы ответы виджета; повторный запрос подтягивает их из базы
     private func reloadWordsChangedByWidget() {
-        let context = container.mainContext
+        guard let context = container?.mainContext else { return }
         for key in Set(AppGroup.takeWordsChangedByWidget()) {
             _ = AppGroup.word(forKey: key, in: context)
         }
@@ -103,7 +113,7 @@ struct MyApp: App {
 
     /// Уходим в фон: сохранить прогресс и обновить виджет — у слов могло поменяться расписание
     private func shareWithWidget() {
-        try? container.mainContext.save()
+        container?.mainContext.saveReporting()
         // «Продолжить чтение» показывает место в книге — обновляем виджеты в любом режиме
         // Не все виджеты: «Слово дня» меняется в полночь само, а каждое обновление открывает базу и тратит бюджет виджетов
         defer {
@@ -118,7 +128,7 @@ struct MyApp: App {
 
     /// База в общей папке. При первом запуске с виджетом её копия переносится из папки приложения;
     /// старая остаётся как есть — запасной. Нет доступа к общей папке или копирование не удалось — работаем по-старому
-    private static func storeURL() -> URL {
+    static func storeURL() -> URL {
         let old = AppGroup.appStoreURL
         guard let shared = AppGroup.sharedStoreURL else { return old }
         let fileManager = FileManager.default

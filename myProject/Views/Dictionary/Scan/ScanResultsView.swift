@@ -673,7 +673,7 @@ struct ScanResultsView: View {
                 word.lists.append(list)
             }
         }
-        try? modelContext.save()
+        modelContext.saveReporting()
         onSave(list)
     }
 }

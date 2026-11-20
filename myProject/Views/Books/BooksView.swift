@@ -114,7 +114,7 @@ struct BooksView: View {
                     LiveAudioStore.delete(book: bookToDelete.id)
                     modelContext.delete(bookToDelete)
                 }
-                try? modelContext.save()
+                modelContext.saveReporting()
             }
         } message: {
             Text("Словарь из этой книги и добавленные слова останутся.")
@@ -319,7 +319,7 @@ struct BooksView: View {
             let parsed = try await Task.detached(priority: .userInitiated) { try BookImport.parse(url) }.value
             let book = Book(parsed)
             modelContext.insert(book)
-            try? modelContext.save()
+            modelContext.saveReporting()
             openedBook = book
         } catch {
             errorMessage = BookImport.message(for: error)

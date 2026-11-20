@@ -30,7 +30,7 @@ struct BookmarksView: View {
                             .swipeActions {
                                 Button(role: .destructive) {
                                     topic.savedAt = nil
-                                    try? modelContext.save()
+                                    modelContext.saveReporting()
                                 } label: {
                                     Label("Убрать", systemImage: "bookmark.slash")
                                 }

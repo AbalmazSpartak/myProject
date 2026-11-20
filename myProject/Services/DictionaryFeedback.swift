@@ -151,7 +151,7 @@ enum DictionaryPatch {
                 }
             }
         }
-        if changed { try? context.save() }
+        if changed { context.saveReporting() }
     }
 
     /// Пользователь сам поправил поле — патч его не трогает

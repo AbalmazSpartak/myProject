@@ -81,7 +81,7 @@ private struct TranslationReviewListView: View {
         .task(id: showsNew) { reload() }
         .task { csvURL = exportNewWords() }
         .sheet(item: $wordToEdit, onDismiss: {
-            try? modelContext.save()
+            modelContext.saveReporting()
             reload()
             csvURL = exportNewWords()
         }) { word in

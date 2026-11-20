@@ -429,7 +429,7 @@ struct WordLookupView: View {
             modelContext.insert(word)
             word.lists.append(list)
         }
-        try? modelContext.save()
+        modelContext.saveReporting()
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         // Сигнал для словаря: в каком значении слово встречается в книгах; или его нет в базе
         if let baseWord {
