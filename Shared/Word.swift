@@ -128,6 +128,23 @@ extension Word {
 }
 
 extension ModelContext {
+    /// Слова с таким написанием (без учёта регистра): запросом по написанию, а не чтением всей базы.
+    /// Нажатие на слово в книге ищет слово так — первое нажатие больше не ждёт загрузки 6000+ слов
+    func words(spelled variants: [String]) -> [Word] {
+        var spellings = Set<String>()
+        for variant in variants where !variant.isEmpty {
+            spellings.insert(variant)
+            spellings.insert(variant.lowercased())
+            spellings.insert(variant.uppercased())
+            spellings.insert(variant.prefix(1).uppercased() + variant.dropFirst().lowercased())
+        }
+        let list = Array(spellings)
+        var descriptor = FetchDescriptor<Word>(predicate: #Predicate { list.contains($0.english) })
+        descriptor.fetchLimit = 100
+        let found = (try? fetch(descriptor)) ?? []
+        return found.filter { word in variants.contains { word.english.caseInsensitiveCompare($0) == .orderedSame } }
+    }
+
     /// Все слова одним запросом. Экраны берут слова так при открытии, а не через @Query:
     /// тот перечитывает ~3000 слов при каждой перерисовке — 0,6 с и больше на любое нажатие.
     /// Сам запрос тоже дорогой (SwiftData собирает каждое слово заново: ~0,5 с в симуляторе, секунды на телефоне),

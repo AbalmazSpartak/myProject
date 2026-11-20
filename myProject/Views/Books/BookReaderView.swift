@@ -172,7 +172,7 @@ struct BookReaderView: View {
                     onNext: { go(to: chapterIndex + 1) }
                 )
                 .equatable()
-                .id("\(chapterIndex)-\(style.phonicsID)-\(isNight)-\(contentVersion)")
+                .id("\(chapterIndex)-\(style.phonicsID)-\(themeSwitchID)-\(contentVersion)")
             } else if let linkedParagraphs {
                 ReaderChapterText(
                     chapterID: chapterIndex,
@@ -199,7 +199,7 @@ struct BookReaderView: View {
                     chapterNavigation
                 }
                 .equatable()
-                .id("\(chapterIndex)-\(style.phonicsID)-\(isNight)-\(showsParallel)-\(translationVersion)-\(contentVersion)")
+                .id("\(chapterIndex)-\(style.phonicsID)-\(themeSwitchID)-\(showsParallel)-\(translationVersion)-\(contentVersion)")
             } else {
                 Spacer()
                 ProgressView()
@@ -255,7 +255,7 @@ struct BookReaderView: View {
             speech.notice = nil
         }
         // Глава готовится, когда главы загружены и при каждой смене главы
-        .task(id: "\(chapters.count)-\(chapterIndex)-\(style.phonicsID)-\(isNight)-\(contentVersion)") { await prepareChapter() }
+        .task(id: "\(chapters.count)-\(chapterIndex)-\(style.phonicsID)-\(themeSwitchID)-\(contentVersion)") { await prepareChapter() }
         .sheet(item: $tappedWord) { tapped in
             WordLookupView(tapped: tapped, bookTitle: book.title) {
                 tappedWord = nil
@@ -842,6 +842,9 @@ struct BookReaderView: View {
 
     private var isNight: Bool { (style.colorScheme ?? systemScheme) == .dark }
 
+    /// День и ночь перестраивают главу только при включённой подсветке правил: цвета подсветки зависят от темы, а сам текст — нет
+    private var themeSwitchID: String { style.phonics == nil ? "" : String(isNight) }
+
     /// «Ночь» ↔ «День»: тёмная тема — «Ночь», светлая — «Бумага»; прочие настройки оформления остаются
     private func toggleDayNight() {
         let next: ReaderTheme = isNight ? .paper : .night
@@ -1166,11 +1169,14 @@ struct BookReaderView: View {
 
     /// Абзац, где каждое слово — ссылка на себя: в английской книге — английские слова, в другой — слова любых букв.
     /// phonics: nil — без подсветки, иначе что подсвечивать; cache — разбор слов главы
+    /// Выражения для слов главы собираются один раз, а не на каждый абзац
+    nonisolated(unsafe) private static let englishWordRegex = try? NSRegularExpression(pattern: "[A-Za-z]+(?:['’-][A-Za-z]+)*")
+    nonisolated(unsafe) private static let anyWordRegex = try? NSRegularExpression(pattern: "\\p{L}+(?:['’-]\\p{L}+)*")
+
     nonisolated static func linked(_ text: String, paragraph: Int, english: Bool = true, phonics: Set<PhonicsOption>? = nil,
                                    palette: PhonicsPalette = .make(.paper), cache: inout [String: ReadingRules.Highlight?]) -> AttributedString {
         let ns = text as NSString
-        let pattern = english ? "[A-Za-z]+(?:['’-][A-Za-z]+)*" : "\\p{L}+(?:['’-]\\p{L}+)*"
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return AttributedString(text) }
+        guard let regex = english ? Self.englishWordRegex : Self.anyWordRegex else { return AttributedString(text) }
         let showsColloquial = english && phonics?.contains(.colloquial) == true
         // Кавычки ‘…’ в абзаце — ’ после слова скорее закрывает цитату, чем глотает звук
         let singleQuotes = showsColloquial && text.contains("‘")

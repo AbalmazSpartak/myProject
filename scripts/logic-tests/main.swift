@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 
 // Тесты логики без экрана: запускаются на компьютере (scripts/run_tests.sh), телефон не нужен.
 // Каждая проверка — expect(условие, «что проверяем»); в конце — итог и код выхода.
@@ -197,6 +198,46 @@ for set in PhonicsPalette.Variant.allCases {
     let inks = PhonicsPalette.entries(palette).map(\.ink)
     expectEqual(Set(inks).count, inks.count, "\(set): у категорий разные цвета")
 }
+
+// MARK: - Куски абзацев на странице (быстрый поиск против прямого перебора)
+
+func naivePieces(starts: [Int], lengths: [Int], chars: NSRange) -> [PageSegments.Piece] {
+    starts.indices.compactMap { index in
+        let from = max(chars.location, starts[index]), to = min(NSMaxRange(chars), starts[index] + lengths[index])
+        return to > from ? PageSegments.Piece(paragraph: index, location: from - starts[index], length: to - from) : nil
+    }
+}
+var generator = SystemRandomNumberGenerator()
+var pieceMismatches = 0
+for _ in 0..<400 {
+    let count = Int.random(in: 1...40, using: &generator)
+    let lengths = (0..<count).map { _ in Int.random(in: 0...60, using: &generator) }
+    var starts: [Int] = []
+    var offset = 0
+    for length in lengths { starts.append(offset); offset += length + 1 }
+    let location = Int.random(in: 0...max(offset - 1, 0), using: &generator)
+    let chars = NSRange(location: location, length: Int.random(in: 1...max(offset - location, 1), using: &generator))
+    if PageSegments.pieces(starts: starts, lengths: lengths, chars: chars) != naivePieces(starts: starts, lengths: lengths, chars: chars) { pieceMismatches += 1 }
+}
+expectEqual(pieceMismatches, 0, "быстрый поиск кусков страницы даёт то же, что полный перебор (400 случайных глав)")
+expect(PageSegments.pieces(starts: [], lengths: [], chars: NSRange(location: 0, length: 5)).isEmpty, "нет абзацев — нет кусков")
+
+// MARK: - Поиск слова запросом по написанию
+
+do {
+    let container = try ModelContainer(for: AppGroup.schema, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    let context = ModelContext(container)
+    for (english, pos) in [("run", "v."), ("run", "n."), ("April", "n."), ("AI", "n."), ("other", "det.")] {
+        context.insert(Word(english: english, russian: "x", example: "<b>\(english)</b>", cefrLevel: "A1", partOfSpeech: pos, isCustom: false))
+    }
+    try context.save()
+    expectEqual(context.words(spelled: ["run"]).count, 2, "слово с двумя частями речи находится обеими строками")
+    expectEqual(context.words(spelled: ["Run"]).count, 2, "регистр не важен (Run → run)")
+    expectEqual(context.words(spelled: ["april"]).first?.english ?? "", "April", "april → April")
+    expectEqual(context.words(spelled: ["ai"]).first?.english ?? "", "AI", "ai → AI")
+    expectEqual(context.words(spelled: ["ran", "run"]).count, 2, "несколько написаний сразу (форма и словарная)")
+    expect(context.words(spelled: ["zzzz"]).isEmpty, "нет слова — пусто")
+} catch { failures.append("поиск слова запросом: \(error)") }
 
 // MARK: - Итог
 

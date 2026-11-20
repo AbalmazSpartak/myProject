@@ -58,26 +58,33 @@ struct BookWordProvider: TimelineProvider {
         let day = Calendar.current.ordinality(of: .day, in: .era, for: date) ?? 0
 
         // Слова из книг: те, что лежат в своих словарях и с примером из текста
-        var descriptor = FetchDescriptor<Word>(
+        // Один объект слова, а не тысячи: у виджета мало памяти. Считаем подходящие и берём одно по номеру дня
+        let fromBooks = FetchDescriptor<Word>(
             predicate: #Predicate { !$0.lists.isEmpty && $0.example != "" },
             sortBy: [SortDescriptor(\.english)]
         )
-        descriptor.fetchLimit = 2000
-        let fromBooks = (try? context.fetch(descriptor)) ?? []
-        if !fromBooks.isEmpty {
-            let word = fromBooks[day % fromBooks.count]
-            return BookWordEntry(date: date, item: item(word, source: word.lists.first?.name))
+        let bookCount = (try? context.fetchCount(fromBooks)) ?? 0
+        if bookCount > 0 {
+            var one = fromBooks
+            one.fetchOffset = day % bookCount
+            one.fetchLimit = 1
+            if let word = (try? context.fetch(one))?.first {
+                return BookWordEntry(date: date, item: item(word, source: word.lists.first?.name))
+            }
         }
 
         // Книжных слов нет — слово дня из базы с примером
-        var base = FetchDescriptor<Word>(
+        let base = FetchDescriptor<Word>(
             predicate: #Predicate { !$0.isCustom && $0.example != "" },
             sortBy: [SortDescriptor(\.english)]
         )
-        base.fetchLimit = 3000
-        let words = (try? context.fetch(base)) ?? []
-        guard !words.isEmpty else { return BookWordEntry(date: date, item: nil) }
-        return BookWordEntry(date: date, item: item(words[day % words.count], source: nil))
+        let baseCount = (try? context.fetchCount(base)) ?? 0
+        guard baseCount > 0 else { return BookWordEntry(date: date, item: nil) }
+        var one = base
+        one.fetchOffset = day % baseCount
+        one.fetchLimit = 1
+        guard let word = (try? context.fetch(one))?.first else { return BookWordEntry(date: date, item: nil) }
+        return BookWordEntry(date: date, item: item(word, source: nil))
     }
 
     private static func item(_ word: Word, source: String?) -> BookWordEntry.Item {

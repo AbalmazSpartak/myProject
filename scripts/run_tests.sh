@@ -18,7 +18,7 @@ swiftc -swift-version 6 -default-isolation MainActor -enable-upcoming-feature No
   Shared/CommunityTopic.swift Shared/TopicBlock.swift Shared/TopicComment.swift Shared/UserProfile.swift Shared/StudyScope.swift \
   Shared/FSRSCalculator.swift Shared/StudyLimits.swift Shared/DailyStreak.swift Shared/DailyStudy.swift Shared/AppGroup.swift \
   myProject/Services/AppMode.swift myProject/Services/TranscriptionLookup.swift myProject/Services/PDFBook.swift \
-  myProject/Services/RussianPlural.swift myProject/Views/Books/PhonicsPalette.swift myProject/Models/BookMarks.swift myProject/Models/BookWordOrder.swift \
+  myProject/Services/RussianPlural.swift myProject/Services/PageSegments.swift myProject/Views/Books/PhonicsPalette.swift myProject/Models/BookMarks.swift myProject/Models/BookWordOrder.swift \
   scripts/logic-tests/main.swift 2>&1 | grep -E "error" | head -20
 if [ -x "$BIN" ]; then "$BIN" || status=1; else echo "Не удалось собрать тесты логики"; status=1; fi
 

@@ -351,10 +351,7 @@ struct WordLookupView: View {
         }
         lemma = found.lemma
         partOfSpeech = found.partOfSpeech
-        let matches = modelContext.fetchAllWords().filter {
-            $0.english.caseInsensitiveCompare(found.lemma) == .orderedSame
-                || $0.english.caseInsensitiveCompare(tapped.word) == .orderedSame
-        }
+        let matches = modelContext.words(spelled: [found.lemma, tapped.word])
         baseWord = matches.first { $0.partOfSpeech == found.partOfSpeech } ?? matches.first
         if baseWord == nil { requestTranslation() }
         refinePassageHighlights()

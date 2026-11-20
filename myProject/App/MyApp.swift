@@ -105,7 +105,12 @@ struct MyApp: App {
     private func shareWithWidget() {
         try? container.mainContext.save()
         // «Продолжить чтение» показывает место в книге — обновляем виджеты в любом режиме
-        defer { WidgetCenter.shared.reloadAllTimelines() }
+        // Не все виджеты: «Слово дня» меняется в полночь само, а каждое обновление открывает базу и тратит бюджет виджетов
+        defer {
+            for kind in ["ReadingWidget", "ListeningWidget", "WordReviewWidget", "StreakWidget"] {
+                WidgetCenter.shared.reloadTimelines(ofKind: kind)
+            }
+        }
         // Виджет «Повторение» — для изучения: в «Чтении» тренировок нет, расписание слов не меняется
         guard mode == .learning else { return }
         AppGroup.defaults.set(studyScope.rawValue, forKey: StudyScope.storageKey)

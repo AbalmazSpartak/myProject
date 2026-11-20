@@ -24,10 +24,13 @@ nonisolated enum ReaderPaginator {
         storage.addLayoutManager(layout)
 
         var starts: [Int] = []
+        var lengths: [Int] = []
         var offset = 0
         for paragraph in paragraphs {
+            let length = (paragraph as NSString).length
             starts.append(offset)
-            offset += (paragraph as NSString).length + 1
+            lengths.append(length)
+            offset += length + 1
         }
 
         var result: [[Segment]] = []
@@ -38,10 +41,8 @@ nonisolated enum ReaderPaginator {
             let glyphs = layout.glyphRange(for: container)
             guard glyphs.length > 0 else { break }
             let chars = layout.characterRange(forGlyphRange: glyphs, actualGlyphRange: nil)
-            let segments = paragraphs.indices.compactMap { index -> Segment? in
-                let length = (paragraphs[index] as NSString).length
-                let from = max(chars.location, starts[index]), to = min(NSMaxRange(chars), starts[index] + length)
-                return to > from ? Segment(paragraph: index, range: NSRange(location: from - starts[index], length: to - from)) : nil
+            let segments = PageSegments.pieces(starts: starts, lengths: lengths, chars: chars).map {
+                Segment(paragraph: $0.paragraph, range: NSRange(location: $0.location, length: $0.length))
             }
             if !segments.isEmpty { result.append(segments) }
             if NSMaxRange(chars) >= storage.length { break }
@@ -98,8 +99,10 @@ nonisolated final class ReaderPageLayout {
     }
 
     /// Английское слово, в котором стоит символ
+    nonisolated(unsafe) private static let wordRegex = try? NSRegularExpression(pattern: "[A-Za-z]+(?:['’-][A-Za-z]+)*")
+
     func word(at index: Int) -> NSRange? {
-        guard let regex = try? NSRegularExpression(pattern: "[A-Za-z]+(?:['’-][A-Za-z]+)*") else { return nil }
+        guard let regex = Self.wordRegex else { return nil }
         return regex.matches(in: text as String, range: NSRange(location: 0, length: text.length))
             .first { NSLocationInRange(index, $0.range) }?.range
     }

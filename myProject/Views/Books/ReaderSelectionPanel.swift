@@ -255,9 +255,7 @@ struct ReaderSelectionPanel: View {
         let clean = text.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
         guard !clean.isEmpty else { return nil }
         let found = TextWordExtractor.lemma(of: clean, at: clean.startIndex..<clean.endIndex, in: clean)
-        let matches = modelContext.fetchAllWords().filter {
-            $0.english.caseInsensitiveCompare(found.lemma) == .orderedSame || $0.english.caseInsensitiveCompare(clean) == .orderedSame
-        }
+        let matches = modelContext.words(spelled: [found.lemma, clean])
         return matches.first { $0.partOfSpeech == found.partOfSpeech } ?? matches.first
     }
 

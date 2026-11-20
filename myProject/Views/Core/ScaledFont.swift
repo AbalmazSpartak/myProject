@@ -10,9 +10,14 @@ nonisolated private struct ScaledFont: ViewModifier {
     let design: Font.Design
 
     func body(content: Content) -> some View {
-        let traits = UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(dynamicTypeSize))
-        let scaled = UIFontMetrics(forTextStyle: Self.textStyle(for: size)).scaledValue(for: size, compatibleWith: traits)
-        return content.font(AppFonts.font(size: scaled, weight: weight, design: design))
+        // Шрифт собирается один раз на сочетание размера, веса, начертания и «Размера текста»: этот модификатор стоит на сотнях строк
+        let key = ScaledFontCache.Key(size: size, weight: weight, design: design, dynamicTypeSize: dynamicTypeSize)
+        let font = ScaledFontCache.shared.font(for: key) {
+            let traits = UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(dynamicTypeSize))
+            let scaled = UIFontMetrics(forTextStyle: Self.textStyle(for: size)).scaledValue(for: size, compatibleWith: traits)
+            return AppFonts.font(size: scaled, weight: weight, design: design)
+        }
+        return content.font(font)
     }
 
     /// Системный стиль того же размера — у крупных стилей рост мягче, чтобы заголовки не разваливали экран
@@ -29,6 +34,32 @@ nonisolated private struct ScaledFont: ViewModifier {
         case ..<31: return .title1
         default: return .largeTitle
         }
+    }
+}
+
+/// Готовые шрифты `scaledFont`: сборка UIFont с поиском по семейству и запасным шрифтом дорогая, а вызывается на каждую перерисовку строки
+nonisolated final class ScaledFontCache: @unchecked Sendable {
+    nonisolated static let shared = ScaledFontCache()
+
+    struct Key: Hashable {
+        let size: CGFloat
+        let weight: Font.Weight
+        let design: Font.Design
+        let dynamicTypeSize: DynamicTypeSize
+    }
+
+    private let lock = NSLock()
+    private var fonts: [Key: Font] = [:]
+
+    func font(for key: Key, make: () -> Font) -> Font {
+        lock.lock()
+        if let cached = fonts[key] { lock.unlock(); return cached }
+        lock.unlock()
+        let font = make()
+        lock.lock()
+        fonts[key] = font
+        lock.unlock()
+        return font
     }
 }
 
