@@ -27,6 +27,10 @@ struct GutenbergCatalogView: View {
     @State private var downloadingAudio: Set<Int> = []
     /// Аудиокнига, для которой спрашиваем: скачать целиком или слушать онлайн
     @State private var pendingAudio: LibriVox.Audiobook?
+    /// Другой чтец для книги, у которой уже выбрана запись
+    @State private var pendingReader: LibriVox.Audiobook?
+    /// Меняется после выбора записи — строки перечитывают, какая запись у книги
+    @State private var audioVersion = 0
 
     var body: some View {
         NavigationStack {
@@ -76,6 +80,19 @@ struct GutenbergCatalogView: View {
                 Button("Отмена", role: .cancel) {}
             } message: { _ in
                 Text("Книга появится в библиотеке и в разделе «Аудио». Аудио можно скачать и позже, на странице книги.")
+            }
+            .confirmationDialog("Выбрать этого чтеца?", isPresented: Binding(get: { pendingReader != nil }, set: { if !$0 { pendingReader = nil } }),
+                                titleVisibility: .visible, presenting: pendingReader) { audiobook in
+                let downloaded = downloadedOfCurrent(for: audiobook)
+                Button(downloaded > 0 ? "Выбрать и удалить скачанное (\(downloaded) глав)" : "Выбрать",
+                       role: downloaded > 0 ? .destructive : nil) {
+                    Task { await chooseReader(audiobook) }
+                }
+                Button("Отмена", role: .cancel) {}
+            } message: { audiobook in
+                Text(downloadedOfCurrent(for: audiobook) > 0
+                     ? "У книги уже есть другой чтец со скачанными главами — они удалятся. Новый чтец играет онлайн, скачать его можно на странице книги."
+                     : "Новый чтец заменит прежнего. Он играет онлайн, скачать его можно на странице книги.")
             }
             .navigationTitle(kind == .audiobooks ? (query.isEmpty ? "Аудиокниги" : "Поиск") : (query.isEmpty ? "Популярные книги" : "Поиск"))
             .navigationBarTitleDisplayMode(.inline)
@@ -187,8 +204,10 @@ struct GutenbergCatalogView: View {
     }
 
     private func audiobookRow(_ audiobook: LibriVox.Audiobook) -> some View {
+        _ = audioVersion
         let book = books.first { $0.gutenbergID == audiobook.gutenbergID }
-        let hasAudio = book.map { LiveAudioStore.audiobook(book: $0.id) != nil } ?? false
+        let saved = book.flatMap { LiveAudioStore.audiobook(book: $0.id) }
+        let isChosen = saved?.id == audiobook.id
         return HStack(spacing: 12) {
             RemoteCover(url: audiobook.coverURL)
                 .frame(width: 56, height: 56)
@@ -206,23 +225,52 @@ struct GutenbergCatalogView: View {
                     .font(.caption)
                     .foregroundStyle(Color.brandMuted)
                     .lineLimit(1)
+                if let book, let saved, isChosen {
+                    let downloaded = LiveAudioStore.downloadedCount(book: book.id, audiobook: saved)
+                    Text(downloaded == saved.sections.count ? "У вас · скачана целиком"
+                         : downloaded > 0 ? "У вас · скачано \(downloaded) из \(saved.sections.count) глав" : "У вас · слушаете онлайн")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.green)
+                }
             }
             Spacer()
-            if hasAudio {
+            if isChosen {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.green)
-                    .accessibilityLabel("В библиотеке")
+                    .accessibilityLabel("Эта запись у вас")
             } else if downloadingAudio.contains(audiobook.id) {
                 ProgressView()
             } else {
-                Button { pendingAudio = audiobook } label: {
+                Button { if saved != nil { pendingReader = audiobook } else { pendingAudio = audiobook } } label: {
                     Image(systemName: "headphones.circle.fill")
                         .font(.title2)
                         .foregroundColor(Color.brandTint)
                 }
                 .buttonStyle(.borderless)
-                .accessibilityLabel("Добавить аудиокнигу")
+                .accessibilityLabel(saved != nil ? "Выбрать этого чтеца" : "Добавить аудиокнигу")
             }
+        }
+    }
+
+    /// Сколько глав скачано у записи, которую заменит этот чтец
+    private func downloadedOfCurrent(for audiobook: LibriVox.Audiobook) -> Int {
+        guard let book = books.first(where: { $0.gutenbergID == audiobook.gutenbergID }),
+              let saved = LiveAudioStore.audiobook(book: book.id) else { return 0 }
+        return LiveAudioStore.downloadedCount(book: book.id, audiobook: saved)
+    }
+
+    /// Другой чтец для книги из библиотеки: прежняя запись (и её скачанные главы) уходит, новая играет онлайн
+    private func chooseReader(_ item: LibriVox.Audiobook) async {
+        guard let book = books.first(where: { $0.gutenbergID == item.gutenbergID }) else { return }
+        downloadingAudio.insert(item.id)
+        defer { downloadingAudio.remove(item.id) }
+        do {
+            let audiobook = item.sections.isEmpty ? try await LibriVox.details(id: item.id) : item
+            guard let audiobook else { throw URLError(.fileDoesNotExist) }
+            try LiveAudioPlayer.shared.replaceRecording(book: book.id, with: audiobook)
+            audioVersion += 1
+        } catch {
+            errorMessage = "Не удалось выбрать чтеца: LibriVox не ответил. Проверьте интернет и попробуйте ещё раз."
         }
     }
 
@@ -257,6 +305,7 @@ struct GutenbergCatalogView: View {
                 try? modelContext.save()
             }
             try LiveAudioStore.save(audiobook, book: book.id)
+            audioVersion += 1
             if downloadAudio { LiveAudioDownloader.shared.start(book: book.id) }
         } catch {
             errorMessage = "Не удалось добавить «\(item.title)»: LibriVox не ответил. Проверьте интернет и попробуйте ещё раз."
