@@ -52,6 +52,7 @@ struct BookDetailView: View {
                     actions.padding(.top, 18)
                     bookWordsCard.padding(.top, 14)
                     aboutRows.padding(.top, 14)
+                    LiveAudioCard(book: book).padding(.top, 18)
                     audiobookCard.padding(.top, 18)
                     if AppMode.tapTranslationEnabled { dictionaryButton.padding(.top, 12) }
                 }

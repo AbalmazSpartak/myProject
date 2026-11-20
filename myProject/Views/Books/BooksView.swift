@@ -109,6 +109,9 @@ struct BooksView: View {
             Button("Удалить", role: .destructive) {
                 if let bookToDelete {
                     DailyReminder.forgetBook(bookToDelete.title)
+                    if LiveAudioPlayer.shared.isCurrent(bookToDelete.id) { LiveAudioPlayer.shared.stop() }
+                    if LiveAudioDownloader.shared.isDownloading(bookToDelete.id) { LiveAudioDownloader.shared.cancel() }
+                    LiveAudioStore.delete(book: bookToDelete.id)
                     modelContext.delete(bookToDelete)
                 }
                 try? modelContext.save()

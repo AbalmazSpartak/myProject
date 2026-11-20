@@ -168,6 +168,8 @@ final class ReaderSpeech: NSObject {
     /// Начать с абзаца; offset — с какого символа в нём («Читать отсюда» в карточке слова)
     func start(from index: Int, offset: Int = 0) {
         guard paragraphs.indices.contains(index) else { return }
+        // Два голоса разом не нужны: живая озвучка LibriVox встаёт на паузу
+        LiveAudioPlayer.shared.pause()
         // Новое чтение — Kokoro с первой фразы, даже если до этого после блокировки читал Piper
         usedLockedVoice = false
         // Приготовленное при запуске приложения — если чтение с того же места, тем же голосом и на той же скорости
@@ -349,6 +351,7 @@ final class ReaderSpeech: NSObject {
 
     func resume() {
         guard !isPlaying, let paragraph else { return }
+        LiveAudioPlayer.shared.pause()
         activateSession()
         isPlaying = true
         if neuralPaused {

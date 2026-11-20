@@ -15,6 +15,15 @@ struct AudioLibraryView: View {
 
     @State private var infos: [UUID: Info] = [:]
     @State private var isLoaded = false
+    /// Книги с живой озвучкой LibriVox и сколько в ней глав
+    @State private var live: [UUID: (downloaded: Int, total: Int)] = [:]
+    @State private var liveBook: Book?
+    @State private var player = LiveAudioPlayer.shared
+
+    private var liveBooks: [Book] {
+        books.filter { live[$0.id] != nil }
+            .sorted { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }
+    }
 
     /// Книги с озвучкой: последняя открытая сверху
     private var audioBooks: [Book] {
@@ -26,28 +35,36 @@ struct AudioLibraryView: View {
         Group {
             if !isLoaded {
                 Color.clear
-            } else if audioBooks.isEmpty {
+            } else if audioBooks.isEmpty && liveBooks.isEmpty {
                 TabPlaceholder(icon: "headphones", title: "Пока нет озвучки",
-                               text: "Откройте книгу и нажмите «Записать озвучку» на её странице — книга появится здесь.")
+                               text: "Откройте книгу и нажмите «Записать озвучку» на её странице или возьмите аудиокнигу с живым голосом в каталоге — книга появится здесь.")
             } else {
                 content
             }
         }
         // Заново при каждом показе раздела: озвучка могла дозаписаться
         .task(id: books.map(\.id)) { await load() }
+        .navigationDestination(item: $liveBook) { book in
+            LiveAudioPlayerView(book: book)
+                .toolbar(.hidden, for: .tabBar)
+        }
     }
 
     private var content: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
                 if let first = audioBooks.first { continueCard(first) }
-                Text("ОЗВУЧЕНО")
-                    .scaledFont(size: 12, weight: .medium)
-                    .tracking(0.5)
-                    .foregroundColor(Color.brandMuted)
-                    .padding(.top, 12)
-                ForEach(audioBooks) { book in
-                    row(book)
+                if !liveBooks.isEmpty {
+                    sectionTitle("ЖИВОЙ ГОЛОС")
+                    ForEach(liveBooks) { book in
+                        liveRow(book)
+                    }
+                }
+                if !audioBooks.isEmpty {
+                    sectionTitle("ОЗВУЧЕНО")
+                    ForEach(audioBooks) { book in
+                        row(book)
+                    }
                 }
             }
             .padding(16)
@@ -55,6 +72,49 @@ struct AudioLibraryView: View {
     }
 
     // MARK: - Части экрана
+
+    private func sectionTitle(_ text: String) -> some View {
+        Text(text)
+            .scaledFont(size: 12, weight: .medium)
+            .tracking(0.5)
+            .foregroundColor(Color.brandMuted)
+            .padding(.top, 12)
+    }
+
+    /// Живая озвучка LibriVox: открывается свой плеер, без читалки
+    private func liveRow(_ book: Book) -> some View {
+        Button { liveBook = book } label: {
+            HStack(spacing: 12) {
+                cover(book, width: 48)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(book.title)
+                        .scaledFont(size: 15, weight: .semibold)
+                        .foregroundColor(.brandDark)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(2)
+                    if !book.author.isEmpty {
+                        Text(book.author)
+                            .scaledFont(size: 13)
+                            .foregroundColor(Color.brandMuted)
+                            .lineLimit(1)
+                    }
+                    if let info = live[book.id] {
+                        Text(player.isCurrent(book.id) && player.isPlaying ? "Сейчас играет"
+                             : (info.downloaded == info.total ? "Скачано: \(info.total) глав" : "Скачано \(info.downloaded) из \(info.total) глав · остальное онлайн"))
+                            .scaledFont(size: 12)
+                            .foregroundColor(Color.brandMuted)
+                    }
+                }
+                Spacer(minLength: 0)
+                playButton(size: 40)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Слушать живой голос: \(book.title)")
+    }
 
     private func continueCard(_ book: Book) -> some View {
         Button { listen(book) } label: {
@@ -158,6 +218,13 @@ struct AudioLibraryView: View {
             result[id] = Info(recorded: recorded, total: total, bytes: bytes)
         }
         infos = result
+        var liveInfo: [UUID: (downloaded: Int, total: Int)] = [:]
+        for book in books {
+            if let audiobook = LiveAudioStore.audiobook(book: book.id) {
+                liveInfo[book.id] = (LiveAudioStore.downloadedCount(book: book.id, audiobook: audiobook), audiobook.sections.count)
+            }
+        }
+        live = liveInfo
         isLoaded = true
     }
 }
