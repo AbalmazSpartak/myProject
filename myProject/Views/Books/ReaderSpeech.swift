@@ -173,6 +173,11 @@ final class ReaderSpeech: NSObject {
         // Приготовленное при запуске приложения — если чтение с того же места, тем же голосом и на той же скорости
         let ready = offset == 0 && recording() == nil ? takePreroll(for: index) : nil
         Self.cancelPreroll()
+        // Виджет «Сейчас слушаете»: какая книга и глава читаются вслух
+        if let bookID {
+            AppGroup.defaults.set(bookID.uuidString, forKey: AppGroup.listeningBookKey)
+            AppGroup.defaults.set(title, forKey: AppGroup.listeningChapterKey)
+        }
         // Книгу читает Kokoro на нейроядре — при следующем запуске приложения она приготовит начало заранее
         if let bookID, let voice = NeuralVoice.shared.bookVoice(language: language ?? BookLanguage.english),
            case .kokoroML = voice.engine {

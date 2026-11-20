@@ -27,6 +27,10 @@ enum AppGroup {
         URL.applicationSupportDirectory.appending(path: "default.store")
     }
 
+    /// Что читалось вслух последним — для виджета «Сейчас слушаете»
+    nonisolated static let listeningBookKey = "widget_listening_book"
+    nonisolated static let listeningChapterKey = "widget_listening_chapter"
+
     // MARK: - Слова, изменённые виджетом
 
     private static let changedWordsKey = "widget_changed_words"

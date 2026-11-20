@@ -32,6 +32,8 @@ struct ContentView: View {
     @State private var activeScreen: ActiveScreen?
     /// Книга, открытая нажатием на виджет «Продолжить чтение»
     @State private var widgetBook: Book?
+    /// Виджет «Сейчас слушаете»: открыть книгу и сразу продолжить озвучку
+    @State private var widgetListens = false
     /// «Практика» — свои переходы, чтобы экран не открылся сразу в двух вкладках
     @State private var practiceScreen: ActiveScreen?
     @State private var selectedTab = 0
@@ -53,16 +55,17 @@ struct ContentView: View {
             }
         }
         .onOpenURL { url in
-            // lexistream://read/<id книги>
-            guard url.scheme == "lexistream", url.host == "read",
+            // lexistream://read/<id книги> или lexistream://listen/<id книги>
+            guard url.scheme == "lexistream", url.host == "read" || url.host == "listen",
                   let id = UUID(uuidString: url.lastPathComponent) else { return }
+            widgetListens = url.host == "listen"
             var descriptor = FetchDescriptor<Book>(predicate: #Predicate { $0.id == id })
             descriptor.fetchLimit = 1
             widgetBook = try? modelContext.fetch(descriptor).first
         }
         .fullScreenCover(item: $widgetBook) { book in
             NavigationStack {
-                BookReaderView(book: book)
+                BookReaderView(book: book, listensOnOpen: widgetListens)
                     .toolbar(.hidden, for: .navigationBar)
             }
             .appThemedColorScheme()
