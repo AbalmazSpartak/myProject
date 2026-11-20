@@ -1,5 +1,19 @@
 import SwiftUI
 
+/// Порядок книг в «Аудио»
+enum AudioLibrarySort: String, CaseIterable, Identifiable {
+    case recent, title, author, downloaded
+    var id: Self { self }
+    var title: String {
+        switch self {
+        case .recent: "Недавние"
+        case .title: "По названию"
+        case .author: "По автору"
+        case .downloaded: "Скачанные сначала"
+        }
+    }
+}
+
 /// «Аудио» в библиотеке: «Продолжить слушать» и список книг с записанной озвучкой
 struct AudioLibraryView: View {
     let books: [Book]
@@ -19,6 +33,51 @@ struct AudioLibraryView: View {
     @State private var live: [UUID: (downloaded: Int, total: Int)] = [:]
     @State private var liveBook: Book?
     @State private var player = LiveAudioPlayer.shared
+    @AppStorage("audio_library_sort") private var sort: AudioLibrarySort = .recent
+
+    /// Доля скачанного: живой голос — главы на устройстве, записанная озвучка — записанные главы
+    private func downloadedShare(_ book: Book) -> Double {
+        if let info = live[book.id] { return info.total > 0 ? Double(info.downloaded) / Double(info.total) : 0 }
+        if let info = infos[book.id] { return info.total > 0 ? Double(info.recorded) / Double(info.total) : 0 }
+        return 0
+    }
+
+    private func sorted(_ list: [Book]) -> [Book] {
+        let recent = list.sorted { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }
+        switch sort {
+        case .recent:
+            return recent
+        case .title:
+            return list.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+        case .author:
+            return list.sorted {
+                let order = $0.author.localizedCaseInsensitiveCompare($1.author)
+                return order == .orderedSame ? $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending : order == .orderedAscending
+            }
+        case .downloaded:
+            // Порядок среди одинаково скачанных — как в «Недавних»
+            return recent.enumerated().sorted { a, b in
+                let da = downloadedShare(a.element), db = downloadedShare(b.element)
+                return da != db ? da > db : a.offset < b.offset
+            }.map(\.element)
+        }
+    }
+
+    private var sortMenu: some View {
+        HStack {
+            Spacer()
+            Menu {
+                Picker("Сортировка", selection: $sort) {
+                    ForEach(AudioLibrarySort.allCases) { Text($0.title).tag($0) }
+                }
+            } label: {
+                Label(sort.title, systemImage: "arrow.up.arrow.down")
+                    .scaledFont(size: 13, weight: .semibold)
+                    .foregroundColor(.brandTint)
+            }
+            .accessibilityLabel("Сортировка: \(sort.title)")
+        }
+    }
 
     private var liveBooks: [Book] {
         books.filter { live[$0.id] != nil }
@@ -54,15 +113,16 @@ struct AudioLibraryView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
                 if let first = audioBooks.first { continueCard(first) }
+                sortMenu
                 if !liveBooks.isEmpty {
                     sectionTitle("ЖИВОЙ ГОЛОС")
-                    ForEach(liveBooks) { book in
+                    ForEach(sorted(liveBooks)) { book in
                         liveRow(book)
                     }
                 }
                 if !audioBooks.isEmpty {
                     sectionTitle("ОЗВУЧЕНО")
-                    ForEach(audioBooks) { book in
+                    ForEach(sorted(audioBooks)) { book in
                         row(book)
                     }
                 }

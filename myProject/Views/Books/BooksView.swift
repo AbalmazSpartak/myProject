@@ -29,6 +29,11 @@ struct BooksView: View {
 
     private let columns = [GridItem(.adaptive(minimum: 150), spacing: 16)]
 
+    /// Разделы плашки: при нижней панели «Чтения» у «Аудио» своя вкладка — здесь его не повторяем
+    private var tabs: [LibraryTab] {
+        hasTabBar ? LibraryTab.allCases.filter { $0 != .audio } : LibraryTab.allCases
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -45,7 +50,7 @@ struct BooksView: View {
             } else {
             // Вкладки — и в пустой библиотеке: сразу видно, где будут книги и откуда их взять
             Picker("Раздел", selection: $tab.animation()) {
-                ForEach(LibraryTab.allCases) { Text($0.title).tag($0) }
+                ForEach(tabs) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented)
             .padding(.horizontal, 16)
@@ -56,8 +61,10 @@ struct BooksView: View {
                 Group {
                     grid(sortedBooks, withAddCard: true, withSearch: true)
                         .tag(LibraryTab.mine)
-                    AudioLibraryView(books: books) { listenBook = $0 }
-                        .tag(LibraryTab.audio)
+                    if tabs.contains(.audio) {
+                        AudioLibraryView(books: books) { listenBook = $0 }
+                            .tag(LibraryTab.audio)
+                    }
                     subscriptions
                         .tag(LibraryTab.subscriptions)
                 }
@@ -67,6 +74,8 @@ struct BooksView: View {
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
+            // «Аудио» убрали из плашки, а запомнен он — открываем «Мои книги»
+            .onAppear { if !tabs.contains(tab) { tab = .mine } }
             }
         }
         .background(Color.brandBackground.ignoresSafeArea())

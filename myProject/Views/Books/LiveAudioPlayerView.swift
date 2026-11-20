@@ -71,7 +71,11 @@ struct LiveAudioPlayerView: View {
         .background(Color.brandBackground.ignoresSafeArea())
         .navigationTitle(book.title)
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { player.open(book: book.id, title: book.title, cover: book.coverData, section: startSection) }
+        .onAppear {
+            // «Недавние» в «Аудио» — по последнему открытию, живой голос тоже считается
+            book.lastOpenedAt = Date()
+            player.open(book: book.id, title: book.title, cover: book.coverData, section: startSection)
+        }
         .navigationDestination(item: $readerChapter) { chapter in
             BookReaderView(book: book, listensOnOpen: true, listenFromChapter: chapter)
                 .toolbar(.hidden, for: .navigationBar)
