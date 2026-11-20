@@ -30,6 +30,8 @@ struct ContentView: View {
     @Query private var profiles: [UserProfile]
     
     @State private var activeScreen: ActiveScreen?
+    /// «Практика» — свои переходы, чтобы экран не открылся сразу в двух вкладках
+    @State private var practiceScreen: ActiveScreen?
     @State private var selectedTab = 0
     /// Открыт «Профиль» — при смене режима общий раздел остаётся открытым, а не прыгает на «Библиотеку» / «Обзор»
     @State private var onProfile = false
@@ -53,7 +55,7 @@ struct ContentView: View {
         }
     }
 
-    /// «Обучение» — минимум для запоминания слов: Обзор (три раздела), Словарь и Профиль
+    /// «Обучение» — минимум для запоминания слов: Обзор («Повторить сейчас»), Практика (все тренировки), Словарь и Профиль
     private var learningTabs: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
@@ -71,11 +73,25 @@ struct ContentView: View {
             .tabItem { Label("Обзор", systemImage: "house") }
             .tag(0)
 
+            NavigationStack {
+                PracticeView(open: { practiceScreen = $0 })
+                    .readableColumn()
+                    .modeSwitcherInset()
+                    .toolbar(.hidden, for: .navigationBar)
+                    .navigationDestination(item: $practiceScreen) { screen in
+                        destination(for: screen)
+                            .toolbar(.hidden, for: .navigationBar)
+                            .toolbar(.hidden, for: .tabBar)
+                    }
+            }
+            .tabItem { Label("Практика", systemImage: "square.stack.3d.up") }
+            .tag(1)
+
             DictionaryView(showsBackButton: false)
                 .readableColumn()
                 .modeSwitcherInset()
                 .tabItem { Label("Словарь", systemImage: "books.vertical") }
-                .tag(1)
+                .tag(2)
 
             NavigationStack {
                 ProfileView(showsBackButton: false)
@@ -84,14 +100,14 @@ struct ContentView: View {
                     .toolbar(.hidden, for: .navigationBar)
             }
             .tabItem { Label("Профиль", systemImage: "person") }
-            .tag(2)
+            .tag(3)
         }
         .onAppear {
-            if onProfile { selectedTab = 2 } else if selectedTab == 2 { selectedTab = 0 }
+            if onProfile { selectedTab = 3 } else if selectedTab == 3 { selectedTab = 0 }
         }
         .onChange(of: selectedTab) { _, new in
             Haptics.tap()
-            onProfile = new == 2
+            onProfile = new == 3
         }
         .tint(.brandTint)
         .toolbarBackground(Color.brandBackground, for: .tabBar)
