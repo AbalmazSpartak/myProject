@@ -53,7 +53,8 @@ struct BookReaderView: View {
     @State private var language = BookLanguage.english
     @State private var isShowingContents = false
     /// Заметка к выделенному месту: фраза уже выбрана, ждём описание
-    private struct NoteDraft { let text: String; let paragraph: Int }
+    private struct NoteDraft { let text: String; let paragraph: Int; let range: NSRange }
+    @State private var notes: [BookNote] = []
     @State private var noteDraft: NoteDraft?
     @State private var noteText = ""
     /// «Меню чтения» — лист снизу; что открывает другой экран, делается после его закрытия
@@ -161,11 +162,12 @@ struct BookReaderView: View {
                     onPageTurn: { setChromeHidden(true) },
                     onTap: handleTap,
                     onSelectionStart: { setChromeHidden(true) },
-                    onNote: { text, paragraph in
+                    onNote: { text, paragraph, range in
                         guard chapterStarts.indices.contains(chapterIndex) else { return }
                         noteText = ""
-                        noteDraft = NoteDraft(text: text, paragraph: chapterStarts[chapterIndex] + paragraph)
+                        noteDraft = NoteDraft(text: text, paragraph: chapterStarts[chapterIndex] + paragraph, range: range)
                     },
+                    noted: chapterNotedRanges,
                     onPrevious: { go(to: chapterIndex - 1, atEnd: true) },
                     onNext: { go(to: chapterIndex + 1) }
                 )
@@ -675,6 +677,7 @@ struct BookReaderView: View {
         }
         loadTranslation()
         bookmarks = book.bookmarks
+        notes = book.notes
         if let target = listenFromChapter, chapterStarts.indices.contains(target) { book.position = chapterStarts[target] }
         let position = book.position
         chapterIndex = chapterStarts.lastIndex { $0 <= position } ?? 0
@@ -879,6 +882,18 @@ struct BookReaderView: View {
         return Set(bookmarks.map { $0.paragraph - start }.filter { chapter.paragraphs.indices.contains($0) })
     }
 
+    /// Места заметок открытой главы: абзац главы → символы абзаца
+    private var chapterNotedRanges: [Int: [NSRange]] {
+        guard chapterStarts.indices.contains(chapterIndex) else { return [:] }
+        let start = chapterStarts[chapterIndex]
+        var result: [Int: [NSRange]] = [:]
+        for note in notes {
+            guard let location = note.location, let length = note.length, length > 0 else { continue }
+            result[note.paragraph - start, default: []].append(NSRange(location: location, length: length))
+        }
+        return result
+    }
+
     /// Закладка на открытом месте: на открытой странице, в прокрутке — на абзаце вверху экрана
     private var currentBookmark: BookBookmark? {
         guard chapterStarts.indices.contains(chapterIndex) else { return nil }
@@ -891,8 +906,10 @@ struct BookReaderView: View {
         guard let draft = noteDraft else { return }
         var list = book.notes
         list.append(BookNote(paragraph: draft.paragraph, text: draft.text,
-                             note: noteText.trimmingCharacters(in: .whitespacesAndNewlines)))
+                             note: noteText.trimmingCharacters(in: .whitespacesAndNewlines),
+                             location: draft.range.location, length: draft.range.length))
         book.notes = list
+        notes = book.notes
         noteDraft = nil
         Haptics.tap()
     }

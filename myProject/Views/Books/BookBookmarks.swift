@@ -23,6 +23,9 @@ nonisolated struct BookNote: Codable, Identifiable, Hashable, Sendable {
     var text: String
     var note = ""
     var created = Date()
+    /// Где выделенное стоит в абзаце (символы абзаца) — по нему страница подсвечивает заметку; у старых заметок нет
+    var location: Int?
+    var length: Int?
 }
 
 extension Book {

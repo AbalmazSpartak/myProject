@@ -193,7 +193,9 @@ struct ReaderPagedText: View, Equatable {
     /// Слово выделено — читалка прячет шапку и нижнюю панель, иначе панель действий оказывается под ними
     var onSelectionStart: () -> Void = {}
     /// «Заметка» из панели выделения: выделенный текст и абзац главы
-    var onNote: (String, Int) -> Void = { _, _ in }
+    var onNote: (String, Int, NSRange) -> Void = { _, _, _ in }
+    /// Места заметок в абзацах главы: абзац → символы; на странице подсвечиваются
+    var noted: [Int: [NSRange]] = [:]
     let onPrevious: () -> Void
     let onNext: () -> Void
 
@@ -228,7 +230,7 @@ struct ReaderPagedText: View, Equatable {
         lhs.chapterID == rhs.chapterID && lhs.paragraphs.count == rhs.paragraphs.count && lhs.readerFont == rhs.readerFont
             && lhs.fontSize == rhs.fontSize && lhs.textColor == rhs.textColor && lhs.lineSpacing == rhs.lineSpacing
             && lhs.curl == rhs.curl && lhs.animated == rhs.animated && lhs.background == rhs.background && lhs.bookTitle == rhs.bookTitle
-            && lhs.language == rhs.language && lhs.bookmarked == rhs.bookmarked
+            && lhs.language == rhs.language && lhs.bookmarked == rhs.bookmarked && lhs.noted == rhs.noted
     }
 
     var body: some View {
@@ -261,7 +263,9 @@ struct ReaderPagedText: View, Equatable {
                                                  clearSelection()
                                              } : nil,
                                              onNote: {
-                                                 onNote(layout.string(selected), layout.firstParagraphPart(of: selected)?.paragraph ?? 0)
+                                                 if let part = layout.firstParagraphPart(of: selected) {
+                                                     onNote(layout.string(selected), part.paragraph, part.range)
+                                                 }
                                                  clearSelection()
                                              }) {
                             clearSelection()
@@ -384,7 +388,8 @@ struct ReaderPagedText: View, Equatable {
                 ReaderPageSegment(segment: segment, text: paragraphs[segment.paragraph], font: readerFont.font(size: fontSize),
                                   textColor: textColor, lineSpacing: lineSpacing, hyphenation: hyphenation,
                                   uiFont: readerFont.uiFont(size: fontSize), speech: speech, mark: mark,
-                                  selected: selectedPart(page: index, segment: number))
+                                  selected: selectedPart(page: index, segment: number),
+                                  noted: noted[segment.paragraph] ?? [])
             }
         }
     }
@@ -638,6 +643,8 @@ private struct ReaderPageSegment: View {
     let mark: ReaderMark
     /// Выделенное долгим нажатием — в символах этого куска
     let selected: NSRange?
+    /// Места заметок в этом абзаце: подсвечиваются
+    var noted: [NSRange] = []
 
     var body: some View {
         let isReading = speech.paragraph == segment.paragraph
@@ -667,6 +674,14 @@ private struct ReaderPageSegment: View {
         var result = AttributedString(text[range])
         // Нажатия на страницах разбирает сама страница — ссылки у слов не нужны
         result.link = nil
+        for place in noted {
+            let visible = NSIntersectionRange(place, segment.range)
+            guard visible.length > 0 else { continue }
+            let local = NSRange(location: visible.location - segment.range.location, length: visible.length)
+            if let noteRange = Range(local, in: result) {
+                result[noteRange].backgroundColor = Color.brandTint.opacity(0.28)
+            }
+        }
         if let selected, let selectedRange = Range(selected, in: result) {
             result[selectedRange].backgroundColor = Color.accentColor.opacity(0.28)
         }
