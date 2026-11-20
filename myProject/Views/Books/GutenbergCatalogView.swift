@@ -84,10 +84,31 @@ struct GutenbergCatalogView: View {
             }
             .brandListBackground()
             .safeAreaInset(edge: .top) {
-                Picker("Каталог", selection: $kind) {
-                    ForEach(CatalogKind.allCases) { Text($0.title).tag($0) }
+                // Сортировка — рядом с переключателем: панель сверху во время поиска прячется
+                VStack(spacing: 8) {
+                    Picker("Каталог", selection: $kind) {
+                        ForEach(CatalogKind.allCases) { Text($0.title).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    if kind == .audiobooks {
+                        HStack {
+                            Text(audiobooks.isEmpty ? "" : "Записей: \(audiobooks.count)")
+                                .font(.footnote)
+                                .foregroundStyle(Color.brandMuted)
+                            Spacer()
+                            Menu {
+                                Picker("Сортировка", selection: $audioSort) {
+                                    ForEach(AudioSort.allCases) { Label($0.title, systemImage: $0.icon).tag($0) }
+                                }
+                            } label: {
+                                Label(audioSort.title, systemImage: "arrow.up.arrow.down")
+                                    .font(.footnote.weight(.semibold))
+                                    .foregroundStyle(Color.brandTint)
+                            }
+                            .accessibilityLabel("Сортировка: \(audioSort.title)")
+                        }
+                    }
                 }
-                .pickerStyle(.segmented)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(Color.brandBackground)
@@ -128,18 +149,6 @@ struct GutenbergCatalogView: View {
             }
             .task { await load() }
             .toolbar {
-                if kind == .audiobooks {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Menu {
-                            Picker("Сортировка", selection: $audioSort) {
-                                ForEach(AudioSort.allCases) { Label($0.title, systemImage: $0.icon).tag($0) }
-                            }
-                        } label: {
-                            Image(systemName: "arrow.up.arrow.down")
-                        }
-                        .accessibilityLabel("Сортировка: \(audioSort.title)")
-                    }
-                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Готово") { dismiss() }
                         .fontWeight(.bold)
