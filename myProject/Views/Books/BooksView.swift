@@ -86,7 +86,7 @@ struct BooksView: View {
             BookDetailView(book: book, startsListening: true)
                 .toolbar(.hidden, for: .tabBar)
         }
-        .fileImporter(isPresented: $isImporting, allowedContentTypes: UTType.bookFiles) { result in
+        .fileImporter(isPresented: $isImporting, allowedContentTypes: UTType.readableBookFiles) { result in
             if case .success(let url) = result {
                 Task { await importBook(url) }
             }
@@ -313,13 +313,13 @@ struct BooksView: View {
         isParsing = true
         defer { isParsing = false }
         do {
-            let parsed = try await Task.detached(priority: .userInitiated) { try BookParser.parse(url) }.value
+            let parsed = try await Task.detached(priority: .userInitiated) { try BookImport.parse(url) }.value
             let book = Book(parsed)
             modelContext.insert(book)
             try? modelContext.save()
             openedBook = book
         } catch {
-            errorMessage = "Не получилось открыть книгу. Подходят .epub без защиты (например, не из Apple Books), .fb2 и .txt."
+            errorMessage = BookImport.message(for: error)
         }
     }
 }

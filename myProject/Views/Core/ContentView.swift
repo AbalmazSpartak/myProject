@@ -34,6 +34,8 @@ struct ContentView: View {
     @State private var widgetBook: Book?
     /// Виджет «Сейчас слушаете»: открыть книгу и сразу продолжить озвучку
     @State private var widgetListens = false
+    /// Файл книги из «Открыть в…»: ошибка импорта
+    @State private var importError: String?
     /// «Практика» — свои переходы, чтобы экран не открылся сразу в двух вкладках
     @State private var practiceScreen: ActiveScreen?
     @State private var selectedTab = 0
@@ -55,6 +57,22 @@ struct ContentView: View {
             }
         }
         .onOpenURL { url in
+            // Файл книги из «Файлов» или «Поделиться»: импортируем и сразу открываем
+            if url.isFileURL, BookImport.isBookFile(url) {
+                Task {
+                    do {
+                        let parsed = try await Task.detached(priority: .userInitiated) { try BookImport.parse(url) }.value
+                        let book = Book(parsed)
+                        modelContext.insert(book)
+                        try? modelContext.save()
+                        widgetListens = false
+                        widgetBook = book
+                    } catch {
+                        importError = BookImport.message(for: error)
+                    }
+                }
+                return
+            }
             // lexistream://read/<id книги> или lexistream://listen/<id книги>
             guard url.scheme == "lexistream", url.host == "read" || url.host == "listen",
                   let id = UUID(uuidString: url.lastPathComponent) else { return }
@@ -62,6 +80,11 @@ struct ContentView: View {
             var descriptor = FetchDescriptor<Book>(predicate: #Predicate { $0.id == id })
             descriptor.fetchLimit = 1
             widgetBook = try? modelContext.fetch(descriptor).first
+        }
+        .alert("Не получилось", isPresented: Binding(get: { importError != nil }, set: { if !$0 { importError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(importError ?? "")
         }
         .fullScreenCover(item: $widgetBook) { book in
             NavigationStack {
