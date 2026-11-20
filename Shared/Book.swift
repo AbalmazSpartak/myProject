@@ -27,6 +27,8 @@ final class Book {
     var bookmarksData: Data?
     /// Заметки — JSON массива BookNote: выделенная фраза и описание
     var notesData: Data?
+    /// Вместо текста — заглушка: книгу добавили ради живой озвучки, пока Project Gutenberg не отвечал
+    var isTextPending: Bool = false
 
     init(_ parsed: ParsedBook, gutenbergID: Int? = nil) {
         title = parsed.title

@@ -21,6 +21,8 @@ struct GutenbergCatalogView: View {
     @State private var downloading: Set<Int> = []
     @State private var errorMessage: String?
     @State private var kind: CatalogKind = .books
+    /// Почему список пуст: техработы у Gutenberg или нет интернета
+    @State private var loadError: String?
     @State private var audiobooks: [LibriVox.Audiobook] = LibriVox.featured
     @State private var downloadingAudio: Set<Int> = []
     /// Аудиокнига, для которой спрашиваем: скачать целиком или слушать онлайн
@@ -45,7 +47,7 @@ struct GutenbergCatalogView: View {
                         .listRowBackground(Color.cardBackground)
                 }
                 if !isLoading && entries.isEmpty {
-                    Text(query.isEmpty ? "Каталог недоступен — проверьте интернет." : "Ничего не нашлось. Попробуйте название или автора на английском.")
+                    Text(loadError ?? (query.isEmpty ? "Каталог недоступен — проверьте интернет." : "Ничего не нашлось. Попробуйте название или автора на английском."))
                         .foregroundStyle(Color.brandMuted)
                         .listRowBackground(Color.clear)
                 }
@@ -151,7 +153,13 @@ struct GutenbergCatalogView: View {
             let text = query.trimmingCharacters(in: .whitespaces)
             audiobooks = text.isEmpty ? LibriVox.featured : ((try? await LibriVox.search(text)) ?? [])
         } else {
-            entries = (try? await GutenbergCatalog.search(query)) ?? []
+            do {
+                entries = try await GutenbergCatalog.search(query)
+                loadError = nil
+            } catch {
+                entries = []
+                loadError = GutenbergCatalog.failureText(error, action: "Открыть каталог")
+            }
         }
     }
 
@@ -237,15 +245,21 @@ struct GutenbergCatalogView: View {
                 book = existing
             } else {
                 let entry = GutenbergCatalog.Entry(id: gutenbergID, title: item.title, author: item.author)
-                let parsed = try await GutenbergCatalog.downloadBook(entry)
-                book = Book(parsed, gutenbergID: gutenbergID)
+                if let parsed = try? await GutenbergCatalog.downloadBook(entry) {
+                    book = Book(parsed, gutenbergID: gutenbergID)
+                } else {
+                    // Gutenberg не ответил — слушать можно и без текста, он подтянется позже
+                    book = Book(GutenbergCatalog.placeholder(title: item.title, author: item.author), gutenbergID: gutenbergID)
+                    book.isTextPending = true
+                    book.coverData = await RemoteImage.data(item.coverURL)
+                }
                 modelContext.insert(book)
                 try? modelContext.save()
             }
             try LiveAudioStore.save(audiobook, book: book.id)
             if downloadAudio { LiveAudioDownloader.shared.start(book: book.id) }
         } catch {
-            errorMessage = "Не удалось добавить «\(item.title)». LibriVox или Gutenberg не ответили — проверьте интернет и попробуйте ещё раз."
+            errorMessage = "Не удалось добавить «\(item.title)»: LibriVox не ответил. Проверьте интернет и попробуйте ещё раз."
         }
     }
 
@@ -257,7 +271,7 @@ struct GutenbergCatalogView: View {
             modelContext.insert(Book(parsed, gutenbergID: entry.id))
             try? modelContext.save()
         } catch {
-            errorMessage = "Не удалось скачать «\(entry.title)». Проверьте интернет и попробуйте ещё раз."
+            errorMessage = "Не удалось скачать «\(entry.title)». " + GutenbergCatalog.failureText(error, action: "Скачать книгу")
         }
     }
 }
@@ -294,5 +308,14 @@ private struct RemoteCover: View {
               let loaded = UIImage(data: data) else { return }
         Self.cache.setObject(loaded, forKey: url as NSURL)
         image = loaded
+    }
+}
+
+/// Картинка целиком (для обложки книги без текста — берём обложку записи LibriVox)
+enum RemoteImage {
+    static func data(_ url: URL?) async -> Data? {
+        guard let url, let (data, response) = try? await URLSession.shared.data(from: url),
+              (response as? HTTPURLResponse)?.statusCode == 200, UIImage(data: data) != nil else { return nil }
+        return data
     }
 }

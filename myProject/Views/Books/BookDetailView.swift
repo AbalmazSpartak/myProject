@@ -23,6 +23,8 @@ struct BookDetailView: View {
     @State private var isConfirmingDelete = false
     @State private var isShowingChapters = false
     @State private var didAutoListen = false
+    @State private var isLoadingText = false
+    @State private var textError: String?
 
     /// Что нужно разобрать из текста книги: делается один раз, в фоне
     private struct Details {
@@ -48,6 +50,7 @@ struct BookDetailView: View {
                 cover
                 VStack(spacing: 0) {
                     titleBlock
+                    if book.isTextPending { pendingTextCard.padding(.top, 14) }
                     chips.padding(.top, 14)
                     actions.padding(.top, 18)
                     bookWordsCard.padding(.top, 14)
@@ -84,6 +87,8 @@ struct BookDetailView: View {
                 .appThemedColorScheme()
         }
         .task {
+            // Книга без текста (Gutenberg не отвечал) — пробуем скачать текст молча
+            if book.isTextPending { await loadText(silently: true) }
             await loadDetails()
             // Один раз: после возврата из читалки страница не должна открыть её снова
             if startsListening, !didAutoListen {
@@ -174,6 +179,46 @@ struct BookDetailView: View {
             }
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: - Текст ещё не скачан
+
+    private var pendingTextCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Текст книги ещё не скачан: Project Gutenberg не отвечал. Живой голос уже можно слушать.")
+                .scaledFont(size: 14)
+                .foregroundStyle(Color.brandDark)
+            if let textError {
+                Text(textError)
+                    .scaledFont(size: 13)
+                    .foregroundStyle(Color.statusLearning)
+            }
+            if isLoadingText {
+                ProgressView().frame(maxWidth: .infinity)
+            } else {
+                LXButton(title: "Загрузить текст", systemImage: "arrow.down.circle", style: .soft) {
+                    Task { await loadText(silently: false) }
+                }
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+    }
+
+    private func loadText(silently: Bool) async {
+        isLoadingText = true
+        defer { isLoadingText = false }
+        do {
+            try await book.loadPendingText()
+            textError = nil
+            // Пересчитать главы и слова уже по настоящему тексту
+            details = nil
+            await loadDetails()
+        } catch {
+            if !silently { textError = GutenbergCatalog.failureText(error, action: "Загрузить текст") }
+        }
     }
 
     // MARK: - Слова из книги
