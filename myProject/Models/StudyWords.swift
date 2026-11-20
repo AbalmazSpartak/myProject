@@ -171,6 +171,10 @@ enum StudyWords {
         case .level(let level):
             let raw = level.rawValue
             return random(all(inScope, #Predicate<Word> { $0.cefrLevel == raw }), limit: limit, in: context)
+        case .list(let list):
+            // Слова книги берём прямо из её словаря: они могут быть и вне выбранных для изучения
+            let ordered = TrainingFilter.bookOrder(list.words, now: now)
+            return limit.map { Array(ordered.prefix($0)) } ?? ordered
         }
     }
 

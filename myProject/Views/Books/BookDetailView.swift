@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 /// Страница книги: обложка, название, автор, сколько прочитано, «Читать» и «Слушать».
 /// Открывается нажатием на книгу в библиотеке; читалка — следующим шагом
@@ -8,6 +9,8 @@ struct BookDetailView: View {
     var startsListening = false
 
     @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
+    @Query private var lists: [WordList]
+    @State private var isReviewingBookWords = false
     @State private var details: Details?
     @State private var isReading = false
     @State private var listensOnOpen = false
@@ -47,6 +50,7 @@ struct BookDetailView: View {
                     titleBlock
                     chips.padding(.top, 14)
                     actions.padding(.top, 18)
+                    bookWordsCard.padding(.top, 14)
                     aboutRows.padding(.top, 14)
                     audiobookCard.padding(.top, 18)
                     if mode == .learning { dictionaryButton.padding(.top, 12) }
@@ -67,6 +71,12 @@ struct BookDetailView: View {
         .navigationDestination(isPresented: $isReading) {
             BookReaderView(book: book, listensOnOpen: listensOnOpen, listenFromChapter: listenChapter)
                 .toolbar(.hidden, for: .navigationBar)
+        }
+        .fullScreenCover(isPresented: $isReviewingBookWords) {
+            if let bookList {
+                FlashcardsView(filter: .list(bookList))
+                    .appThemedColorScheme()
+            }
         }
         .sheet(isPresented: $isShowingDictionary) {
             BookDictionaryView(book: book)
@@ -163,6 +173,41 @@ struct BookDetailView: View {
             }
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: - Слова из книги
+
+    /// Словарь с названием книги: слова, которые взяли в словарь при чтении
+    private var bookList: WordList? {
+        let name = book.title.trimmingCharacters(in: .whitespaces)
+        return lists.first { $0.name.trimmingCharacters(in: .whitespaces).caseInsensitiveCompare(name) == .orderedSame }
+    }
+
+    /// Мягкий мост от чтения к учёбе: слова, взятые из этой книги, — повторить в любой момент, без счётчиков и сроков
+    @ViewBuilder
+    private var bookWordsCard: some View {
+        if let bookList, !bookList.words.isEmpty, !AppMode.isReaderOnly {
+            let now = Date()
+            let words = bookList.words
+            let due = words.filter { $0.state != .new && $0.dueDate <= now }.count
+            let fresh = words.filter { $0.state == .new }.count
+            VStack(alignment: .leading, spacing: 10) {
+                LXSectionLabel(text: "Слова из этой книги")
+                Text(DictionaryCounts.words(words.count))
+                    .scaledFont(size: 22, weight: .medium, design: .serif)
+                    .foregroundStyle(Color.brandDark)
+                Text(due > 0 ? "Пора повторить: \(due)" : (fresh > 0 ? "Новых, ещё не начатых: \(fresh)" : "Всё повторено, можно освежить"))
+                    .scaledFont(size: 14)
+                    .foregroundStyle(Color.brandMuted)
+                LXButton(title: "Повторить слова книги", systemImage: "rectangle.stack", style: .soft) {
+                    isReviewingBookWords = true
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+        }
     }
 
     // MARK: - О книге

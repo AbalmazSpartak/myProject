@@ -17,7 +17,12 @@ struct FlashcardsView: View {
     @State private var counts = WordCounts()
     @Query private var profiles: [UserProfile]
     
-    @State private var currentFilter: TrainingFilter = .due
+    @State private var currentFilter: TrainingFilter
+
+    /// filter — с чего начать: «На повторение» или, например, слова из книги
+    init(filter: TrainingFilter = .due) {
+        _currentFilter = State(initialValue: filter)
+    }
     @State private var sessionWords: [Word] = []
     @State private var currentIndex = 0
     @State private var isAnswerRevealed = false

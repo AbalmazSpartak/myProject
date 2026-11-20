@@ -7,6 +7,8 @@ enum TrainingFilter: Equatable {
     case category(Category)
     case mistakes      // Ошибки
     case level(CEFRLevel)
+    /// Слова из словаря книги: повторить то, что взяли при чтении
+    case list(WordList)
 
     func title(counts: WordCounts) -> String {
         switch self {
@@ -15,6 +17,7 @@ enum TrainingFilter: Equatable {
         case .category(let category): return category.name
         case .mistakes: return "⚠️ Ошибки (\(counts.mistakes))"
         case .level(let level): return "Уровень \(level.rawValue)"
+        case .list(let list): return "Из книги: \(list.name)"
         }
     }
 
@@ -26,6 +29,7 @@ enum TrainingFilter: Equatable {
         case .category(let category): return category.name
         case .mistakes: return "Ошибки"
         case .level(let level): return "Уровень \(level.rawValue)"
+        case .list(let list): return DictionaryView.shortName(list.name, limit: 22)
         }
     }
 
@@ -36,6 +40,7 @@ enum TrainingFilter: Equatable {
         case .level(let level): return counts.count(level: level).formatted()
         case .category(let category): return counts.count(for: category).formatted()
         case .all: return nil
+        case .list(let list): return list.words.count.formatted()
         }
     }
 
@@ -56,7 +61,17 @@ enum TrainingFilter: Equatable {
             return words.filter(\.isMistake).shuffled()
         case .level(let level):
             return words.filter { $0.cefrLevel == level.rawValue }.shuffled()
+        case .list(let list):
+            return Self.bookOrder(words.filter { word in word.lists.contains { $0.id == list.id } }, now: now)
         }
+    }
+
+    /// Слова книги: сначала те, которым пора на повторение, затем новые, затем остальные вперемешку
+    static func bookOrder(_ words: [Word], now: Date = Date()) -> [Word] {
+        let due = words.filter { $0.state != .new && $0.dueDate <= now }.sorted { $0.dueDate < $1.dueDate }
+        let fresh = words.filter { $0.state == .new }.shuffled()
+        let rest = words.filter { $0.state != .new && $0.dueDate > now }.shuffled()
+        return due + fresh + rest
     }
 
     /// Новые слова: сначала из словарей, созданных из файла, — от самых частых в файле;
