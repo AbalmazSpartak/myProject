@@ -29,6 +29,9 @@ nonisolated struct PhonicsPalette: Sendable {
     let colloquial: Entry
     /// Немые буквы: цвет текста с перечёркиванием
     let silent: UInt32
+    /// Цвет текста слова из словаря: «учу» и «выучено» (статусы слов)
+    let learning: UInt32
+    let learned: UInt32
 
     var isDark: Bool { variant == .gray || variant == .night }
 
@@ -43,31 +46,31 @@ nonisolated struct PhonicsPalette: Sendable {
                 vowelPair: .init(ink: 0x1F6BC4, fill: 0xD2E1F3), magicE: .init(ink: 0xB02F78, fill: 0xE1B0CC),
                 rControlled: .init(ink: 0x6A4BC8, fill: 0xD2C9EE), consonantPair: .init(ink: 0x586B7E, fill: 0xE8EAED),
                 ending: .init(ink: 0x5E7316, fill: 0xD5DBC2), exception: .init(ink: 0xB8500F, fill: 0xE7C4AD),
-                colloquial: .init(ink: 0x7D5A2E, fill: 0xE0D7CD), silent: 0x737373)
+                colloquial: .init(ink: 0x7D5A2E, fill: 0xE0D7CD), silent: 0x737373, learning: 0x8A4A00, learned: 0x13695C)
         case .app:
             return PhonicsPalette(variant: variant, background: 0xFAF7F0, text: 0x1C1B19,
                 vowelPair: .init(ink: 0x1F6BC4, fill: 0xCEDBE7), magicE: .init(ink: 0xB02F78, fill: 0xDEABC2),
                 rControlled: .init(ink: 0x6A4BC8, fill: 0xCFC3E4), consonantPair: .init(ink: 0x586B7E, fill: 0xE3E3E0),
                 ending: .init(ink: 0x5E7316, fill: 0xD1D5B7), exception: .init(ink: 0xB8500F, fill: 0xE4BEA3),
-                colloquial: .init(ink: 0x7D5A2E, fill: 0xDCD1C1), silent: 0x716D63)
+                colloquial: .init(ink: 0x7D5A2E, fill: 0xDCD1C1), silent: 0x716D63, learning: 0x8A4A00, learned: 0x13695C)
         case .sepia:
             return PhonicsPalette(variant: variant, background: 0xF4ECD8, text: 0x5B4636,
                 vowelPair: .init(ink: 0x1F6BC4, fill: 0xD2D7D5), magicE: .init(ink: 0xA52B6E, fill: 0xDEB6BA),
                 rControlled: .init(ink: 0x6244BC, fill: 0xD1C4D1), consonantPair: .init(ink: 0x566A7C, fill: 0xE1DCCD),
                 ending: .init(ink: 0x586B12, fill: 0xD5D2B0), exception: .init(ink: 0xA94A0C, fill: 0xE0C2A3),
-                colloquial: .init(ink: 0x6E4E22, fill: 0xDCD0B7), silent: 0x7A6552)
+                colloquial: .init(ink: 0x6E4E22, fill: 0xDCD0B7), silent: 0x7A6552, learning: 0x975000, learned: 0x0F5F52)
         case .gray:
             return PhonicsPalette(variant: variant, background: 0x4A4A4C, text: 0xE3E3E3,
                 vowelPair: .init(ink: 0x7DB4FF, fill: 0x525A67), magicE: .init(ink: 0xF58CC0, fill: 0x715967),
                 rControlled: .init(ink: 0xB7A2FF, fill: 0x5F5B6E), consonantPair: .init(ink: 0xA9BCCF, fill: 0x55585C),
                 ending: .init(ink: 0xB4CB62, fill: 0x5C6050), exception: .init(ink: 0xFFA05C, fill: 0x705C4F),
-                colloquial: .init(ink: 0xE0C08A, fill: 0x625D56), silent: 0xBABABC)
+                colloquial: .init(ink: 0xE0C08A, fill: 0x625D56), silent: 0xBABABC, learning: 0xFFC266, learned: 0x7FE0CB)
         case .night:
             return PhonicsPalette(variant: variant, background: 0x000000, text: 0xB8B8B8,
                 vowelPair: .init(ink: 0x5FA2F5, fill: 0x1B2D45), magicE: .init(ink: 0xE56FAE, fill: 0x5C2C46),
                 rControlled: .init(ink: 0x9C84F0, fill: 0x383056), consonantPair: .init(ink: 0x8FA3B8, fill: 0x1D2125),
                 ending: .init(ink: 0xA0B84A, fill: 0x303716), exception: .init(ink: 0xF28A3C, fill: 0x522F14),
-                colloquial: .init(ink: 0xCDAA72, fill: 0x352C1E), silent: 0x8A8A8A)
+                colloquial: .init(ink: 0xCDAA72, fill: 0x352C1E), silent: 0x8A8A8A, learning: 0xE3A857, learned: 0x5FD0BA)
         }
     }
 

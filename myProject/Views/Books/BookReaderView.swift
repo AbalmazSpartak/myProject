@@ -261,7 +261,10 @@ struct BookReaderView: View {
         }
         // Глава готовится, когда главы загружены и при каждой смене главы
         .task(id: "\(chapters.count)-\(chapterIndex)-\(style.phonicsID)-\(themeSwitchID)-\(contentVersion)") { await prepareChapter() }
-        .sheet(item: $tappedWord) { tapped in
+        .sheet(item: $tappedWord, onDismiss: {
+            // Слово могли добавить в словарь или отметить «Знаю» — статусы в тексте обновляем
+            if style.showsStatus { contentVersion += 1 }
+        }) { tapped in
             WordLookupView(tapped: tapped, bookTitle: book.title) {
                 tappedWord = nil
                 speech.start(from: tapped.paragraph, offset: tapped.location)
@@ -728,10 +731,12 @@ struct BookReaderView: View {
         let english = isEnglish
         let phonics = english ? style.phonics : nil
         let palette = style.phonicsPalette(isDark: isNight)
+        // Статусы слов: словарь читаем здесь (главный поток), окрашиваем в фоне
+        let statuses = english && style.showsStatus ? BookWordStatusSnapshot.make(in: modelContext) : nil
         linkedParagraphs = await Task.detached(priority: .userInitiated) {
             var cache: [String: ReadingRules.Highlight?] = [:]
             return paragraphs.enumerated().map {
-                Self.linked($1, paragraph: $0, english: english, phonics: phonics, palette: palette, cache: &cache)
+                Self.linked($1, paragraph: $0, english: english, phonics: phonics, palette: palette, statuses: statuses, cache: &cache)
             }
         }.value
         speech.load(paragraphs: paragraphs, chapterTitle: chapter.title, bookTitle: book.title,
@@ -869,7 +874,7 @@ struct BookReaderView: View {
     private var isNight: Bool { (style.colorScheme ?? systemScheme) == .dark }
 
     /// День и ночь перестраивают главу только при включённой подсветке правил: цвета подсветки зависят от темы, а сам текст — нет
-    private var themeSwitchID: String { style.phonics == nil ? "" : String(isNight) }
+    private var themeSwitchID: String { style.phonics == nil && !style.showsStatus ? "" : String(isNight) }
 
     /// «Ночь» ↔ «День»: тёмная тема — «Ночь», светлая — «Бумага»; прочие настройки оформления остаются
     private func toggleDayNight() {
@@ -1246,7 +1251,8 @@ struct BookReaderView: View {
     nonisolated(unsafe) private static let anyWordRegex = try? NSRegularExpression(pattern: "\\p{L}+(?:['’-]\\p{L}+)*")
 
     nonisolated static func linked(_ text: String, paragraph: Int, english: Bool = true, phonics: Set<PhonicsOption>? = nil,
-                                   palette: PhonicsPalette = .make(.paper), cache: inout [String: ReadingRules.Highlight?]) -> AttributedString {
+                                   palette: PhonicsPalette = .make(.paper), statuses: BookWordStatusSnapshot? = nil,
+                                   cache: inout [String: ReadingRules.Highlight?]) -> AttributedString {
         let ns = text as NSString
         guard let regex = english ? Self.englishWordRegex : Self.anyWordRegex else { return AttributedString(text) }
         let showsColloquial = english && phonics?.contains(.colloquial) == true
@@ -1254,6 +1260,9 @@ struct BookReaderView: View {
         let singleQuotes = showsColloquial && text.contains("‘")
         var result = AttributedString()
         var last = 0
+        // Словарные формы абзаца считаем, только если есть что красить
+        let statuses = statuses?.isEmpty == false ? statuses : nil
+        let lemmas = statuses == nil ? [:] : BookWordStatusSnapshot.lemmas(in: text)
         for match in regex.matches(in: text, range: NSRange(location: 0, length: ns.length)) {
             let range = match.range
             if range.location > last {
@@ -1263,6 +1272,9 @@ struct BookReaderView: View {
             word.link = URL(string: "\(wordScheme)://w/\(paragraph)/\(range.location)/\(range.length)")
             if let phonics {
                 decorate(&word, ns.substring(with: range), options: phonics, palette: palette, cache: &cache)
+            }
+            if let statuses, let status = statuses.status(surface: ns.substring(with: range), lemma: lemmas[range.location]) {
+                word.foregroundColor = Color(hex: status == .learning ? palette.learning : palette.learned)
             }
             if showsColloquial {
                 let before = range.location > 0 ? ns.substring(with: NSRange(location: range.location - 1, length: 1)).first : nil

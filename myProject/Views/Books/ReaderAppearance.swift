@@ -202,6 +202,8 @@ enum ReaderSettings {
     /// Перевод под абзацами (книга с добавленным переводом, режим прокрутки)
     static let parallelKey = "reader_parallel"
     static let phonicsKey = "reader_phonics"
+    /// Статусы слов в тексте: слова из словаря окрашены — «учу» и «выучено»
+    static let wordStatusKey = "reader_word_status"
     /// Какие правила подсвечивать — галочки; пусто — как было в режиме («Все правила» → все, иначе «Сложное»)
     static let phonicsRulesKey = "reader_phonics_rules"
 
@@ -240,6 +242,8 @@ struct ReaderStyle: Equatable {
     /// nil — подсветка выключена
     var phonics: Set<PhonicsOption>?
     var night = NightPalette.standard
+    /// Статусы слов из словаря в тексте
+    var showsStatus = false
 
     /// Снимок настроек. Читалка берёт его при открытии и после шторки «Оформление», а не на каждый кадр:
     /// чтение и разбор настроек для каждого абзаца делали прокрутку в 4 раза рывистее (замер Instruments)
@@ -255,7 +259,8 @@ struct ReaderStyle: Equatable {
             phonics: Self.phonics(defaults),
             night: NightPalette(brightness: defaults.object(forKey: ReaderSettings.nightBrightnessKey) as? Double ?? NightPalette.standard.brightness,
                                 warmth: defaults.object(forKey: ReaderSettings.nightWarmthKey) as? Double ?? NightPalette.standard.warmth,
-                                text: defaults.object(forKey: ReaderSettings.nightTextKey) as? Double ?? NightPalette.standard.text))
+                                text: defaults.object(forKey: ReaderSettings.nightTextKey) as? Double ?? NightPalette.standard.text),
+            showsStatus: defaults.bool(forKey: ReaderSettings.wordStatusKey) && !AppMode.isReaderOnly)
     }
 
     private static func phonics(_ defaults: UserDefaults) -> Set<PhonicsOption>? {
@@ -266,8 +271,9 @@ struct ReaderStyle: Equatable {
 
     /// Для перерисовки главы: меняется вместе с галочками и темой (цвета подсветки зависят от темы)
     var phonicsID: String {
-        guard let phonics else { return "off" }
-        return PhonicsOption.raw(phonics) + "|" + theme.rawValue + (theme == .nightCustom ? "|\(Int(night.brightness * 20))|\(Int(night.warmth * 4))" : "")
+        let status = showsStatus ? "|status|" + theme.rawValue : ""
+        guard let phonics else { return "off" + status }
+        return PhonicsOption.raw(phonics) + "|" + theme.rawValue + (theme == .nightCustom ? "|\(Int(night.brightness * 20))|\(Int(night.warmth * 4))" : "") + status
     }
 
     /// Набор цветов подсветки правил под тему; «Как в приложении» — по тому, тёмный ли сейчас экран; «Своя» — по яркости фона
@@ -322,6 +328,8 @@ struct ReaderAppearanceSheet: View {
     @AppStorage(ReaderSettings.pageTurnKey) private var pageTurn = ReaderPageTurn.slide
     @AppStorage(AppMode.tapTranslationKey) private var tapTranslation = true
     @AppStorage(ReaderSettings.phonicsKey) private var phonicsMode = "off"
+    @AppStorage(ReaderSettings.wordStatusKey) private var wordStatus = false
+    @Environment(\.colorScheme) private var systemScheme
     @AppStorage(ReaderSettings.phonicsRulesKey) private var phonicsRules = ""
     @AppStorage(ReaderSettings.nightBrightnessKey) private var nightBrightness = NightPalette.standard.brightness
     @AppStorage(ReaderSettings.nightWarmthKey) private var nightWarmth = NightPalette.standard.warmth
@@ -391,6 +399,24 @@ struct ReaderAppearanceSheet: View {
                         } else {
                             PhonicsLegend(selection: phonicsSelection)
                         }
+                    }
+
+                    // Статусы слов нужны, пока есть словарь: в «Только читалке» его нет
+                    if !AppMode.isReaderOnly {
+                        section("Статусы слов")
+                        Toggle("Окрасить слова из словаря", isOn: $wordStatus)
+                            .scaledFont(size: 16, weight: .semibold)
+                            .tint(Color.brandTint)
+                        let palette = ReaderStyle.current().phonicsPalette(isDark: systemScheme == .dark)
+                        HStack(spacing: 18) {
+                            Label { Text("учу") } icon: { Image(systemName: "circle.fill").foregroundColor(Color(hex: palette.learning)) }
+                            Label { Text("выучено") } icon: { Image(systemName: "circle.fill").foregroundColor(Color(hex: palette.learned)) }
+                        }
+                        .scaledFont(size: 14)
+                        .foregroundColor(Color.brandDark)
+                        Text("Слова, которые вы добавили в словарь, в тексте окрашены: «учу» — пока не выучено, «выучено» — когда слово повторяется уверенно. Незнакомые слова не красятся.")
+                            .scaledFont(size: 13)
+                            .foregroundColor(Color.brandMuted)
                     }
 
                     section("Тема")

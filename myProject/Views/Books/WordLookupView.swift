@@ -324,10 +324,22 @@ struct WordLookupView: View {
     }
 
     private var addButton: some View {
-        LXButton(title: isAdded ? "В словаре «\(bookTitle)»" : "В словарь «\(bookTitle)»",
-                 systemImage: isAdded ? "checkmark.circle" : "plus",
-                 isEnabled: !(isAdded || (baseWord == nil && translation.trimmingCharacters(in: .whitespaces).isEmpty)),
-                 action: add)
+        VStack(spacing: 8) {
+            LXButton(title: isAdded ? "В словаре «\(bookTitle)»" : "В словарь «\(bookTitle)»",
+                     systemImage: isAdded ? "checkmark.circle" : "plus",
+                     isEnabled: !(isAdded || (baseWord == nil && translation.trimmingCharacters(in: .whitespaces).isEmpty)),
+                     action: { add() })
+            // «Знаю» — слово сразу идёт как выученное (в тексте окрасится) и всё равно вернётся на повторение
+            if !isKnown, !AppMode.isReaderOnly, baseWord != nil || !translation.trimmingCharacters(in: .whitespaces).isEmpty {
+                LXButton(title: "Знаю это слово", systemImage: "checkmark", style: .outline) { add(known: true) }
+            }
+        }
+    }
+
+    /// Слово уже выучено (повторяется уверенно) — «Знаю» не нужно
+    private var isKnown: Bool {
+        guard let word = bookList?.words.first(where: { $0.english.caseInsensitiveCompare(lemma) == .orderedSame }) else { return false }
+        return word.state == .review
     }
 
     /// Предложение с выделенным словом — пример для карточки
@@ -418,16 +430,18 @@ struct WordLookupView: View {
     // MARK: - В словарь
 
     /// Слово из базы — ссылкой со своим прогрессом; новое — своим словом с примером из книги
-    private func add() {
+    private func add(known: Bool = false) {
         let list = WordList.named(bookTitle, context: modelContext)
         if let baseWord {
             if !baseWord.lists.contains(where: { $0.id == list.id }) { baseWord.lists.append(list) }
+            if known { FSRSCalculator().calculateNextReview(word: baseWord, rating: .easy) }
         } else {
             let word = Word(english: lemma, russian: translation.trimmingCharacters(in: .whitespaces),
                             example: exampleWithBold, cefrLevel: CEFRLevel.c1.rawValue,
                             partOfSpeech: partOfSpeech, isCustom: true)
             modelContext.insert(word)
             word.lists.append(list)
+            if known { FSRSCalculator().calculateNextReview(word: word, rating: .easy) }
         }
         modelContext.saveReporting()
         UINotificationFeedbackGenerator().notificationOccurred(.success)

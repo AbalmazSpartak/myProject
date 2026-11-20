@@ -194,6 +194,14 @@ for set in PhonicsPalette.Variant.allCases {
         expect(PhonicsPalette.contrast(palette.background, entry.ink) >= 3.0, "\(set): цвет категории \(index) виден на фоне, контраст ≥ 3")
     }
     expect(PhonicsPalette.contrast(palette.background, palette.silent) >= 4.5, "\(set): немые буквы читаются на фоне, контраст ≥ 4,5")
+    // Статусы слов: цвет «учу» и «выучено» виден на фоне темы, они различаются, и читаются поверх заливок правил
+    expect(PhonicsPalette.contrast(palette.background, palette.learning) >= 4.5, "\(set): цвет «учу» на фоне, контраст ≥ 4,5")
+    expect(PhonicsPalette.contrast(palette.background, palette.learned) >= 4.5, "\(set): цвет «выучено» на фоне, контраст ≥ 4,5")
+    expect(palette.learning != palette.learned, "\(set): «учу» и «выучено» разного цвета")
+    for (index, entry) in PhonicsPalette.entries(palette).enumerated() {
+        expect(PhonicsPalette.contrast(entry.fill, palette.learning) >= 3.0, "\(set): «учу» читается на заливке категории \(index), контраст ≥ 3")
+        expect(PhonicsPalette.contrast(entry.fill, palette.learned) >= 3.0, "\(set): «выучено» читается на заливке категории \(index), контраст ≥ 3")
+    }
     // Цвета категорий в теме не совпадают
     let inks = PhonicsPalette.entries(palette).map(\.ink)
     expectEqual(Set(inks).count, inks.count, "\(set): у категорий разные цвета")
@@ -238,6 +246,33 @@ do {
     expectEqual(context.words(spelled: ["ran", "run"]).count, 2, "несколько написаний сразу (форма и словарная)")
     expect(context.words(spelled: ["zzzz"]).isEmpty, "нет слова — пусто")
 } catch { failures.append("поиск слова запросом: \(error)") }
+
+// MARK: - Статусы слов в книге
+
+do {
+    let container = try ModelContainer(for: AppGroup.schema, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    let context = ModelContext(container)
+    let walk = Word(english: "walk", russian: "ходить", example: "<b>walk</b>", cefrLevel: "A1", partOfSpeech: "v.", isCustom: false)
+    let known = Word(english: "house", russian: "дом", example: "<b>house</b>", cefrLevel: "A1", partOfSpeech: "n.", isCustom: false)
+    let untouched = Word(english: "table", russian: "стол", example: "<b>table</b>", cefrLevel: "A1", partOfSpeech: "n.", isCustom: false)
+    let own = Word(english: "gizmo", russian: "штуковина", example: "<b>gizmo</b>", cefrLevel: "C1", partOfSpeech: "n.", isCustom: true)
+    for word in [walk, known, untouched, own] { context.insert(word) }
+    walk.reps = 1; walk.state = .learning
+    known.reps = 3; known.state = .review
+    try context.save()
+    let snapshot = BookWordStatusSnapshot.make(in: context)
+    expect(snapshot.status(surface: "walk", lemma: nil) == .learning, "слово в процессе изучения — «учу»")
+    expect(snapshot.status(surface: "House", lemma: nil) == .learned, "слово в повторении — «выучено», регистр не важен")
+    expect(snapshot.status(surface: "gizmo", lemma: nil) == .learning, "своё слово без прогресса — «учу»")
+    expect(snapshot.status(surface: "table", lemma: nil) == nil, "слово базы без прогресса и словарей — без статуса")
+    expect(snapshot.status(surface: "walked", lemma: "walk") == .learning, "форма слова находится по словарной форме")
+    expect(snapshot.status(surface: "unknownword", lemma: "unknownword") == nil, "незнакомое слово — без статуса")
+    for (form, base) in [("walked", "walk"), ("dogs", "dog"), ("stopped", "stop"), ("studies", "study"), ("making", "make"), ("liked", "like"), ("boxes", "box"), ("carried", "carry")] {
+        expect(BookWordStatusSnapshot.baseCandidates(of: form).contains(base), "по окончанию \(form) → \(base)")
+    }
+    let lemmas = BookWordStatusSnapshot.lemmas(in: "She walked home.")
+    expectEqual(lemmas[4] ?? "", "walk", "теггер приводит walked к walk по месту слова в абзаце")
+} catch { failures.append("статусы слов: \(error)") }
 
 // MARK: - Итог
 
