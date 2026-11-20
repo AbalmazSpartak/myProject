@@ -52,6 +52,9 @@ struct BookReaderView: View {
     /// Язык книги — определяется при открытии
     @State private var language = BookLanguage.english
     @State private var isShowingContents = false
+    /// «Меню чтения» — лист снизу; что открывает другой экран, делается после его закрытия
+    @State private var isShowingMenu = false
+    @State private var pendingMenuAction: (() -> Void)?
     @State private var isShowingDictionary = false
     @State private var isShowingAppearance = false
     @State private var isShowingSearch = false
@@ -255,6 +258,11 @@ struct BookReaderView: View {
                 .ignoresSafeArea()
         }
         .sheet(isPresented: $isShowingContents) { contents }
+        .sheet(isPresented: $isShowingMenu, onDismiss: {
+            let action = pendingMenuAction
+            pendingMenuAction = nil
+            action?()
+        }) { readerMenu }
         .overlay {
             if isShowingPlayer, let chapter {
                 ReaderPlayerView(book: book, chapterTitle: chapter.title,
@@ -549,6 +557,45 @@ struct BookReaderView: View {
         .scaledFont(size: 16, weight: .semibold)
     }
 
+    // MARK: - Меню чтения
+
+    private var readerMenu: some View {
+        ReaderMenuSheet(
+            bookTitle: book.title,
+            chapterTitles: chapters.indices.map { numbering.listTitle(for: $0, title: chapters[$0].title) },
+            currentChapter: chapterIndex,
+            isNight: isNight,
+            hasBookmark: currentBookmark != nil,
+            onStyleChange: { style = .current() },
+            onSearch: { query in
+                pendingMenuAction = { searchQuery = query; isShowingSearch = true }
+                isShowingMenu = false
+            },
+            onChapter: { index in
+                go(to: index)
+                isShowingMenu = false
+            },
+            onAllChapters: {
+                pendingMenuAction = { isShowingContents = true }
+                isShowingMenu = false
+            },
+            onToggleDayNight: { toggleDayNight() },
+            onBookmark: {
+                if let current = currentBookmark {
+                    removeBookmark(current)
+                } else {
+                    pendingMenuAction = { bookmarkNote = ""; isAddingBookmark = true }
+                }
+                isShowingMenu = false
+            },
+            onBookmarks: {
+                pendingMenuAction = { isShowingBookmarks = true }
+                isShowingMenu = false
+            }
+        )
+        .appThemedColorScheme()
+    }
+
     // MARK: - Оглавление
 
     private var contents: some View {
@@ -694,6 +741,7 @@ struct BookReaderView: View {
                 barButton(isNight ? "sun.max" : "moon", isNight ? "День" : "Ночь") { toggleDayNight() }
                 barButton("magnifyingglass", "Поиск") { isShowingSearch = true }
                 barButton("bookmark", bookmarks.isEmpty ? "Закладки" : "Закладки \(bookmarks.count)") { isShowingBookmarks = true }
+                barButton("list.bullet", "Меню") { isShowingMenu = true }
             }
         }
         .padding(.horizontal, 20)
