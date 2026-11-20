@@ -35,6 +35,8 @@ struct QuizView: View {
     @State private var isApproachFinished = false
     @State private var approachAnswered = 0
     @State private var approachCorrect = 0
+    /// Слова с ошибками в этом подходе — в итоге «Вернутся позже»
+    @State private var missed: [Word] = []
     
     private var currentWord: Word? {
         guard !sessionWords.isEmpty, currentIndex < sessionWords.count else { return nil }
@@ -53,137 +55,51 @@ struct QuizView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            HStack(alignment: .top) {
-                Button(action: { dismiss() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                            .scaledFont(size: 16, weight: .semibold)
-                        Text("Обзор")
-                            .scaledFont(size: 17, weight: .semibold, design: .rounded)
-                    }
-                    .foregroundColor(.purple)
-                }
-                
-                Spacer()
+            TrainingTopBar(current: currentFilter, counts: counts, categories: categories, helpTopic: .quiz,
+                           onSelect: changeFilter, onExit: { dismiss() })
 
-                HelpButton(topic: .quiz)
-                    .padding(.trailing, 8)
-                
-                VStack(alignment: .trailing, spacing: 6) {
-                    TrainingFilterMenu(
-                        current: currentFilter,
-                        counts: counts,
-                        categories: categories,
-                        icon: "folder.fill",
-                        tint: .purple,
-                        backgroundTint: Color.brandTint,
-                        onSelect: changeFilter
-                    )
-                    
-                    Text("Тест: \(correctCount)/\(totalAnswered)")
-                        .scaledFont(size: 13, weight: .bold, design: .rounded)
-                        .foregroundColor(Color.brandMuted)
-                        .padding(.trailing, 2)
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 10)
-            
-            Spacer()
-            
             if isApproachFinished {
-                ApproachDoneCard(
-                    summary: "Верно \(approachCorrect) из \(approachAnswered)",
-                    tint: .purple,
+                TrainingSummary(
+                    subtitle: "Верно \(approachCorrect) из \(approachAnswered).",
+                    tiles: [
+                        .init(symbol: "checkmark.circle", color: .statusKnown, value: approachCorrect, title: "Верно"),
+                        .init(symbol: "xmark.circle", color: .statusLearning, value: approachAnswered - approachCorrect, title: "Ошибки")
+                    ],
+                    laterTitle: "Вернутся позже",
+                    later: missed,
                     onContinue: { withAnimation { generateSession() } },
                     onExit: { dismiss() }
                 )
+                .transition(.opacity)
             } else if sessionWords.isEmpty {
-                VStack(spacing: 12) {
-                    Image(systemName: currentFilter == .mistakes ? "checkmark.circle.fill" : "doc.text.magnifyingglass")
-                        .font(.system(size: 48))
-                        .foregroundColor(currentFilter == .mistakes ? .green : Color.brandMuted)
-                    
-                    Text(currentFilter == .mistakes ? "Отлично! У вас нет неисправленных ошибок." : "В выбранном разделе нет слов.")
-                        .font(.system(.body, design: .rounded))
-                        .foregroundColor(Color.brandMuted)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.horizontal, 40)
+                TrainingEmpty(systemImage: currentFilter == .mistakes ? "checkmark.circle" : "doc.text.magnifyingglass",
+                              text: currentFilter == .mistakes ? "Неисправленных ошибок нет" : "В выбранном разделе нет слов")
             } else if let word = currentWord {
-                VStack(spacing: 16) {
-                    HStack(spacing: 10) {
-                        Text(currentQuestion)
-                            .scaledFont(size: 38, weight: .semibold, design: .serif)
-                            .foregroundColor(.primary)
-                        
-                        Button(action: { TextToSpeechManager.shared.speak(word.english) }) {
-                            Image(systemName: "speaker.wave.2.bubble.fill")
-                                .scaledFont(size: 22)
-                                .foregroundColor(.purple)
-                        }
-                    }
-                    .padding(.top, 28)
-                    
-                    // Транскрипция и часть речи — одной строкой; без транскрипции — только часть речи
-                    HStack(spacing: 8) {
-                        if translationMode == "en_ru" && !word.displayTranscription.isEmpty {
-                            Text(word.displayTranscription)
-                                .scaledFont(size: 18, weight: .bold, design: .rounded)
-                                .foregroundColor(Color.brandTint)
-                        }
-                        PartOfSpeechBadge(word: word)
-                    }
-                    if translationMode == "en_ru" {
-                        ExampleFormHint(word: word)
-                    }
-                    
-                    VStack(spacing: 12) {
-                        ForEach(options, id: \.self) { option in
-                            Button(action: { selectOption(option) }) {
-                                Text(option)
-                                    .scaledFont(size: 16, weight: .bold, design: .rounded)
-                                    .multilineTextAlignment(.center)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 16)
-                                    .padding(.horizontal, 12)
-                                    .background(optionBackgroundColor(option))
-                                    .foregroundColor(optionForegroundColor(option))
-                                    .cornerRadius(16)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 16)
-                                            .stroke(optionBorderColor(option), lineWidth: 1.5)
-                                    )
-                            }
-                            .disabled(showResult)
-                        }
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
-                    .padding(.bottom, 20)
-                    
-                    if showResult {
-                        Button(action: nextWord) {
-                            Text("Следующее слово")
-                                .scaledFont(size: 16, weight: .bold, design: .rounded)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(Color.brandTint)
-                                .foregroundColor(.white)
-                                .cornerRadius(14)
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 20)
+                TrainingCard(score: "Верно \(correctCount) из \(totalAnswered)", level: word.cefrLevel) {
+                    VStack {
+                        Spacer(minLength: 0)
+                        TrainingQuestion(word: word, text: currentQuestion, isEnglish: translationMode == "en_ru")
+                        Spacer(minLength: 0)
                     }
                 }
-                .frame(maxWidth: .infinity)
-                .background(Color.cardBackground)
-                .cornerRadius(28)
-                .shadow(color: colorScheme == .dark ? Color.black.opacity(0.35) : Color.black.opacity(0.04), radius: 14, x: 0, y: 6)
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 16)
+
+                VStack(spacing: 8) {
+                    ForEach(options, id: \.self) { option in
+                        QuizOptionRow(text: option, state: optionState(option), isLocked: showResult) {
+                            selectOption(option)
+                        }
+                    }
+                    if showResult {
+                        LXButton(title: "Следующее слово", action: nextWord)
+                            .padding(.top, 6)
+                            .transition(.opacity)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 14)
+                .padding(.bottom, 12)
             }
-            
-            Spacer()
         }
         .background(Color.brandBackground.ignoresSafeArea())
         // «Озвучивать слово сразу» (⚙️ → «Озвучка»): англ ➔ рус — как только слово показано
@@ -197,7 +113,13 @@ struct QuizView: View {
             generateSession()
         }
     }
-    
+
+    private func optionState(_ option: String) -> QuizOptionState {
+        guard showResult else { return .plain }
+        if isOptionCorrect(option) { return .correct }
+        return selectedOption == option ? .wrong : .dimmed
+    }
+
     private func changeFilter(to filter: TrainingFilter) {
         currentFilter = filter
         correctCount = 0
@@ -224,6 +146,7 @@ struct QuizView: View {
         isApproachFinished = false
         approachAnswered = 0
         approachCorrect = 0
+        missed = []
         setupQuestion()
     }
 
@@ -266,7 +189,7 @@ struct QuizView: View {
         }
         totalAnswered += 1
         approachAnswered += 1
-        if isCorrect { approachCorrect += 1 }
+        if isCorrect { approachCorrect += 1 } else { missed.append(word) }
         counts.refreshProgress(scope: studyScope, in: modelContext)
         
         profiles.first?.recordAnswer(.quiz, translationMode: translationMode, isCorrect: isCorrect)
@@ -281,51 +204,6 @@ struct QuizView: View {
     
     private func isOptionCorrect(_ option: String) -> Bool {
         return option == currentCorrectAnswerString
-    }
-    
-    private func optionBackgroundColor(_ option: String) -> Color {
-        guard showResult else {
-            return colorScheme == .dark
-                ? Color.brandInputBg
-                : Color(red: 0.94, green: 0.95, blue: 0.98)
-        }
-        if isOptionCorrect(option) {
-            return Color.green.opacity(colorScheme == .dark ? 0.25 : 0.18)
-        }
-        if selectedOption == option {
-            return Color.red.opacity(colorScheme == .dark ? 0.25 : 0.18)
-        }
-        return colorScheme == .dark ? Color.cardBackground : Color(red: 0.95, green: 0.95, blue: 0.97)
-    }
-    
-    private func optionForegroundColor(_ option: String) -> Color {
-        guard showResult else {
-            return colorScheme == .dark
-                ? .brandDark
-                : Color(red: 0.2, green: 0.25, blue: 0.45)
-        }
-        if isOptionCorrect(option) {
-            return colorScheme == .dark ? Color(red: 0.4, green: 0.9, blue: 0.5) : .green
-        }
-        if selectedOption == option {
-            return colorScheme == .dark ? Color(red: 1.0, green: 0.45, blue: 0.45) : .red
-        }
-        return Color.brandFill
-    }
-    
-    private func optionBorderColor(_ option: String) -> Color {
-        guard showResult else {
-            return colorScheme == .dark
-                ? Color.white.opacity(0.12)
-                : Color.black.opacity(0.03)
-        }
-        if isOptionCorrect(option) {
-            return .green.opacity(0.6)
-        }
-        if selectedOption == option {
-            return .red.opacity(0.6)
-        }
-        return Color.clear
     }
     
     private func nextWord() {
