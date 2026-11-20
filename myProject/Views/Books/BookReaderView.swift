@@ -216,7 +216,7 @@ struct BookReaderView: View {
         .preferredColorScheme(style.colorScheme)
         .readableColumn(PadLayout.readerWidth)
         .task {
-            open()
+            await open()
             speech.onChapterEnd = {
                 // Таймер сна «в конце главы» — дальше не читаем
                 if sleep == .chapterEnd {
@@ -680,11 +680,18 @@ struct BookReaderView: View {
     // MARK: - Логика
 
     /// Главы разбираются из сохранённого JSON; открываем там, где остановились
-    private func open() {
+    private func open() async {
         guard chapters.isEmpty else { return }
-        chapters = book.chapters
+        // JSON большой книги разбирается в фоне: экран не замирает при открытии
+        let data = book.chaptersData
+        let decoded = await Task.detached(priority: .userInitiated) { () -> ([BookChapter], String) in
+            let list = (try? JSONDecoder().decode([BookChapter].self, from: data)) ?? []
+            return (list, BookLanguage.detect(list))
+        }.value
+        guard chapters.isEmpty else { return }
+        chapters = decoded.0
         numbering = ChapterNumbering(titles: chapters.map(\.title))
-        language = BookLanguage.detect(chapters)
+        language = decoded.1
         speech.language = isEnglish ? nil : language
         // Запуск в режиме «Чтение» загрузит Kokoro заранее, только если последняя книга английская
         UserDefaults.standard.set(language, forKey: KokoroML.lastBookLanguageKey)

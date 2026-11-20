@@ -96,7 +96,7 @@ struct ReaderBookmarksTab: View {
                     .toolbar(.hidden, for: .navigationBar)
                     .toolbar(.hidden, for: .tabBar)
             }
-            .task(id: allBooks.map(\.id)) { loadPlaces() }
+            .task(id: allBooks.map(\.id)) { await loadPlaces() }
             .onChange(of: section) { _, _ in bookFilter = nil }
             .alert("Описание заметки", isPresented: Binding(get: { editingNote != nil }, set: { if !$0 { editingNote = nil } })) {
                 TextField("Описание", text: $editText)
@@ -296,19 +296,24 @@ struct ReaderBookmarksTab: View {
         return date.formatted(.dateTime.day().month(.abbreviated))
     }
 
-    /// Главы книг с закладками: JSON книги разбирается один раз на книгу
-    private func loadPlaces() {
-        for book in allBooks where places[book.id] == nil {
-            let chapters = book.chapters
-            var start = 0
-            let starts = chapters.map { chapter -> Int in
-                defer { start += chapter.paragraphs.count }
-                return start
+    /// Главы книг с закладками: JSON книги разбирается один раз на книгу и в фоне
+    private func loadPlaces() async {
+        let pending = allBooks.filter { places[$0.id] == nil }.map { ($0.id, $0.chaptersData) }
+        guard !pending.isEmpty else { return }
+        let loaded = await Task.detached(priority: .userInitiated) { () -> [(UUID, Places)] in
+            pending.map { id, data in
+                let chapters = (try? JSONDecoder().decode([BookChapter].self, from: data)) ?? []
+                var start = 0
+                let starts = chapters.map { chapter -> Int in
+                    defer { start += chapter.paragraphs.count }
+                    return start
+                }
+                let numbering = ChapterNumbering(titles: chapters.map(\.title))
+                let titles = chapters.indices.map { numbering.listTitle(for: $0, title: chapters[$0].title) }
+                return (id, Places(starts: starts, titles: titles))
             }
-            let numbering = ChapterNumbering(titles: chapters.map(\.title))
-            let titles = chapters.indices.map { numbering.listTitle(for: $0, title: chapters[$0].title) }
-            places[book.id] = Places(starts: starts, titles: titles)
-        }
+        }.value
+        for (id, place) in loaded { places[id] = place }
     }
 
     private func remove(_ entry: Entry) {

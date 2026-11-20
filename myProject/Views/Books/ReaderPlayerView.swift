@@ -95,7 +95,7 @@ struct ReaderPlayerView: View {
     /// Размытая обложка сверху, плавно уходит в фон
     private var background: some View {
         Group {
-            if let data = book.coverData, let image = UIImage(data: data) {
+            if let data = book.coverData, let image = CoverCache.image(data) {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()

@@ -173,7 +173,7 @@ private struct BookCoverThumb: View {
     let book: Book
     var body: some View {
         Group {
-            if let data = book.coverData, let image = UIImage(data: data) {
+            if let data = book.coverData, let image = CoverCache.image(data) {
                 Image(uiImage: image).resizable().scaledToFill()
             } else {
                 Color.brandAccent.overlay(

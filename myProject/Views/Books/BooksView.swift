@@ -483,7 +483,7 @@ struct BookCover: View {
     let title: String
 
     var body: some View {
-        if let data, let image = UIImage(data: data) {
+        if let data, let image = CoverCache.image(data) {
             // Обложка целиком; поля другой пропорции — размытая копия, без обрезки
             ZStack {
                 Image(uiImage: image)
