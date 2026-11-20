@@ -21,7 +21,7 @@ struct BookmarkRibbon: View {
     var body: some View {
         Image(systemName: "bookmark.fill")
             .font(.system(size: 22))
-            .foregroundStyle(Color.red.opacity(0.75))
+            .foregroundStyle(Color.brandTint)
             .offset(y: -4)
             .accessibilityLabel("Закладка")
     }
@@ -59,7 +59,7 @@ struct BookBookmarksView: View {
             .overlay {
                 if bookmarks.isEmpty {
                     ContentUnavailableView("Закладок нет", systemImage: "bookmark",
-                                           description: Text("«…» → «Добавить закладку» — отметить место, которое открыто сейчас."))
+                                           description: Text("«Меню» → «Закладка здесь» — отметить место, которое открыто сейчас."))
                 }
             }
             .navigationTitle("Закладки")
@@ -76,8 +76,8 @@ struct BookBookmarksView: View {
         let place = position(of: bookmark.paragraph)
         return VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Image(systemName: "bookmark.fill")
-                    .foregroundColor(.red.opacity(0.8))
+                Image(systemName: "bookmark")
+                    .foregroundColor(Color.brandTint)
                 Text(place.chapter)
                     .scaledFont(size: 13, weight: .semibold)
                     .foregroundColor(Color.brandMuted)

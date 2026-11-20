@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 /// Режим «Чтение» (LexiStream): нижняя панель — Библиотека, Аудио, Закладки, Профиль; сверху — переключатель режимов.
-/// «Закладки» пока заглушка, «Профиль» — временный макет (потом разделим по назначению)
+/// «Закладки» — закладки из всех книг («Заметки» пока пустые), «Профиль» — временный макет (потом разделим по назначению)
 struct ReaderTabsView: View {
     enum Tab: Hashable { case library, audio, bookmarks, profile }
 
@@ -22,7 +22,7 @@ struct ReaderTabsView: View {
                 .tabItem { Label("Аудио", systemImage: "headphones") }
                 .tag(Tab.audio)
 
-            ReaderMarksStubView()
+            ReaderBookmarksTab()
                 .modeSwitcherInset()
                 .tabItem { Label("Закладки", systemImage: "bookmark") }
                 .tag(Tab.bookmarks)
@@ -52,33 +52,6 @@ struct ReaderTabsView: View {
         .tint(.brandTint)
         .toolbarBackground(Color.brandBackground, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
-    }
-}
-
-/// «Закладки» и «Заметки» — заглушка по дизайну LexiStream: вкладки есть, функционала пока нет
-private struct ReaderMarksStubView: View {
-    private enum Section: String, CaseIterable { case bookmarks = "Закладки", notes = "Заметки" }
-    @State private var section = Section.bookmarks
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Text("Закладки и заметки")
-                .scaledFont(size: 34, weight: .semibold, design: .serif)
-                .foregroundColor(.brandDark)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 20)
-                .padding(.top, 8)
-            Picker("Раздел", selection: $section) {
-                ForEach(Section.allCases, id: \.self) { Text($0.rawValue).tag($0) }
-            }
-            .pickerStyle(.segmented)
-            .padding(20)
-            TabPlaceholder(icon: section == .bookmarks ? "bookmark" : "note.text",
-                           title: section == .bookmarks ? "Закладок пока нет" : "Заметок пока нет",
-                           text: "Скоро: закладки и заметки из всех книг — в одном месте.")
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.brandBackground.ignoresSafeArea())
     }
 }
 
