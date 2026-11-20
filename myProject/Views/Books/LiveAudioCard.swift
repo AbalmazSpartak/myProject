@@ -15,9 +15,6 @@ struct LiveAudioCard: View {
     @State private var isConfirmingDelete = false
     @State private var errorText: String?
 
-    /// Поиск в LibriVox медленный — найденное помним, пока приложение открыто
-    private static var cache: [Int: [LibriVox.Audiobook]] = [:]
-
     var body: some View {
         Group {
             if let saved {
@@ -148,16 +145,14 @@ struct LiveAudioCard: View {
 
     private func load() async {
         saved = LiveAudioStore.audiobook(book: book.id)
-        guard saved == nil, let id = book.gutenbergID else { return }
-        if let cached = Self.cache[id] {
+        guard saved == nil, book.gutenbergID != nil else { return }
+        if let cached = LiveAudioLookup.cached(gutenbergID: book.gutenbergID) {
             found = cached
             return
         }
         isSearching = true
         defer { isSearching = false }
-        let result = (try? await LibriVox.recordings(gutenbergID: id, title: book.title)) ?? []
-        Self.cache[id] = result
-        found = result
+        found = await LiveAudioLookup.recordings(for: book)
     }
 
     private func info(_ audiobook: LibriVox.Audiobook) -> String {

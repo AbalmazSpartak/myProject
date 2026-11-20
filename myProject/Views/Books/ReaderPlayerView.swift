@@ -40,6 +40,11 @@ struct ReaderPlayerView: View {
     let onChapter: (Int) -> Void
     let onChapters: () -> Void
     let onClose: () -> Void
+    /// Язык книги — для списка голосов
+    var language: String = BookLanguage.english
+    /// Меню «Голос»: другой нейроголос или живая запись LibriVox
+    var onNeuralVoice: (String) -> Void = { _ in }
+    var onLiveVoice: (LibriVox.Audiobook) -> Void = { _ in }
 
     /// Сколько знаков в секунду на скорости 1×: время считается по тексту, поэтому приблизительное
     private static let charsPerSecond = 14.0
@@ -147,6 +152,9 @@ struct ReaderPlayerView: View {
                 .foregroundColor(Color.brandMuted)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
+            BookVoiceMenu(book: book, language: language, current: .neural(NeuralVoice.shared.bookChoice(language)),
+                          onNeural: onNeuralVoice, onLive: onLiveVoice)
+                .padding(.top, 4)
         }
     }
 

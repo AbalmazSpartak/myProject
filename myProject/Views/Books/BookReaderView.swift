@@ -41,6 +41,11 @@ struct BookReaderView: View {
     /// С какого абзаца книги начинается каждая глава
     @State private var chapterStarts: [Int] = []
     @State private var chapterIndex = 0
+    /// Живой голос LibriVox из меню «Голос»: открыт ли его плеер и с какой главы записи
+    @State private var isListeningLive = false
+    @State private var liveSection: Int?
+    /// Другой чтец, а у нынешнего есть скачанные главы — спрашиваем
+    @State private var pendingLiveRecording: LibriVox.Audiobook?
     /// Абзац, с которого открыть главу
     @State private var startParagraph = 0
     /// Абзацы главы, где каждое слово — ссылка на перевод. Готовятся один раз при открытии главы:
@@ -282,11 +287,25 @@ struct BookReaderView: View {
                                  paragraphs: chapter.paragraphs, speech: speech, speed: $speechSpeed,
                                  sleep: sleep, sleepEndsAt: sleepEndsAt, onSleep: setSleep, onToggle: toggleReading,
                                  onSeek: { speech.start(from: $0) }, onChapter: playerChapter(_:),
-                                 onChapters: { isShowingContents = true }, onClose: { isShowingPlayer = false })
+                                 onChapters: { isShowingContents = true }, onClose: { isShowingPlayer = false },
+                                 language: language, onNeuralVoice: switchNeuralVoice, onLiveVoice: switchToLive)
                     .transition(.move(edge: .bottom))
             }
         }
         .animation(.easeInOut(duration: 0.25), value: isShowingPlayer)
+        .navigationDestination(isPresented: $isListeningLive) {
+            LiveAudioPlayerView(book: book, startSection: liveSection, onNeural: resumeNeural)
+                .toolbar(.visible, for: .navigationBar)
+        }
+        .confirmationDialog("Сменить чтеца?", isPresented: Binding(get: { pendingLiveRecording != nil }, set: { if !$0 { pendingLiveRecording = nil } }),
+                            titleVisibility: .visible, presenting: pendingLiveRecording) { audiobook in
+            Button("Сменить и удалить скачанное", role: .destructive) {
+                if (try? LiveAudioPlayer.shared.replaceRecording(book: book.id, with: audiobook)) != nil { openLive(audiobook) }
+            }
+            Button("Отмена", role: .cancel) {}
+        } message: { _ in
+            Text("Скачанные главы нынешнего чтеца удалятся. Новый чтец играет онлайн, скачать его можно на странице книги.")
+        }
         // Нижняя панель — вместе с шапкой; поверх страницы, не сдвигая текст
         .overlay(alignment: .bottom) {
             if !isShowingPlayer, !chapters.isEmpty {
@@ -853,6 +872,52 @@ struct BookReaderView: View {
     }
 
     /// Экран слушания: ⏮ ⏭ — соседняя глава; читает дальше, если до этого читал
+    // MARK: - Смена голоса
+
+    /// Другой нейроголос: читаем дальше с того же слова уже им
+    private func switchNeuralVoice(_ choice: String) {
+        NeuralVoice.shared.setBookChoice(language, choice)
+        guard speech.isPlaying, let paragraph = speech.paragraph else { return }
+        speech.start(from: paragraph, offset: speech.word?.location ?? 0)
+    }
+
+    /// Живой голос LibriVox: нейроголос — на паузу, плеер записи — с той же главы
+    private func switchToLive(_ audiobook: LibriVox.Audiobook) {
+        let saved = LiveAudioStore.audiobook(book: book.id)
+        if saved?.id != audiobook.id {
+            let downloaded = saved.map { LiveAudioStore.downloadedCount(book: book.id, audiobook: $0) } ?? 0
+            if downloaded > 0 {
+                pendingLiveRecording = audiobook
+                return
+            }
+            guard (try? LiveAudioPlayer.shared.replaceRecording(book: book.id, with: audiobook)) != nil else { return }
+        }
+        openLive(audiobook)
+    }
+
+    private func openLive(_ audiobook: LibriVox.Audiobook) {
+        speech.pause()
+        if let chapter {
+            liveSection = ChapterMatch.section(chapterTitle: chapter.title, chapterIndex: chapterIndex,
+                                               chapterCount: chapters.count, sections: audiobook.sections)
+        }
+        isShowingPlayer = false
+        isListeningLive = true
+    }
+
+    /// Вернулись из живого голоса нейроголосом: глава — та, что играла в записи, читаем с её начала
+    private func resumeNeural(_ chapter: Int) {
+        isShowingPlayer = true
+        if chapter != chapterIndex, chapters.indices.contains(chapter) {
+            go(to: chapter)
+            continuesReading = true
+        } else if speech.paragraph != nil {
+            speech.resume()
+        } else {
+            toggleReading()
+        }
+    }
+
     private func playerChapter(_ delta: Int) {
         let wasPlaying = speech.isPlaying || speech.isPreparing
         let target = chapterIndex + delta

@@ -20,6 +20,8 @@ final class LiveAudioPlayer {
     private(set) var isLoading = false
     private(set) var time: Double = 0
     private(set) var duration: Double = 0
+    /// Глава не включилась — что сказать
+    private(set) var errorText: String?
     var speed: Float = UserDefaults.standard.object(forKey: "liveaudio_speed") as? Float ?? 1 {
         didSet {
             UserDefaults.standard.set(speed, forKey: "liveaudio_speed")
@@ -43,9 +45,13 @@ final class LiveAudioPlayer {
 
     func isCurrent(_ book: UUID) -> Bool { bookID == book }
 
-    /// Открыть книгу: с места, где остановились. Уже играющую не трогаем
-    func open(book: UUID, title: String, cover: Data?) {
-        guard bookID != book else { return }
+    /// Открыть книгу: с места, где остановились, или с главы section (переключились с нейроголоса — сразу играть).
+    /// Уже открытую не перезагружаем
+    func open(book: UUID, title: String, cover: Data?, section: Int? = nil) {
+        if bookID == book {
+            if let section, section != self.section { play(section: section) } else if section != nil { resume() }
+            return
+        }
         guard let audiobook = LiveAudioStore.audiobook(book: book), let first = audiobook.sections.first else { return }
         stop()
         bookID = book
@@ -53,8 +59,18 @@ final class LiveAudioPlayer {
         self.audiobook = audiobook
         artwork = cover.flatMap(UIImage.init(data:)).map(Self.artwork(image:))
         let saved = LiveAudioStore.position(book: book)
-        let start = saved.flatMap { position in audiobook.sections.first { $0.number == position.section } } ?? first
-        load(start, at: saved?.section == start.number ? saved?.time ?? 0 : 0, autoplay: false)
+        let wanted = section.flatMap { number in audiobook.sections.first { $0.number == number } }
+        let start = wanted ?? saved.flatMap { position in audiobook.sections.first { $0.number == position.section } } ?? first
+        let time = wanted == nil && saved?.section == start.number ? saved?.time ?? 0 : 0
+        load(start, at: time, autoplay: section != nil)
+    }
+
+    /// Другой чтец: прежняя запись и её скачанные главы удаляются, новая играет онлайн
+    func replaceRecording(book: UUID, with audiobook: LibriVox.Audiobook) throws {
+        if bookID == book { stop() }
+        if LiveAudioDownloader.shared.isDownloading(book) { LiveAudioDownloader.shared.cancel() }
+        LiveAudioStore.delete(book: book)
+        try LiveAudioStore.save(audiobook, book: book)
     }
 
     func play(section number: Int) {
@@ -138,6 +154,7 @@ final class LiveAudioPlayer {
         let url = FileManager.default.fileExists(atPath: local.path) ? local : target.url
         let asset = AVURLAsset(url: url, options: [AVURLAssetHTTPUserAgentKey: "LexiStream/1.0 (iOS)"])
         let item = AVPlayerItem(asset: asset)
+        errorText = nil
         section = target.number
         time = start
         duration = Double(target.seconds)
@@ -159,16 +176,30 @@ final class LiveAudioPlayer {
         endObserver = NotificationCenter.default.addObserver(forName: AVPlayerItem.didPlayToEndTimeNotification, object: item, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.finishedSection() }
         }
-        statusObservation = item.observe(\.status) { [weak self] item, _ in
-            let ready = item.status != .unknown
-            let seconds = item.duration.seconds
-            Task { @MainActor in
-                guard let self, ready else { return }
-                self.isLoading = false
-                if seconds.isFinite, seconds > 0 { self.duration = seconds }
-                self.updateNowPlaying()
-            }
+        statusObservation = Self.watchStatus(item) { [weak self] status, seconds, error in
+            Task { @MainActor in self?.statusChanged(status, seconds: seconds, error: error) }
         }
+    }
+
+    /// KVO зовёт замыкание из своего потока: оно не должно быть «главнопоточным», иначе Swift 6 роняет приложение
+    private nonisolated static func watchStatus(_ item: AVPlayerItem,
+                                                _ handler: @escaping @Sendable (AVPlayerItem.Status, Double, String?) -> Void) -> NSKeyValueObservation {
+        item.observe(\.status, options: [.initial, .new]) { item, _ in
+            handler(item.status, item.duration.seconds, item.error?.localizedDescription)
+        }
+    }
+
+    private func statusChanged(_ status: AVPlayerItem.Status, seconds: Double, error: String?) {
+        guard status != .unknown else { return }
+        isLoading = false
+        if status == .failed {
+            isPlaying = false
+            errorText = "Не получилось включить главу" + (error.map { ": \($0)" } ?? ".")
+        } else {
+            errorText = nil
+            if seconds.isFinite, seconds > 0 { duration = seconds }
+        }
+        updateNowPlaying()
     }
 
     private func tick(_ seconds: Double) {

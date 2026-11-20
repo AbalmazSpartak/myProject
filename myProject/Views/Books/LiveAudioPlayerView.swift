@@ -3,6 +3,14 @@ import SwiftUI
 /// Плеер живой озвучки LibriVox: обложка, глава и чтец, полоска времени, кнопки, скорость, список глав
 struct LiveAudioPlayerView: View {
     let book: Book
+    /// С какой главы записи начать (переключились с нейроголоса); nil — где остановились
+    var startSection: Int? = nil
+    /// Открыт из читалки: «Нейроголос» возвращает туда, с этой главы текста
+    var onNeural: ((Int) -> Void)? = nil
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var readerChapter: Int?
+    @State private var pendingRecording: LibriVox.Audiobook?
 
     @State private var player = LiveAudioPlayer.shared
     @State private var downloader = LiveAudioDownloader.shared
@@ -31,9 +39,24 @@ struct LiveAudioPlayerView: View {
                         .scaledFont(size: 14)
                         .foregroundStyle(Color.brandMuted)
                         .multilineTextAlignment(.center)
+                    if let audiobook = player.audiobook, isMine {
+                        BookVoiceMenu(book: book, language: BookLanguage.english, current: .live(audiobook.id),
+                                      onNeural: switchToNeural, onLive: switchRecording)
+                            .padding(.top, 8)
+                    }
                 }
 
-                if isMine { timeline; controls; speedPicker }
+                if isMine {
+                    timeline
+                    controls
+                    if let error = player.errorText {
+                        Text(error)
+                            .scaledFont(size: 13)
+                            .foregroundStyle(Color.statusLearning)
+                            .multilineTextAlignment(.center)
+                    }
+                    speedPicker
+                }
                 chapters
                 Text("Живой голос LibriVox: книгу читает человек-волонтёр. Запись — общественное достояние. Скачанные главы играют без интернета, остальные — онлайн.")
                     .scaledFont(size: 12)
@@ -48,7 +71,53 @@ struct LiveAudioPlayerView: View {
         .background(Color.brandBackground.ignoresSafeArea())
         .navigationTitle(book.title)
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { player.open(book: book.id, title: book.title, cover: book.coverData) }
+        .onAppear { player.open(book: book.id, title: book.title, cover: book.coverData, section: startSection) }
+        .navigationDestination(item: $readerChapter) { chapter in
+            BookReaderView(book: book, listensOnOpen: true, listenFromChapter: chapter)
+                .toolbar(.hidden, for: .navigationBar)
+        }
+        .confirmationDialog("Сменить чтеца?", isPresented: Binding(get: { pendingRecording != nil }, set: { if !$0 { pendingRecording = nil } }),
+                            titleVisibility: .visible, presenting: pendingRecording) { audiobook in
+            Button("Сменить и удалить скачанное", role: .destructive) { useRecording(audiobook) }
+            Button("Отмена", role: .cancel) {}
+        } message: { _ in
+            Text("Скачанные главы нынешнего чтеца удалятся. Новый чтец играет онлайн, скачать его можно на странице книги.")
+        }
+    }
+
+    // MARK: - Смена голоса
+
+    /// Нейроголос: живой голос — на паузу, читалка открывается на той же главе и читает вслух
+    private func switchToNeural(_ choice: String) {
+        NeuralVoice.shared.setBookChoice(BookLanguage.english, choice)
+        player.pause()
+        let titles = book.chapters.enumerated().map { $1.title.isEmpty ? "Глава \($0 + 1)" : $1.title }
+        var chapter = 0
+        if let sections = player.audiobook?.sections, let index = sections.firstIndex(where: { $0.number == player.section }) {
+            chapter = ChapterMatch.chapter(section: sections[index], sectionIndex: index, sectionCount: sections.count, titles: titles)
+        }
+        if let onNeural {
+            onNeural(chapter)
+            dismiss()
+        } else {
+            readerChapter = chapter
+        }
+    }
+
+    private func switchRecording(_ audiobook: LibriVox.Audiobook) {
+        guard audiobook.id != player.audiobook?.id else { return }
+        let downloaded = player.audiobook.map { LiveAudioStore.downloadedCount(book: book.id, audiobook: $0) } ?? 0
+        if downloaded > 0 { pendingRecording = audiobook } else { useRecording(audiobook) }
+    }
+
+    /// Новый чтец — с той же главы книги, если она у него есть
+    private func useRecording(_ audiobook: LibriVox.Audiobook) {
+        let title = player.currentSection?.title ?? ""
+        let index = player.audiobook?.sections.firstIndex { $0.number == player.section } ?? 0
+        let count = player.audiobook?.sections.count ?? 1
+        guard (try? player.replaceRecording(book: book.id, with: audiobook)) != nil else { return }
+        let section = ChapterMatch.section(chapterTitle: title, chapterIndex: index, chapterCount: count, sections: audiobook.sections)
+        player.open(book: book.id, title: book.title, cover: book.coverData, section: section)
     }
 
     private var subtitle: String {
