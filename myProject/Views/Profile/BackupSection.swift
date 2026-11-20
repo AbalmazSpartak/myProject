@@ -51,6 +51,7 @@ struct BackupSection: View {
             } label: {
                 Label("Восстановить из копии", systemImage: "arrow.counterclockwise")
             }
+            .disabled(isPreparing)
         }
         .fileExporter(isPresented: $isExporting, document: document, contentType: .json,
                       defaultFilename: Backup.fileName()) { result in
@@ -102,11 +103,15 @@ struct BackupSection: View {
     private func restore() {
         guard let backup = pendingRestore else { return }
         pendingRestore = nil
-        do {
-            try Backup.restore(backup, context: modelContext)
-            message = "Готово: \(backup.summary)."
-        } catch {
-            message = "Не получилось восстановить: \(error.localizedDescription). Данные не изменились."
+        isPreparing = true
+        Task {
+            defer { isPreparing = false }
+            do {
+                try await Backup.restore(backup, context: modelContext)
+                message = "Готово: \(backup.summary)."
+            } catch {
+                message = "Не получилось восстановить: \(error.localizedDescription). Данные не изменились."
+            }
         }
     }
 }

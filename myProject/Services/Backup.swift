@@ -134,11 +134,14 @@ nonisolated struct BackupFile: Codable, Sendable {
 
 enum BackupError: LocalizedError {
     case unreadable, newerVersion
+    /// Страховочная копия текущих данных не записалась — заменять данные нельзя
+    case safetyCopyFailed(String)
 
     var errorDescription: String? {
         switch self {
         case .unreadable: return "Это не резервная копия LexiStream или файл повреждён."
         case .newerVersion: return "Копия сделана в более новой версии приложения — обновите приложение."
+        case .safetyCopyFailed(let reason): return "Не удалось сохранить страховочную копию текущих данных (\(reason)). Восстановление остановлено"
         }
     }
 }
@@ -249,13 +252,27 @@ enum Backup {
 
     // MARK: - Восстановление: текущее заменяется тем, что в копии
 
-    /// Перед заменой текущие данные сохраняются в «Документы» приложения — на случай, если копия окажется не той
-    static func restore(_ backup: BackupFile, context: ModelContext) throws {
+    /// Страховочная копия текущих данных: собирается из базы на главном потоке, кодируется и пишется в фоне.
+    /// Не записалась или записалась не целиком — ошибка, и восстановление не начинается: иначе данные заменились бы без страховки
+    private static func writeSafetyCopy(context: ModelContext) async throws {
         let safety = make(context: context, includeMedia: true)
-        if let data = try? encode(safety) {
-            let url = URL.documentsDirectory.appending(path: "Перед восстановлением \(fileName()).json")
-            try? data.write(to: url)
-        }
+        let url = URL.documentsDirectory.appending(path: "Перед восстановлением \(fileName()).json")
+        try await Task.detached(priority: .userInitiated) {
+            let data: Data
+            do { data = try encode(safety) } catch { throw BackupError.safetyCopyFailed("не удалось подготовить") }
+            // Места должно хватить с запасом
+            let free = (try? URL.documentsDirectory.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]))?
+                .volumeAvailableCapacityForImportantUsage ?? Int64.max
+            guard free > Int64(data.count) * 12 / 10 + 5_000_000 else { throw BackupError.safetyCopyFailed("на iPhone мало места") }
+            do { try data.write(to: url, options: .atomic) } catch { throw BackupError.safetyCopyFailed("запись не удалась") }
+            let size = (try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? -1
+            guard size == data.count else { throw BackupError.safetyCopyFailed("файл записался не целиком") }
+        }.value
+    }
+
+    /// Перед заменой текущие данные сохраняются в «Документы» приложения — на случай, если копия окажется не той
+    static func restore(_ backup: BackupFile, context: ModelContext) async throws {
+        try await writeSafetyCopy(context: context)
 
         // 1. Убираем своё: свои слова, словари, свои темы, книги; у встроенных слов — сбрасываем прогресс
         for word in context.fetchAllWords() {
