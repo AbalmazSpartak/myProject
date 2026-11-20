@@ -350,7 +350,8 @@ struct ReaderAppearanceSheet: View {
                         .pickerStyle(.segmented)
                     }
 
-                    if mode == .learning {
+                    // «Читаем и учим»: подсветка доступна и в режиме «Чтение»; нет её только в «Только читалке»
+                    if mode == .learning || !AppMode.isReaderOnly {
                         section("Правила чтения")
                         Toggle("Подсветка правил", isOn: phonicsOn)
                             .scaledFont(size: 16, weight: .semibold)
