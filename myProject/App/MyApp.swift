@@ -104,10 +104,11 @@ struct MyApp: App {
     /// Уходим в фон: сохранить прогресс и обновить виджет — у слов могло поменяться расписание
     private func shareWithWidget() {
         try? container.mainContext.save()
+        // «Продолжить чтение» показывает место в книге — обновляем виджеты в любом режиме
+        defer { WidgetCenter.shared.reloadAllTimelines() }
         // Виджет «Повторение» — для изучения: в «Чтении» тренировок нет, расписание слов не меняется
         guard mode == .learning else { return }
         AppGroup.defaults.set(studyScope.rawValue, forKey: StudyScope.storageKey)
-        WidgetCenter.shared.reloadAllTimelines()
     }
 
     /// База в общей папке. При первом запуске с виджетом её копия переносится из папки приложения;

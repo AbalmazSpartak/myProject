@@ -30,6 +30,8 @@ struct ContentView: View {
     @Query private var profiles: [UserProfile]
     
     @State private var activeScreen: ActiveScreen?
+    /// Книга, открытая нажатием на виджет «Продолжить чтение»
+    @State private var widgetBook: Book?
     /// «Практика» — свои переходы, чтобы экран не открылся сразу в двух вкладках
     @State private var practiceScreen: ActiveScreen?
     @State private var selectedTab = 0
@@ -49,6 +51,21 @@ struct ContentView: View {
             // «Чтение» — библиотека с нижней панелью (Главная, Библиотека, Закладки, Профиль), без тренировок и игр
             case .reading: ReaderTabsView(onProfile: $onProfile)
             }
+        }
+        .onOpenURL { url in
+            // lexistream://read/<id книги>
+            guard url.scheme == "lexistream", url.host == "read",
+                  let id = UUID(uuidString: url.lastPathComponent) else { return }
+            var descriptor = FetchDescriptor<Book>(predicate: #Predicate { $0.id == id })
+            descriptor.fetchLimit = 1
+            widgetBook = try? modelContext.fetch(descriptor).first
+        }
+        .fullScreenCover(item: $widgetBook) { book in
+            NavigationStack {
+                BookReaderView(book: book)
+                    .toolbar(.hidden, for: .navigationBar)
+            }
+            .appThemedColorScheme()
         }
         .fullScreenCover(isPresented: Binding(get: { !readerOnly && !learningOnly && (!modeChosen || asksOnLaunch) }, set: { _ in })) {
             ModeChoiceView { asksOnLaunch = false }
