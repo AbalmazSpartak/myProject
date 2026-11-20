@@ -1,6 +1,8 @@
 import Foundation
 import PDFKit
+#if canImport(UIKit)
 import UIKit
+#endif
 
 /// PDF → книга для читалки: текст по страницам собирается в абзацы, главы — из оглавления PDF,
 /// а без него — частями, как у .txt. Сканы без текстового слоя не читаются (в них только картинки)
@@ -31,7 +33,11 @@ nonisolated enum PDFBook {
         chapters = BookCleanup.clean(chapters, title: title, author: author)
         guard !chapters.isEmpty else { throw Failure.noText }
 
+        #if canImport(UIKit)
         let cover = document.page(at: 0)?.thumbnail(of: CGSize(width: 360, height: 520), for: .mediaBox).jpegData(compressionQuality: 0.8)
+        #else
+        let cover: Data? = nil
+        #endif
         return ParsedBook(title: title, author: author, cover: cover, chapters: chapters)
     }
 
@@ -83,7 +89,9 @@ nonisolated enum PDFBook {
             } else {
                 current += current.isEmpty ? line : " " + line
             }
-            if endsSentence(line), line.count < Int(Double(usual) * 0.7) { flush() }
+            // Короткая строка без точки в начале абзаца — заголовок («Chapter One»): отдельным абзацем
+            if current == line, line.count < Int(Double(usual) * 0.5), !endsSentence(line), !line.hasSuffix(",") { flush(); continue }
+            if endsSentence(line), line.count < Int(Double(usual) * 0.8) { flush() }
         }
         flush()
         return result

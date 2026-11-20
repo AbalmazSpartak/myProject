@@ -35,34 +35,8 @@ enum DictionaryCounts {
     }
 
     /// «1 слово», «2 слова», «5 слов»
-    static func words(_ count: Int) -> String {
-        let lastTwo = count % 100, last = count % 10
-        let noun: String
-        if (11...14).contains(lastTwo) {
-            noun = "слов"
-        } else {
-            switch last {
-            case 1: noun = "слово"
-            case 2...4: noun = "слова"
-            default: noun = "слов"
-            }
-        }
-        return "\(count.formatted()) \(noun)"
-    }
+    static func words(_ count: Int) -> String { RussianPlural.words(count) }
 
     /// «1 карточку», «2 карточки», «5 карточек» — после «посмотрели»
-    static func cards(_ count: Int) -> String {
-        let lastTwo = count % 100, last = count % 10
-        let noun: String
-        if (11...14).contains(lastTwo) {
-            noun = "карточек"
-        } else {
-            switch last {
-            case 1: noun = "карточку"
-            case 2...4: noun = "карточки"
-            default: noun = "карточек"
-            }
-        }
-        return "\(count.formatted()) \(noun)"
-    }
+    static func cards(_ count: Int) -> String { RussianPlural.cards(count) }
 }

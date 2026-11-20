@@ -68,10 +68,7 @@ enum TrainingFilter: Equatable {
 
     /// Слова книги: сначала те, которым пора на повторение, затем новые, затем остальные вперемешку
     static func bookOrder(_ words: [Word], now: Date = Date()) -> [Word] {
-        let due = words.filter { $0.state != .new && $0.dueDate <= now }.sorted { $0.dueDate < $1.dueDate }
-        let fresh = words.filter { $0.state == .new }.shuffled()
-        let rest = words.filter { $0.state != .new && $0.dueDate > now }.shuffled()
-        return due + fresh + rest
+        BookWordOrder.ordered(words, now: now)
     }
 
     /// Новые слова: сначала из словарей, созданных из файла, — от самых частых в файле;
