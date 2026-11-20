@@ -382,7 +382,7 @@ struct GutenbergCatalogView: View {
             } else {
                 let entry = GutenbergCatalog.Entry(id: gutenbergID, title: item.title, author: item.author)
                 if let parsed = try? await GutenbergCatalog.downloadBook(entry) {
-                    book = Book(parsed, gutenbergID: gutenbergID)
+                    book = await Book.make(parsed, gutenbergID: gutenbergID)
                 } else {
                     // Gutenberg не ответил — слушать можно и без текста, он подтянется позже
                     book = Book(GutenbergCatalog.placeholder(title: item.title, author: item.author), gutenbergID: gutenbergID)
@@ -405,7 +405,7 @@ struct GutenbergCatalogView: View {
         defer { downloading.remove(entry.id) }
         do {
             let parsed = try await GutenbergCatalog.downloadBook(entry)
-            modelContext.insert(Book(parsed, gutenbergID: entry.id))
+            modelContext.insert(await Book.make(parsed, gutenbergID: entry.id))
             modelContext.saveReporting()
         } catch {
             errorMessage = "Не удалось скачать «\(entry.title)». " + GutenbergCatalog.failureText(error, action: "Скачать книгу")

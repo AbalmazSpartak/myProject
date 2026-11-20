@@ -104,6 +104,7 @@ enum DictionaryPatch {
     private static let entriesKey = "dictionary_patch_entries"
     private static let editedKey = "dictionary_user_edited"
     private static let lastCheckKey = "dictionary_patch_checked"
+    private static let appliedStampKey = "dictionary_patch_applied"
     private static let endpoint = OnlineRaceManager.baseURL.appending(path: "patch")
 
     /// Скачать новые правки (не чаще раза в 6 часов) и применить все
@@ -123,7 +124,11 @@ enum DictionaryPatch {
                 UserDefaults.standard.set(Date(), forKey: lastCheckKey)
             }
         }
+        // Те же правки поверх той же версии words.csv уже применены — на каждый запуск по запросу на правку не гоняем
+        let stamp = "\(entries.map(\.version).max() ?? 0)|\(entries.count)|\(UserDefaults.standard.string(forKey: "bundled_words_hash") ?? "")"
+        guard UserDefaults.standard.string(forKey: appliedStampKey) != stamp else { return }
         apply(entries, context: context)
+        UserDefaults.standard.set(stamp, forKey: appliedStampKey)
     }
 
     private struct Response: Decodable { let entries: [Entry] }

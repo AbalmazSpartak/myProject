@@ -3,6 +3,7 @@ import Foundation
 import NaturalLanguage
 import Observation
 import SherpaOnnx
+import UIKit
 
 /// Нейросетевой голос Kokoro (82M, int8) через sherpa-onnx: работает на процессоре, без интернета.
 /// Модель (~100 МБ архив, ~150 МБ распакованная) не входит в приложение — скачивается по кнопке в настройках «Озвучки» с официального релиза sherpa-onnx.
@@ -229,6 +230,13 @@ final class NeuralVoice {
         }
         for (language, _) in PiperVoice.languages {
             bookChoices[language] = UserDefaults.standard.string(forKey: Self.bookChoiceKey(language))
+        }
+        // Системе не хватает памяти — модель голоса выгружаем, если сейчас ничего не звучит (загрузится снова при следующей фразе)
+        NotificationCenter.default.addObserver(forName: UIApplication.didReceiveMemoryWarningNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, !self.playerNode.isPlaying else { return }
+                await self.engine.unload()
+            }
         }
     }
 
@@ -567,17 +575,26 @@ final class NeuralVoice {
         return kept
     }
 
-    /// Распаковать архив в общую папку голосов; заменяется только папка этого голоса
+    /// Распаковать архив в общую папку голосов. Сначала во временную папку, и только потом — на место прежнего голоса:
+    /// оборвалась распаковка (нет места, выход из приложения) — рабочий голос остаётся нетронутым
     private nonisolated static func install(_ archive: URL, folder: String, progress: @escaping @Sendable (Double) -> Void) throws {
         let manager = FileManager.default
-        try? manager.removeItem(at: root.appendingPathComponent(folder))
         try manager.createDirectory(at: root, withIntermediateDirectories: true)
         var values = URLResourceValues()
         values.isExcludedFromBackup = true
-        var folder = root
-        try? folder.setResourceValues(values)
+        var rootFolder = root
+        try? rootFolder.setResourceValues(values)
         defer { try? manager.removeItem(at: archive) }
-        try TarBz2Extractor.extract(archive, to: root, progress: progress)
+        let staging = root.appendingPathComponent(".installing-\(folder)", isDirectory: true)
+        try? manager.removeItem(at: staging)
+        try manager.createDirectory(at: staging, withIntermediateDirectories: true)
+        defer { try? manager.removeItem(at: staging) }
+        try TarBz2Extractor.extract(archive, to: staging, progress: progress)
+        let unpacked = staging.appendingPathComponent(folder, isDirectory: true)
+        guard manager.fileExists(atPath: unpacked.path(percentEncoded: false)) else { throw NeuralVoiceError.empty }
+        let target = root.appendingPathComponent(folder, isDirectory: true)
+        try? manager.removeItem(at: target)
+        try manager.moveItem(at: unpacked, to: target)
     }
 
     // MARK: - Речь

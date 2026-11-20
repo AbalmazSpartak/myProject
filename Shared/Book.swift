@@ -30,11 +30,26 @@ final class Book {
     /// Вместо текста — заглушка: книгу добавили ради живой озвучки, пока Project Gutenberg не отвечал
     var isTextPending: Bool = false
 
-    init(_ parsed: ParsedBook, gutenbergID: Int? = nil) {
+    /// JSON глав — для большой книги тяжёлый, поэтому `make` делает его в фоне
+    nonisolated static func encodeChapters(_ chapters: [BookChapter]) -> Data {
+        (try? JSONEncoder().encode(chapters)) ?? Data()
+    }
+
+    /// Книга из разобранного текста; главы кодируются в фоне, главный поток не ждёт
+    static func make(_ parsed: ParsedBook, gutenbergID: Int? = nil) async -> Book {
+        let data = await Task.detached(priority: .userInitiated) { encodeChapters(parsed.chapters) }.value
+        return Book(parsed, chaptersData: data, gutenbergID: gutenbergID)
+    }
+
+    convenience init(_ parsed: ParsedBook, gutenbergID: Int? = nil) {
+        self.init(parsed, chaptersData: Book.encodeChapters(parsed.chapters), gutenbergID: gutenbergID)
+    }
+
+    init(_ parsed: ParsedBook, chaptersData: Data, gutenbergID: Int? = nil) {
         title = parsed.title
         author = parsed.author
         coverData = parsed.cover
-        chaptersData = (try? JSONEncoder().encode(parsed.chapters)) ?? Data()
+        self.chaptersData = chaptersData
         paragraphCount = parsed.chapters.reduce(0) { $0 + $1.paragraphs.count }
         self.gutenbergID = gutenbergID
     }

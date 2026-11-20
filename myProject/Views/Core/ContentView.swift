@@ -62,7 +62,7 @@ struct ContentView: View {
                 Task {
                     do {
                         let parsed = try await Task.detached(priority: .userInitiated) { try BookImport.parse(url) }.value
-                        let book = Book(parsed)
+                        let book = await Book.make(parsed)
                         modelContext.insert(book)
                         modelContext.saveReporting()
                         widgetListens = false
