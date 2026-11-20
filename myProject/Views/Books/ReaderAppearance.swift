@@ -264,8 +264,25 @@ struct ReaderStyle: Equatable {
         return ReaderSettings.phonicsOptions(mode: mode, rules: defaults.string(forKey: ReaderSettings.phonicsRulesKey) ?? "")
     }
 
-    /// Для перерисовки главы: меняется вместе с галочками
-    var phonicsID: String { phonics.map(PhonicsOption.raw) ?? "off" }
+    /// Для перерисовки главы: меняется вместе с галочками и темой (цвета подсветки зависят от темы)
+    var phonicsID: String {
+        guard let phonics else { return "off" }
+        return PhonicsOption.raw(phonics) + "|" + theme.rawValue + (theme == .nightCustom ? "|\(Int(night.brightness * 20))|\(Int(night.warmth * 4))" : "")
+    }
+
+    /// Набор цветов подсветки правил под тему; «Как в приложении» — по тому, тёмный ли сейчас экран; «Своя» — по яркости фона
+    func phonicsPalette(isDark: Bool) -> PhonicsPalette {
+        switch theme {
+        case .paper: return .make(.paper)
+        case .sepia: return .make(.sepia)
+        case .gray: return .make(.gray)
+        case .night: return .make(.night)
+        case .app: return .make(isDark ? .night : .app)
+        case .nightCustom:
+            if night.brightness > 0.5 { return .make(night.warmth > 0.45 ? .sepia : .paper) }
+            return .make(night.brightness > 0.15 ? .gray : .night)
+        }
+    }
 
     var background: Color {
         switch theme {

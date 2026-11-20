@@ -1,26 +1,48 @@
 import SwiftUI
 import SwiftData
 
+/// Цвета подсветки правил вне страницы книги (карточка слова, легенда): светлая тема приложения — набор «Как в приложении», тёмная — «Ночь»
+nonisolated enum PhonicsInk {
+    static func color(_ light: UInt32, _ dark: UInt32) -> Color {
+        Color(UIColor { $0.userInterfaceStyle == .dark ? UIColor(Color(hex: dark)) : UIColor(Color(hex: light)) })
+    }
+
+    private static let app = PhonicsPalette.make(.app)
+    private static let night = PhonicsPalette.make(.night)
+
+    static var vowelPair: Color { color(app.vowelPair.ink, night.vowelPair.ink) }
+    static var magicE: Color { color(app.magicE.ink, night.magicE.ink) }
+    static var rControlled: Color { color(app.rControlled.ink, night.rControlled.ink) }
+    static var consonantPair: Color { color(app.consonantPair.ink, night.consonantPair.ink) }
+    static var ending: Color { color(app.ending.ink, night.ending.ink) }
+    static var exception: Color { color(app.exception.ink, night.exception.ink) }
+    static var colloquial: Color { color(app.colloquial.ink, night.colloquial.ink) }
+    static var silent: Color { color(app.silent, night.silent) }
+    static var exceptionFill: Color { color(app.exception.fill, night.exception.fill) }
+    static var magicEFill: Color { color(app.magicE.fill, night.magicE.fill) }
+    static var endingFill: Color { color(app.ending.fill, night.ending.fill) }
+}
+
 extension PhonicsKind {
-    /// Цвет подсветки в тексте и в разборе слова — мягкий, читается и на светлой, и на тёмной теме
+    /// Цвет категории в разборе слова и в легенде — тот же, что на странице книги
     nonisolated var color: Color {
         switch self {
-        case .vowelTeam: return Color.brandTint
-        case .magicE: return .green
-        case .rVowel: return Color.brandTint
-        case .consonantPair: return .purple
-        case .ending: return Color.brandTint
-        case .silent: return Color.brandMuted
+        case .vowelTeam: return PhonicsInk.vowelPair
+        case .magicE: return PhonicsInk.magicE
+        case .rVowel: return PhonicsInk.rControlled
+        case .consonantPair: return PhonicsInk.consonantPair
+        case .ending: return PhonicsInk.ending
+        case .silent: return PhonicsInk.silent
         case .plain: return .clear
         }
     }
 
-    nonisolated static let exceptionColor = Color.red
+    nonisolated static var exceptionColor: Color { PhonicsInk.exception }
 }
 
 extension ColloquialRule {
-    /// Разговорные формы — пунктиром под словом: фон занят правилами чтения
-    nonisolated static let color = Color.brandTint
+    /// Разговорные формы — штрих-точка под словом и курсив
+    nonisolated static var color: Color { PhonicsInk.colloquial }
 }
 
 /// Легенда цветов подсветки с галочками — в шторке «Оформление»: что подсвечивать в книге
@@ -77,20 +99,25 @@ struct PhonicsLegend: View {
     }
 
     @ViewBuilder
+    /// Образец категории так, как она выглядит в тексте: заливка, линия определённого вида или перечёркивание
     private func swatch(_ option: PhonicsOption) -> some View {
         switch option {
         case .silent:
-            Text("k").foregroundColor(Color.brandMuted.opacity(0.55)) + Text("nife")
+            Text("kn").strikethrough(true, color: PhonicsInk.silent).foregroundColor(PhonicsInk.silent) + Text("ife")
         case .exception:
-            Text("one").underline(pattern: .dot, color: PhonicsKind.exceptionColor)
+            Text("said").fontWeight(.semibold).padding(.horizontal, 4).background(PhonicsInk.exceptionFill, in: RoundedRectangle(cornerRadius: 3))
         case .colloquial:
-            Text("knowed").underline(pattern: .dash, color: ColloquialRule.color)
-        default:
-            let kind = PhonicsKind(rawValue: option.rawValue) ?? .plain
-            Text(kind.example.components(separatedBy: ",").first ?? "")
-                .padding(.horizontal, 4)
-                .background(kind.color.opacity(0.28))
-                .cornerRadius(4)
+            Text("knowed").italic().underline(pattern: .dashDot, color: PhonicsInk.colloquial)
+        case .magicE:
+            Text("make").padding(.horizontal, 4).background(PhonicsInk.magicEFill, in: RoundedRectangle(cornerRadius: 3))
+        case .ending:
+            Text("-tion").padding(.horizontal, 4).background(PhonicsInk.endingFill, in: RoundedRectangle(cornerRadius: 3))
+        case .vowelTeam:
+            Text("ee").underline(pattern: .solid, color: PhonicsInk.vowelPair)
+        case .rVowel:
+            Text("ar").underline(pattern: .dash, color: PhonicsInk.rControlled)
+        case .consonantPair:
+            Text("th").underline(pattern: .dot, color: PhonicsInk.consonantPair)
         }
     }
 
@@ -105,8 +132,8 @@ struct PhonicsLegend: View {
 
     private func detail(_ option: PhonicsOption) -> String {
         switch option {
-        case .silent: return "бледные — не читаются: knife, write, light"
-        case .exception: return "читается не по правилу; красная подсветка — где именно"
+        case .silent: return "перечёркнуты — не читаются: knife, write, light"
+        case .exception: return "читается не по правилу; заливка и полужирный — где именно"
         case .colloquial: return "диалект старых книг: knowed = knew, a-going, de = the, ain’t"
         default: return PhonicsKind(rawValue: option.rawValue)?.example ?? ""
         }
@@ -251,7 +278,7 @@ struct ReadingBreakdownView: View {
             .scaledFont(size: 17, design: .serif)
             .foregroundColor(Color.brandMuted)
             if reading.isException {
-                Label("Читается не по правилам — красным отмечено, где именно", systemImage: "exclamationmark.triangle.fill")
+                Label("Читается не по правилам — заливкой отмечено, где именно", systemImage: "exclamationmark.triangle.fill")
                     .scaledFont(size: 13, weight: .semibold)
                     .foregroundColor(PhonicsKind.exceptionColor)
             }

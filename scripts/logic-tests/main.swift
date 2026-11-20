@@ -182,6 +182,22 @@ expectEqual(ordered[2], "fresh", "потом новые")
 expectEqual(ordered[3], "later", "в конце остальные")
 expectEqual(BookWordOrder.ordered([]).count, 0, "пустая книга — пустой список")
 
+// MARK: - Палитра подсветки правил чтения
+
+for set in PhonicsPalette.Variant.allCases {
+    let palette = PhonicsPalette.make(set)
+    // Текст темы на заливках категорий читается: контраст не ниже 4,5
+    for (index, entry) in PhonicsPalette.entries(palette).enumerated() {
+        expect(PhonicsPalette.contrast(palette.text, entry.fill) >= 4.5, "\(set): текст на заливке категории \(index) контраст ≥ 4,5")
+        // Линия или текст категории видны на фоне темы (≥ 3)
+        expect(PhonicsPalette.contrast(palette.background, entry.ink) >= 3.0, "\(set): цвет категории \(index) виден на фоне, контраст ≥ 3")
+    }
+    expect(PhonicsPalette.contrast(palette.background, palette.silent) >= 4.5, "\(set): немые буквы читаются на фоне, контраст ≥ 4,5")
+    // Цвета категорий в теме не совпадают
+    let inks = PhonicsPalette.entries(palette).map(\.ink)
+    expectEqual(Set(inks).count, inks.count, "\(set): у категорий разные цвета")
+}
+
 // MARK: - Итог
 
 if failures.isEmpty {

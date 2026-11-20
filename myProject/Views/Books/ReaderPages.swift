@@ -830,16 +830,23 @@ private struct HyphenatedLabel: UIViewRepresentable {
             let range = NSRange(run.range, in: text)
             if let value = run.foregroundColor { result.addAttribute(.foregroundColor, value: UIColor(value), range: range) }
             if let value = run.backgroundColor { result.addAttribute(.backgroundColor, value: UIColor(value), range: range) }
-            // Параметры линии из Text.LineStyle не прочитать — узнаём две, что есть в читалке: пунктир разговорных форм и точки исключений
-            if let line = run.underlineStyle {
-                if line == Text.LineStyle(pattern: .dash, color: ColloquialRule.color) {
-                    result.addAttribute(.underlineStyle, value: (NSUnderlineStyle.single.union(.patternDash)).rawValue, range: range)
-                    result.addAttribute(.underlineColor, value: UIColor(ColloquialRule.color), range: range)
-                } else if line == Text.LineStyle(pattern: .dot, color: PhonicsKind.exceptionColor) {
-                    result.addAttribute(.underlineStyle, value: (NSUnderlineStyle.single.union(.patternDot)).rawValue, range: range)
-                    result.addAttribute(.underlineColor, value: UIColor(PhonicsKind.exceptionColor), range: range)
-                } else {
-                    result.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: range)
+            // Линии правил чтения несёт метка PhonicsLine (из Text.LineStyle узор и цвет не прочитать)
+            if let mark = run[PhonicsLineKey.self] {
+                let patterns: [NSUnderlineStyle] = [.single, .single.union(.patternDash), .single.union(.patternDot), .single.union(.patternDashDot)]
+                let key: NSAttributedString.Key = mark.strike ? .strikethroughStyle : .underlineStyle
+                let colorKey: NSAttributedString.Key = mark.strike ? .strikethroughColor : .underlineColor
+                result.addAttribute(key, value: (mark.strike ? NSUnderlineStyle.single : patterns[min(mark.pattern, 3)]).rawValue, range: range)
+                result.addAttribute(colorKey, value: UIColor(Color(hex: mark.color)), range: range)
+            } else if run.underlineStyle != nil {
+                result.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: range)
+            }
+            // Полужирный (исключения) и курсив (разговорные формы)
+            if let intent = run.inlinePresentationIntent {
+                var traits: UIFontDescriptor.SymbolicTraits = []
+                if intent.contains(.stronglyEmphasized) { traits.insert(.traitBold) }
+                if intent.contains(.emphasized) { traits.insert(.traitItalic) }
+                if let descriptor = font.fontDescriptor.withSymbolicTraits(traits) {
+                    result.addAttribute(.font, value: UIFont(descriptor: descriptor, size: font.pointSize), range: range)
                 }
             }
         }

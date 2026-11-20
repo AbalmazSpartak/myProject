@@ -172,7 +172,7 @@ struct BookReaderView: View {
                     onNext: { go(to: chapterIndex + 1) }
                 )
                 .equatable()
-                .id("\(chapterIndex)-\(style.phonicsID)-\(contentVersion)")
+                .id("\(chapterIndex)-\(style.phonicsID)-\(isNight)-\(contentVersion)")
             } else if let linkedParagraphs {
                 ReaderChapterText(
                     chapterID: chapterIndex,
@@ -199,7 +199,7 @@ struct BookReaderView: View {
                     chapterNavigation
                 }
                 .equatable()
-                .id("\(chapterIndex)-\(style.phonicsID)-\(showsParallel)-\(translationVersion)-\(contentVersion)")
+                .id("\(chapterIndex)-\(style.phonicsID)-\(isNight)-\(showsParallel)-\(translationVersion)-\(contentVersion)")
             } else {
                 Spacer()
                 ProgressView()
@@ -255,7 +255,7 @@ struct BookReaderView: View {
             speech.notice = nil
         }
         // Глава готовится, когда главы загружены и при каждой смене главы
-        .task(id: "\(chapters.count)-\(chapterIndex)-\(style.phonicsID)-\(contentVersion)") { await prepareChapter() }
+        .task(id: "\(chapters.count)-\(chapterIndex)-\(style.phonicsID)-\(isNight)-\(contentVersion)") { await prepareChapter() }
         .sheet(item: $tappedWord) { tapped in
             WordLookupView(tapped: tapped, bookTitle: book.title) {
                 tappedWord = nil
@@ -701,10 +701,11 @@ struct BookReaderView: View {
         // Правила чтения — английские: в книге на другом языке не подсвечиваем
         let english = isEnglish
         let phonics = english ? style.phonics : nil
+        let palette = style.phonicsPalette(isDark: isNight)
         linkedParagraphs = await Task.detached(priority: .userInitiated) {
             var cache: [String: ReadingRules.Highlight?] = [:]
             return paragraphs.enumerated().map {
-                Self.linked($1, paragraph: $0, english: english, phonics: phonics, cache: &cache)
+                Self.linked($1, paragraph: $0, english: english, phonics: phonics, palette: palette, cache: &cache)
             }
         }.value
         speech.load(paragraphs: paragraphs, chapterTitle: chapter.title, bookTitle: book.title,
@@ -1166,7 +1167,7 @@ struct BookReaderView: View {
     /// Абзац, где каждое слово — ссылка на себя: в английской книге — английские слова, в другой — слова любых букв.
     /// phonics: nil — без подсветки, иначе что подсвечивать; cache — разбор слов главы
     nonisolated static func linked(_ text: String, paragraph: Int, english: Bool = true, phonics: Set<PhonicsOption>? = nil,
-                                   cache: inout [String: ReadingRules.Highlight?]) -> AttributedString {
+                                   palette: PhonicsPalette = .make(.paper), cache: inout [String: ReadingRules.Highlight?]) -> AttributedString {
         let ns = text as NSString
         let pattern = english ? "[A-Za-z]+(?:['’-][A-Za-z]+)*" : "\\p{L}+(?:['’-]\\p{L}+)*"
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return AttributedString(text) }
@@ -1183,14 +1184,18 @@ struct BookReaderView: View {
             var word = AttributedString(ns.substring(with: range))
             word.link = URL(string: "\(wordScheme)://w/\(paragraph)/\(range.location)/\(range.length)")
             if let phonics {
-                decorate(&word, ns.substring(with: range), options: phonics, cache: &cache)
+                decorate(&word, ns.substring(with: range), options: phonics, palette: palette, cache: &cache)
             }
             if showsColloquial {
                 let before = range.location > 0 ? ns.substring(with: NSRange(location: range.location - 1, length: 1)).first : nil
                 let end = NSMaxRange(range)
                 let after = ns.substring(with: NSRange(location: end, length: min(2, ns.length - end)))
                 if ColloquialForms.form(ns.substring(with: range), before: before, after: after, singleQuotes: singleQuotes) != nil {
-                    word.underlineStyle = Text.LineStyle(pattern: .dash, color: ColloquialRule.color)
+                    // Разговорная форма: штрих-точка под словом и курсив (вариант C холста)
+                    let line = Color(hex: palette.colloquial.ink)
+                    word.underlineStyle = Text.LineStyle(pattern: .dashDot, color: line)
+                    word.inlinePresentationIntent = .emphasized
+                    word[PhonicsLineKey.self] = PhonicsLine(pattern: 3, color: palette.colloquial.ink)
                 }
             }
             result += word
@@ -1204,10 +1209,20 @@ struct BookReaderView: View {
 }
 
 extension BookReaderView {
-    /// Подсветка правил чтения в слове: сочетания — цветным фоном, немые буквы — бледными, исключение — пунктиром.
-    /// Слова через дефис разбираются по частям
+    /// Подсветка правил чтения в слове (вариант C холста «Подсветка правил чтения»): заливка у исключений, немой e и окончаний,
+    /// линии разного вида у пар гласных, гласной + r и пар согласных, немые буквы перечёркнуты. Слова через дефис разбираются по частям
     nonisolated static func decorate(_ word: inout AttributedString, _ text: String, options: Set<PhonicsOption>,
-                                     cache: inout [String: ReadingRules.Highlight?]) {
+                                     palette: PhonicsPalette, cache: inout [String: ReadingRules.Highlight?]) {
+        func fill(_ target: Range<AttributedString.Index>, _ entry: PhonicsPalette.Entry, bold: Bool = false) {
+            word[target].backgroundColor = Color(hex: entry.fill)
+            if bold { word[target].inlinePresentationIntent = .stronglyEmphasized }
+        }
+        func line(_ target: Range<AttributedString.Index>, _ entry: PhonicsPalette.Entry, pattern: Int) {
+            let color = Color(hex: entry.ink)
+            let style: Text.LineStyle.Pattern = [.solid, .dash, .dot, .dashDot][pattern]
+            word[target].underlineStyle = Text.LineStyle(pattern: style, color: color)
+            word[target][PhonicsLineKey.self] = PhonicsLine(pattern: pattern, color: entry.ink)
+        }
         var offset = 0
         for part in text.split(separator: "-", omittingEmptySubsequences: false) {
             let piece = String(part)
@@ -1227,15 +1242,29 @@ extension BookReaderView {
             }
             for span in highlight.spans {
                 guard let target = range(span.range) else { continue }
-                let color = span.irregular ? PhonicsKind.exceptionColor : span.kind.color
-                word[target].backgroundColor = color.opacity(span.irregular ? 0.18 : 0.22)
+                if span.irregular {
+                    fill(target, palette.exception, bold: true)
+                    continue
+                }
+                switch span.kind {
+                case .vowelTeam: line(target, palette.vowelPair, pattern: 0)
+                case .rVowel: line(target, palette.rControlled, pattern: 1)
+                case .consonantPair: line(target, palette.consonantPair, pattern: 2)
+                case .magicE: fill(target, palette.magicE)
+                case .ending: fill(target, palette.ending)
+                case .silent, .plain: break
+                }
             }
             for silent in highlight.silent {
                 guard let target = range(silent) else { continue }
-                word[target].foregroundColor = Color.brandMuted.opacity(0.75)
+                let color = Color(hex: palette.silent)
+                word[target].foregroundColor = color
+                word[target].strikethroughStyle = Text.LineStyle(pattern: .solid, color: color)
+                word[target][PhonicsLineKey.self] = PhonicsLine(pattern: 0, color: palette.silent, strike: true)
             }
+            // Слово-исключение целиком: заливка и полужирный
             if highlight.isException, let target = range(NSRange(location: 0, length: (piece as NSString).length)) {
-                word[target].underlineStyle = Text.LineStyle(pattern: .dot, color: PhonicsKind.exceptionColor)
+                fill(target, palette.exception, bold: true)
             }
         }
     }
