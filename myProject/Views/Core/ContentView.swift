@@ -40,7 +40,7 @@ struct ContentView: View {
     @State private var practiceScreen: ActiveScreen?
     @State private var selectedTab = 0
     /// Открыт «Профиль» — при смене режима общий раздел остаётся открытым, а не прыгает на «Библиотеку» / «Обзор»
-    @State private var onProfile = false
+    @State private var onProfile = SettingsReturn.isPending
     @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
     @AppStorage(AppMode.chosenKey) private var modeChosen = false
     @AppStorage(AppMode.readerOnlyKey) private var readerOnly = false

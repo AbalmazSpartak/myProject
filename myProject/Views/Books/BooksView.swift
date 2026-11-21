@@ -29,9 +29,9 @@ struct BooksView: View {
 
     private let columns = [GridItem(.adaptive(minimum: 150), spacing: 16)]
 
-    /// Разделы плашки: при нижней панели «Чтения» у «Аудио» своя вкладка — здесь его не повторяем
+    /// Разделы плашки: при нижней панели «Чтения» у «Подписок» своя вкладка — здесь их не повторяем
     private var tabs: [LibraryTab] {
-        hasTabBar ? LibraryTab.allCases.filter { $0 != .audio } : LibraryTab.allCases
+        hasTabBar ? LibraryTab.allCases.filter { $0 != .subscriptions } : LibraryTab.allCases
     }
 
     var body: some View {
@@ -61,12 +61,12 @@ struct BooksView: View {
                 Group {
                     grid(sortedBooks, withAddCard: true, withSearch: true)
                         .tag(LibraryTab.mine)
-                    if tabs.contains(.audio) {
-                        AudioLibraryView(books: books) { listenBook = $0 }
-                            .tag(LibraryTab.audio)
+                    AudioLibraryView(books: books) { listenBook = $0 }
+                        .tag(LibraryTab.audio)
+                    if tabs.contains(.subscriptions) {
+                        subscriptions
+                            .tag(LibraryTab.subscriptions)
                     }
-                    subscriptions
-                        .tag(LibraryTab.subscriptions)
                 }
                 .background {
                     // В «Изучении» библиотека открыта с «Обзора» — свайп от левого края должен вести назад
@@ -74,7 +74,7 @@ struct BooksView: View {
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            // «Аудио» убрали из плашки, а запомнен он — открываем «Мои книги»
+            // Раздела нет в плашке, а запомнен он — открываем «Мои книги»
             .onAppear { if !tabs.contains(tab) { tab = .mine } }
             }
         }
@@ -301,7 +301,7 @@ struct BooksView: View {
             if isHome {
                 // Крупный заголовок слева, как в дизайне LexiStream
                 HStack {
-                    Text(fixedTab == .audio ? "Аудио" : "Библиотека")
+                    Text(fixedTab?.title ?? "Библиотека")
                         .scaledFont(size: 34, weight: .semibold, design: .serif)
                         .foregroundColor(.brandDark)
                         .padding(.leading, 20)

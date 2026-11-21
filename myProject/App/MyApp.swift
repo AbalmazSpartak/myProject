@@ -10,6 +10,7 @@ struct MyApp: App {
     @AppStorage(AppPalette.accentKey) private var paletteAccent = ""
     @AppStorage(AppPalette.buttonKey) private var paletteButton = ""
     @AppStorage(AppPalette.backgroundKey) private var paletteBackground = ""
+    @AppStorage(AppPalette.blackKey) private var paletteBlack = false
 
     // Создаем ModelContainer один раз и храним его в свойстве
     private var container: ModelContainer?
@@ -54,7 +55,7 @@ struct MyApp: App {
             if let container {
                 ContentView()
                     // Цвета читаются при отрисовке — после «Применить» в Настройках корень строится заново
-                    .id("\(paletteAccent)|\(paletteButton)|\(paletteBackground)")
+                    .id("\(paletteAccent)|\(paletteButton)|\(paletteBackground)|\(paletteBlack)")
                     .modelContext(container.mainContext)
                     .appThemedColorScheme()
                     // Текст растёт по «Размеру текста» iPhone, но не до самых огромных размеров, где ломаются шапки и карточки

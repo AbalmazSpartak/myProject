@@ -1,10 +1,10 @@
 import SwiftUI
 import SwiftData
 
-/// Режим «Чтение» (LexiStream): нижняя панель — Библиотека, Аудио, Закладки, Профиль; сверху — переключатель режимов.
+/// Режим «Чтение» (LexiStream): нижняя панель — Библиотека (Мои книги и Аудио), Подписки, Закладки, Профиль; сверху — переключатель режимов.
 /// «Закладки» — закладки из всех книг («Заметки» пока пустые), «Профиль» — временный макет (потом разделим по назначению)
 struct ReaderTabsView: View {
-    enum Tab: Hashable { case library, audio, bookmarks, profile }
+    enum Tab: Hashable { case library, subscriptions, bookmarks, profile }
 
     @State private var tab: Tab = .library
     /// Общий с «Обучением» признак «открыт Профиль»: при смене режима остаёмся в нём
@@ -18,9 +18,9 @@ struct ReaderTabsView: View {
                 .tabItem { Label("Библиотека", systemImage: "book") }
                 .tag(Tab.library)
 
-            NavigationStack { BooksView(isHome: true, hasTabBar: true, fixedTab: .audio).modeSwitcherInset() }
-                .tabItem { Label("Аудио", systemImage: "headphones") }
-                .tag(Tab.audio)
+            NavigationStack { BooksView(isHome: true, hasTabBar: true, fixedTab: .subscriptions).modeSwitcherInset() }
+                .tabItem { Label("Подписки", systemImage: "arrow.down.circle") }
+                .tag(Tab.subscriptions)
 
             ReaderBookmarksTab()
                 .modeSwitcherInset()
@@ -30,8 +30,8 @@ struct ReaderTabsView: View {
             NavigationStack {
                 ReaderProfileView(
                     openLibrary: { section in
-                        if section == .audio {
-                            tab = .audio
+                        if section == .subscriptions {
+                            tab = .subscriptions
                         } else {
                             libraryTab = section
                             tab = .library
@@ -105,6 +105,7 @@ private struct ReaderProfileView: View {
         }
         .background(Color.brandBackground.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear { if SettingsReturn.consume() { isShowingSettings = true } }
         .navigationDestination(item: $openedBook) { book in
             BookDetailView(book: book)
                 .toolbar(.hidden, for: .tabBar)

@@ -1,6 +1,17 @@
 import SwiftUI
 import SwiftData
 
+/// Новые цвета применяются перестройкой всего приложения: отметка «вернуться» — после неё снова открыты «Профиль» и Настройки
+enum SettingsReturn {
+    static var isPending = false
+
+    /// Профиль появился — открыть Настройки, если их закрыла перестройка
+    static func consume() -> Bool {
+        defer { isPending = false }
+        return isPending
+    }
+}
+
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     
@@ -12,6 +23,7 @@ struct SettingsView: View {
     @AppStorage(AppPalette.accentKey) private var storedAccent = ""
     @AppStorage(AppPalette.buttonKey) private var storedButton = ""
     @AppStorage(AppPalette.backgroundKey) private var storedBackground = ""
+    @AppStorage(AppPalette.blackKey) private var isBlack = false
     @State private var pickedAccent: AppPalette.Accent?
     @State private var pickedButton: AppPalette.Accent?
     @State private var pickedBackground: AppPalette.Background?
@@ -133,6 +145,8 @@ struct SettingsView: View {
     @ViewBuilder
     private var paletteSection: some View {
         Section {
+            themePicker
+            Toggle("Чёрный фон ночью", isOn: Binding(get: { isBlack }, set: { SettingsReturn.isPending = true; isBlack = $0 }))
             // Пока кнопки не выбирали отдельно, они идут за основным цветом
             swatchRow("Основной цвет", selection: Binding(get: { shownAccent }, set: { pickedAccent = $0 }))
             swatchRow("Цвет кнопок", selection: Binding(get: { shownButton }, set: { pickedButton = $0 }))
@@ -143,10 +157,14 @@ struct SettingsView: View {
                         let isOn = shownBackground == item
                         Button { pickedBackground = item } label: {
                             VStack(spacing: 4) {
-                                Circle()
-                                    .fill(Color(UIColor(red: CGFloat(item.bg.0 >> 16 & 0xFF) / 255, green: CGFloat(item.bg.0 >> 8 & 0xFF) / 255, blue: CGFloat(item.bg.0 & 0xFF) / 255, alpha: 1)))
-                                    .frame(width: 34, height: 34)
-                                    .overlay(Circle().stroke(isOn ? Color.brandTint : Color.brandBorder, lineWidth: isOn ? 3 : 1))
+                                // Пополам: слева фон светлой темы, справа — тёмной
+                                HStack(spacing: 0) {
+                                    Self.color(item.bg.0)
+                                    Self.color(item.bg.1)
+                                }
+                                .frame(width: 34, height: 34)
+                                .clipShape(Circle())
+                                .overlay(Circle().stroke(isOn ? Color.brandTint : Color.brandBorder, lineWidth: isOn ? 3 : 1))
                                 Text(item.title).scaledFont(size: 11).foregroundColor(isOn ? .brandDark : .brandMuted)
                             }
                         }
@@ -158,6 +176,7 @@ struct SettingsView: View {
             }
             if hasPaletteChanges {
                 Button("Применить цвета") {
+                    SettingsReturn.isPending = true
                     storedAccent = shownAccent.rawValue
                     if pickedButton != nil { storedButton = shownButton.rawValue }
                     storedBackground = shownBackground.rawValue
@@ -166,6 +185,7 @@ struct SettingsView: View {
             }
             if !storedAccent.isEmpty || !storedButton.isEmpty || !storedBackground.isEmpty {
                 Button("Вернуть цвета по умолчанию", role: .destructive) {
+                    SettingsReturn.isPending = true
                     storedAccent = ""; storedButton = ""; storedBackground = ""
                     pickedAccent = nil; pickedButton = nil; pickedBackground = nil
                 }
@@ -173,8 +193,21 @@ struct SettingsView: View {
         } header: {
             Self.header("Цвета приложения")
         } footer: {
-            Text("Основной цвет — вкладки, значки и подсветка; цвет кнопок — «Читать», «Слушать», «Войти» и другие. После «Применить» приложение перерисуется.")
+            Text("«Чёрный фон ночью» — в тёмной теме фон чисто чёрный: на экране iPhone это бережёт батарею. Кружки фона: слева — светлая тема, справа — тёмная. Основной цвет — вкладки, значки и подсветка; цвет кнопок — «Читать», «Слушать», «Войти» и другие. После «Применить» приложение перерисуется.")
         }
+    }
+
+    private static func color(_ hex: UInt32) -> Color {
+        Color(UIColor(red: CGFloat(hex >> 16 & 0xFF) / 255, green: CGFloat(hex >> 8 & 0xFF) / 255, blue: CGFloat(hex & 0xFF) / 255, alpha: 1))
+    }
+
+    private var themePicker: some View {
+        Picker("Тема оформления", selection: $selectedTheme) {
+            Text("Системная").tag("system")
+            Text("Светлая").tag("light")
+            Text("Тёмная").tag("dark")
+        }
+        .pickerStyle(.segmented)
     }
 
     private func swatchRow(_ title: String, selection: Binding<AppPalette.Accent>) -> some View {
@@ -198,23 +231,13 @@ struct SettingsView: View {
         }
     }
 
-    /// Тема и вид «Обзора»
-    @ViewBuilder
+    /// Вид «Обзора» — только в «Изучении»; тема — в «Цветах приложения»
     private var appearanceSection: some View {
         Section(header: Self.header("Оформление")) {
-            Picker("Тема оформления", selection: $selectedTheme) {
-                Text("Системная").tag("system")
-                Text("Светлая").tag("light")
-                Text("Тёмная").tag("dark")
-            }
-            .pickerStyle(.segmented)
-
-            if mode == .learning {
-                NavigationLink {
-                    OverviewSettingsView()
-                } label: {
-                    LabeledContent("Обзор", value: overviewLayout == .standard ? "Стандартный" : "Настроен")
-                }
+            NavigationLink {
+                OverviewSettingsView()
+            } label: {
+                LabeledContent("Обзор", value: overviewLayout == .standard ? "Стандартный" : "Настроен")
             }
         }
     }
@@ -230,7 +253,6 @@ struct SettingsView: View {
                         appearanceSection
                         paletteSection
                     } else {
-                        appearanceSection
                         paletteSection
                         modeSection
                         speechLink

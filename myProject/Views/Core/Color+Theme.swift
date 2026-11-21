@@ -11,6 +11,11 @@ extension Color {
         Color(UIColor { $0.userInterfaceStyle == .dark ? dark : light })
     }
 
+    /// Поверхность фона: ночью при «Чёрном фоне» — свой чёрный оттенок вместо цвета выбранного фона
+    nonisolated private static func surface(_ pair: AppPalette.Pair, black: UInt32) -> Color {
+        themed(light: rgb(pair.0), dark: rgb(AppPalette.isBlack ? black : pair.1))
+    }
+
     // LexiStream: палитра с холста агента-дизайнера — тёплая бумага и один тёмно-бирюзовый акцент.
     // Основной цвет, цвет кнопок и фон выбираются в Настройках (AppPalette); по умолчанию — как на холсте.
 
@@ -18,16 +23,16 @@ extension Color {
     nonisolated static var brandDark: Color { themed(light: rgb(0x1F2421), dark: rgb(0xE9E6DD)) }
 
     /// Фон экранов
-    nonisolated static var brandBackground: Color { themed(light: rgb(AppPalette.background.bg.0), dark: rgb(AppPalette.background.bg.1)) }
+    nonisolated static var brandBackground: Color { surface(AppPalette.background.bg, black: 0x000000) }
 
     /// Фон полей ввода и переключателей
-    nonisolated static var brandInputBg: Color { themed(light: rgb(AppPalette.background.fill.0), dark: rgb(AppPalette.background.fill.1)) }
+    nonisolated static var brandInputBg: Color { surface(AppPalette.background.fill, black: 0x1E1E1E) }
 
     /// Фон карточек
-    nonisolated static var cardBackground: Color { themed(light: rgb(AppPalette.background.card.0), dark: rgb(AppPalette.background.card.1)) }
+    nonisolated static var cardBackground: Color { surface(AppPalette.background.card, black: 0x141414) }
 
     /// Подложки: блоки групп, плашки иконок, полосы прогресса
-    nonisolated static var brandFill: Color { themed(light: rgb(AppPalette.background.fill.0), dark: rgb(AppPalette.background.fill.1)) }
+    nonisolated static var brandFill: Color { surface(AppPalette.background.fill, black: 0x1E1E1E) }
 
     /// Цвет элементов управления (переключатели, выбранная вкладка, иконки)
     nonisolated static var brandTint: Color { themed(light: rgb(AppPalette.accent.tint.0), dark: rgb(AppPalette.accent.tint.1)) }
@@ -46,7 +51,7 @@ extension Color {
     nonisolated static let brandScale4 = themed(light: rgb(0x1F6F63), dark: rgb(0xA6E0D3))
 
     /// Линии-разделители
-    nonisolated static var brandBorder: Color { themed(light: rgb(AppPalette.background.border.0), dark: rgb(AppPalette.background.border.1)) }
+    nonisolated static var brandBorder: Color { surface(AppPalette.background.border, black: 0x2A2A2A) }
 
     /// Приглушённый текст подписей
     nonisolated static let brandMuted = themed(light: rgb(0x5F6560), dark: rgb(0xA4A9A5))
@@ -68,6 +73,8 @@ nonisolated enum AppPalette {
     static let accentKey = "palette_accent"
     static let buttonKey = "palette_button"
     static let backgroundKey = "palette_background"
+    /// «Чёрный фон ночью» (для OLED-экранов): в тёмной теме фон чисто чёрный при любом выбранном фоне
+    static let blackKey = "palette_black"
 
     typealias Pair = (UInt32, UInt32)
 
@@ -131,34 +138,34 @@ nonisolated enum AppPalette {
         }
         var bg: Pair {
             switch self {
-            case .paper: (0xFAF7F0, 0x141617)
-            case .white: (0xFFFFFF, 0x101112)
-            case .mist: (0xF3F6F8, 0x12161A)
-            case .sand: (0xF1E9DA, 0x1A1714)
+            case .paper: (0xFAF7F0, 0x1F1D18)
+            case .white: (0xFFFFFF, 0x18191B)
+            case .mist: (0xF3F6F8, 0x121A24)
+            case .sand: (0xF1E9DA, 0x251B12)
             }
         }
         var card: Pair {
             switch self {
-            case .paper: (0xFFFFFF, 0x202324)
-            case .white: (0xF6F6F4, 0x1C1E1F)
-            case .mist: (0xFFFFFF, 0x1C2227)
-            case .sand: (0xFBF7EE, 0x26211C)
+            case .paper: (0xFFFFFF, 0x2A2721)
+            case .white: (0xF6F6F4, 0x232426)
+            case .mist: (0xFFFFFF, 0x1B2531)
+            case .sand: (0xFBF7EE, 0x30241A)
             }
         }
         var fill: Pair {
             switch self {
-            case .paper: (0xEDE7D9, 0x2C3032)
-            case .white: (0xEFEFEC, 0x2A2C2D)
-            case .mist: (0xE4EAEF, 0x2A3238)
-            case .sand: (0xE6DCC8, 0x332D26)
+            case .paper: (0xEDE7D9, 0x34302A)
+            case .white: (0xEFEFEC, 0x2D2E31)
+            case .mist: (0xE4EAEF, 0x24303E)
+            case .sand: (0xE6DCC8, 0x3B2E22)
             }
         }
         var border: Pair {
             switch self {
-            case .paper: (0xE6E0D2, 0x34383A)
-            case .white: (0xE4E4E0, 0x333536)
-            case .mist: (0xDCE3E9, 0x333B42)
-            case .sand: (0xDDD1BB, 0x3B342C)
+            case .paper: (0xE6E0D2, 0x454037)
+            case .white: (0xE4E4E0, 0x3D3E42)
+            case .mist: (0xDCE3E9, 0x334255)
+            case .sand: (0xDDD1BB, 0x4D3C2D)
             }
         }
     }
@@ -168,6 +175,7 @@ nonisolated enum AppPalette {
     nonisolated static var accent: Accent { stored(accentKey).flatMap(Accent.init(rawValue:)) ?? .teal }
     /// Кнопки: свой цвет или, пока не выбран, основной
     nonisolated static var button: Accent { stored(buttonKey).flatMap(Accent.init(rawValue:)) ?? accent }
+    nonisolated static var isBlack: Bool { UserDefaults.standard.bool(forKey: blackKey) }
     nonisolated static var background: Background { stored(backgroundKey).flatMap(Background.init(rawValue:)) ?? .paper }
 }
 

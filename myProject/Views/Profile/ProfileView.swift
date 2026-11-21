@@ -53,6 +53,7 @@ struct ProfileView: View {
         .background(Color.brandBackground.ignoresSafeArea())
         // Тренировки идут на другой вкладке — при переходе сюда прогресс пересчитывается
         .onAppear(perform: reloadProgress)
+        .onAppear { if SettingsReturn.consume() { showSettings = true } }
         // Норму уменьшили ниже пройденного — сегодняшний день сразу идёт в серию
         .onChange(of: newWordsPerDay) { _, _ in reloadProgress() }
         .sheet(isPresented: $showPersonalData) {
