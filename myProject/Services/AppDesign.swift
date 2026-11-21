@@ -1,10 +1,10 @@
 import SwiftUI
 
-/// Дизайн приложения: «Классический» (как был) или «Новый стиль» (белый фон, контуры, цветные смещённые тени).
-/// Экраны переходят на новый стиль по одному: пока у экрана нового вида нет, он остаётся классическим
+/// Оформление приложения: «Классический» или «Скетч» (тонкий контур, цветные смещённые тени, пастельные круги, жёлтая главная кнопка).
+/// Расположение элементов одинаковое, меняется только стиль. Экраны переходят на «Скетч» по одному
 enum AppDesign: String, CaseIterable, Identifiable {
     case classic
-    case modern
+    case sketch
 
     static let storageKey = "app_design"
 
@@ -13,7 +13,7 @@ enum AppDesign: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .classic: "Классический"
-        case .modern: "Новый стиль"
+        case .sketch: "Скетч"
         }
     }
 

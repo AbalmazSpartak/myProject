@@ -105,7 +105,7 @@ struct BookDetailView: View {
 
     @ViewBuilder
     private var cover: some View {
-        if design == AppDesign.modern.rawValue {
+        if design == AppDesign.sketch.rawValue {
             NewCover(book: book)
                 .frame(width: coverWidth)
                 .padding(.top, 8)
@@ -153,7 +153,20 @@ struct BookDetailView: View {
         .frame(maxWidth: .infinity)
     }
 
+    @ViewBuilder
     private func chip(_ text: String, isSoft: Bool) -> some View {
+        if design == AppDesign.sketch.rawValue {
+            Text(text)
+                .scaledFont(size: 12, weight: .semibold)
+                .foregroundStyle(Color.brandDark)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 5)
+                .background(Capsule().fill(isSoft ? NewStyle.pastels[1] : Color.cardBackground))
+                .overlay(Capsule().stroke(NewStyle.outline, lineWidth: NewStyle.lineWidth))
+        } else { classicChip(text, isSoft: isSoft) }
+    }
+
+    private func classicChip(_ text: String, isSoft: Bool) -> some View {
         Text(text)
             .scaledFont(size: 12, weight: isSoft ? .semibold : .regular)
             .foregroundStyle(isSoft ? Color.brandOnSoft : Color.brandMuted)
@@ -163,7 +176,7 @@ struct BookDetailView: View {
     }
 
     private var actions: some View {
-        if design == AppDesign.modern.rawValue {
+        if design == AppDesign.sketch.rawValue {
             return AnyView(modernActions)
         }
         return AnyView(classicActions)

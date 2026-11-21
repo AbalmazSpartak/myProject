@@ -64,3 +64,58 @@ struct NewCover: View {
             .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(shadow).offset(x: offset, y: offset))
     }
 }
+
+/// Вкладки «Скетча»: пилюли с контуром, выбранная — жёлтая
+struct SketchTabs<Item: Hashable & Identifiable>: View {
+    let items: [Item]
+    let title: KeyPath<Item, String>
+    @Binding var selection: Item
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(items) { item in
+                let isOn = item == selection
+                Button { withAnimation { selection = item } } label: {
+                    Text(item[keyPath: title])
+                        .scaledFont(size: 14, weight: .semibold)
+                        .foregroundStyle(isOn ? Color.black : Color.brandDark)
+                        .frame(maxWidth: .infinity, minHeight: 40)
+                        .background(Capsule().fill(isOn ? NewStyle.yellow : Color.cardBackground))
+                        .overlay(Capsule().stroke(NewStyle.outline, lineWidth: NewStyle.lineWidth))
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(isOn ? .isSelected : [])
+            }
+        }
+    }
+}
+
+/// Полоска прогресса «Скетча»: контур, жёлтая заливка
+struct SketchProgress: View {
+    let value: Double
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.cardBackground)
+                Capsule().fill(NewStyle.yellow).frame(width: max(0, min(1, value)) * proxy.size.width)
+            }
+        }
+        .frame(height: 9)
+        .overlay(Capsule().stroke(NewStyle.outline, lineWidth: 1))
+    }
+}
+
+extension View {
+    /// «Скетч»: контур и смещённая цветная тень поверх уже заданной заливки; в классическом виде ничего не меняет
+    @ViewBuilder
+    func sketchFrame(_ on: Bool, radius: CGFloat = 12, shadow: Color = NewStyle.blue, offset: CGFloat = 3) -> some View {
+        if on {
+            self
+                .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).stroke(NewStyle.outline, lineWidth: NewStyle.lineWidth))
+                .background(RoundedRectangle(cornerRadius: radius, style: .continuous).fill(shadow).offset(x: offset, y: offset))
+        } else {
+            self
+        }
+    }
+}

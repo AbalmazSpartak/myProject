@@ -11,18 +11,10 @@ struct ReaderTabsView: View {
     @Binding var onProfile: Bool
     /// Тот же ключ, что у библиотеки: «Профиль» может открыть её сразу на «Подписках»
     @AppStorage("books_tab") private var libraryTab: LibraryTab = .mine
-    @AppStorage(AppDesign.storageKey) private var design = AppDesign.classic.rawValue
 
     var body: some View {
         TabView(selection: $tab) {
-            NavigationStack {
-                if design == AppDesign.modern.rawValue {
-                    ModernLibraryHome(openSubscriptions: { tab = .subscriptions }, openBookmarks: { tab = .bookmarks })
-                        .modeSwitcherInset()
-                } else {
-                    BooksView(isHome: true, hasTabBar: true).modeSwitcherInset()
-                }
-            }
+            NavigationStack { BooksView(isHome: true, hasTabBar: true).modeSwitcherInset() }
                 .tabItem { Label("Библиотека", systemImage: "book") }
                 .tag(Tab.library)
 

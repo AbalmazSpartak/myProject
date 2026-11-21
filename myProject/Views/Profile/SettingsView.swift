@@ -235,14 +235,14 @@ struct SettingsView: View {
     /// Дизайн приложения: классический или новый стиль
     private var designSection: some View {
         Section {
-            Picker("Дизайн приложения", selection: $design) {
+            Picker("Оформление приложения", selection: $design) {
                 ForEach(AppDesign.allCases) { Text($0.title).tag($0.rawValue) }
             }
             .pickerStyle(.segmented)
         } header: {
-            Self.header("Дизайн")
+            Self.header("Оформление")
         } footer: {
-            Text("«Новый стиль» подключается к экранам по одному: где нового вида ещё нет, остаётся классический. Данные и настройки не меняются, вернуться можно в любой момент.")
+            Text("«Скетч» — тонкие контуры, цветные тени и пастельные цвета; расположение экранов то же. Подключается к экранам по одному, остальные пока классические. Данные не меняются, вернуться можно в любой момент.")
                 .textSelection(.enabled)
         }
     }

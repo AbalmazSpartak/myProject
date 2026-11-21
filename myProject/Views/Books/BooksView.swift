@@ -14,9 +14,8 @@ struct BooksView: View {
     var hasTabBar = false
     /// Раздел зафиксирован (отдельная вкладка «Аудио»): плашка разделов скрыта
     var fixedTab: LibraryTab? = nil
-    /// Подпись кнопки «назад» вне главного экрана
-    var backTitle = "Обзор"
 
+    @AppStorage(AppDesign.storageKey) private var design = AppDesign.classic.rawValue
     @State private var openedBook: Book?
     @State private var listenBook: Book?
     @State private var isImporting = false
@@ -53,12 +52,18 @@ struct BooksView: View {
                 .frame(maxHeight: .infinity)
             } else {
             // Вкладки — и в пустой библиотеке: сразу видно, где будут книги и откуда их взять
-            Picker("Раздел", selection: $tab.animation()) {
-                ForEach(tabs) { Text($0.title).tag($0) }
+            if design == AppDesign.sketch.rawValue {
+                SketchTabs(items: tabs, title: \.title, selection: $tab)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
+            } else {
+                Picker("Раздел", selection: $tab.animation()) {
+                    ForEach(tabs) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
             }
-            .pickerStyle(.segmented)
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
 
             // Разделы листаются и свайпом, плашка переключается вместе с ними
             TabView(selection: $tab) {
@@ -195,6 +200,7 @@ struct BooksView: View {
                     .foregroundColor(.brandDark)
                     .frame(width: 44, height: 44)
                     .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .sketchFrame(design == AppDesign.sketch.rawValue)
             }
             .accessibilityLabel("Порядок книг: \(sort.title)")
         }
@@ -220,6 +226,7 @@ struct BooksView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .sketchFrame(design == AppDesign.sketch.rawValue)
     }
 
     /// Книги, у которых название или автор содержат запрос
@@ -279,7 +286,7 @@ struct BooksView: View {
                 Button(action: { dismiss() }) {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
-                        Text(backTitle)
+                        Text("Обзор")
                     }
                     .scaledFont(size: 17, weight: .semibold)
                     .foregroundColor(.brandDark)
@@ -429,6 +436,7 @@ struct TabPlaceholder: View {
 /// Первая карточка «Моих книг»: книга или текст из «Файлов»
 private struct AddBookCard: View {
     let action: () -> Void
+    @AppStorage(AppDesign.storageKey) private var design = AppDesign.classic.rawValue
 
     var body: some View {
         Button(action: action) {
@@ -449,7 +457,13 @@ private struct AddBookCard: View {
                     .background(Color.brandTint.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                     .overlay {
                         RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .strokeBorder(Color.brandTint.opacity(0.45), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5]))
+                            .strokeBorder(design == AppDesign.sketch.rawValue ? NewStyle.outline : Color.brandTint.opacity(0.45),
+                                          style: StrokeStyle(lineWidth: design == AppDesign.sketch.rawValue ? NewStyle.lineWidth : 1.5, dash: [6, 5]))
+                    }
+                    .background {
+                        if design == AppDesign.sketch.rawValue {
+                            RoundedRectangle(cornerRadius: 10, style: .continuous).fill(NewStyle.pastels[1]).offset(x: 5, y: 5)
+                        }
                     }
                 Text("EPUB, FB2, TXT")
                     .scaledFont(size: 13)
@@ -466,8 +480,35 @@ private struct AddBookCard: View {
 struct BookCard: View {
     let book: Book
     let action: () -> Void
+    @AppStorage(AppDesign.storageKey) private var design = AppDesign.classic.rawValue
 
     var body: some View {
+        if design == AppDesign.sketch.rawValue {
+            sketch
+        } else {
+            classic
+        }
+    }
+
+    /// «Скетч»: контур и жёлтая смещённая тень, полоска прогресса с контуром
+    private var sketch: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 8) {
+                NewCover(book: book, shadow: NewStyle.yellow, offset: 5)
+                    .padding(.trailing, 5)
+                if !book.author.isEmpty {
+                    Text(book.author)
+                        .scaledFont(size: 13)
+                        .foregroundColor(Color.brandMuted)
+                        .lineLimit(1)
+                }
+                SketchProgress(value: book.progress)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var classic: some View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: 8) {
                 // Пропорция книги 2:3 — карточка растёт с шириной колонки, а не режет обложку
