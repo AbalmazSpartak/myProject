@@ -46,6 +46,9 @@ struct DictionaryView: View {
     @State private var totalCount = 0
 
     @State private var filter: DictionaryFilter
+    /// Где были до нынешнего раздела: свайп от левого края и повторное нажатие «С ошибками» возвращают назад
+    @State private var history: [DictionaryFilter] = []
+    @State private var isGoingBack = false
     /// Фильтры под поиском: состояние слова и уровень
     @State private var statusFilter: WordStatus?
     @State private var levelFilter: String?
@@ -233,7 +236,20 @@ struct DictionaryView: View {
             }
         }
         .onDisappear { isOnScreen = false }
-        .onChange(of: filter) { _, _ in refilter() }
+        .onChange(of: filter) { old, _ in
+            if isGoingBack {
+                isGoingBack = false
+            } else {
+                history.append(old)
+                if history.count > 20 { history.removeFirst() }
+            }
+            refilter()
+        }
+        .overlay(alignment: .leading) {
+            if !history.isEmpty { backEdge }
+        }
+        // Есть куда вернуться в словаре — свайп от края листает разделы, а не закрывает экран
+        .swipeBackDisabled(when: !history.isEmpty)
         .onChange(of: statusFilter) { _, _ in refilter() }
         .onChange(of: levelFilter) { _, _ in refilter() }
         // Любое сохранение (правка, скан, удаление темы со словами) — перечитываем, чтобы не показать удалённые слова.
@@ -271,6 +287,29 @@ struct DictionaryView: View {
                 filter = .list(list)
             }
         }
+    }
+
+    /// Полоска у левого края: свайп вправо — к прежнему разделу
+    private var backEdge: some View {
+        Color.clear
+            .frame(width: 16)
+            .frame(maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 15)
+                    .onEnded { value in
+                        if value.translation.width > 60, abs(value.translation.height) < value.translation.width {
+                            goBack()
+                        }
+                    }
+            )
+    }
+
+    private func goBack() {
+        guard let previous = history.popLast() else { return }
+        Haptics.tap()
+        isGoingBack = true
+        withAnimation(.easeInOut(duration: 0.2)) { filter = previous }
     }
 
     private var header: some View {
@@ -313,7 +352,13 @@ struct DictionaryView: View {
                     .padding(.vertical, 4)
                     LXChip(title: "Папки", systemImage: "folder") { foldersStart = .root }
                     LXChip(title: "С ошибками", systemImage: "flag", isOn: filter == .mistakes) {
-                        filter = filter == .mistakes ? .general : .mistakes
+                        if filter != .mistakes {
+                            filter = .mistakes
+                        } else if !history.isEmpty {
+                            goBack()
+                        } else {
+                            filter = .general
+                        }
                     }
                 }
                 .padding(.horizontal, 16)

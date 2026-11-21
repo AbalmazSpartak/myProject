@@ -25,4 +25,29 @@ extension View {
         onAppear { SwipeBack.disabledCount += 1 }
             .onDisappear { SwipeBack.disabledCount -= 1 }
     }
+
+    /// Запрещает свайп «назад», пока условие верно и экран открыт (у экрана свой свайп от края)
+    func swipeBackDisabled(when condition: Bool) -> some View {
+        modifier(ConditionalSwipeBack(condition: condition))
+    }
+}
+
+private struct ConditionalSwipeBack: ViewModifier {
+    let condition: Bool
+    @State private var isVisible = false
+    @State private var isCounted = false
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear { isVisible = true; sync() }
+            .onDisappear { isVisible = false; sync() }
+            .onChange(of: condition) { _, _ in sync() }
+    }
+
+    private func sync() {
+        let wanted = isVisible && condition
+        guard wanted != isCounted else { return }
+        isCounted = wanted
+        SwipeBack.disabledCount += wanted ? 1 : -1
+    }
 }
