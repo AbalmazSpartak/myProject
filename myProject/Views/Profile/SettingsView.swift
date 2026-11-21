@@ -27,6 +27,7 @@ struct SettingsView: View {
     @State private var pickedAccent: AppPalette.Accent?
     @State private var pickedButton: AppPalette.Accent?
     @State private var pickedBackground: AppPalette.Background?
+    @AppStorage(AppDesign.storageKey) private var design = AppDesign.classic.rawValue
     @AppStorage(AppMode.readerOnlyKey) private var readerOnly = false
     @AppStorage(AppMode.learningOnlyKey) private var learningOnly = false
 
@@ -231,6 +232,21 @@ struct SettingsView: View {
         }
     }
 
+    /// Дизайн приложения: классический или новый стиль
+    private var designSection: some View {
+        Section {
+            Picker("Дизайн приложения", selection: $design) {
+                ForEach(AppDesign.allCases) { Text($0.title).tag($0.rawValue) }
+            }
+            .pickerStyle(.segmented)
+        } header: {
+            Self.header("Дизайн")
+        } footer: {
+            Text("«Новый стиль» подключается к экранам по одному: где нового вида ещё нет, остаётся классический. Данные и настройки не меняются, вернуться можно в любой момент.")
+                .textSelection(.enabled)
+        }
+    }
+
     /// Вид «Обзора» — только в «Изучении»; тема — в «Цветах приложения»
     private var appearanceSection: some View {
         Section(header: Self.header("Оформление")) {
@@ -247,6 +263,7 @@ struct SettingsView: View {
             Form {
                 Group {
                     // В каждом режиме свой порядок: «Изучение» — личное и озвучка, «Чтение» — оформление и режим сверху
+                    designSection
                     if mode == .learning {
                         speechLink
                         modeSection
