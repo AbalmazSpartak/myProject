@@ -43,6 +43,10 @@ struct GutenbergCatalogView: View {
     @State private var entries: [GutenbergCatalog.Entry] = []
     @State private var isLoading = false
     @State private var downloading: Set<Int> = []
+    /// Книга по этому номеру Gutenberg уже добавляется (текст качается) — второй раз не начинаем
+    @State private var addingGutenberg: Set<Int> = []
+    /// Скачанная книга похожа на ту, что уже в библиотеке — ждёт решения
+    @State private var pendingImport: PendingBookImport?
     @State private var errorMessage: String?
     @State private var kind: CatalogKind = .books
     /// Почему список пуст: техработы у Gutenberg или нет интернета
@@ -147,6 +151,7 @@ struct GutenbergCatalogView: View {
             .onChange(of: query) { _, newValue in
                 if newValue.isEmpty { Task { await load() } }
             }
+            .bookImportPrompts(pending: $pendingImport, books: books, onAdded: { _ in }, onOpenExisting: { _ in })
             .task { await load() }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -364,7 +369,9 @@ struct GutenbergCatalogView: View {
 
     /// Текст книги — из Gutenberg (если его ещё нет в библиотеке), рядом — запись LibriVox
     private func addAudiobook(_ item: LibriVox.Audiobook, downloadAudio: Bool) async {
-        guard let gutenbergID = item.gutenbergID else { return }
+        guard let gutenbergID = item.gutenbergID, !addingGutenberg.contains(gutenbergID) else { return }
+        addingGutenberg.insert(gutenbergID)
+        defer { addingGutenberg.remove(gutenbergID) }
         downloadingAudio.insert(item.id)
         defer { downloadingAudio.remove(item.id) }
         do {
@@ -401,12 +408,15 @@ struct GutenbergCatalogView: View {
     }
 
     private func download(_ entry: GutenbergCatalog.Entry) async {
+        guard !addingGutenberg.contains(entry.id), !books.contains(where: { $0.gutenbergID == entry.id }) else { return }
+        addingGutenberg.insert(entry.id)
+        defer { addingGutenberg.remove(entry.id) }
         downloading.insert(entry.id)
         defer { downloading.remove(entry.id) }
         do {
             let parsed = try await GutenbergCatalog.downloadBook(entry)
-            modelContext.insert(await Book.make(parsed, gutenbergID: entry.id))
-            modelContext.saveReporting()
+            // Тот же текст под другим номером или другое издание — спросим; новая книга добавляется сразу
+            _ = await BookImportCheck.add(parsed, gutenbergID: entry.id, books: books, context: modelContext, pending: $pendingImport)
         } catch {
             errorMessage = "Не удалось скачать «\(entry.title)». " + GutenbergCatalog.failureText(error, action: "Скачать книгу")
         }

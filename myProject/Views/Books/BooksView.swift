@@ -21,6 +21,8 @@ struct BooksView: View {
     @State private var isShowingCatalog = false
     @State private var isParsing = false
     @State private var errorMessage: String?
+    /// Файл похож на книгу из библиотеки — ждёт решения человека
+    @State private var pendingImport: PendingBookImport?
     @State private var bookToDelete: Book?
     @State private var isShowingSettings = false
     @State private var searchText = ""
@@ -87,6 +89,7 @@ struct BooksView: View {
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
             }
         }
+        .bookImportPrompts(pending: $pendingImport, books: books, onAdded: { openedBook = $0 }, onOpenExisting: { openedBook = $0 })
         .navigationDestination(item: $openedBook) { book in
             BookDetailView(book: book)
                 .toolbar(.hidden, for: .tabBar)
@@ -326,10 +329,10 @@ struct BooksView: View {
         defer { isParsing = false }
         do {
             let parsed = try await Task.detached(priority: .userInitiated) { try BookImport.parse(url) }.value
-            let book = await Book.make(parsed)
-            modelContext.insert(book)
-            modelContext.saveReporting()
-            openedBook = book
+            // Дубль или другое издание — спросим; новая книга добавляется сразу
+            if let book = await BookImportCheck.add(parsed, books: books, context: modelContext, pending: $pendingImport) {
+                openedBook = book
+            }
         } catch {
             errorMessage = BookImport.message(for: error)
         }

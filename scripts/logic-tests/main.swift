@@ -274,6 +274,38 @@ do {
     expectEqual(lemmas[4] ?? "", "walk", "теггер приводит walked к walk по месту слова в абзаце")
 } catch { failures.append("статусы слов: \(error)") }
 
+// MARK: - Дубль или другое издание
+
+do {
+    func para(_ i: Int) -> String { "Это достаточно длинный абзац номер \(i) про старый дом и собаку у реки, чтобы пройти порог длины." }
+    let original = [BookChapter(title: "1", paragraphs: (0..<40).map(para))]
+    let sameWithNoise = [BookChapter(title: "Глава I", paragraphs: ["***", "Заголовок"] + (0..<40).map { para($0).uppercased() + "  " })]
+    let otherEdition = [BookChapter(title: "1", paragraphs: (0..<40).map { $0 % 3 == 0 ? "Совсем другой абзац \($0), в нём переведено иначе и сказано по-другому слово в слово." : para($0) })]
+    let different = [BookChapter(title: "1", paragraphs: (0..<40).map { "Другая книга и её содержание, абзац \($0), про море, корабли и ветер над волнами." })]
+    let a = BookDuplicates.fingerprint(original)
+    expectEqual(a.count, 40, "короткие строки вроде *** и заголовков в отпечаток не входят")
+    expect(BookDuplicates.similarity(a, BookDuplicates.fingerprint(sameWithNoise)) >= 0.97, "та же книга с другим регистром, пробелами и заголовками — дубль")
+    let editionScore = BookDuplicates.similarity(a, BookDuplicates.fingerprint(otherEdition))
+    expect(editionScore >= 0.5 && editionScore < 0.97, "часть абзацев другая — другое издание (\(editionScore))")
+    expect(BookDuplicates.similarity(a, BookDuplicates.fingerprint(different)) < 0.05, "другая книга — почти нет общего")
+    expect(BookDuplicates.verdict(similarity: 0.99, sameTitle: false) == .duplicate, "99% общего — дубль, даже с другим названием")
+    expect(BookDuplicates.verdict(similarity: 0.2, sameTitle: true) == .edition, "то же название, но текст другой — другое издание")
+    expect(BookDuplicates.verdict(similarity: 0.2, sameTitle: false) == .none, "ничего общего — не дубль")
+    // Поиск среди книг библиотеки
+    func candidate(_ title: String, _ chapters: [BookChapter]) -> BookDuplicates.Candidate {
+        BookDuplicates.Candidate(title: title, author: "", paragraphCount: chapters.reduce(0) { $0 + $1.paragraphs.count },
+                                 chaptersData: (try? JSONEncoder().encode(chapters)) ?? Data())
+    }
+    let library = [candidate("Другая", different), candidate("Дом у реки", original)]
+    let found = BookDuplicates.find(ParsedBook(title: "дом у реки!", author: "", cover: nil, chapters: sameWithNoise), among: library)
+    expectEqual(found?.index ?? -1, 1, "поиск находит нужную книгу среди нескольких")
+    expect(found?.verdict == .duplicate, "и называет её дублем")
+    let edition = BookDuplicates.find(ParsedBook(title: "Дом у реки", author: "", cover: nil, chapters: otherEdition), among: library)
+    expect(edition?.verdict == .edition, "другое издание того же названия находится как издание")
+    expect(BookDuplicates.find(ParsedBook(title: "Новая", author: "", cover: nil, chapters: [BookChapter(title: "1", paragraphs: ["Совсем новый текст про космос и звёзды, которого нет ни у одной книги в списке."])]), among: library) == nil,
+           "новая книга без пары — nil")
+}
+
 // MARK: - Итог
 
 if failures.isEmpty {

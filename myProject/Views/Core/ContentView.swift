@@ -36,6 +36,11 @@ struct ContentView: View {
     @State private var widgetListens = false
     /// Файл книги из «Открыть в…»: ошибка импорта
     @State private var importError: String?
+    /// Файл из «Открыть в…» похож на книгу из библиотеки — ждёт решения
+    @State private var pendingImport: PendingBookImport?
+    @State private var libraryForPrompt: [Book] = []
+    /// iOS иногда вызывает «Открыть в…» дважды подряд — второй раз тот же файл не добавляем
+    @State private var lastOpened: (url: URL, at: Date)?
     /// «Практика» — свои переходы, чтобы экран не открылся сразу в двух вкладках
     @State private var practiceScreen: ActiveScreen?
     @State private var selectedTab = 0
@@ -59,14 +64,17 @@ struct ContentView: View {
         .onOpenURL { url in
             // Файл книги из «Файлов» или «Поделиться»: импортируем и сразу открываем
             if url.isFileURL, BookImport.isBookFile(url) {
+                if let last = lastOpened, last.url == url, Date().timeIntervalSince(last.at) < 5 { return }
+                lastOpened = (url, Date())
                 Task {
                     do {
                         let parsed = try await Task.detached(priority: .userInitiated) { try BookImport.parse(url) }.value
-                        let book = await Book.make(parsed)
-                        modelContext.insert(book)
-                        modelContext.saveReporting()
-                        widgetListens = false
-                        widgetBook = book
+                        let books = (try? modelContext.fetch(FetchDescriptor<Book>())) ?? []
+                        libraryForPrompt = books
+                        if let book = await BookImportCheck.add(parsed, books: books, context: modelContext, pending: $pendingImport) {
+                            widgetListens = false
+                            widgetBook = book
+                        }
                     } catch {
                         importError = BookImport.message(for: error)
                     }
@@ -81,6 +89,13 @@ struct ContentView: View {
             descriptor.fetchLimit = 1
             widgetBook = try? modelContext.fetch(descriptor).first
         }
+        .bookImportPrompts(pending: $pendingImport, books: libraryForPrompt, onAdded: { book in
+            widgetListens = false
+            widgetBook = book
+        }, onOpenExisting: { book in
+            widgetListens = false
+            widgetBook = book
+        })
         .alert("Не удалось сохранить", isPresented: Binding(get: { SaveIssue.shared.message != nil }, set: { if !$0 { SaveIssue.shared.message = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {
