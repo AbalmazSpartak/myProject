@@ -12,6 +12,7 @@ struct BookDetailView: View {
     @Query private var lists: [WordList]
     @State private var isReviewingBookWords = false
     @State private var details: Details?
+    @AppStorage(AppDesign.storageKey) private var design = AppDesign.classic.rawValue
     @State private var isReading = false
     @State private var listensOnOpen = false
     @State private var isShowingDictionary = false
@@ -102,7 +103,17 @@ struct BookDetailView: View {
 
     // MARK: - Обложка (по холсту «Страница книги»: по центру, без размытого фона)
 
+    @ViewBuilder
     private var cover: some View {
+        if design == AppDesign.modern.rawValue {
+            NewCover(book: book)
+                .frame(width: coverWidth)
+                .padding(.top, 8)
+                .padding(.trailing, 6)
+        } else { classicCover }
+    }
+
+    private var classicCover: some View {
         Color.clear
             .aspectRatio(2.0 / 3.0, contentMode: .fit)
             .frame(width: coverWidth)
@@ -152,6 +163,34 @@ struct BookDetailView: View {
     }
 
     private var actions: some View {
+        if design == AppDesign.modern.rawValue {
+            return AnyView(modernActions)
+        }
+        return AnyView(classicActions)
+    }
+
+    private var modernActions: some View {
+        HStack(spacing: 12) {
+            Button {
+                listensOnOpen = false
+                listenChapter = nil
+                isReading = true
+            } label: {
+                NewButtonLabel(title: isStarted ? "Продолжить" : "Читать", systemImage: "book.closed", isMain: true)
+            }
+            Button {
+                listensOnOpen = true
+                listenChapter = nil
+                isReading = true
+            } label: {
+                NewButtonLabel(title: "Слушать", systemImage: "headphones")
+            }
+        }
+        .buttonStyle(.plain)
+        .padding(.trailing, 3)
+    }
+
+    private var classicActions: some View {
         HStack(spacing: 12) {
             Button {
                 listensOnOpen = false

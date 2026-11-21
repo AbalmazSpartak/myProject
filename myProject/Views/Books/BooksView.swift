@@ -14,6 +14,8 @@ struct BooksView: View {
     var hasTabBar = false
     /// Раздел зафиксирован (отдельная вкладка «Аудио»): плашка разделов скрыта
     var fixedTab: LibraryTab? = nil
+    /// Подпись кнопки «назад» вне главного экрана
+    var backTitle = "Обзор"
 
     @State private var openedBook: Book?
     @State private var listenBook: Book?
@@ -277,7 +279,7 @@ struct BooksView: View {
                 Button(action: { dismiss() }) {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
-                        Text("Обзор")
+                        Text(backTitle)
                     }
                     .scaledFont(size: 17, weight: .semibold)
                     .foregroundColor(.brandDark)
