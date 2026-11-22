@@ -20,6 +20,7 @@ struct MyApp: App {
 
     init() {
         AppFonts.register()
+        SketchChrome.apply(AppDesign.isSketch)
         do {
             // База — в общей с виджетом папке: виджет «Повторение» оценивает слова прямо в ней
             let sharedContainer = try ModelContainer(for: AppGroup.schema, configurations: ModelConfiguration(url: Self.storeURL()))

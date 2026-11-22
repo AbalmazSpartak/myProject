@@ -199,3 +199,51 @@ extension View {
             .sketchFrame(AppDesign.isSketch, radius: radius, shadow: NewStyle.blue, offset: 3)
     }
 }
+
+/// Нижняя панель вкладок в «Скетче»: белый фон, линия сверху, у выбранной вкладки жёлтая пилюля с контуром.
+/// Настройка действует на панели, созданные после вызова (при смене оформления приложение перестраивается)
+enum SketchChrome {
+    @MainActor
+    static func apply(_ sketch: Bool) {
+        let tabBar = UITabBar.appearance()
+        guard sketch else {
+            tabBar.standardAppearance = UITabBarAppearance()
+            tabBar.scrollEdgeAppearance = nil
+            return
+        }
+        let ink = UIColor(NewStyle.outline)
+        let muted = UIColor(red: 0.369, green: 0.353, blue: 0.322, alpha: 1)
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = UIColor(Color.cardBackground)
+        appearance.shadowColor = ink
+        appearance.selectionIndicatorImage = pill(itemWidth: UIScreen.main.bounds.width / 4)
+        let titleFont = UIFont(name: "PTSans-Bold", size: 11) ?? .systemFont(ofSize: 11, weight: .semibold)
+        for item in [appearance.stackedLayoutAppearance, appearance.inlineLayoutAppearance, appearance.compactInlineLayoutAppearance] {
+            item.normal.iconColor = muted
+            item.normal.titleTextAttributes = [.foregroundColor: muted, .font: titleFont]
+            item.selected.iconColor = ink
+            item.selected.titleTextAttributes = [.foregroundColor: ink, .font: titleFont]
+        }
+        tabBar.standardAppearance = appearance
+        tabBar.scrollEdgeAppearance = appearance
+    }
+
+    /// Жёлтая пилюля 58×32 с контуром и тёмно-жёлтой тенью под иконкой выбранной вкладки
+    @MainActor
+    private static func pill(itemWidth: CGFloat) -> UIImage {
+        let size = CGSize(width: itemWidth, height: 49)
+        return UIGraphicsImageRenderer(size: size).image { _ in
+            let rect = CGRect(x: (size.width - 58) / 2, y: 2, width: 58, height: 32)
+            let shadow = UIBezierPath(roundedRect: rect.offsetBy(dx: 0, dy: 2), cornerRadius: 16)
+            UIColor(NewStyle.yellowShadow).setFill()
+            shadow.fill()
+            let body = UIBezierPath(roundedRect: rect, cornerRadius: 16)
+            UIColor(NewStyle.yellow).setFill()
+            body.fill()
+            UIColor(NewStyle.outline).setStroke()
+            body.lineWidth = 1.5
+            body.stroke()
+        }
+    }
+}

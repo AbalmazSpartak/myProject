@@ -235,7 +235,7 @@ struct SettingsView: View {
     /// Дизайн приложения: классический или новый стиль
     private var designSection: some View {
         Section {
-            Picker("Оформление приложения", selection: Binding(get: { design }, set: { SettingsReturn.isPending = true; design = $0 })) {
+            Picker("Оформление приложения", selection: Binding(get: { design }, set: { SettingsReturn.isPending = true; SketchChrome.apply($0 == AppDesign.sketch.rawValue); design = $0 })) {
                 ForEach(AppDesign.allCases) { Text($0.title).tag($0.rawValue) }
             }
             .pickerStyle(.segmented)
