@@ -156,9 +156,10 @@ struct WordLookupView: View {
             } label: {
                 Image(systemName: "speaker.wave.2")
                     .scaledFont(size: 20)
-                    .foregroundStyle(Color.brandOnSoft)
+                    .foregroundStyle(AppDesign.isSketch ? Color.brandDark : Color.brandOnSoft)
                     .frame(width: 44, height: 44)
-                    .background(Circle().fill(Color.brandAccent))
+                    .background(Circle().fill(AppDesign.isSketch ? NewStyle.pastels[1] : Color.brandAccent))
+                    .overlay { if AppDesign.isSketch { Circle().stroke(NewStyle.outline, style: NewStyle.stroke) } }
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Озвучить")
@@ -198,8 +199,7 @@ struct WordLookupView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+        .lxPlate(radius: 18)
     }
 
     /// «В переводе книги» — то же место у переводчика книги, перевод слова подсвечен
@@ -214,8 +214,7 @@ struct WordLookupView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+        .lxPlate(radius: 18)
     }
 
     /// Словарь приложения слова не знает (Hatter) — ищем в переводе книги его перевод из базы или переводчика (шляпник ≈ шляпочник)
@@ -275,8 +274,7 @@ struct WordLookupView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+        .lxPlate(radius: 18)
     }
 
     /// ИИ-подсказка с сервера — только по нажатию: каждая тратит дневной запас

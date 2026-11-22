@@ -190,3 +190,12 @@ struct SketchProgress: View {
         .overlay(RoughRoundedRect(radius: 4.5, seed: 2, jitter: 0.4).stroke(NewStyle.outline, style: StrokeStyle(lineWidth: 1.3, lineCap: .round, lineJoin: .round)))
     }
 }
+
+extension View {
+    /// Плашка блока: в «Скетче» — контур «от руки» с синей смещённой тенью, иначе тонкая рамка
+    func lxPlate(radius: CGFloat = 18) -> some View {
+        background(Color.cardBackground, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).stroke(AppDesign.isSketch ? Color.clear : Color.brandBorder, lineWidth: 1))
+            .sketchFrame(AppDesign.isSketch, radius: radius, shadow: NewStyle.blue, offset: 3)
+    }
+}

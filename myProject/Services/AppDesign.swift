@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Оформление приложения: «Классический» или «Скетч» (тонкий контур, цветные смещённые тени, пастельные круги, жёлтая главная кнопка).
 /// Расположение элементов одинаковое, меняется только стиль. Экраны переходят на «Скетч» по одному
-enum AppDesign: String, CaseIterable, Identifiable {
+nonisolated enum AppDesign: String, CaseIterable, Identifiable {
     case classic
     case sketch
 

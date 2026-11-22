@@ -35,6 +35,25 @@ nonisolated struct PhonicsPalette: Sendable {
 
     var isDark: Bool { variant == .gray || variant == .night }
 
+    /// «Скетч»: слова из словаря — маркерная заливка под обычным цветом текста («учу» — жёлтая, «выучено» — зелёная)
+    var sketchLearningFill: UInt32 {
+        switch variant {
+        case .paper, .app: 0xFFE7A0
+        case .sepia: 0xEFCF80
+        case .gray: 0x6B5A22
+        case .night: 0x524416
+        }
+    }
+
+    var sketchLearnedFill: UInt32 {
+        switch variant {
+        case .paper, .app: 0xD9EBD2
+        case .sepia: 0xD2DFB2
+        case .gray: 0x3F5A3B
+        case .night: 0x2F4A2C
+        }
+    }
+
     static func entries(_ palette: PhonicsPalette) -> [Entry] {
         [palette.vowelPair, palette.magicE, palette.rControlled, palette.consonantPair, palette.ending, palette.exception, palette.colloquial]
     }

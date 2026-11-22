@@ -1287,7 +1287,12 @@ struct BookReaderView: View {
                 decorate(&word, ns.substring(with: range), options: phonics, palette: palette, cache: &cache)
             }
             if let statuses, let status = statuses.status(surface: ns.substring(with: range), lemma: lemmas[range.location]) {
-                word.foregroundColor = Color(hex: status == .learning ? palette.learning : palette.learned)
+                if AppDesign.isSketch {
+                    // «Скетч»: цвет текста не меняем (читается так же), слово подчёркнуто маркером
+                    word.backgroundColor = Color(hex: status == .learning ? palette.sketchLearningFill : palette.sketchLearnedFill)
+                } else {
+                    word.foregroundColor = Color(hex: status == .learning ? palette.learning : palette.learned)
+                }
             }
             if showsColloquial {
                 let before = range.location > 0 ? ns.substring(with: NSRange(location: range.location - 1, length: 1)).first : nil

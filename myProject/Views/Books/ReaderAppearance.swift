@@ -360,6 +360,17 @@ struct ReaderAppearanceSheet: View {
                 set: { phonicsRules = PhonicsOption.raw($0) })
     }
 
+    /// Образец цвета слова из словаря: в «Скетче» — маркерная заливка, иначе цветной кружок
+    @ViewBuilder
+    private func statusSwatch(_ fill: UInt32, fallback: UInt32) -> some View {
+        if AppDesign.isSketch {
+            RoundedRectangle(cornerRadius: 4).fill(Color(hex: fill)).frame(width: 18, height: 12)
+                .overlay(RoundedRectangle(cornerRadius: 4).stroke(NewStyle.outline, lineWidth: 1))
+        } else {
+            Image(systemName: "circle.fill").foregroundColor(Color(hex: fallback))
+        }
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -409,8 +420,8 @@ struct ReaderAppearanceSheet: View {
                             .tint(Color.brandTint)
                         let palette = ReaderStyle.current().phonicsPalette(isDark: systemScheme == .dark)
                         HStack(spacing: 18) {
-                            Label { Text("учу") } icon: { Image(systemName: "circle.fill").foregroundColor(Color(hex: palette.learning)) }
-                            Label { Text("выучено") } icon: { Image(systemName: "circle.fill").foregroundColor(Color(hex: palette.learned)) }
+                            Label { Text("учу") } icon: { statusSwatch(palette.sketchLearningFill, fallback: palette.learning) }
+                            Label { Text("выучено") } icon: { statusSwatch(palette.sketchLearnedFill, fallback: palette.learned) }
                         }
                         .scaledFont(size: 14)
                         .foregroundColor(Color.brandDark)
