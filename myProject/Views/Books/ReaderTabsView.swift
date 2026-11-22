@@ -11,6 +11,7 @@ struct ReaderTabsView: View {
     @Binding var onProfile: Bool
     /// Тот же ключ, что у библиотеки: «Профиль» может открыть её сразу на «Подписках»
     @AppStorage("books_tab") private var libraryTab: LibraryTab = .mine
+    @AppStorage(AppDesign.storageKey) private var design = AppDesign.classic.rawValue
 
     var body: some View {
         TabView(selection: $tab) {
@@ -49,8 +50,8 @@ struct ReaderTabsView: View {
             Haptics.tap()
             onProfile = new == .profile
         }
-        .tint(.brandTint)
-        .toolbarBackground(Color.brandBackground, for: .tabBar)
+        .tint(design == AppDesign.sketch.rawValue ? Color.brandDark : Color.brandTint)
+        .toolbarBackground(design == AppDesign.sketch.rawValue ? Color.cardBackground : Color.brandBackground, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
     }
 }

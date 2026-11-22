@@ -11,11 +11,13 @@ nonisolated private struct ScaledFont: ViewModifier {
 
     func body(content: Content) -> some View {
         // Шрифт собирается один раз на сочетание размера, веса, начертания и «Размера текста»: этот модификатор стоит на сотнях строк
-        let key = ScaledFontCache.Key(size: size, weight: weight, design: design, dynamicTypeSize: dynamicTypeSize)
+        // «Скетч» меняет шрифты; при смене оформления приложение перестраивается целиком (см. MyApp), строки читают выбор заново
+        let isSketch = AppDesign.current == .sketch
+        let key = ScaledFontCache.Key(size: size, weight: weight, design: design, dynamicTypeSize: dynamicTypeSize, isSketch: isSketch)
         let font = ScaledFontCache.shared.font(for: key) {
             let traits = UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(dynamicTypeSize))
             let scaled = UIFontMetrics(forTextStyle: Self.textStyle(for: size)).scaledValue(for: size, compatibleWith: traits)
-            return AppFonts.font(size: scaled, weight: weight, design: design)
+            return AppFonts.font(size: scaled, weight: weight, design: design, sketch: isSketch)
         }
         return content.font(font)
     }
@@ -46,6 +48,7 @@ nonisolated final class ScaledFontCache: @unchecked Sendable {
         let weight: Font.Weight
         let design: Font.Design
         let dynamicTypeSize: DynamicTypeSize
+        let isSketch: Bool
     }
 
     private let lock = NSLock()
@@ -79,7 +82,22 @@ enum AppFonts {
         for url in urls { CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil) }
     }
 
-    nonisolated static func font(size: CGFloat, weight: Font.Weight, design: Font.Design, italic: Bool = false) -> Font {
+    /// «Скетч»: PT Sans (текст), PT Serif (засечки), Neucha (рукописные заголовки — `.rounded`). Нет файла — системный шрифт
+    nonisolated private static func sketchFont(size: CGFloat, weight: Font.Weight, design: Font.Design) -> Font? {
+        let isBold = weight == .semibold || weight == .bold || weight == .heavy || weight == .black
+        let name: String
+        switch design {
+        case .rounded: name = "Neucha"
+        case .serif: name = isBold ? "PTSerif-Bold" : "PTSerif-Regular"
+        case .default: name = isBold ? "PTSans-Bold" : "PTSans-Regular"
+        default: return nil
+        }
+        guard let font = UIFont(name: name, size: size) else { return nil }
+        return Font(font)
+    }
+
+    nonisolated static func font(size: CGFloat, weight: Font.Weight, design: Font.Design, italic: Bool = false, sketch: Bool = false) -> Font {
+        if sketch, !italic, let font = sketchFont(size: size, weight: weight, design: design) { return font }
         let family: String
         switch design {
         case .serif: family = "Newsreader"

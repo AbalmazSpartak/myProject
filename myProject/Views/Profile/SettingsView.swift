@@ -235,14 +235,14 @@ struct SettingsView: View {
     /// Дизайн приложения: классический или новый стиль
     private var designSection: some View {
         Section {
-            Picker("Оформление приложения", selection: $design) {
+            Picker("Оформление приложения", selection: Binding(get: { design }, set: { SettingsReturn.isPending = true; design = $0 })) {
                 ForEach(AppDesign.allCases) { Text($0.title).tag($0.rawValue) }
             }
             .pickerStyle(.segmented)
         } header: {
             Self.header("Оформление")
         } footer: {
-            Text("«Скетч» — тонкие контуры, цветные тени и пастельные цвета; расположение экранов то же. Подключается к экранам по одному, остальные пока классические. Данные не меняются, вернуться можно в любой момент.")
+            Text("«Скетч» — контуры «от руки», цветные тени, пастельные цвета и другие шрифты; расположение экранов то же. Подключается к экранам по одному, остальные пока классические. После выбора приложение перерисуется. Данные не меняются, вернуться можно в любой момент.")
                 .textSelection(.enabled)
         }
     }

@@ -314,7 +314,7 @@ struct BooksView: View {
                 // Крупный заголовок слева, как в дизайне LexiStream
                 HStack {
                     Text(fixedTab?.title ?? "Библиотека")
-                        .scaledFont(size: 34, weight: .semibold, design: .serif)
+                        .scaledFont(size: design == AppDesign.sketch.rawValue ? 38 : 34, weight: .semibold, design: design == AppDesign.sketch.rawValue ? .rounded : .serif)
                         .foregroundColor(.brandDark)
                         .padding(.leading, 20)
                     Spacer()
