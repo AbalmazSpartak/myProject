@@ -53,9 +53,11 @@ struct BooksView: View {
             } else {
             // Вкладки — и в пустой библиотеке: сразу видно, где будут книги и откуда их взять
             if design == AppDesign.sketch.rawValue {
+                // Отступы как у сетки книг (20), снизу — просвет, чтобы обложки не подходили вплотную к вкладкам
                 SketchTabs(items: tabs, title: \.title, selection: $tab)
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, 20)
                     .padding(.top, 12)
+                    .padding(.bottom, 14)
             } else {
                 Picker("Раздел", selection: $tab.animation()) {
                     ForEach(tabs) { Text($0.title).tag($0) }
