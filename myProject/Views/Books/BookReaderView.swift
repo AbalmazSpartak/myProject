@@ -808,7 +808,15 @@ struct BookReaderView: View {
         .padding(.top, 12)
         .padding(.bottom, 8)
         .frame(maxWidth: .infinity)
-        .background(style.background.shadow(color: .black.opacity(0.12), radius: 6, y: -2).ignoresSafeArea(edges: .bottom))
+        .background {
+            if AppDesign.isSketch {
+                // «Скетч»: вместо тени — тонкая линия сверху
+                style.background.ignoresSafeArea(edges: .bottom)
+                    .overlay(alignment: .top) { Rectangle().fill(style.text).frame(height: 1.5) }
+            } else {
+                style.background.shadow(color: .black.opacity(0.12), radius: 6, y: -2).ignoresSafeArea(edges: .bottom)
+            }
+        }
     }
 
     /// Мини-плеер по холсту: кнопка паузы, полоса прогресса главы с подписью, скорость. Нажатие на полосу — полный плеер
@@ -823,18 +831,23 @@ struct BookReaderView: View {
                     } else {
                         Image(systemName: speech.isPlaying ? "pause.fill" : "play.fill")
                             .scaledFont(size: 18)
-                            .foregroundStyle(Color.brandOnButton)
+                            .foregroundStyle(AppDesign.isSketch ? Color.black : Color.brandOnButton)
                     }
                 }
                 .frame(width: 44, height: 44)
-                .background(Circle().fill(Color.brandButton))
+                .background(Circle().fill(AppDesign.isSketch ? NewStyle.yellow : Color.brandButton))
+                .overlay { if AppDesign.isSketch { Circle().stroke(NewStyle.outline, style: NewStyle.stroke) } }
             }
             .buttonStyle(.plain)
             .accessibilityLabel(speech.isPlaying ? "Пауза" : "Читать вслух")
             Button { isShowingPlayer = true } label: {
                 VStack(alignment: .leading, spacing: 5) {
-                    ProgressView(value: fraction)
-                        .tint(Color.brandButton)
+                    if AppDesign.isSketch {
+                        SketchProgress(value: fraction)
+                    } else {
+                        ProgressView(value: fraction)
+                            .tint(Color.brandButton)
+                    }
                     Text("Озвучка · \(chapterHeadline)")
                         .scaledFont(size: 11)
                         .foregroundStyle(Color.brandMuted)

@@ -21,4 +21,7 @@ enum AppDesign: String, CaseIterable, Identifiable {
     static var current: AppDesign {
         AppDesign(rawValue: UserDefaults.standard.string(forKey: storageKey) ?? "") ?? .classic
     }
+
+    /// Включён ли «Скетч» (приложение перестраивается при смене, поэтому достаточно прочитать один раз)
+    static var isSketch: Bool { current == .sketch }
 }

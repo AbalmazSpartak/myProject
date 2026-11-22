@@ -149,7 +149,8 @@ struct LXIconLabel: View {
             .scaledFont(size: 19)
             .foregroundStyle(isSoft ? Color.brandOnSoft : Color.brandDark)
             .frame(width: 44, height: 44)
-            .background(Circle().fill(isSoft ? Color.brandAccent : Color.clear))
+            .background(Circle().fill(isSoft ? (AppDesign.isSketch ? NewStyle.pastels[1] : Color.brandAccent) : Color.clear))
+            .overlay { if AppDesign.isSketch && isSoft { Circle().stroke(NewStyle.outline, style: NewStyle.stroke) } }
             .contentShape(Circle())
             .accessibilityLabel(label)
     }
@@ -162,9 +163,10 @@ struct LXSquareIcon: View {
     var body: some View {
         Image(systemName: systemImage)
             .scaledFont(size: 19)
-            .foregroundStyle(Color.brandOnSoft)
+            .foregroundStyle(AppDesign.isSketch ? Color.brandDark : Color.brandOnSoft)
             .frame(width: 44, height: 44)
-            .background(Color.brandAccent, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .background(AppDesign.isSketch ? NewStyle.pastels[1] : Color.brandAccent, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .sketchFrame(AppDesign.isSketch, radius: 12, shadow: NewStyle.blue, offset: 2)
     }
 }
 
@@ -248,7 +250,7 @@ struct LXTableHeader: View {
 
 struct LXDivider: View {
     var body: some View {
-        Rectangle().fill(Color.brandBorder).frame(height: 1)
+        Rectangle().fill(AppDesign.isSketch ? NewStyle.outline.opacity(0.18) : Color.brandBorder).frame(height: AppDesign.isSketch ? 1.5 : 1)
     }
 }
 
@@ -269,7 +271,8 @@ struct LXGroup<Content: View>: View {
         }
         .background(Color.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(AppDesign.isSketch ? Color.clear : Color.brandBorder, lineWidth: 1))
+        .sketchFrame(AppDesign.isSketch, radius: 18, shadow: NewStyle.blue, offset: 3)
     }
 }
 
@@ -281,7 +284,8 @@ struct LXCard<Content: View>: View {
     var body: some View {
         content
             .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).stroke(AppDesign.isSketch ? Color.clear : Color.brandBorder, lineWidth: 1))
+            .sketchFrame(AppDesign.isSketch, radius: radius, shadow: NewStyle.blue, offset: 3)
     }
 }
 
@@ -306,7 +310,8 @@ struct LXField<Content: View>: View {
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
         .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(AppDesign.isSketch ? Color.clear : Color.brandBorder, lineWidth: 1))
+        .sketchFrame(AppDesign.isSketch, radius: 14, shadow: NewStyle.blue, offset: 2)
     }
 }
 
@@ -336,10 +341,11 @@ struct LXButton: View {
             .frame(height: style == .text ? 44 : 52)
             .background(background, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay {
-                if style == .outline {
+                if style == .outline && !AppDesign.isSketch {
                     RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.brandBorder, lineWidth: 1)
                 }
             }
+            .sketchFrame(AppDesign.isSketch && style != .text, radius: 16, shadow: sketchShadow, offset: 3)
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
@@ -347,8 +353,18 @@ struct LXButton: View {
         .opacity(isEnabled || style == .primary || style == .soft ? 1 : 0.45)
     }
 
+    /// «Скетч»: главная кнопка жёлтая с тёмной тенью, остальные — с синей
+    private var sketchShadow: Color { style == .primary && isEnabled ? NewStyle.yellowShadow : NewStyle.blue }
+
     private var foreground: Color {
         if !isEnabled, style == .primary || style == .soft { return .brandMuted }
+        if AppDesign.isSketch, isEnabled {
+            switch style {
+            case .primary: return .black
+            case .soft, .outline: return .brandDark
+            case .text: break
+            }
+        }
         return switch style {
         case .primary: .brandOnButton
         case .soft: .brandOnSoft
@@ -359,6 +375,14 @@ struct LXButton: View {
 
     private var background: Color {
         if !isEnabled, style == .primary || style == .soft { return .brandFill }
+        if AppDesign.isSketch {
+            switch style {
+            case .primary: return NewStyle.yellow
+            case .soft: return NewStyle.pastels[1]
+            case .outline: return .cardBackground
+            case .text: return .clear
+            }
+        }
         return switch style {
         case .primary: .brandButton
         case .soft: .brandAccent
