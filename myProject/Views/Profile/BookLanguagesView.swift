@@ -26,7 +26,7 @@ struct BookLanguagesView: View {
     @State private var voice = NeuralVoice.shared
 
     var body: some View {
-        List {
+        LXForm {
             Section {
                 ForEach(NeuralVoice.PiperVoice.languages, id: \.code) { language in
                     NavigationLink {
@@ -66,7 +66,7 @@ struct BookLanguageVoiceView: View {
     }
 
     var body: some View {
-        List {
+        LXForm {
             Section {
                 Picker("Голос", selection: $choice) {
                     ForEach(NeuralVoice.PiperVoice.voices(for: code)) { Text($0.summary).tag($0) }
@@ -141,7 +141,7 @@ struct BookVoicePickerView: View {
     private var hasKokoro: Bool { voice.phase == .ready || kokoroML.isReady }
 
     var body: some View {
-        List {
+        LXForm {
             Section {
                 row("Системный голос iPhone", choice: "system")
             } footer: {

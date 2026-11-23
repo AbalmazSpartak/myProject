@@ -383,6 +383,9 @@ struct LXForm<Content: View>: View {
                 .padding(.vertical, 16)
             }
             .background(Color.brandBackground)
+            // Кнопки и ссылки в строках — тёмные, а не системный синий
+            .tint(NewStyle.outline)
+            .font(.custom("PTSans-Regular", size: 17, relativeTo: .body))
             .navigationLinkIndicatorVisibility(.visible)
         } else {
             Form { content }

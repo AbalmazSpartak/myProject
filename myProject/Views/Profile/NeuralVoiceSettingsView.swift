@@ -14,7 +14,7 @@ struct NeuralVoiceSettingsView: View {
     private static let sample = "Hello! This is how English words will sound."
 
     var body: some View {
-        List {
+        LXForm {
             Group {
                 Section {
                     NavigationLink {

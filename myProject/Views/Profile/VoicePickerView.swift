@@ -24,7 +24,7 @@ struct VoicePickerView: View {
     private var neuralOn: Bool { neuralVoice.phase == .ready && wordsEngine != "system" }
 
     var body: some View {
-        List {
+        LXForm {
             Group {
                 if neuralVoice.phase == .ready {
                     Section {
