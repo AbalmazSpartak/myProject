@@ -19,15 +19,26 @@ struct LiveAudioPlayerView: View {
 
     private var isMine: Bool { player.isCurrent(book.id) }
 
+    @ViewBuilder
+    private var cover: some View {
+        if AppDesign.isSketch {
+            NewCover(book: book, shadow: NewStyle.peach, offset: 6)
+                .frame(width: 180)
+                .padding(.trailing, 6)
+        } else {
+            Color.clear
+                .aspectRatio(2.0 / 3.0, contentMode: .fit)
+                .frame(width: 180)
+                .overlay { BookCover(data: book.coverData, title: book.title) }
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .shadow(color: .black.opacity(0.25), radius: 12, x: 0, y: 8)
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
-                Color.clear
-                    .aspectRatio(2.0 / 3.0, contentMode: .fit)
-                    .frame(width: 180)
-                    .overlay { BookCover(data: book.coverData, title: book.title) }
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    .shadow(color: .black.opacity(0.25), radius: 12, x: 0, y: 8)
+                cover
                     .padding(.top, 8)
 
                 VStack(spacing: 4) {
@@ -140,7 +151,7 @@ struct LiveAudioPlayerView: View {
                     self.scrubTime = nil
                 }
             }
-            .tint(.brandTint)
+            .tint(AppDesign.isSketch ? Color.brandDark : Color.brandTint)
             HStack {
                 Text(Self.clock(scrubTime ?? player.time))
                 Spacer()
@@ -161,9 +172,11 @@ struct LiveAudioPlayerView: View {
             Button { player.togglePlay() } label: {
                 Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
                     .font(.system(size: 28))
-                    .foregroundStyle(Color.brandOnButton)
+                    .foregroundStyle(AppDesign.isSketch ? NewStyle.onYellow : Color.brandOnButton)
                     .frame(width: 68, height: 68)
-                    .background(Color.brandButton, in: Circle())
+                    .background(AppDesign.isSketch ? NewStyle.yellow : Color.brandButton, in: Circle())
+                    .overlay { if AppDesign.isSketch { Circle().stroke(NewStyle.outline, style: NewStyle.stroke) } }
+                    .background { if AppDesign.isSketch { Circle().fill(NewStyle.yellowShadow).offset(x: 3, y: 3) } }
             }
             .buttonStyle(.plain)
             .accessibilityLabel(player.isPlaying ? "Пауза" : "Слушать")
@@ -176,14 +189,27 @@ struct LiveAudioPlayerView: View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: size))
-                .foregroundStyle(Color.brandTint)
+                .foregroundStyle(AppDesign.isSketch ? Color.brandDark : Color.brandTint)
                 .frame(width: 40, height: 44)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
     }
 
+    @ViewBuilder
     private var speedPicker: some View {
+        if AppDesign.isSketch {
+            HStack(spacing: 8) {
+                ForEach(LiveAudioPlayer.speeds, id: \.self) { speed in
+                    LXChip(title: speed == 1 ? "1×" : "\(speed.formatted())×", isOn: player.speed == speed) { player.speed = speed }
+                }
+            }
+        } else {
+            classicSpeedPicker
+        }
+    }
+
+    private var classicSpeedPicker: some View {
         Picker("Скорость", selection: $player.speed) {
             ForEach(LiveAudioPlayer.speeds, id: \.self) { speed in
                 Text(speed == 1 ? "1×" : "\(speed.formatted())×").tag(speed)
@@ -223,8 +249,7 @@ struct LiveAudioPlayerView: View {
                 }
             }
             .padding(.horizontal, 16)
-            .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+            .lxPlate(radius: 16)
         }
     }
 
@@ -237,7 +262,7 @@ struct LiveAudioPlayerView: View {
             HStack(spacing: 10) {
                 Text(section.title)
                     .lineLimit(1)
-                    .foregroundStyle(isCurrent ? Color.brandTint : Color.brandDark)
+                    .foregroundStyle(isCurrent && !AppDesign.isSketch ? Color.brandTint : Color.brandDark)
                     .fontWeight(isCurrent ? .semibold : .regular)
                 Spacer()
                 Text(LibriVox.durationText(section.seconds))
