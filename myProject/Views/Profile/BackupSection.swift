@@ -69,7 +69,7 @@ struct BackupSection: View {
                 message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
             }
         }
-        .alert("Восстановить из копии?", isPresented: Binding(get: { pendingRestore != nil }, set: { if !$0 { pendingRestore = nil } })) {
+        .lxAlert("Восстановить из копии?", isPresented: Binding(get: { pendingRestore != nil }, set: { if !$0 { pendingRestore = nil } })) {
             Button("Отмена", role: .cancel) {}
             Button("Восстановить", role: .destructive) { restore() }
         } message: {
@@ -77,7 +77,7 @@ struct BackupSection: View {
                 Text("Копия от \(backup.createdAt.formatted(date: .long, time: .shortened)): \(backup.summary).\n\nТекущий прогресс, словари и настройки заменятся данными из копии. На всякий случай они сохранятся в «Файлы» → «На iPhone» → папка приложения.")
             }
         }
-        .alert("Резервная копия", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
+        .lxAlert("Резервная копия", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(message ?? "")

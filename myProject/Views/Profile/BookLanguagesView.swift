@@ -79,7 +79,7 @@ struct BookLanguageVoiceView: View {
         .textCase(nil)
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
-        .alert("Удалить голос?", isPresented: $isConfirmingRemove) {
+        .lxAlert("Удалить голос?", isPresented: $isConfirmingRemove) {
             Button("Отмена", role: .cancel) {}
             Button("Удалить", role: .destructive) { voice.removePiper(language: code) }
         } message: {

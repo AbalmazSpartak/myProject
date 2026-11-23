@@ -200,7 +200,7 @@ struct DailyGoalSheet: View {
         .background(Color.cardBackground.ignoresSafeArea())
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
-        .alert("Своё число", isPresented: $isEnteringCustom) {
+        .lxAlert("Своё число", isPresented: $isEnteringCustom) {
             TextField("Слов в день", text: $customText)
                 .keyboardType(.numberPad)
             Button("Отмена", role: .cancel) {}

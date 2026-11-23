@@ -401,7 +401,7 @@ struct BookDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color.cardBackground))
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
-        .confirmationDialog("Удалить озвучку этой книги?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
+        .lxDialog("Удалить озвучку этой книги?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
             Button("Удалить", role: .destructive) {
                 AudiobookStore.delete(book: book.id)
                 refreshAudiobook()

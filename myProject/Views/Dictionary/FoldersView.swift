@@ -114,22 +114,22 @@ struct FoldersView: View {
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
             }
         }
-        .alert("Новая папка", isPresented: $isAddingFolder) {
+        .lxAlert("Новая папка", isPresented: $isAddingFolder) {
             TextField("Название папки", text: $newFolderName)
             Button("Отмена", role: .cancel) { newFolderName = "" }
             Button("Создать", action: createFolder)
         }
-        .alert("Переименовать словарь", isPresented: isPresented($listToRename)) {
+        .lxAlert("Переименовать словарь", isPresented: isPresented($listToRename)) {
             TextField("Название", text: $renameText)
             Button("Отмена", role: .cancel) {}
             Button("Сохранить", action: renameList)
         }
-        .alert("Переименовать папку", isPresented: isPresented($folderToRename)) {
+        .lxAlert("Переименовать папку", isPresented: isPresented($folderToRename)) {
             TextField("Название", text: $renameText)
             Button("Отмена", role: .cancel) {}
             Button("Сохранить", action: renameFolder)
         }
-        .alert("Словарь «\(listMerge?.target.name ?? "")» уже есть", isPresented: isPresented($listMerge)) {
+        .lxAlert("Словарь «\(listMerge?.target.name ?? "")» уже есть", isPresented: isPresented($listMerge)) {
             Button("Отмена", role: .cancel) {}
             Button("Объединить") {
                 if let pair = listMerge { merge(pair.source, into: pair.target) }
@@ -137,7 +137,7 @@ struct FoldersView: View {
         } message: {
             Text("Слова из «\(listMerge?.source.name ?? "")» перейдут в него, без повторов, а «\(listMerge?.source.name ?? "")» удалится.")
         }
-        .alert("Удалить словарь «\(listToDelete?.name ?? "")»?", isPresented: isPresented($listToDelete)) {
+        .lxAlert("Удалить словарь «\(listToDelete?.name ?? "")»?", isPresented: isPresented($listToDelete)) {
             Button("Отмена", role: .cancel) {}
             Button("Удалить", role: .destructive) {
                 if let list = listToDelete { delete(list) }
@@ -145,7 +145,7 @@ struct FoldersView: View {
         } message: {
             Text("Новые слова, добавленные только в этот словарь, тоже удалятся. Слова из основной базы останутся в своих темах.")
         }
-        .alert("Удалить папку «\(folderToDelete?.name ?? "")»?", isPresented: isPresented($folderToDelete)) {
+        .lxAlert("Удалить папку «\(folderToDelete?.name ?? "")»?", isPresented: isPresented($folderToDelete)) {
             Button("Отмена", role: .cancel) {}
             Button("Удалить", role: .destructive) {
                 if let folder = folderToDelete { deleteFolder(folder) }
@@ -154,7 +154,7 @@ struct FoldersView: View {
             let count = folderToDelete.map { DictionaryCounts.category($0, in: modelContext) } ?? 0
             Text(count == 0 ? "Папка пуста." : "Слова папки (\(DictionaryCounts.words(count))) тоже удалятся вместе с прогрессом.")
         }
-        .alert(notice ?? "", isPresented: noticeBinding) {
+        .lxAlert(notice ?? "", isPresented: noticeBinding) {
             Button("Понятно", role: .cancel) {}
         }
     }

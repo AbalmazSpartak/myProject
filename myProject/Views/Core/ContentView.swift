@@ -96,12 +96,12 @@ struct ContentView: View {
             widgetListens = false
             widgetBook = book
         })
-        .alert("Не удалось сохранить", isPresented: Binding(get: { SaveIssue.shared.message != nil }, set: { if !$0 { SaveIssue.shared.message = nil } })) {
+        .lxAlert("Не удалось сохранить", isPresented: Binding(get: { SaveIssue.shared.message != nil }, set: { if !$0 { SaveIssue.shared.message = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(SaveIssue.shared.message ?? "")
         }
-        .alert("Не получилось", isPresented: Binding(get: { importError != nil }, set: { if !$0 { importError = nil } })) {
+        .lxAlert("Не получилось", isPresented: Binding(get: { importError != nil }, set: { if !$0 { importError = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(importError ?? "")

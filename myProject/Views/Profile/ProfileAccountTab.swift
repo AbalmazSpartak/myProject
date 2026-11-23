@@ -37,7 +37,7 @@ struct ProfileAccountTab: View {
         .sheet(isPresented: $showSettings) {
             SettingsView(profile: profile).appThemedColorScheme()
         }
-        .confirmationDialog("Выйти из аккаунта?", isPresented: $askSignOut, titleVisibility: .visible) {
+        .lxDialog("Выйти из аккаунта?", isPresented: $askSignOut, titleVisibility: .visible) {
             Button("Выйти", role: .destructive) { Task { await account.signOut() } }
             Button("Отмена", role: .cancel) {}
         } message: {

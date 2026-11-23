@@ -123,7 +123,7 @@ struct GutenbergCatalogView: View {
                 .background(Color.brandBackground)
             }
             .onChange(of: kind) { _, _ in Task { await load() } }
-            .confirmationDialog(pendingAudio.map { "«\($0.title)» · \(LibriVox.durationText($0.seconds))" } ?? "",
+            .lxDialog(pendingAudio.map { "«\($0.title)» · \(LibriVox.durationText($0.seconds))" } ?? "",
                                 isPresented: Binding(get: { pendingAudio != nil }, set: { if !$0 { pendingAudio = nil } }),
                                 titleVisibility: .visible, presenting: pendingAudio) { audiobook in
                 Button("Скачать текст и аудио (≈ \(ByteCountFormatter.string(fromByteCount: audiobook.estimatedBytes, countStyle: .file)))") {
@@ -136,7 +136,7 @@ struct GutenbergCatalogView: View {
             } message: { _ in
                 Text("Книга появится в библиотеке и в разделе «Аудио». Аудио можно скачать и позже, на странице книги.")
             }
-            .confirmationDialog("Выбрать этого чтеца?", isPresented: Binding(get: { pendingReader != nil }, set: { if !$0 { pendingReader = nil } }),
+            .lxDialog("Выбрать этого чтеца?", isPresented: Binding(get: { pendingReader != nil }, set: { if !$0 { pendingReader = nil } }),
                                 titleVisibility: .visible, presenting: pendingReader) { audiobook in
                 let downloaded = downloadedOfCurrent(for: audiobook)
                 Button(downloaded > 0 ? "Выбрать и удалить скачанное (\(downloaded) глав)" : "Выбрать",
@@ -176,7 +176,7 @@ struct GutenbergCatalogView: View {
                     .frame(maxWidth: .infinity)
                     .background(.bar)
             }
-            .alert("Не получилось", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+            .lxAlert("Не получилось", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(errorMessage ?? "")

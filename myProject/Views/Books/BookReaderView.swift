@@ -305,7 +305,7 @@ struct BookReaderView: View {
             LiveAudioPlayerView(book: book, startSection: liveSection, onNeural: resumeNeural)
                 .toolbar(.visible, for: .navigationBar)
         }
-        .confirmationDialog("Сменить чтеца?", isPresented: Binding(get: { pendingLiveRecording != nil }, set: { if !$0 { pendingLiveRecording = nil } }),
+        .lxDialog("Сменить чтеца?", isPresented: Binding(get: { pendingLiveRecording != nil }, set: { if !$0 { pendingLiveRecording = nil } }),
                             titleVisibility: .visible, presenting: pendingLiveRecording) { audiobook in
             Button("Сменить и удалить скачанное", role: .destructive) {
                 if (try? LiveAudioPlayer.shared.replaceRecording(book: book.id, with: audiobook)) != nil { openLive(audiobook) }
@@ -380,14 +380,14 @@ struct BookReaderView: View {
                           onSelect: { open($0.paragraph) }, onDelete: removeBookmark)
                 .appThemedColorScheme()
         }
-        .alert("Заметка", isPresented: Binding(get: { noteDraft != nil }, set: { if !$0 { noteDraft = nil } })) {
+        .lxAlert("Заметка", isPresented: Binding(get: { noteDraft != nil }, set: { if !$0 { noteDraft = nil } })) {
             TextField("Описание (можно пусто)", text: $noteText)
             Button("Отмена", role: .cancel) {}
             Button("Сохранить", action: saveNote)
         } message: {
             Text("«\(String((noteDraft?.text ?? "").prefix(140)))»")
         }
-        .alert("Закладка", isPresented: $isAddingBookmark) {
+        .lxAlert("Закладка", isPresented: $isAddingBookmark) {
             TextField("Заметка (можно пусто)", text: $bookmarkNote)
             Button("Отмена", role: .cancel) {}
             Button("Добавить", action: addBookmark)
@@ -411,18 +411,18 @@ struct BookReaderView: View {
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
             }
         }
-        .alert("Не получилось", isPresented: Binding(get: { translationError != nil }, set: { if !$0 { translationError = nil } })) {
+        .lxAlert("Не получилось", isPresented: Binding(get: { translationError != nil }, set: { if !$0 { translationError = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(translationError ?? "")
         }
-        .alert("Начать книгу с этого места?", isPresented: $isConfirmingTrim) {
+        .lxAlert("Начать книгу с этого места?", isPresented: $isConfirmingTrim) {
             Button("Отмена", role: .cancel) {}
             Button("Убрать начало", role: .destructive, action: trimBeforeCurrentPosition)
         } message: {
             Text("Всё, что стоит до открытой страницы (абзацев: \(book.position)) — обложка, оглавление, служебные строки, — будет убрано из книги. Вернуть можно, добавив книгу заново.")
         }
-        .alert("Убрать перевод?", isPresented: $isConfirmingTranslationRemoval) {
+        .lxAlert("Убрать перевод?", isPresented: $isConfirmingTranslationRemoval) {
             Button("Отмена", role: .cancel) {}
             Button("Убрать", role: .destructive, action: removeTranslation)
         } message: {

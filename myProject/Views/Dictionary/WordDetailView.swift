@@ -74,7 +74,7 @@ struct WordDetailView: View {
         .sheet(item: $definedWord) { item in
             SystemDefinitionView(term: item.term)
         }
-        .confirmationDialog("Сбросить прогресс слова?", isPresented: $isConfirmingReset, titleVisibility: .visible) {
+        .lxDialog("Сбросить прогресс слова?", isPresented: $isConfirmingReset, titleVisibility: .visible) {
             Button("Сбросить", role: .destructive, action: resetProgress)
         } message: {
             Text("Слово снова станет новым: повторения и «забыто раз» обнулятся.")

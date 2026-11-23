@@ -104,20 +104,20 @@ struct DeveloperView: View {
                     Button("Готово") { dismiss() }
                 }
             }
-            .alert("Перезагрузить словарь?", isPresented: $showConfirmReseed) {
+            .lxAlert("Перезагрузить словарь?", isPresented: $showConfirmReseed) {
                 Button("Отмена", role: .cancel) {}
                 Button("Перезагрузить", role: .destructive) {
                     DataPreloader.forceReloadBundledWords(context: modelContext)
                     lastActionMessage = "Словарь перезагружен из JSON."
                 }
             }
-            .alert("Сбросить FSRS у всех слов?", isPresented: $showConfirmFSRSReset) {
+            .lxAlert("Сбросить FSRS у всех слов?", isPresented: $showConfirmFSRSReset) {
                 Button("Отмена", role: .cancel) {}
                 Button("Сбросить", role: .destructive) {
                     resetAllFSRS()
                 }
             }
-            .alert("Полный сброс базы?", isPresented: $showConfirmReset) {
+            .lxAlert("Полный сброс базы?", isPresented: $showConfirmReset) {
                 Button("Отмена", role: .cancel) {}
                 Button("Сбросить всё", role: .destructive) {
                     resetEverything()

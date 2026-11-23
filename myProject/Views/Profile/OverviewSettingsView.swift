@@ -101,7 +101,7 @@ struct OverviewSettingsView: View {
         .brandListBackground()
         .navigationTitle("Обзор")
         .navigationBarTitleDisplayMode(.inline)
-        .alert("Вернуть «Обзор» по умолчанию?", isPresented: $isConfirmingReset) {
+        .lxAlert("Вернуть «Обзор» по умолчанию?", isPresented: $isConfirmingReset) {
             Button("Отмена", role: .cancel) {}
             Button("Вернуть", role: .destructive) { layout = .standard }
         } message: {

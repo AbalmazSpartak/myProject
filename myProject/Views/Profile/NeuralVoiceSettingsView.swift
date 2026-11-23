@@ -100,13 +100,13 @@ struct NeuralVoiceSettingsView: View {
                 UserDefaults.standard.set(chosen.accentCode, forKey: SpeechSettings.accentKey)
             }
         }
-        .alert("Удалить Kokoro на нейроядре?", isPresented: $isConfirmingMLRemove) {
+        .lxAlert("Удалить Kokoro на нейроядре?", isPresented: $isConfirmingMLRemove) {
             Button("Отмена", role: .cancel) {}
             Button("Удалить", role: .destructive) { kokoroML.remove() }
         } message: {
             Text("Освободится \(KokoroML.downloadSize). Английские книги будет читать Piper или системный голос.")
         }
-        .alert("Удалить нейросетевой голос?", isPresented: $isConfirmingRemove) {
+        .lxAlert("Удалить нейросетевой голос?", isPresented: $isConfirmingRemove) {
             Button("Отмена", role: .cancel) {}
             Button("Удалить", role: .destructive) { voice.remove() }
         } message: {

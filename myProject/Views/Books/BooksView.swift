@@ -120,12 +120,12 @@ struct BooksView: View {
             GutenbergCatalogView()
                 .appThemedColorScheme()
         }
-        .alert("Не получилось", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+        .lxAlert("Не получилось", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(errorMessage ?? "")
         }
-        .alert("Удалить книгу?", isPresented: Binding(get: { bookToDelete != nil }, set: { if !$0 { bookToDelete = nil } })) {
+        .lxAlert("Удалить книгу?", isPresented: Binding(get: { bookToDelete != nil }, set: { if !$0 { bookToDelete = nil } })) {
             Button("Отмена", role: .cancel) {}
             Button("Удалить", role: .destructive) {
                 if let bookToDelete {

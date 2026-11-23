@@ -91,7 +91,7 @@ struct LiveAudioPlayerView: View {
             BookReaderView(book: book, listensOnOpen: true, listenFromChapter: chapter)
                 .toolbar(.hidden, for: .navigationBar)
         }
-        .confirmationDialog("Сменить чтеца?", isPresented: Binding(get: { pendingRecording != nil }, set: { if !$0 { pendingRecording = nil } }),
+        .lxDialog("Сменить чтеца?", isPresented: Binding(get: { pendingRecording != nil }, set: { if !$0 { pendingRecording = nil } }),
                             titleVisibility: .visible, presenting: pendingRecording) { audiobook in
             Button("Сменить и удалить скачанное", role: .destructive) { useRecording(audiobook) }
             Button("Отмена", role: .cancel) {}

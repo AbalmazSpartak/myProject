@@ -105,7 +105,7 @@ struct EditWordView: View {
             .scrollDismissesKeyboard(.immediately)
         }
         .background(Color.brandBackground.ignoresSafeArea())
-        .confirmationDialog("Удалить «\(word.english)»?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
+        .lxDialog("Удалить «\(word.english)»?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
             Button("Удалить", role: .destructive) {
                 deleteOnClose = true
                 dismiss()

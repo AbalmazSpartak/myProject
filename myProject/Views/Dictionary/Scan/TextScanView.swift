@@ -75,7 +75,7 @@ struct TextScanView: View {
                 if mode == .object { await identify(item) } else { await recognize(item) }
             }
         }
-        .alert("Не получилось", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+        .lxAlert("Не получилось", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(errorMessage ?? "")

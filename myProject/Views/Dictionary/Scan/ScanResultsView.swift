@@ -272,7 +272,7 @@ struct ScanResultsView: View {
             default: isChoosingTranslator = true
             }
         }
-        .confirmationDialog("Как перевести новые слова?", isPresented: $isChoosingTranslator, titleVisibility: .visible) {
+        .lxDialog("Как перевести новые слова?", isPresented: $isChoosingTranslator, titleVisibility: .visible) {
             Button("ИИ — точнее, по предложению") {
                 translatorChoice = "ai"
                 Task { await translateWithAI() }

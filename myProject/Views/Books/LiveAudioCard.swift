@@ -37,7 +37,7 @@ struct LiveAudioCard: View {
         }
         .task { await load() }
         .onChange(of: downloader.job?.done) { _, _ in saved = LiveAudioStore.audiobook(book: book.id) }
-        .confirmationDialog("Удалить живую озвучку этой книги?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
+        .lxDialog("Удалить живую озвучку этой книги?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
             Button("Удалить", role: .destructive) {
                 if downloader.isDownloading(book.id) { downloader.cancel() }
                 if player.isCurrent(book.id) { player.stop() }

@@ -105,7 +105,7 @@ struct ReaderBookmarksTab: View {
             }
             .task(id: allBooks.map(\.id)) { await loadPlaces() }
             .onChange(of: section) { _, _ in bookFilter = nil }
-            .alert("Описание заметки", isPresented: Binding(get: { editingNote != nil }, set: { if !$0 { editingNote = nil } })) {
+            .lxAlert("Описание заметки", isPresented: Binding(get: { editingNote != nil }, set: { if !$0 { editingNote = nil } })) {
                 TextField("Описание", text: $editText)
                 Button("Отмена", role: .cancel) {}
                 Button("Сохранить") { saveEdit() }
