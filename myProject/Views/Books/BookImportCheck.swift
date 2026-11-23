@@ -68,7 +68,26 @@ private struct BookImportPrompts: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .confirmationDialog(dialogTitle, isPresented: Binding(get: { duplicate != nil }, set: { if !$0 { pending = nil } }),
+            // «Скетч»: своё окно вместо системного списка действий
+            .sheet(isPresented: Binding(get: { duplicate != nil && AppDesign.isSketch }, set: { if !$0, AppDesign.isSketch { pending = nil } })) {
+                if let item = duplicate ?? pending {
+                    DuplicateBookSheet(title: dialogTitle, similarity: item.similarity) {
+                        onOpenExisting(item.existing)
+                        pending = nil
+                    } onEdition: {
+                        pending = nil
+                        // Первое окно должно успеть закрыться, иначе второе не откроется
+                        Task {
+                            try? await Task.sleep(for: .milliseconds(450))
+                            editionFor = item
+                        }
+                    } onCancel: {
+                        pending = nil
+                    }
+                    .appThemedColorScheme()
+                }
+            }
+            .confirmationDialog(dialogTitle, isPresented: Binding(get: { duplicate != nil && !AppDesign.isSketch }, set: { if !$0, !AppDesign.isSketch { pending = nil } }),
                                 titleVisibility: .visible) {
                 Button("Открыть эту книгу") {
                     if let existing = duplicate?.existing { onOpenExisting(existing) }
@@ -197,5 +216,40 @@ struct BookEditionSheet: View {
                 .frame(height: 48)
                 .lxPlate(radius: 12)
         }
+    }
+}
+
+/// «Эта книга уже есть» в «Скетче»: окно с тремя кнопками вместо системного списка действий
+private struct DuplicateBookSheet: View {
+    let title: String
+    let similarity: Double
+    let onOpen: () -> Void
+    let onEdition: () -> Void
+    let onCancel: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(title)
+                .scaledFont(size: 22, weight: .semibold, design: .serif)
+                .foregroundStyle(Color.brandDark)
+                .padding(.top, 8)
+            Text("Текст совпадает на \(Int((similarity * 100).rounded()))%. Скорее всего, это та же книга.")
+                .scaledFont(size: 15)
+                .foregroundStyle(Color.brandMuted)
+            VStack(spacing: 10) {
+                LXButton(title: "Открыть эту книгу", action: onOpen)
+                LXButton(title: "Это другое издание…", style: .soft, action: onEdition)
+                LXButton(title: "Не добавлять", style: .outline, action: onCancel)
+            }
+            .padding(.top, 6)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.brandBackground.ignoresSafeArea())
+        .presentationDetents([.height(330)])
+        .presentationDragIndicator(.visible)
+        .presentationCornerRadius(24)
     }
 }

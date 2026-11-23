@@ -157,7 +157,8 @@ struct AddWordView: View {
             }
             .foregroundStyle(Color.brandOnSoft)
             .frame(width: 56, height: 56)
-            .background(Color.brandAccent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(AppDesign.isSketch ? NewStyle.pastels[1] : Color.brandAccent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .sketchFrame(AppDesign.isSketch, radius: 14, shadow: NewStyle.blue, offset: 3)
         }
         .buttonStyle(.plain)
         .disabled(english.trimmingCharacters(in: .whitespaces).isEmpty || isTranslating)
@@ -190,7 +191,8 @@ struct AddWordView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-        .background(Color.brandAccent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(AppDesign.isSketch ? NewStyle.pastels[0] : Color.brandAccent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .sketchFrame(AppDesign.isSketch, radius: 14, shadow: NewStyle.yellowShadow.opacity(0.7), offset: 3)
     }
 
     private func matchDetails(_ word: Word) -> String {
