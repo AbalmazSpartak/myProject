@@ -101,7 +101,7 @@ struct AudioLibraryView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .cardPlate(radius: 12)
             Menu {
                 Picker("Порядок", selection: $sort) {
                     ForEach(AudioLibrarySort.allCases) { Text($0.title).tag($0) }
@@ -111,7 +111,7 @@ struct AudioLibraryView: View {
                     .scaledFont(size: 16)
                     .foregroundColor(.brandDark)
                     .frame(width: 44, height: 44)
-                    .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .cardPlate(radius: 12)
             }
             .accessibilityLabel("Порядок аудиокниг: \(sort.title)")
         }
@@ -213,7 +213,7 @@ struct AudioLibraryView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .cardPlate(radius: 14)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Слушать живой голос: \(book.title)")
@@ -236,13 +236,17 @@ struct AudioLibraryView: View {
                     Text("Прочитано \(Int((book.progress * 100).rounded()))%")
                         .scaledFont(size: 13)
                         .foregroundColor(Color.brandMuted)
-                    ProgressView(value: book.progress)
-                        .tint(.brandTint)
+                    if AppDesign.isSketch {
+                        SketchProgress(value: book.progress)
+                    } else {
+                        ProgressView(value: book.progress)
+                            .tint(.brandTint)
+                    }
                 }
                 playButton(size: 48)
             }
             .padding(14)
-            .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .cardPlate(radius: 16)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Продолжить слушать: \(book.title)")
@@ -275,7 +279,7 @@ struct AudioLibraryView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .cardPlate(radius: 14)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Слушать: \(book.title)")
@@ -284,17 +288,21 @@ struct AudioLibraryView: View {
     private func cover(_ book: Book, width: CGFloat) -> some View {
         Color.clear
             .frame(width: width, height: width * 1.5)
-            .overlay { BookCover(data: book.coverData, title: book.title) }
+            .overlay { BookCover(data: book.coverData, title: book.title, author: book.author) }
             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-            .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+            .shadow(color: .black.opacity(AppDesign.isSketch ? 0 : 0.2), radius: 4, x: 0, y: 2)
+            .sketchFrame(AppDesign.isSketch, radius: 8, shadow: NewStyle.yellow, offset: 3)
+            .padding(.trailing, AppDesign.isSketch ? 3 : 0)
     }
 
     private func playButton(size: CGFloat) -> some View {
         Image(systemName: "play.fill")
             .font(.system(size: size * 0.38))
-            .foregroundColor(.brandOnTint)
+            .foregroundColor(AppDesign.isSketch ? NewStyle.onYellow : .brandOnTint)
             .frame(width: size, height: size)
-            .background(Color.brandButton, in: Circle())
+            .background(AppDesign.isSketch ? NewStyle.yellow : Color.brandButton, in: Circle())
+            .overlay { if AppDesign.isSketch { Circle().stroke(NewStyle.outline, style: NewStyle.stroke) } }
+            .background { if AppDesign.isSketch { Circle().fill(NewStyle.yellowShadow).offset(x: 2, y: 2) } }
     }
 
     private func infoText(_ info: Info) -> String {
