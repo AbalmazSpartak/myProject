@@ -135,7 +135,12 @@ struct BookReaderView: View {
                 }
             }
             .frame(height: Self.barHeight)
-            Divider().opacity(isChromeHidden ? 0 : 0.4)
+            if AppDesign.isSketch {
+                // «Скетч»: линия под шапкой потолще и в цвет текста страницы — как линия над нижней панелью
+                Rectangle().fill(style.text.opacity(isChromeHidden ? 0 : 0.55)).frame(height: NewStyle.lineWidth)
+            } else {
+                Divider().opacity(isChromeHidden ? 0 : 0.4)
+            }
             if let linkedParagraphs, style.layout == .pages, let chapter {
                 ReaderPagedText(
                     chapterID: chapterIndex,
@@ -440,7 +445,7 @@ struct BookReaderView: View {
             buttonsBar
             Button { isShowingContents = true } label: {
                 Text(chapterHeadline)
-                    .scaledFont(size: 16, weight: .semibold)
+                    .scaledFont(size: AppDesign.isSketch ? 19 : 16, weight: .semibold, design: AppDesign.isSketch ? .rounded : .default)
                     .foregroundColor(style.text)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
@@ -556,7 +561,7 @@ struct BookReaderView: View {
     /// Шапка спрятана — тонкая строка с названием главы; нажатие возвращает шапку
     private var compactTitle: some View {
         Text(chapterHeadline)
-            .scaledFont(size: 12, weight: .medium)
+            .scaledFont(size: AppDesign.isSketch ? 14 : 12, weight: .medium, design: AppDesign.isSketch ? .rounded : .default)
             .foregroundColor(style.text.opacity(0.5))
             .lineLimit(1)
             .padding(.horizontal, 40)
