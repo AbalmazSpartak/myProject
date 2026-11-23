@@ -90,10 +90,15 @@ struct GutenbergCatalogView: View {
             .safeAreaInset(edge: .top) {
                 // Сортировка — рядом с переключателем: панель сверху во время поиска прячется
                 VStack(spacing: 8) {
-                    Picker("Каталог", selection: $kind) {
-                        ForEach(CatalogKind.allCases) { Text($0.title).tag($0) }
+                    if AppDesign.isSketch {
+                        SketchTabs(items: CatalogKind.allCases, title: \.title, selection: $kind)
+                            .padding(.horizontal, 4)
+                    } else {
+                        Picker("Каталог", selection: $kind) {
+                            ForEach(CatalogKind.allCases) { Text($0.title).tag($0) }
+                        }
+                        .pickerStyle(.segmented)
                     }
-                    .pickerStyle(.segmented)
                     if kind == .audiobooks {
                         HStack {
                             Text(audiobooks.isEmpty ? "" : "Записей: \(audiobooks.count)")
@@ -185,10 +190,12 @@ struct GutenbergCatalogView: View {
             RemoteCover(url: entry.coverURL)
                 .frame(width: 46, height: 68)
             .clipShape(RoundedRectangle(cornerRadius: 4))
+            .sketchFrame(AppDesign.isSketch, radius: 4, shadow: NewStyle.yellow, offset: 3)
+            .padding(.trailing, AppDesign.isSketch ? 3 : 0)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(entry.title)
-                    .font(.system(.body, design: .serif).weight(.semibold))
+                    .lxBookTitleFont()
                     .lineLimit(2)
                 Text(entry.author)
                     .font(.subheadline)
@@ -305,10 +312,12 @@ struct GutenbergCatalogView: View {
             RemoteCover(url: audiobook.coverURL)
                 .frame(width: 56, height: 56)
                 .clipShape(RoundedRectangle(cornerRadius: 6))
+                .sketchFrame(AppDesign.isSketch, radius: 6, shadow: NewStyle.yellow, offset: 3)
+                .padding(.trailing, AppDesign.isSketch ? 3 : 0)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(audiobook.title)
-                    .font(.system(.body, design: .serif).weight(.semibold))
+                    .lxBookTitleFont()
                     .lineLimit(2)
                 Text(audiobook.author)
                     .font(.subheadline)

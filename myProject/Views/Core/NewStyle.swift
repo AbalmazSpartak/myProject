@@ -222,6 +222,17 @@ extension View {
         scaledFont(size: AppDesign.isSketch ? 38 : 32, weight: .medium, design: AppDesign.isSketch ? .rounded : .serif)
     }
 
+    /// Название книги в каталоге: PT Serif Bold в «Скетче», иначе системный шрифт с засечками
+    func lxBookTitleFont() -> some View {
+        Group {
+            if AppDesign.isSketch {
+                scaledFont(size: 17, weight: .semibold, design: .serif)
+            } else {
+                font(.system(.body, design: .serif).weight(.semibold))
+            }
+        }
+    }
+
     func lxPlate(radius: CGFloat = 18) -> some View {
         background(Color.cardBackground, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).stroke(AppDesign.isSketch ? Color.clear : Color.brandBorder, lineWidth: 1))
