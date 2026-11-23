@@ -56,13 +56,17 @@ struct ProfileAccountTab: View {
                         Text("Сейчас читаю").scaledFont(size: 12, weight: .semibold).foregroundColor(.brandMuted).textCase(.uppercase)
                         Text(book.title).scaledFont(size: 19, weight: .semibold, design: .serif).foregroundColor(.brandDark).lineLimit(2)
                         Text(book.author).scaledFont(size: 13).foregroundColor(.brandMuted).lineLimit(1)
-                        ProgressView(value: book.progress).tint(.brandTint).padding(.top, 6)
+                        Group {
+                            if AppDesign.isSketch { SketchProgress(value: book.progress) } else { ProgressView(value: book.progress).tint(.brandTint) }
+                        }
+                        .padding(.top, 6)
                         Button { openedBook = book } label: {
                             Text("Продолжить")
                                 .scaledFont(size: 14, weight: .semibold)
-                                .foregroundColor(.brandOnTint)
+                                .foregroundColor(AppDesign.isSketch ? .black : .brandOnTint)
                                 .padding(.horizontal, 18).frame(height: 38)
-                                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.brandButton))
+                                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(AppDesign.isSketch ? NewStyle.yellow : Color.brandButton))
+                                .sketchFrame(AppDesign.isSketch, radius: 12, shadow: NewStyle.yellowShadow, offset: 3)
                         }
                         .padding(.top, 6)
                     }
@@ -141,7 +145,9 @@ struct ProfileAccountTab: View {
             }
             .foregroundColor(.brandDark)
             .frame(maxWidth: .infinity, minHeight: 48)
-            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.brandBorder, lineWidth: 1.5))
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(AppDesign.isSketch ? Color.clear : Color.brandBorder, lineWidth: 1.5))
+            .background(AppDesign.isSketch ? Color.cardBackground : Color.clear, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .sketchFrame(AppDesign.isSketch, radius: 12, shadow: NewStyle.blue, offset: 3)
         }
         .buttonStyle(.plain)
     }
@@ -188,8 +194,7 @@ private struct BookCoverThumb: View {
 
 private extension View {
     func card() -> some View {
-        background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+        lxPlate(radius: 16)
     }
 }
 
@@ -250,7 +255,9 @@ struct ProfileHeaderCard: View {
         }
         .foregroundColor(.brandDark)
         .frame(maxWidth: .infinity, minHeight: 40)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.brandBorder, lineWidth: 1.5))
+        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(AppDesign.isSketch ? Color.clear : Color.brandBorder, lineWidth: 1.5))
+            .background(AppDesign.isSketch ? Color.cardBackground : Color.clear, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .sketchFrame(AppDesign.isSketch, radius: 12, shadow: NewStyle.blue, offset: 3)
     }
 
 }

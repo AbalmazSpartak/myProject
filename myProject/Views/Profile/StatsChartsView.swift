@@ -12,6 +12,15 @@ struct ProfileSectionTabs: View {
     @Binding var selection: ProfileSection
 
     var body: some View {
+        if AppDesign.isSketch {
+            SketchTabs(items: ProfileSection.allCases, title: \.rawValue, selection: $selection)
+                .padding(.horizontal, 20)
+        } else {
+            classic
+        }
+    }
+
+    private var classic: some View {
         HStack(spacing: 24) {
             ForEach(ProfileSection.allCases) { section in
                 Button {
@@ -57,8 +66,7 @@ struct StatCard<Content: View>: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+        .lxPlate(radius: 16)
     }
 }
 
