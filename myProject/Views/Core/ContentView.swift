@@ -126,6 +126,7 @@ struct ContentView: View {
                 LearningOverviewView(open: { activeScreen = $0 })
                     .readableColumn()
                     .modeSwitcherInset()
+                    .sketchTabBarInset()
                     .toolbar(.hidden, for: .navigationBar)
                     // Раздел открывается переходом на весь экран: свайп от левого края возвращает на «Обзор»
                     .navigationDestination(item: $activeScreen) { screen in
@@ -141,6 +142,7 @@ struct ContentView: View {
                 PracticeView(open: { practiceScreen = $0 })
                     .readableColumn()
                     .modeSwitcherInset()
+                    .sketchTabBarInset()
                     .toolbar(.hidden, for: .navigationBar)
                     .navigationDestination(item: $practiceScreen) { screen in
                         destination(for: screen)
@@ -154,6 +156,7 @@ struct ContentView: View {
             DictionaryView(showsBackButton: false)
                 .readableColumn()
                 .modeSwitcherInset()
+                .sketchTabBarInset()
                 .tabItem { Label("Словарь", systemImage: "books.vertical") }
                 .tag(2)
 
@@ -161,11 +164,18 @@ struct ContentView: View {
                 ProfileView(showsBackButton: false)
                     .readableColumn()
                     .modeSwitcherInset()
+                    .sketchTabBarInset()
                     .toolbar(.hidden, for: .navigationBar)
             }
             .tabItem { Label("Профиль", systemImage: "person") }
             .tag(3)
         }
+        .environment(\.sketchTabBar, SketchTabBarConfig(
+            items: [SketchTabItem(title: "Обзор", icon: "house", selectedIcon: "house.fill"),
+                    SketchTabItem(title: "Практика", icon: "square.stack.3d.up", selectedIcon: "square.stack.3d.up.fill"),
+                    SketchTabItem(title: "Словарь", icon: "books.vertical", selectedIcon: "books.vertical.fill"),
+                    SketchTabItem(title: "Профиль", icon: "person", selectedIcon: "person.fill")],
+            selected: selectedTab, select: { selectedTab = $0 }))
         .onAppear {
             if onProfile { selectedTab = 3 } else if selectedTab == 3 { selectedTab = 0 }
         }

@@ -384,3 +384,100 @@ struct LXForm<Content: View>: View {
         }
     }
 }
+
+// MARK: - Нижняя панель «Скетча»
+
+/// Вкладка своей нижней панели
+struct SketchTabItem {
+    let title: String
+    let icon: String
+    let selectedIcon: String
+}
+
+/// Что рисует своя нижняя панель: вкладки, выбранная и что делать при нажатии. Задаётся один раз на `TabView`
+struct SketchTabBarConfig {
+    let items: [SketchTabItem]
+    let selected: Int
+    let select: (Int) -> Void
+}
+
+private struct SketchTabBarKey: EnvironmentKey {
+    static let defaultValue: SketchTabBarConfig? = nil
+}
+
+extension EnvironmentValues {
+    var sketchTabBar: SketchTabBarConfig? {
+        get { self[SketchTabBarKey.self] }
+        set { self[SketchTabBarKey.self] = newValue }
+    }
+}
+
+/// Панель вкладок «Скетча»: белый фон, линия сверху, у выбранной вкладки жёлтая пилюля с контуром.
+/// Системная панель iOS 18 не даёт нарисовать пилюлю, поэтому в «Скетче» она скрыта, а эта стоит внизу корневого экрана каждой вкладки
+/// (на вложенных экранах её нет — они закрывают корневой экран, как раньше закрывали системную панель)
+private struct SketchTabBarInset: ViewModifier {
+    @Environment(\.sketchTabBar) private var config
+    @State private var isKeyboardShown = false
+
+    func body(content: Content) -> some View {
+        if AppDesign.isSketch, let config {
+            content
+                .toolbar(.hidden, for: .tabBar)
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    if !isKeyboardShown { bar(config) }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in isKeyboardShown = true }
+                .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in isKeyboardShown = false }
+        } else {
+            content
+        }
+    }
+
+    private func bar(_ config: SketchTabBarConfig) -> some View {
+        HStack(spacing: 0) {
+            ForEach(config.items.indices, id: \.self) { index in
+                let item = config.items[index]
+                let isOn = index == config.selected
+                Button {
+                    guard !isOn else { return }
+                    config.select(index)
+                } label: {
+                    VStack(spacing: 3) {
+                        Image(systemName: isOn ? item.selectedIcon : item.icon)
+                            .scaledFont(size: 20)
+                            .foregroundStyle(isOn ? NewStyle.onYellow : Color.brandMuted)
+                            .frame(width: 58, height: 32)
+                            .background {
+                                if isOn {
+                                    RoughRoundedRect(radius: 16, seed: UInt64(index + 3)).fill(NewStyle.yellow)
+                                }
+                            }
+                            .overlay {
+                                if isOn {
+                                    RoughRoundedRect(radius: 16, seed: UInt64(index + 3)).stroke(NewStyle.outline, style: NewStyle.stroke)
+                                }
+                            }
+                        Text(item.title)
+                            .scaledFont(size: 11, weight: .bold)
+                            .foregroundStyle(isOn ? Color.brandDark : Color.brandMuted)
+                            .lineLimit(1)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(item.title)
+                .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
+            }
+        }
+        .padding(.top, 8)
+        .padding(.bottom, 6)
+        .background(Color.cardBackground.ignoresSafeArea(edges: .bottom))
+        .overlay(alignment: .top) { Rectangle().fill(NewStyle.outline.opacity(0.7)).frame(height: NewStyle.lineWidth) }
+    }
+}
+
+extension View {
+    /// Своя нижняя панель «Скетча» внизу корневого экрана вкладки (рядом с `modeSwitcherInset`)
+    func sketchTabBarInset() -> some View { modifier(SketchTabBarInset()) }
+}

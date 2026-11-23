@@ -13,13 +13,21 @@ struct ReaderTabsView: View {
     @AppStorage("books_tab") private var libraryTab: LibraryTab = .mine
     @AppStorage(AppDesign.storageKey) private var design = AppDesign.classic.rawValue
 
+    private static let order: [Tab] = [.library, .subscriptions, .bookmarks, .profile]
+    private static let sketchItems = [
+        SketchTabItem(title: "Библиотека", icon: "book", selectedIcon: "book.fill"),
+        SketchTabItem(title: "Подписки", icon: "arrow.down.circle", selectedIcon: "arrow.down.circle.fill"),
+        SketchTabItem(title: "Закладки", icon: "bookmark", selectedIcon: "bookmark.fill"),
+        SketchTabItem(title: "Профиль", icon: "person", selectedIcon: "person.fill")
+    ]
+
     var body: some View {
         TabView(selection: $tab) {
-            NavigationStack { BooksView(isHome: true, hasTabBar: true).modeSwitcherInset() }
+            NavigationStack { BooksView(isHome: true, hasTabBar: true).modeSwitcherInset().sketchTabBarInset() }
                 .tabItem { Label("Библиотека", systemImage: "book") }
                 .tag(Tab.library)
 
-            NavigationStack { BooksView(isHome: true, hasTabBar: true, fixedTab: .subscriptions).modeSwitcherInset() }
+            NavigationStack { BooksView(isHome: true, hasTabBar: true, fixedTab: .subscriptions).modeSwitcherInset().sketchTabBarInset() }
                 .tabItem { Label("Подписки", systemImage: "arrow.down.circle") }
                 .tag(Tab.subscriptions)
 
@@ -41,10 +49,13 @@ struct ReaderTabsView: View {
                     openBookmarks: { tab = .bookmarks }
                 )
                 .modeSwitcherInset()
+                .sketchTabBarInset()
             }
             .tabItem { Label("Профиль", systemImage: "person") }
             .tag(Tab.profile)
         }
+        .environment(\.sketchTabBar, SketchTabBarConfig(items: Self.sketchItems, selected: Self.order.firstIndex(of: tab) ?? 0,
+                                                         select: { tab = Self.order[$0] }))
         .onAppear { if onProfile { tab = .profile } }
         .onChange(of: tab) { _, new in
             Haptics.tap()

@@ -96,6 +96,7 @@ struct ReaderBookmarksTab: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.brandBackground.ignoresSafeArea())
+            .sketchTabBarInset()
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(item: $openedBook) { book in
                 BookReaderView(book: book)
