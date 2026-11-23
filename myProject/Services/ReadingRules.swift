@@ -545,13 +545,36 @@ nonisolated enum ReadingRules {
         var chunks: [PhonicsChunk] = []
         var i = 0
         while i < chars.count {
-            let rule = (rules[chars[i]] ?? []).first { $0.typical && fits($0, chars, at: i) }
-                ?? (rules[chars[i]] ?? []).first { fits($0, chars, at: i) }
+            let rule = (rules[chars[i]] ?? []).first { $0.typical && fits($0, chars, at: i) && guessAllows($0, chars, at: i) }
+                ?? (rules[chars[i]] ?? []).first { fits($0, chars, at: i) && guessAllows($0, chars, at: i) }
             let length = rule?.letters.count ?? 1
             chunks.append(chunk(id: chunks.count, chars: chars, range: i..<(i + length), phones: rule?.phones ?? [], rule: rule))
             i += length
         }
         return chunks
+    }
+
+    /// Без словаря правило с условием («t перед u», «s между гласными») берём, только если условие выполнено:
+    /// иначе первое по списку правило подходило бы к любой букве (в «at first» выходило «эч фэзч»)
+    private static func guessAllows(_ rule: GraphemeRule, _ chars: [Character], at i: Int) -> Bool {
+        let n = rule.letters.count
+        let next: Character? = i + n < chars.count ? chars[i + n] : nil
+        let previous: Character? = i > 0 ? chars[i - 1] : nil
+        let after = String(chars[min(i + n, chars.count)...])
+        switch (rule.letters, rule.phones.first ?? "") {
+        case ("s", "Z"): return previous.map(vowels.contains) == true && next.map(vowels.contains) == true
+        case ("s", "ZH"): return after.hasPrefix("u") || after.hasPrefix("ion")
+        case ("t", "CH"): return after.hasPrefix("u")
+        case ("t", "SH"): return after.hasPrefix("ia") || after.hasPrefix("io")
+        case ("d", "JH"): return after.hasPrefix("u")
+        case ("d", "T"): return false
+        case ("n", "NG"): return next == "k" || next == "g"
+        case ("x", "G"): return false
+        case ("a", "AO"): return next == "l"
+        case ("wh", "HH"): return after.hasPrefix("o")
+        case ("y", "Y"): return i == 0 && next.map(vowels.contains) == true
+        default: return true
+        }
     }
 
     /// Гласная — согласная — немая e на конце: гласная читается как в алфавите (make, time, home).

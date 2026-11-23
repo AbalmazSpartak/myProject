@@ -163,6 +163,8 @@ struct ReadingBreakdownView: View {
     var showsPracticeButton = true
 
     @State private var reading: WordReading?
+    /// Выражение из нескольких слов («at first»): разбор каждого слова отдельно
+    @State private var phrase: [WordReading]?
     @State private var topic: CommunityTopic?
     @State private var isQueued = false
 
@@ -170,7 +172,9 @@ struct ReadingBreakdownView: View {
         // Пустой Group на экране не появляется — и .task у него не срабатывал: разбор не показывался никогда.
         // Невидимая заглушка, пока разбора нет
         VStack(spacing: 0) {
-            if let reading {
+            if let phrase {
+                phraseContent(phrase)
+            } else if let reading {
                 content(reading)
             } else {
                 Color.clear.frame(height: 1)
@@ -184,6 +188,18 @@ struct ReadingBreakdownView: View {
     }
 
     private func analyze() {
+        // Выражение из двух и более слов: пробел нельзя выбрасывать — «at first» читается как два слова, а не «atfirst»
+        let parts = word.split(whereSeparator: \.isWhitespace).map(String.init).filter { $0.contains { $0.isASCII && $0.isLetter } }
+        if parts.count > 1 {
+            let readings = parts.compactMap { ReadingRules.reading(for: $0) }
+            if readings.count == parts.count {
+                phrase = readings
+                reading = nil
+                isQueued = false
+                return
+            }
+        }
+        phrase = nil
         let tapped = ReadingRules.reading(for: word)
         if let tapped, !tapped.isGuess || lemma.isEmpty {
             reading = tapped
@@ -255,6 +271,52 @@ struct ReadingBreakdownView: View {
             // У исключения кнопка — в плашке сверху
             if exception == nil {
                 practiceButton(reading)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.cardBackground)
+        .cornerRadius(14)
+    }
+
+    /// Выражение: общее звучание по-русски и разбор каждого слова отдельно
+    private func phraseContent(_ readings: [WordReading]) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Как читать")
+                    .scaledFont(size: 17, weight: .semibold)
+                    .foregroundColor(.brandDark)
+                Spacer()
+                Button {
+                    TextToSpeechManager.shared.speak(word, slow: true)
+                } label: {
+                    Label("Медленно", systemImage: "tortoise.fill")
+                        .scaledFont(size: 14, weight: .semibold)
+                }
+                .tint(Color.brandTint)
+            }
+            Text("≈ «\(readings.map { ReadingRules.russian($0.phones) }.joined(separator: " "))»")
+                .scaledFont(size: 17, design: .serif)
+                .foregroundColor(.brandDark)
+            ForEach(readings.indices, id: \.self) { index in
+                let part = readings[index]
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(part.word)
+                        .scaledFont(size: 14, weight: .semibold)
+                        .foregroundColor(Color.brandMuted)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            ForEach(part.chunks) { chunk in
+                                chunkTile(chunk)
+                            }
+                        }
+                    }
+                    if part.isGuess {
+                        Text("Слова нет в словаре произношения — разбор по общим правилам.")
+                            .scaledFont(size: 12)
+                            .foregroundColor(Color.brandMuted)
+                    }
+                }
             }
         }
         .padding(14)
