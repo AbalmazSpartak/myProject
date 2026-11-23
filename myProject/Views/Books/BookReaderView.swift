@@ -686,7 +686,7 @@ struct BookReaderView: View {
                     }
                 }
             }
-            .listRowBackground(Color.cardBackground)
+            .lxRowPlate()
         }
         .brandListBackground()
     }

@@ -251,7 +251,7 @@ struct ScanResultsView: View {
                 }
             }
             // Строки — тёплого цвета карточек, а не системного серого
-            .listRowBackground(Color.cardBackground)
+            .lxRowPlate()
         }
         .brandListBackground()
         .navigationTitle("Слова из текста")

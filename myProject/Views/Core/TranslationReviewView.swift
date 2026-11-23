@@ -27,7 +27,7 @@ struct TranslationReviewView: View {
                     }
                 }
             }
-            .listRowBackground(Color.cardBackground)
+            .lxRowPlate()
         }
         .brandListBackground()
         .navigationTitle("Проверка перевода")
@@ -65,7 +65,7 @@ private struct TranslationReviewListView: View {
                 }
             }
         }
-        .listRowBackground(Color.cardBackground)
+        .lxRowPlate()
         .brandListBackground()
         .navigationTitle(list.name)
         .navigationBarTitleDisplayMode(.inline)

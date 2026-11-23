@@ -70,7 +70,7 @@ struct ObjectResultsView: View {
                          ?? "Будет создан новый словарь, фото сохранится в нём.")
                 }
             }
-            .listRowBackground(Color.cardBackground)
+            .lxRowPlate()
         }
         .brandListBackground()
         .navigationTitle("Предмет")

@@ -188,7 +188,7 @@ struct BookNamesView: View {
                         .buttonStyle(.plain)
                         .accessibilityLabel("Все места, где встречается «\(item.name.name)»")
                     }
-                    .listRowBackground(Color.cardBackground)
+                    .lxRowPlate()
                 }
             }
             .brandListBackground()

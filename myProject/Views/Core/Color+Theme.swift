@@ -190,11 +190,38 @@ extension View {
                     .font(.custom("PTSans-Regular", size: 17, relativeTo: .body))
                     .toggleStyle(SwitchToggleStyle(tint: NewStyle.yellow))
                     .listRowSeparatorTint(NewStyle.outline.opacity(0.25))
+                    .tint(NewStyle.outline)
             } else {
                 scrollContentBackground(.hidden)
                     .background(Color.brandBackground)
             }
         }
+    }
+}
+
+extension View {
+    /// Строка списка: в «Скетче» — отдельная плашка с контуром «от руки» и цветной тенью, без разделителей; иначе цвет карточек
+    @ViewBuilder
+    func lxRowPlate() -> some View {
+        if AppDesign.isSketch {
+            listRowBackground(SketchRowPlate())
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+        } else {
+            listRowBackground(Color.cardBackground)
+        }
+    }
+}
+
+private struct SketchRowPlate: View {
+    var body: some View {
+        ZStack {
+            RoughRoundedRect(radius: 14, seed: 9).fill(NewStyle.blue).offset(x: 3, y: 3)
+            RoughRoundedRect(radius: 14, seed: 5).fill(Color.cardBackground)
+            RoughRoundedRect(radius: 14, seed: 5).stroke(NewStyle.outline, style: NewStyle.stroke)
+        }
+        .padding(.trailing, 4)
+        .padding(.vertical, 5)
     }
 }
 

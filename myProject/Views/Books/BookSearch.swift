@@ -176,7 +176,7 @@ struct BookSearchView: View {
                         Text("\(chapterTitle(group.chapter)) — \(group.items.count)")
                             .textCase(nil)
                     }
-                    .listRowBackground(Color.cardBackground)
+                    .lxRowPlate()
                 }
             }
             .brandListBackground()

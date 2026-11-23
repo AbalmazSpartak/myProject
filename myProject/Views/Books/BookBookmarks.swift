@@ -82,7 +82,7 @@ struct BookBookmarksView: View {
                     } label: {
                         row(bookmark)
                     }
-                    .listRowBackground(Color.cardBackground)
+                    .lxRowPlate()
                     .swipeActions {
                         Button(role: .destructive) { onDelete(bookmark) } label: {
                             Label("Удалить", systemImage: "trash")

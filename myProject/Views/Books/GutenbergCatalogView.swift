@@ -77,7 +77,7 @@ struct GutenbergCatalogView: View {
                 }
                 ForEach(entries) { entry in
                     row(entry)
-                        .listRowBackground(Color.cardBackground)
+                        .lxRowPlate()
                 }
                 if !isLoading && entries.isEmpty {
                     Text(loadError ?? (query.isEmpty ? "Каталог недоступен — проверьте интернет." : "Ничего не нашлось. Попробуйте название или автора на английском."))
@@ -256,7 +256,7 @@ struct GutenbergCatalogView: View {
         } else {
             ForEach(sortedAudiobooks) { audiobook in
                 audiobookRow(audiobook)
-                    .listRowBackground(Color.cardBackground)
+                    .lxRowPlate()
             }
         }
     }

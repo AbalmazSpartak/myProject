@@ -43,6 +43,7 @@ struct OverviewSettingsView: View {
                 } footer: {
                     Text("Большие карточки вверху «Обзора» — листаются свайпом, до трёх. При запуске видна средняя карточка, остальные — свайпом в стороны. Порядок — перетаскиванием, убрать — «−» (одна карточка остаётся всегда). «Интервальное повторение» — «Карточки для запоминания»: слова, которым пора на повторение, и новые по дневной норме.")
                         .textSelection(.enabled)
+                        .font(AppDesign.isSketch ? .custom("PTSans-Regular", size: 13, relativeTo: .footnote) : nil)
                 }
 
                 Section {
@@ -74,6 +75,7 @@ struct OverviewSettingsView: View {
                 } footer: {
                     Text("Плитки по две в ряд. Порядок — перетаскиванием за ручку справа, убрать — кнопкой «−».")
                         .textSelection(.enabled)
+                        .font(AppDesign.isSketch ? .custom("PTSans-Regular", size: 13, relativeTo: .footnote) : nil)
                 }
 
                 Section {
@@ -86,6 +88,7 @@ struct OverviewSettingsView: View {
                 } footer: {
                     Text("«Ваши подборки» — темы «Сообщества», добавленные кнопкой «В мои подборки». Все сразу — по кнопке «Все».")
                         .textSelection(.enabled)
+                        .font(AppDesign.isSketch ? .custom("PTSans-Regular", size: 13, relativeTo: .footnote) : nil)
                 }
 
                 Section {
@@ -94,7 +97,7 @@ struct OverviewSettingsView: View {
                 }
             }
             // Строки — тёплого цвета карточек, а не системного серого
-            .listRowBackground(Color.cardBackground)
+            .lxRowPlate()
         }
         // Ручки для перетаскивания видны сразу, без кнопки «Изменить»
         .environment(\.editMode, .constant(.active))
