@@ -324,7 +324,7 @@ struct SettingsView: View {
             }
             .brandListBackground()
             .tint(Color.brandTint)
-            .listRowSeparatorTint(Color.brandBorder)
+            .listRowSeparatorTint(AppDesign.isSketch ? NewStyle.outline.opacity(0.25) : Color.brandBorder)
             .navigationTitle("Настройки")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -182,8 +182,19 @@ nonisolated enum AppPalette {
 extension View {
     /// Списки и формы на кремовом фоне вместо системного серого
     func brandListBackground() -> some View {
-        scrollContentBackground(.hidden)
-            .background(Color.brandBackground)
+        Group {
+            if AppDesign.isSketch {
+                // «Скетч»: шрифт PT Sans в стандартных строках, жёлтые переключатели, тонкие тёмные разделители
+                scrollContentBackground(.hidden)
+                    .background(Color.brandBackground)
+                    .font(.custom("PTSans-Regular", size: 17, relativeTo: .body))
+                    .toggleStyle(SwitchToggleStyle(tint: NewStyle.yellow))
+                    .listRowSeparatorTint(NewStyle.outline.opacity(0.25))
+            } else {
+                scrollContentBackground(.hidden)
+                    .background(Color.brandBackground)
+            }
+        }
     }
 }
 

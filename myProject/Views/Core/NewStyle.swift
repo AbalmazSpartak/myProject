@@ -234,6 +234,9 @@ extension View {
 enum SketchChrome {
     @MainActor
     static func apply(_ sketch: Bool) {
+        // Заголовки экранов (навигация): PT Sans Bold в «Скетче», системные иначе
+        UINavigationBar.appearance().titleTextAttributes = sketch
+            ? [.font: UIFont(name: "PTSans-Bold", size: 17) ?? UIFont.boldSystemFont(ofSize: 17)] : nil
         let tabBar = UITabBar.appearance()
         guard sketch else {
             tabBar.standardAppearance = UITabBarAppearance()
