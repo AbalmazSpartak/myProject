@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Детали стиля «Скетч»: тонкий контур «от руки», цветная смещённая тень, пастельные круги, жёлтая главная кнопка
-enum NewStyle {
+nonisolated enum NewStyle {
     /// Цвет пары «день / ночь»
     private static func themed(_ light: UInt32, _ dark: UInt32) -> Color {
         func ui(_ h: UInt32) -> UIColor {
@@ -58,6 +58,8 @@ nonisolated struct RoughRoundedRect: Shape {
     var jitter: CGFloat = 0.9
 
     func path(in rect: CGRect) -> Path {
+        // Во время анимаций размер бывает нулевым, отрицательным или не числом — на таком не рисуем (UInt64(…) ниже иначе падает)
+        guard rect.width.isFinite, rect.height.isFinite, rect.width > 1, rect.height > 1 else { return Path() }
         let r = min(radius, min(rect.width, rect.height) / 2)
         var points: [CGPoint] = []
         func side(from a: CGPoint, to b: CGPoint) {
@@ -84,7 +86,7 @@ nonisolated struct RoughRoundedRect: Shape {
         side(from: CGPoint(x: minX, y: maxY - r), to: CGPoint(x: minX, y: minY + r))
         corner(center: CGPoint(x: minX + r, y: minY + r), from: .pi)
 
-        var state = seed &+ UInt64(rect.width * 10) &* 31 &+ UInt64(rect.height * 10)
+        var state = seed &+ UInt64(min(rect.width, 100_000) * 10) &* 31 &+ UInt64(min(rect.height, 100_000) * 10)
         func next() -> CGFloat {
             state = state &+ 0x9E3779B97F4A7C15
             var z = state
@@ -310,7 +312,7 @@ enum SketchChrome {
     }
 }
 
-private extension UIColor {
+private nonisolated extension UIColor {
     /// Темнее на долю `amount`: тень под цветной заливкой
     func blended(_ amount: CGFloat) -> UIColor {
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
