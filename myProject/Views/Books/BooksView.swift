@@ -468,7 +468,8 @@ private struct AddBookCard: View {
                         }
                     }
                 Text("EPUB, FB2, TXT")
-                    .scaledFont(size: 13)
+                    .scaledFont(size: 15, design: AppDesign.isSketch ? .rounded : .default)
+                    .tracking(AppDesign.isSketch ? 0.3 : 0)
                     .foregroundColor(Color.brandMuted)
                     .lineLimit(1)
             }
@@ -500,7 +501,8 @@ struct BookCard: View {
                     .padding(.trailing, 5)
                 if !book.author.isEmpty {
                     Text(book.author)
-                        .scaledFont(size: 13)
+                        .scaledFont(size: 15, design: .rounded)
+                        .tracking(0.3)
                         .foregroundColor(Color.brandMuted)
                         .lineLimit(1)
                 }

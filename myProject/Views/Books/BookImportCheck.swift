@@ -148,11 +148,13 @@ struct BookEditionSheet: View {
                             .frame(width: 96)
                             .overlay { BookCover(data: previewCover, title: title) }
                             .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                            .sketchFrame(AppDesign.isSketch, radius: 6, shadow: NewStyle.peach, offset: 4)
+                            .padding(.trailing, AppDesign.isSketch ? 4 : 0)
                         VStack(alignment: .leading, spacing: 8) {
                             PhotosPicker(selection: $coverItem, matching: .images) {
                                 Label("Другая обложка", systemImage: "photo")
                                     .scaledFont(size: 15, weight: .semibold)
-                                    .foregroundStyle(Color.brandTint)
+                                    .foregroundStyle(AppDesign.isSketch ? Color.brandDark : Color.brandTint)
                                     .frame(minHeight: 44, alignment: .leading)
                             }
                             if cover != nil {
@@ -193,8 +195,7 @@ struct BookEditionSheet: View {
                 .scaledFont(size: 16)
                 .padding(.horizontal, 14)
                 .frame(height: 48)
-                .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+                .lxPlate(radius: 12)
         }
     }
 }
