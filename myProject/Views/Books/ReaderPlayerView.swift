@@ -95,7 +95,10 @@ struct ReaderPlayerView: View {
     /// Размытая обложка сверху, плавно уходит в фон
     private var background: some View {
         Group {
-            if let data = book.coverData, let image = CoverCache.image(data) {
+            if AppDesign.isSketch {
+                // «Скетч» плоский: без размытой обложки
+                Color.clear
+            } else if let data = book.coverData, let image = CoverCache.image(data) {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
@@ -127,7 +130,18 @@ struct ReaderPlayerView: View {
         .padding(.top, 8)
     }
 
+    @ViewBuilder
     private var cover: some View {
+        if AppDesign.isSketch {
+            NewCover(book: book, shadow: NewStyle.peach, offset: 6)
+                .frame(width: coverWidth)
+                .padding(.trailing, 6)
+        } else {
+            classicCover
+        }
+    }
+
+    private var classicCover: some View {
         Color.clear
             .aspectRatio(2.0 / 3.0, contentMode: .fit)
             .frame(width: coverWidth)
@@ -144,7 +158,7 @@ struct ReaderPlayerView: View {
                 .multilineTextAlignment(.center)
             if !book.author.isEmpty {
                 Text(book.author)
-                    .scaledFont(size: 15, weight: .semibold)
+                    .scaledFont(size: AppDesign.isSketch ? 17 : 15, weight: .semibold, design: AppDesign.isSketch ? .rounded : .default)
                     .foregroundColor(.brandDark)
             }
             Text(chapterLabel)
@@ -168,7 +182,7 @@ struct ReaderPlayerView: View {
                     seek(to: value)
                 }
             }
-            .tint(.brandTint)
+            .tint(AppDesign.isSketch ? Color.brandDark : Color.brandTint)
             HStack {
                 Text(clock(fraction * seconds))
                 Spacer()
@@ -204,13 +218,19 @@ struct ReaderPlayerView: View {
             control("backward.fill", label: "Абзац назад") { speech.previousParagraph() }
             Button(action: onToggle) {
                 ZStack {
-                    Circle().fill(Color.brandButton)
+                    if AppDesign.isSketch {
+                        Circle().fill(NewStyle.yellow)
+                            .overlay(Circle().stroke(NewStyle.outline, style: NewStyle.stroke))
+                            .background(Circle().fill(NewStyle.yellowShadow).offset(x: 3, y: 3))
+                    } else {
+                        Circle().fill(Color.brandButton)
+                    }
                     if speech.isPreparing {
-                        ProgressView().tint(.brandOnTint)
+                        ProgressView().tint(AppDesign.isSketch ? NewStyle.onYellow : .brandOnTint)
                     } else {
                         Image(systemName: speech.isPlaying ? "pause.fill" : "play.fill")
                             .scaledFont(size: 28)
-                            .foregroundColor(.brandOnTint)
+                            .foregroundColor(AppDesign.isSketch ? NewStyle.onYellow : .brandOnTint)
                     }
                 }
                 .frame(width: 68, height: 68)
@@ -273,6 +293,7 @@ struct ReaderPlayerView: View {
         .buttonStyle(.plain)
         .padding(.vertical, 12)
         .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.cardBackground))
+        .sketchFrame(AppDesign.isSketch, radius: 14, shadow: NewStyle.blue, offset: 3)
     }
 
     private func tool(_ icon: String, _ title: String) -> some View {
