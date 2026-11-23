@@ -8,7 +8,7 @@ struct BookTranslationSettingsView: View {
     @AppStorage(BookWordsAI.choiceKey) private var bookWordsTranslator = ""
 
     var body: some View {
-        Form {
+        LXForm {
             Group {
                 Section {
                     Toggle("Переводчик iOS для выделенных слов", isOn: $selectionSystemTranslator)

@@ -114,10 +114,14 @@ struct SettingsView: View {
     @ViewBuilder
     private var modeSection: some View {
         Section {
-            Picker("Как пользуюсь", selection: usage) {
-                ForEach(Usage.allCases) { Text($0.title).tag($0) }
+            if AppDesign.isSketch {
+                SketchTabs(items: Usage.allCases, title: \.title, selection: usage)
+            } else {
+                Picker("Как пользуюсь", selection: usage) {
+                    ForEach(Usage.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
             }
-            .pickerStyle(.segmented)
             if !readerOnly && !learningOnly {
                 Toggle("Спрашивать при запуске", isOn: $asksMode)
             }
@@ -202,13 +206,27 @@ struct SettingsView: View {
         Color(UIColor(red: CGFloat(hex >> 16 & 0xFF) / 255, green: CGFloat(hex >> 8 & 0xFF) / 255, blue: CGFloat(hex & 0xFF) / 255, alpha: 1))
     }
 
+    private struct ThemeOption: Hashable, Identifiable {
+        let id: String
+        let title: String
+        static let all = [ThemeOption(id: "system", title: "Системная"), ThemeOption(id: "light", title: "Светлая"), ThemeOption(id: "dark", title: "Тёмная")]
+    }
+
     private var themePicker: some View {
-        Picker("Тема оформления", selection: $selectedTheme) {
-            Text("Системная").tag("system")
-            Text("Светлая").tag("light")
-            Text("Тёмная").tag("dark")
+        Group {
+            if AppDesign.isSketch {
+                SketchTabs(items: ThemeOption.all, title: \.title,
+                           selection: Binding(get: { ThemeOption.all.first { $0.id == selectedTheme } ?? ThemeOption.all[0] },
+                                              set: { selectedTheme = $0.id }))
+            } else {
+                Picker("Тема оформления", selection: $selectedTheme) {
+                    Text("Системная").tag("system")
+                    Text("Светлая").tag("light")
+                    Text("Тёмная").tag("dark")
+                }
+                .pickerStyle(.segmented)
+            }
         }
-        .pickerStyle(.segmented)
     }
 
     private func swatchRow(_ title: String, selection: Binding<AppPalette.Accent>) -> some View {
@@ -235,10 +253,16 @@ struct SettingsView: View {
     /// Дизайн приложения: классический или новый стиль
     private var designSection: some View {
         Section {
-            Picker("Оформление приложения", selection: Binding(get: { design }, set: { SettingsReturn.isPending = true; SketchChrome.apply($0 == AppDesign.sketch.rawValue); design = $0 })) {
-                ForEach(AppDesign.allCases) { Text($0.title).tag($0.rawValue) }
+            let designBinding = Binding(get: { design }, set: { SettingsReturn.isPending = true; SketchChrome.apply($0 == AppDesign.sketch.rawValue); design = $0 })
+            if AppDesign.isSketch {
+                SketchTabs(items: AppDesign.allCases, title: \.title,
+                           selection: Binding(get: { AppDesign(rawValue: design) ?? .classic }, set: { designBinding.wrappedValue = $0.rawValue }))
+            } else {
+                Picker("Оформление приложения", selection: designBinding) {
+                    ForEach(AppDesign.allCases) { Text($0.title).tag($0.rawValue) }
+                }
+                .pickerStyle(.segmented)
             }
-            .pickerStyle(.segmented)
         } header: {
             Self.header("Оформление")
         } footer: {
@@ -260,7 +284,7 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            LXForm {
                 Group {
                     // В каждом режиме свой порядок: «Изучение» — личное и озвучка, «Чтение» — оформление и режим сверху
                     designSection
@@ -330,7 +354,7 @@ struct SettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Настройки")
-                        .scaledFont(size: 20, weight: .semibold, design: .serif)
+                        .scaledFont(size: AppDesign.isSketch ? 24 : 20, weight: .semibold, design: AppDesign.isSketch ? .rounded : .serif)
                         .foregroundStyle(Color.brandDark)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -338,7 +362,7 @@ struct SettingsView: View {
                         dismiss()
                     }
                     .fontWeight(.semibold)
-                    .foregroundStyle(Color.brandTint)
+                    .foregroundStyle(AppDesign.isSketch ? Color.brandDark : Color.brandTint)
                 }
             }
         }

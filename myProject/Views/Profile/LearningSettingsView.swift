@@ -10,7 +10,7 @@ struct LearningSettingsView: View {
     @AppStorage(SessionLength.key) private var sessionLength = SessionLength.defaultValue
 
     var body: some View {
-        Form {
+        LXForm {
             Section {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Направление перевода")

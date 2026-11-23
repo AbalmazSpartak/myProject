@@ -328,3 +328,59 @@ private nonisolated extension UIColor {
         return UIColor(red: r * (1 - amount), green: g * (1 - amount), blue: b * (1 - amount), alpha: a)
     }
 }
+
+/// Форма настроек: в «Скетче» — карточки с контуром вместо системного списка. Разделы (`Section`) разбираются как есть:
+/// заголовок над карточкой, строки с разделителями внутри, пояснение под ней. Классический вид — обычный `Form`
+struct LXForm<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        if AppDesign.isSketch {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    Group(sections: content) { sections in
+                        ForEach(sections) { section in
+                            sectionView(section)
+                        }
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
+            }
+            .background(Color.brandBackground)
+            .navigationLinkIndicatorVisibility(.visible)
+        } else {
+            Form { content }
+        }
+    }
+
+    private func sectionView(_ section: SectionConfiguration) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Group(subviews: section.header) { header in
+                if !header.isEmpty { header[0].padding(.horizontal, 4) }
+            }
+            Group(subviews: section.content) { rows in
+                if !rows.isEmpty {
+                    VStack(spacing: 0) {
+                        ForEach(rows.indices, id: \.self) { index in
+                            rows[index]
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 6)
+                                .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+                            if index < rows.count - 1 { LXDivider() }
+                        }
+                    }
+                    .lxPlate(radius: 18)
+                }
+            }
+            Group(subviews: section.footer) { footer in
+                if !footer.isEmpty {
+                    footer[0]
+                        .scaledFont(size: 13)
+                        .foregroundStyle(Color.brandMuted)
+                        .padding(.horizontal, 4)
+                }
+            }
+        }
+    }
+}

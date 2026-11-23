@@ -19,7 +19,7 @@ struct StudyDictionariesView: View {
     private var oxfordCount: Int { builtInWords.filter { $0.tags == StudyScope.oxfordTag }.count }
 
     var body: some View {
-        Form {
+        LXForm {
             Group {
                 Section {
                     LabeledContent("Слов для изучения", value: "\(allWords.filter { scope.includes($0) }.count)")

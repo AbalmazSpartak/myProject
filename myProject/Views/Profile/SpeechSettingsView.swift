@@ -143,7 +143,7 @@ struct SpeechSettingsView: View {
     }
 
     var body: some View {
-        Form {
+        LXForm {
             Group {
                 // Слова — только в «Изучении»; в «Чтении» их нет
                 if mode == .learning { voiceSection }

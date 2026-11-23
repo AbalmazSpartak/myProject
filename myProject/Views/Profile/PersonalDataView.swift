@@ -11,7 +11,7 @@ struct PersonalDataView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            LXForm {
                 Section {
                     HStack(spacing: 16) {
                         ZStack {
