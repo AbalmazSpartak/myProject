@@ -36,6 +36,9 @@ struct ContentView: View {
     @State private var widgetListens = false
     /// Файл книги из «Открыть в…»: ошибка импорта
     @State private var importError: String?
+    /// Идёт импорт файла из «Открыть в…» (у скана PDF — со строкой прогресса)
+    @State private var isOpeningFile = false
+    @State private var openProgress = BookImportProgress()
     /// Файл из «Открыть в…» похож на книгу из библиотеки — ждёт решения
     @State private var pendingImport: PendingBookImport?
     @State private var libraryForPrompt: [Book] = []
@@ -67,8 +70,12 @@ struct ContentView: View {
                 if let last = lastOpened, last.url == url, Date().timeIntervalSince(last.at) < 5 { return }
                 lastOpened = (url, Date())
                 Task {
+                    isOpeningFile = true
+                    openProgress.reset()
+                    defer { isOpeningFile = false }
                     do {
-                        let parsed = try await Task.detached(priority: .userInitiated) { try BookImport.parse(url) }.value
+                        let report = openProgress.report
+                        let parsed = try await Task.detached(priority: .userInitiated) { try BookImport.parse(url, progress: report) }.value
                         let books = (try? modelContext.fetch(FetchDescriptor<Book>())) ?? []
                         libraryForPrompt = books
                         if let book = await BookImportCheck.add(parsed, books: books, context: modelContext, pending: $pendingImport) {
@@ -101,6 +108,7 @@ struct ContentView: View {
         } message: {
             Text(SaveIssue.shared.message ?? "")
         }
+        .overlay { if isOpeningFile { BookImportProgressView(progress: openProgress) } }
         .lxAlert("Не получилось", isPresented: Binding(get: { importError != nil }, set: { if !$0 { importError = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {

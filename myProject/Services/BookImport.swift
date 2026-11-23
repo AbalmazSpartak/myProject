@@ -9,8 +9,8 @@ nonisolated enum BookImport {
         ["epub", "fb2", "zip", "txt", "text", "pdf"].contains(url.pathExtension.lowercased())
     }
 
-    static func parse(_ url: URL) throws -> ParsedBook {
-        url.pathExtension.lowercased() == "pdf" ? try PDFBook.parse(url) : try BookParser.parse(url)
+    static func parse(_ url: URL, progress: PDFBook.Progress? = nil) throws -> ParsedBook {
+        url.pathExtension.lowercased() == "pdf" ? try PDFBook.parse(url, progress: progress) : try BookParser.parse(url)
     }
 
     /// Понятное объяснение, почему файл не открылся

@@ -21,6 +21,7 @@ struct BooksView: View {
     @State private var isImporting = false
     @State private var isShowingCatalog = false
     @State private var isParsing = false
+    @State private var importProgress = BookImportProgress()
     @State private var errorMessage: String?
     /// Файл похож на книгу из библиотеки — ждёт решения человека
     @State private var pendingImport: PendingBookImport?
@@ -92,11 +93,7 @@ struct BooksView: View {
         .background(Color.brandBackground.ignoresSafeArea())
         .safeAreaInset(edge: .bottom) { AudiobookRecordingBar() }
         .overlay {
-            if isParsing {
-                ProgressView("Открываю книгу…")
-                    .padding(20)
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-            }
+            if isParsing { BookImportProgressView(progress: importProgress) }
         }
         .bookImportPrompts(pending: $pendingImport, books: books, onAdded: { openedBook = $0 }, onOpenExisting: { openedBook = $0 })
         .navigationDestination(item: $openedBook) { book in
@@ -337,9 +334,11 @@ struct BooksView: View {
 
     private func importBook(_ url: URL) async {
         isParsing = true
+        importProgress.reset()
         defer { isParsing = false }
         do {
-            let parsed = try await Task.detached(priority: .userInitiated) { try BookImport.parse(url) }.value
+            let report = importProgress.report
+            let parsed = try await Task.detached(priority: .userInitiated) { try BookImport.parse(url, progress: report) }.value
             // Дубль или другое издание — спросим; новая книга добавляется сразу
             if let book = await BookImportCheck.add(parsed, books: books, context: modelContext, pending: $pendingImport) {
                 openedBook = book

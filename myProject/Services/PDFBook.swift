@@ -12,7 +12,10 @@ nonisolated enum PDFBook {
         case locked, noText
     }
 
-    static func parse(_ url: URL) throws -> ParsedBook {
+    /// Ход распознавания скана: сколько страниц готово и сколько всего (для строки прогресса)
+    typealias Progress = @Sendable (_ page: Int, _ total: Int) -> Void
+
+    static func parse(_ url: URL, progress: Progress? = nil) throws -> ParsedBook {
         let isAccessing = url.startAccessingSecurityScopedResource()
         defer { if isAccessing { url.stopAccessingSecurityScopedResource() } }
         guard let document = PDFDocument(url: url) else { throw BookParser.ParseError.unreadable }
@@ -25,7 +28,7 @@ nonisolated enum PDFBook {
 
         var pageTexts = (0..<document.pageCount).map { document.page(at: $0)?.string ?? "" }
         // Скан без текстового слоя: страницы — картинки, текст распознаёт Vision на устройстве
-        if !pageTexts.contains(where: { $0.contains(where: \.isLetter) }) { pageTexts = recognizedPages(document) }
+        if !pageTexts.contains(where: { $0.contains(where: \.isLetter) }) { pageTexts = recognizedPages(document, progress: progress) }
         guard pageTexts.contains(where: { $0.contains(where: \.isLetter) }) else { throw Failure.noText }
 
         var chapters = outlineChapters(document, pageTexts: pageTexts)
@@ -45,9 +48,13 @@ nonisolated enum PDFBook {
     }
 
     /// Распознавание текста (OCR) у скана: каждая страница рисуется в картинку, Vision читает строки
-    private static func recognizedPages(_ document: PDFDocument) -> [String] {
-        (0..<document.pageCount).map { index in
-            autoreleasepool { document.page(at: index).map(recognizedText) ?? "" }
+    private static func recognizedPages(_ document: PDFDocument, progress: Progress?) -> [String] {
+        let total = document.pageCount
+        progress?(0, total)
+        return (0..<total).map { index in
+            let text = autoreleasepool { document.page(at: index).map(recognizedText) ?? "" }
+            progress?(index + 1, total)
+            return text
         }
     }
 
