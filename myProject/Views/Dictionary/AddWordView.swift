@@ -171,6 +171,7 @@ struct AddWordView: View {
             LXSectionLabel(text: "Уже есть")
             ForEach(existingMatches.prefix(3)) { word in
                 HStack(spacing: 8) {
+                    Button { wordToOpen = word } label: {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("\(word.english)\(word.partOfSpeech.isEmpty ? "" : " (\(word.partOfSpeech))") — \(word.russian)")
                             .scaledFont(size: 15, weight: .semibold)
@@ -179,7 +180,11 @@ struct AddWordView: View {
                             .scaledFont(size: 12)
                             .foregroundStyle(Color.brandMuted)
                     }
-                    Spacer()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Открыть слово для правки")
                     matchAction(for: word)
                 }
             }
@@ -213,9 +218,10 @@ struct AddWordView: View {
                     .foregroundStyle(Color.brandTint)
             }
         } else {
-            Button("Открыть") { wordToOpen = word }
-                .scaledFont(size: 14, weight: .bold)
-                .foregroundStyle(Color.brandTint)
+            // Слово уже в общем словаре — добавлять нечего; открыть его можно нажатием на строку
+            Text("уже в словаре")
+                .scaledFont(size: 12, weight: .medium)
+                .foregroundStyle(Color.brandMuted)
         }
     }
 
