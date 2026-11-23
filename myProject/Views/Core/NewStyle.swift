@@ -277,6 +277,7 @@ enum SketchChrome {
         // Заголовки экранов (навигация): PT Sans Bold в «Скетче», системные иначе
         UINavigationBar.appearance().titleTextAttributes = sketch
             ? [.font: UIFont(name: "PTSans-Bold", size: 17) ?? UIFont.boldSystemFont(ofSize: 17)] : nil
+        applySegmented(sketch)
         let tabBar = UITabBar.appearance()
         guard sketch else {
             tabBar.standardAppearance = UITabBarAppearance()
@@ -299,6 +300,40 @@ enum SketchChrome {
         }
         tabBar.standardAppearance = appearance
         tabBar.scrollEdgeAppearance = appearance
+    }
+
+    /// Сегментные переключатели: плашки с контуром, выбранный сегмент жёлтый, надписи PT Sans
+    @MainActor
+    private static func applySegmented(_ sketch: Bool) {
+        let control = UISegmentedControl.appearance()
+        guard sketch else {
+            for state in [UIControl.State.normal, .selected] {
+                control.setBackgroundImage(nil, for: state, barMetrics: .default)
+                control.setTitleTextAttributes(nil, for: state)
+            }
+            control.setDividerImage(nil, forLeftSegmentState: .normal, rightSegmentState: .normal, barMetrics: .default)
+            control.selectedSegmentTintColor = nil
+            return
+        }
+        func plate(fill: UIColor, stroke: UIColor, width: CGFloat) -> UIImage {
+            let size = CGSize(width: 28, height: 32)
+            return UIGraphicsImageRenderer(size: size).image { _ in
+                let path = UIBezierPath(roundedRect: CGRect(origin: .zero, size: size).insetBy(dx: width / 2, dy: width / 2), cornerRadius: 10)
+                fill.setFill(); path.fill()
+                stroke.setStroke(); path.lineWidth = width; path.stroke()
+            }.resizableImage(withCapInsets: UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12), resizingMode: .stretch)
+        }
+        let ink = UIColor(NewStyle.outline)
+        control.setBackgroundImage(plate(fill: UIColor(Color.cardBackground), stroke: ink.withAlphaComponent(0.35), width: 1), for: .normal, barMetrics: .default)
+        let selected = plate(fill: UIColor(NewStyle.yellow), stroke: ink, width: 1.5)
+        control.setBackgroundImage(selected, for: .selected, barMetrics: .default)
+        control.setBackgroundImage(selected, for: [.selected, .highlighted], barMetrics: .default)
+        control.setDividerImage(UIImage(), forLeftSegmentState: .normal, rightSegmentState: .normal, barMetrics: .default)
+        control.setDividerImage(UIImage(), forLeftSegmentState: .selected, rightSegmentState: .normal, barMetrics: .default)
+        control.setDividerImage(UIImage(), forLeftSegmentState: .normal, rightSegmentState: .selected, barMetrics: .default)
+        let font = UIFont(name: "PTSans-Bold", size: 14) ?? .systemFont(ofSize: 14, weight: .semibold)
+        control.setTitleTextAttributes([.font: font, .foregroundColor: ink], for: .normal)
+        control.setTitleTextAttributes([.font: font, .foregroundColor: UIColor(NewStyle.onYellow)], for: .selected)
     }
 
     /// Жёлтая пилюля 58×32 с контуром и тёмно-жёлтой тенью под иконкой выбранной вкладки
