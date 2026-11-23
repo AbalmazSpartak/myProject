@@ -872,7 +872,7 @@ struct BookReaderView: View {
                     } else {
                         Image(systemName: speech.isPlaying ? "pause.fill" : "play.fill")
                             .scaledFont(size: 18)
-                            .foregroundStyle(AppDesign.isSketch ? Color.black : Color.brandOnButton)
+                            .foregroundStyle(AppDesign.isSketch ? NewStyle.onYellow : Color.brandOnButton)
                     }
                 }
                 .frame(width: 44, height: 44)

@@ -63,7 +63,7 @@ struct ProfileAccountTab: View {
                         Button { openedBook = book } label: {
                             Text("Продолжить")
                                 .scaledFont(size: 14, weight: .semibold)
-                                .foregroundColor(AppDesign.isSketch ? .black : .brandOnTint)
+                                .foregroundColor(AppDesign.isSketch ? NewStyle.onYellow : .brandOnTint)
                                 .padding(.horizontal, 18).frame(height: 38)
                                 .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(AppDesign.isSketch ? NewStyle.yellow : Color.brandButton))
                                 .sketchFrame(AppDesign.isSketch, radius: 12, shadow: NewStyle.yellowShadow, offset: 3)

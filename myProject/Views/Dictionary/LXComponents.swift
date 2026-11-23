@@ -84,7 +84,7 @@ struct LXChipLabel: View {
             }
         }
         .scaledFont(size: 13, weight: isOn ? .semibold : .medium)
-        .foregroundStyle(isOn ? (AppDesign.isSketch ? Color.black : Color.brandOnSoft) : Color.brandDark)
+        .foregroundStyle(isOn ? (AppDesign.isSketch ? NewStyle.onYellow : Color.brandOnSoft) : Color.brandDark)
         .padding(.horizontal, 14)
         .frame(height: 36)
         .background(Capsule().fill(AppDesign.isSketch ? (isOn ? NewStyle.yellow : Color.cardBackground) : (isOn ? Color.brandAccent : Color.cardBackground)))
@@ -361,7 +361,7 @@ struct LXButton: View {
         if !isEnabled, style == .primary || style == .soft { return .brandMuted }
         if AppDesign.isSketch, isEnabled {
             switch style {
-            case .primary: return .black
+            case .primary: return NewStyle.onYellow
             case .soft, .outline: return .brandDark
             case .text: break
             }

@@ -2,19 +2,38 @@ import SwiftUI
 
 /// Детали стиля «Скетч»: тонкий контур «от руки», цветная смещённая тень, пастельные круги, жёлтая главная кнопка
 enum NewStyle {
-    static let yellow = Color(red: 0.922, green: 0.749, blue: 0.278)
-    static let blue = Color(red: 0.447, green: 0.686, blue: 0.890)
-    static let peach = Color(red: 0.937, green: 0.710, blue: 0.620)
-    static let outline = Color.brandDark
-    static let lineWidth: CGFloat = 1.5
-    static let yellowShadow = Color(red: 0.710, green: 0.541, blue: 0.118)
+    /// Цвет пары «день / ночь»
+    private static func themed(_ light: UInt32, _ dark: UInt32) -> Color {
+        func ui(_ h: UInt32) -> UIColor {
+            UIColor(red: CGFloat(h >> 16 & 0xFF) / 255, green: CGFloat(h >> 8 & 0xFF) / 255, blue: CGFloat(h & 0xFF) / 255, alpha: 1)
+        }
+        return Color(UIColor { $0.userInterfaceStyle == .dark ? ui(dark) : ui(light) })
+    }
 
-    /// Пастельные плашки: кремовая, голубая, розовая, зелёная
+    /// Выбран ли в «Цветах приложения» свой цвет кнопок: тогда главные кнопки «Скетча» берут его, а не жёлтый
+    private static var hasCustomButton: Bool { UserDefaults.standard.string(forKey: AppPalette.buttonKey) != nil }
+
+    /// Главная заливка: жёлтая, пока не выбран цвет кнопок
+    static var yellow: Color { hasCustomButton ? Color.brandButton : themed(0xEBBF47, 0xE0B040) }
+    /// Текст на главной заливке
+    static var onYellow: Color { hasCustomButton ? Color.brandOnButton : Color.black }
+    /// Смещённая тень главной заливки
+    static var yellowShadow: Color {
+        hasCustomButton ? Color(UIColor { trait in
+            UIColor(Color.brandButton).resolvedColor(with: trait).blended(0.35)
+        }) : themed(0xB58A1E, 0x8A6A14)
+    }
+    static let blue = themed(0x72AFE3, 0x2F5278)
+    static let peach = themed(0xEFB59E, 0x7A4A3A)
+    static var outline: Color { Color.brandDark }
+    static let lineWidth: CGFloat = 1.5
+
+    /// Пастельные плашки: кремовая, голубая, розовая, зелёная (ночью — тёмные, чтобы светлый текст читался)
     static let pastels: [Color] = [
-        Color(red: 1.0, green: 0.945, blue: 0.788),
-        Color(red: 0.878, green: 0.929, blue: 0.980),
-        Color(red: 0.941, green: 0.882, blue: 0.925),
-        Color(red: 0.886, green: 0.937, blue: 0.863)
+        themed(0xFFF1C9, 0x4A4326),
+        themed(0xE0EDFA, 0x253A4D),
+        themed(0xF0E1EC, 0x42303B),
+        themed(0xE2EFDC, 0x2E3F2A)
     ]
 
     /// Штрих линии: круглые концы, как у маркера
@@ -126,7 +145,7 @@ struct NewButtonLabel: View {
             Text(title)
         }
         .scaledFont(size: 16, weight: .semibold)
-        .foregroundStyle(isMain ? Color.black : Color.brandDark)
+        .foregroundStyle(isMain ? NewStyle.onYellow : Color.brandDark)
         .frame(maxWidth: .infinity, minHeight: 50)
         .newCard(radius: 14, fill: isMain ? NewStyle.yellow : Color.cardBackground, shadow: isMain ? NewStyle.yellowShadow : NewStyle.blue, offset: 3)
     }
@@ -162,7 +181,7 @@ struct SketchTabs<Item: Hashable & Identifiable>: View {
                 Button { withAnimation { selection = item } } label: {
                     Text(item[keyPath: title])
                         .scaledFont(size: 16, weight: .semibold)
-                        .foregroundStyle(isOn ? Color.black : Color.brandDark)
+                        .foregroundStyle(isOn ? NewStyle.onYellow : Color.brandDark)
                         .frame(maxWidth: .infinity, minHeight: 44)
                         .background(RoughRoundedRect(radius: 22, seed: 4).fill(isOn ? NewStyle.yellow : Color.cardBackground))
                         .sketchFrame(true, radius: 22, shadow: isOn ? NewStyle.yellowShadow : NewStyle.blue.opacity(0), offset: 3)
@@ -288,5 +307,14 @@ enum SketchChrome {
             body.lineWidth = 1.5
             body.stroke()
         }
+    }
+}
+
+private extension UIColor {
+    /// Темнее на долю `amount`: тень под цветной заливкой
+    func blended(_ amount: CGFloat) -> UIColor {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        getRed(&r, green: &g, blue: &b, alpha: &a)
+        return UIColor(red: r * (1 - amount), green: g * (1 - amount), blue: b * (1 - amount), alpha: a)
     }
 }

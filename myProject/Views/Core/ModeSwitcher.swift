@@ -46,7 +46,7 @@ struct ModeSwitcher: View {
         } label: {
             Text(title)
                 .scaledFont(size: 14, weight: isOn ? .semibold : .medium)
-                .foregroundColor(isSketch ? (isOn ? .black : .brandMuted) : (isOn ? .brandTint : .brandMuted))
+                .foregroundColor(isSketch ? (isOn ? NewStyle.onYellow : .brandMuted) : (isOn ? .brandTint : .brandMuted))
                 .frame(maxWidth: .infinity, minHeight: isSketch ? 38 : 36)
                 .background {
                     if isOn && isSketch {

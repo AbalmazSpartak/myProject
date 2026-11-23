@@ -163,7 +163,7 @@ struct ReaderMenuSheet: View {
         } label: {
             Text(title)
                 .scaledFont(size: 13, weight: isOn ? .semibold : .medium)
-                .foregroundStyle(isOn ? (AppDesign.isSketch ? Color.black : Color.brandTint) : Color.brandMuted)
+                .foregroundStyle(isOn ? (AppDesign.isSketch ? NewStyle.onYellow : Color.brandTint) : Color.brandMuted)
                 .frame(maxWidth: .infinity, minHeight: 42)
                 .background(isOn && AppDesign.isSketch ? NewStyle.yellow : isOn ? Color.cardBackground : Color.clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
