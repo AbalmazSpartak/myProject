@@ -193,6 +193,35 @@ struct SketchProgress: View {
 
 extension View {
     /// Плашка блока: в «Скетче» — контур «от руки» с синей смещённой тенью, иначе тонкая рамка
+    func lxFill(radius: CGFloat = 14) -> some View {
+        Group {
+            if AppDesign.isSketch {
+                background(Color.cardBackground, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+                    .sketchFrame(true, radius: radius, shadow: NewStyle.blue, offset: 3)
+            } else {
+                background(Color.brandFill, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+            }
+        }
+    }
+
+    /// Выбираемая плашка (переключатель из двух-трёх): в «Скетче» выбранная — жёлтая с контуром
+    func lxSelectable(isOn: Bool, radius: CGFloat = 14) -> some View {
+        Group {
+            if AppDesign.isSketch {
+                background(isOn ? NewStyle.yellow : Color.cardBackground, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+                    .sketchFrame(true, radius: radius, shadow: isOn ? NewStyle.yellowShadow : NewStyle.blue, offset: 3)
+            } else {
+                background(isOn ? Color.brandAccent : Color.cardBackground, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).stroke(isOn ? Color.clear : Color.brandBorder, lineWidth: 1))
+            }
+        }
+    }
+
+    /// Крупный заголовок экрана: Neucha в «Скетче», иначе шрифт с засечками
+    func lxScreenTitle() -> some View {
+        scaledFont(size: AppDesign.isSketch ? 38 : 32, weight: .medium, design: AppDesign.isSketch ? .rounded : .serif)
+    }
+
     func lxPlate(radius: CGFloat = 18) -> some View {
         background(Color.cardBackground, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).stroke(AppDesign.isSketch ? Color.clear : Color.brandBorder, lineWidth: 1))

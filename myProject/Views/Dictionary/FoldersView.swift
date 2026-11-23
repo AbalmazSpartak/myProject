@@ -55,7 +55,7 @@ struct FoldersView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     Text("Мои списки")
-                        .scaledFont(size: 32, weight: .medium, design: .serif)
+                        .lxScreenTitle()
                         .foregroundStyle(Color.brandDark)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
@@ -198,9 +198,7 @@ struct FoldersView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
-                    .background(filter == item ? Color.brandAccent : Color.cardBackground,
-                                in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+                    .lxSelectable(isOn: filter == item)
                 }
                 .buttonStyle(.plain)
                 .disabled(count == 0)

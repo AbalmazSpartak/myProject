@@ -23,7 +23,7 @@ struct TopicsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 Text("Темы")
-                    .scaledFont(size: 32, weight: .medium, design: .serif)
+                    .lxScreenTitle()
                     .foregroundStyle(Color.brandDark)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
@@ -79,7 +79,7 @@ struct TopicsView: View {
         .foregroundStyle(Color.brandMuted)
         .padding(.horizontal, 14)
         .frame(height: 48)
-        .background(Color.brandFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .lxFill(radius: 14)
     }
 
     private func row(_ topic: Category) -> some View {

@@ -260,10 +260,7 @@ struct WordDetailView: View {
                         .foregroundStyle(isOn ? Color.brandOnSoft : Color.brandDark)
                         .frame(maxWidth: .infinity)
                         .frame(height: 48)
-                        .background(isOn ? Color.brandAccent : Color.cardBackground,
-                                    in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .stroke(isOn ? Color.clear : Color.brandBorder, lineWidth: 1))
+                        .lxSelectable(isOn: isOn)
                     }
                     .buttonStyle(.plain)
                     .accessibilityAddTraits(isOn ? .isSelected : [])

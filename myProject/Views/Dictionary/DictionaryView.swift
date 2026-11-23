@@ -318,7 +318,7 @@ struct DictionaryView: View {
                 LXBackButton(label: backTitle) { dismiss() }
             }
             Text("Словарь")
-                .scaledFont(size: 32, weight: .medium, design: .serif)
+                .lxScreenTitle()
                 .foregroundStyle(Color.brandDark)
             Spacer(minLength: 8)
             Button { tableMode.toggle() } label: {
@@ -374,7 +374,7 @@ struct DictionaryView: View {
                 .foregroundStyle(Color.brandMuted)
                 .padding(.horizontal, 14)
                 .frame(height: 48)
-                .background(Color.brandFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .lxFill(radius: 14)
             }
             .buttonStyle(.plain)
             .padding(.horizontal, 16)

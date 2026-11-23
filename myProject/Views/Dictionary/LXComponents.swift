@@ -84,11 +84,12 @@ struct LXChipLabel: View {
             }
         }
         .scaledFont(size: 13, weight: isOn ? .semibold : .medium)
-        .foregroundStyle(isOn ? Color.brandOnSoft : Color.brandDark)
+        .foregroundStyle(isOn ? (AppDesign.isSketch ? Color.black : Color.brandOnSoft) : Color.brandDark)
         .padding(.horizontal, 14)
         .frame(height: 36)
-        .background(Capsule().fill(isOn ? Color.brandAccent : Color.cardBackground))
-        .overlay(Capsule().stroke(isOn ? Color.clear : Color.brandBorder, lineWidth: 1))
+        .background(Capsule().fill(AppDesign.isSketch ? (isOn ? NewStyle.yellow : Color.cardBackground) : (isOn ? Color.brandAccent : Color.cardBackground)))
+        .overlay(Capsule().stroke(isOn || AppDesign.isSketch ? Color.clear : Color.brandBorder, lineWidth: 1))
+        .sketchFrame(AppDesign.isSketch, radius: 18, shadow: isOn ? NewStyle.yellowShadow : NewStyle.blue.opacity(0), offset: 2)
     }
 }
 

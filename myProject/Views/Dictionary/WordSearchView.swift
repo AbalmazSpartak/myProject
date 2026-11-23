@@ -120,7 +120,7 @@ struct WordSearchView: View {
         .foregroundStyle(Color.brandMuted)
         .padding(.horizontal, 14)
         .frame(height: 48)
-        .background(Color.brandFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .lxFill(radius: 14)
     }
 
     @ViewBuilder
