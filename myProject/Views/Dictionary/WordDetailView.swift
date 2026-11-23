@@ -31,7 +31,7 @@ struct WordDetailView: View {
                 HStack(spacing: 0) {
                     Button { isEditing = true } label: { LXIconLabel(systemImage: "pencil", label: "Изменить слово") }
                         .buttonStyle(.plain)
-                    Menu { moreMenu } label: { LXIconLabel(systemImage: "ellipsis", label: "Ещё") }
+                    LXMenu { moreMenu } label: { LXIconLabel(systemImage: "ellipsis", label: "Ещё") }
                 }
             }
             ScrollView {

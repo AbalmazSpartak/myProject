@@ -183,7 +183,7 @@ struct WordSearchView: View {
                         .padding(.bottom, 4)
                 }
             }
-            .contextMenu {
+            .lxContextMenu {
                 Button { copyCSV(of: word) } label: { Label("Скопировать CSV-строку", systemImage: "doc.on.doc") }
             }
             #endif

@@ -59,7 +59,7 @@ struct BookBookmarksView: View {
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .contextMenu {
+                        .lxContextMenu {
                             Button(role: .destructive) { onDelete(bookmark) } label: {
                                 Label("Удалить", systemImage: "trash")
                             }

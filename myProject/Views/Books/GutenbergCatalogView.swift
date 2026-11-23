@@ -105,10 +105,8 @@ struct GutenbergCatalogView: View {
                                 .font(.footnote)
                                 .foregroundStyle(Color.brandMuted)
                             Spacer()
-                            Menu {
-                                Picker("Сортировка", selection: $audioSort) {
-                                    ForEach(AudioSort.allCases) { Label($0.title, systemImage: $0.icon).tag($0) }
-                                }
+                            LXMenu {
+                                LXMenuPicker(title: "Сортировка", selection: $audioSort, options: AudioSort.allCases) { Label($0.title, systemImage: $0.icon) }
                             } label: {
                                 Label(audioSort.title, systemImage: "arrow.up.arrow.down")
                                     .font(.footnote.weight(.semibold))

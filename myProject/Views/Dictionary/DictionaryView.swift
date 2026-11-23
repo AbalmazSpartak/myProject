@@ -326,7 +326,7 @@ struct DictionaryView: View {
                             label: tableMode ? "Режим ленты" : "Режим таблицы")
             }
             .buttonStyle(.plain)
-            Menu {
+            LXMenu {
                 Button { isShowingAddWord = true } label: { Label("Добавить слово", systemImage: "plus") }
                 Button { isShowingScan = true } label: { Label("Слова из текста", systemImage: "text.viewfinder") }
             } label: {
@@ -343,7 +343,7 @@ struct DictionaryView: View {
         VStack(spacing: 0) {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    Menu {
+                    LXMenu {
                         quickPickMenu
                     } label: {
                         LXChipLabel(title: filterTitle, detail: "· \(totalCount.formatted())", isOn: true, chevron: true)
@@ -434,7 +434,7 @@ struct DictionaryView: View {
 
     /// Уровень слов: A1–C2 или один
     private var levelMenu: some View {
-        Menu {
+        LXMenu {
             levelButton("Все уровни", level: nil)
             ForEach(CEFRLevel.allCases, id: \.rawValue) { level in
                 levelButton(level.rawValue, level: level.rawValue)
@@ -484,7 +484,7 @@ struct DictionaryView: View {
                         if tableMode { LXTableRow(word: word) } else { LXWordRow(word: word) }
                     }
                     .onTapGesture { wordToShow = word }
-                    .contextMenu {
+                    .lxContextMenu {
                         Button { wordToEdit = word } label: { Label("Изменить", systemImage: "pencil") }
                         // Открыт свой словарь — слово можно убрать из него, не удаляя совсем
                         if case .list(let list) = filter {

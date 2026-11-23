@@ -75,7 +75,7 @@ struct EditWordView: View {
                     levelPicker
                         .padding(.top, 4)
                     LXField(label: "Тема или папка") {
-                        Menu {
+                        LXMenu {
                             Button("Без темы") { word.category = nil }
                             ForEach(categories) { category in
                                 Button(category.name) { word.category = category }

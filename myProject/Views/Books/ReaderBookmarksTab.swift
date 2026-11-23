@@ -177,7 +177,7 @@ struct ReaderBookmarksTab: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .contextMenu {
+        .lxContextMenu {
             Button(role: .destructive) { remove(entry) } label: {
                 Label("Удалить закладку", systemImage: "trash")
             }
@@ -241,7 +241,7 @@ struct ReaderBookmarksTab: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .contextMenu {
+        .lxContextMenu {
             Button {
                 editText = entry.note.note
                 editingNote = entry

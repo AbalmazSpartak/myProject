@@ -26,7 +26,7 @@ struct OverviewSettingsView: View {
                     .deleteDisabled(layout.focusSections.count == 1)
 
                     if layout.focusSections.count < OverviewLayout.maxFocus {
-                        Menu {
+                        LXMenu {
                             ForEach(OverviewLayout.choices.filter { !layout.focusSections.contains($0) }, id: \.self) { section in
                                 Button {
                                     withAnimation { layout.focusSections.append(section) }
@@ -58,7 +58,7 @@ struct OverviewSettingsView: View {
                     .onDelete { layout.quickAccess.remove(atOffsets: $0) }
 
                     if !available.isEmpty {
-                        Menu {
+                        LXMenu {
                             ForEach(available, id: \.self) { section in
                                 Button {
                                     withAnimation { layout.quickAccess.append(section) }

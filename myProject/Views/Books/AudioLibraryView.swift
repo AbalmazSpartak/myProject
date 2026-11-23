@@ -102,10 +102,8 @@ struct AudioLibraryView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .cardPlate(radius: 12)
-            Menu {
-                Picker("Порядок", selection: $sort) {
-                    ForEach(AudioLibrarySort.allCases) { Text($0.title).tag($0) }
-                }
+            LXMenu {
+                LXMenuPicker(title: "Порядок", selection: $sort, options: AudioLibrarySort.allCases) { Text($0.title) }
             } label: {
                 Image(systemName: "arrow.up.arrow.down")
                     .scaledFont(size: 16)

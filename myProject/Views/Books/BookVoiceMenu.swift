@@ -135,7 +135,7 @@ struct BookVoiceMenu: View {
     }
 
     var body: some View {
-        Menu {
+        LXMenu {
             Button { onNeural(defaultChoice) } label: {
                 checked("Голос по умолчанию · \(NeuralVoice.shared.bookVoiceTitle(language))", !isLive)
             }

@@ -488,7 +488,7 @@ struct BookReaderView: View {
                     .foregroundColor(style.text)
             }
             .accessibilityLabel("Оформление")
-            Menu {
+            LXMenu {
                 Button { isShowingPlayer = true } label: {
                     Label("Плеер", systemImage: "headphones")
                 }
@@ -513,14 +513,22 @@ struct BookReaderView: View {
                     }
                 }
                 translationMenu
-                Picker(selection: $speechSpeed) {
-                    ForEach(ReaderSpeech.speeds, id: \.self) { speed in
-                        Text(speed == 1 ? "Обычная" : "\(speed.formatted(.number.locale(Locale(identifier: "ru_RU"))))×").tag(speed)
+                if AppDesign.isSketch {
+                    Section("Скорость чтения вслух") {
+                        LXMenuPicker(title: "Скорость чтения вслух", selection: $speechSpeed, options: ReaderSpeech.speeds) { speed in
+                            Text(speed == 1 ? "Обычная" : "\(speed.formatted(.number.locale(Locale(identifier: "ru_RU"))))×")
+                        }
                     }
-                } label: {
-                    Label("Скорость чтения вслух", systemImage: "speedometer")
+                } else {
+                    Picker(selection: $speechSpeed) {
+                        ForEach(ReaderSpeech.speeds, id: \.self) { speed in
+                            Text(speed == 1 ? "Обычная" : "\(speed.formatted(.number.locale(Locale(identifier: "ru_RU"))))×").tag(speed)
+                        }
+                    } label: {
+                        Label("Скорость чтения вслух", systemImage: "speedometer")
+                    }
+                    .pickerStyle(.menu)
                 }
-                .pickerStyle(.menu)
             } label: {
                 Image(systemName: "ellipsis.circle")
                     .scaledFont(size: 22)
@@ -1575,7 +1583,7 @@ private struct ReaderParagraph: View {
                     .lineSpacing(lineSpacing * 0.8)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(Rectangle())
-                    .contextMenu { ShiftTranslationMenu(onShift: onShiftTranslation) }
+                    .lxContextMenu { ShiftTranslationMenu(onShift: onShiftTranslation) }
             }
         }
     }
@@ -1658,7 +1666,7 @@ struct PageTranslationView: View {
                                     .italic(item.translation == nil)
                                 Spacer(minLength: 4)
                                 if item.translation != nil {
-                                    Menu {
+                                    LXMenu {
                                         ShiftTranslationMenu { onShift(item.id, $0) }
                                     } label: {
                                         Image(systemName: "arrow.up.arrow.down.circle")

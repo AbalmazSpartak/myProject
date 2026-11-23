@@ -124,7 +124,7 @@ struct TrainingFilterMenu: View {
     }
 
     private var menu: some View {
-        Menu {
+        LXMenu {
             if includesDue {
                 Button("⏰ На повторение (FSRS)") { onSelect(.due) }
             }

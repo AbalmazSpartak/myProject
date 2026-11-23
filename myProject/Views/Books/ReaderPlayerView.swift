@@ -270,19 +270,13 @@ struct ReaderPlayerView: View {
 
     private var tools: some View {
         HStack(spacing: 0) {
-            Menu {
-                Picker("Таймер сна", selection: Binding(get: { sleep }, set: { onSleep($0) })) {
-                    ForEach(SleepTimer.options, id: \.self) { Text($0.title).tag($0) }
-                }
+            LXMenu {
+                LXMenuPicker(title: "Таймер сна", selection: Binding(get: { sleep }, set: { onSleep($0) }), options: SleepTimer.options) { Text($0.title) }
             } label: {
                 tool("moon.zzz", sleepTitle)
             }
-            Menu {
-                Picker("Скорость", selection: $speed) {
-                    ForEach(ReaderSpeech.speeds, id: \.self) { value in
-                        Text(speedTitle(value)).tag(value)
-                    }
-                }
+            LXMenu {
+                LXMenuPicker(title: "Скорость", selection: $speed, options: ReaderSpeech.speeds) { Text(speedTitle($0)) }
             } label: {
                 tool("speedometer", speedTitle(speed))
             }

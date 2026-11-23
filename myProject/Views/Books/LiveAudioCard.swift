@@ -110,7 +110,7 @@ struct LiveAudioCard: View {
             .scaledFont(size: 13)
             .foregroundStyle(Color.brandMuted)
         if found.count > 1 {
-            Menu {
+            LXMenu {
                 ForEach(Array(found.enumerated()), id: \.element.id) { index, item in
                     Button("\(item.readerText.capitalizedFirst) · \(LibriVox.durationText(item.seconds))") { choice = index }
                 }

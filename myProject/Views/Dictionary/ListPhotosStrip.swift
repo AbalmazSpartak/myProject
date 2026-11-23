@@ -27,7 +27,7 @@ struct ListPhotosStrip: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
                         .buttonStyle(.plain)
-                        .contextMenu {
+                        .lxContextMenu {
                             Button("Удалить фото", systemImage: "trash", role: .destructive) { delete(at: index) }
                         }
                         .accessibilityLabel("Фото скана \(index + 1)")
