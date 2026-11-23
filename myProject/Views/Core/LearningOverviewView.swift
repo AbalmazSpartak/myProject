@@ -30,7 +30,7 @@ struct LearningOverviewView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Обзор")
-                    .scaledFont(size: 34, weight: .semibold, design: .serif)
+                    .lxScreenTitle()
                     .foregroundColor(.brandDark)
                     .padding(.bottom, 4)
                 repeatNow
@@ -65,8 +65,7 @@ struct LearningOverviewView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+        .lxPlate(radius: 20)
     }
 }
 
@@ -85,9 +84,10 @@ struct LearningSectionRow: View {
             HStack(spacing: 14) {
                 Image(systemName: icon)
                     .scaledFont(size: 24)
-                    .foregroundColor(.brandTint)
+                    .foregroundColor(AppDesign.isSketch ? .brandDark : .brandTint)
                     .frame(width: 56, height: 56)
-                    .background(Color.brandAccent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .background(AppDesign.isSketch ? NewStyle.pastels[1] : Color.brandAccent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .sketchFrame(AppDesign.isSketch, radius: 14, shadow: NewStyle.yellow, offset: 2)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title)
                         .scaledFont(size: 17, weight: .semibold)
@@ -104,8 +104,7 @@ struct LearningSectionRow: View {
                     .foregroundColor(.brandMuted)
             }
             .padding(16)
-            .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+            .lxPlate(radius: 16)
         }
         .buttonStyle(.plain)
     }
@@ -128,7 +127,7 @@ struct PracticeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Практика")
-                    .scaledFont(size: 34, weight: .semibold, design: .serif)
+                    .lxScreenTitle()
                     .foregroundColor(.brandDark)
                     .padding(.bottom, 4)
                 ForEach(items, id: \.title) { item in

@@ -54,9 +54,8 @@ struct TrainingCard<Content: View>: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
-        .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 6)
+        .lxPlate(radius: 24)
+        .shadow(color: Color.black.opacity(AppDesign.isSketch ? 0 : 0.05), radius: 12, x: 0, y: 6)
     }
 }
 
@@ -91,7 +90,8 @@ struct TrainingQuestion: View {
                     .scaledFont(size: 22)
                     .foregroundStyle(Color.brandOnSoft)
                     .frame(width: 52, height: 52)
-                    .background(Circle().fill(Color.brandAccent))
+                    .background(Circle().fill(AppDesign.isSketch ? NewStyle.pastels[1] : Color.brandAccent))
+                    .overlay { if AppDesign.isSketch { Circle().stroke(NewStyle.outline, style: NewStyle.stroke) } }
             }
             .buttonStyle(.plain)
             .padding(.top, 6)
@@ -163,8 +163,7 @@ struct TrainingSummary: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+                        .lxPlate(radius: 16)
                         .accessibilityElement(children: .combine)
                     }
                 }
@@ -216,7 +215,7 @@ struct QuizOptionRow: View {
 
     private var tint: Color {
         switch state {
-        case .correct: .brandOnSoft
+        case .correct: AppDesign.isSketch ? .brandDark : .brandOnSoft
         case .wrong: .statusLearning
         case .dimmed: .brandMuted
         case .plain: .brandDark
@@ -243,13 +242,14 @@ struct QuizOptionRow: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity, minHeight: 56)
-            .background(state == .correct ? Color.brandAccent : Color.cardBackground,
+            .background(state == .correct ? (AppDesign.isSketch ? NewStyle.pastels[3] : Color.brandAccent) : Color.cardBackground,
                         in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(state == .wrong ? Color.statusLearning : state == .correct ? Color.clear : Color.brandBorder,
+                    .stroke(state == .wrong ? Color.statusLearning : state == .correct || AppDesign.isSketch ? Color.clear : Color.brandBorder,
                             lineWidth: state == .wrong ? 1.5 : 1)
             }
+            .sketchFrame(AppDesign.isSketch, radius: 16, shadow: state == .correct ? NewStyle.yellow : NewStyle.blue, offset: 3)
             .opacity(state == .dimmed ? 0.6 : 1)
         }
         .buttonStyle(.plain)
