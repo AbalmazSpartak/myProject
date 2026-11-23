@@ -80,7 +80,8 @@ private struct SketchContextMenu<Items: View>: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .simultaneousGesture(LongPressGesture(minimumDuration: 0.45).onEnded { _ in
+            // Приоритетное: после долгого нажатия обычное нажатие по кнопке (открыть книгу) не срабатывает
+            .highPriorityGesture(LongPressGesture(minimumDuration: 0.45).onEnded { _ in
                 Haptics.tap()
                 isShown = true
             })

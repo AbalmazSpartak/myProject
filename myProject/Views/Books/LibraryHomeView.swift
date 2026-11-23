@@ -193,10 +193,8 @@ struct LibraryHomeView<Search: View>: View {
             HStack {
                 sectionTitle("Все книги")
                 Spacer()
-                Menu {
-                    Picker("Порядок", selection: $sort) {
-                        ForEach(BookSort.allCases) { Text($0.title).tag($0) }
-                    }
+                LXMenu {
+                    LXMenuPicker(title: "Порядок", selection: $sort, options: BookSort.allCases) { Text($0.title) }
                 } label: {
                     HStack(spacing: 4) {
                         Text(sort.title)
@@ -246,7 +244,7 @@ struct LibraryHomeView<Search: View>: View {
             .frame(width: width)
         }
         .buttonStyle(.plain)
-        .contextMenu {
+        .lxContextMenu {
             Button { onListen(book) } label: { Label("Слушать", systemImage: "headphones") }
             Button(role: .destructive) { onDelete(book) } label: { Label("Удалить книгу", systemImage: "trash") }
         }
@@ -323,7 +321,7 @@ struct LibraryHomeView<Search: View>: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .libraryCard(isSketch)
         .padding(.trailing, 4)
-        .contextMenu {
+        .lxContextMenu {
             Button(role: .destructive) { onDelete(book) } label: { Label("Удалить книгу", systemImage: "trash") }
         }
     }
