@@ -1,11 +1,12 @@
 import Foundation
 import PDFKit
+import Vision
 #if canImport(UIKit)
 import UIKit
 #endif
 
 /// PDF → книга для читалки: текст по страницам собирается в абзацы, главы — из оглавления PDF,
-/// а без него — частями, как у .txt. Сканы без текстового слоя не читаются (в них только картинки)
+/// а без него — частями, как у .txt. Сканы без текстового слоя распознаются через Vision (OCR)
 nonisolated enum PDFBook {
     enum Failure: Error {
         case locked, noText
@@ -22,7 +23,9 @@ nonisolated enum PDFBook {
             .flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } ?? fileName
         let author = (document.documentAttributes?[PDFDocumentAttribute.authorAttribute] as? String) ?? ""
 
-        let pageTexts = (0..<document.pageCount).map { document.page(at: $0)?.string ?? "" }
+        var pageTexts = (0..<document.pageCount).map { document.page(at: $0)?.string ?? "" }
+        // Скан без текстового слоя: страницы — картинки, текст распознаёт Vision на устройстве
+        if !pageTexts.contains(where: { $0.contains(where: \.isLetter) }) { pageTexts = recognizedPages(document) }
         guard pageTexts.contains(where: { $0.contains(where: \.isLetter) }) else { throw Failure.noText }
 
         var chapters = outlineChapters(document, pageTexts: pageTexts)
@@ -39,6 +42,40 @@ nonisolated enum PDFBook {
         let cover: Data? = nil
         #endif
         return ParsedBook(title: title, author: author, cover: cover, chapters: chapters)
+    }
+
+    /// Распознавание текста (OCR) у скана: каждая страница рисуется в картинку, Vision читает строки
+    private static func recognizedPages(_ document: PDFDocument) -> [String] {
+        (0..<document.pageCount).map { index in
+            autoreleasepool { document.page(at: index).map(recognizedText) ?? "" }
+        }
+    }
+
+    private static func recognizedText(on page: PDFPage) -> String {
+        let box = page.bounds(for: .mediaBox)
+        guard box.width > 0, box.height > 0 else { return "" }
+        // Длинная сторона ~2400 пикселей: мельче Vision хуже читает, крупнее — дольше без пользы
+        let scale = 2400 / max(box.width, box.height)
+        let width = Int(box.width * scale), height = Int(box.height * scale)
+        guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue) else { return "" }
+        context.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        context.scaleBy(x: scale, y: scale)
+        page.draw(with: .mediaBox, to: context)
+        guard let image = context.makeImage() else { return "" }
+
+        let request = VNRecognizeTextRequest()
+        request.recognitionLevel = .accurate
+        request.usesLanguageCorrection = true
+        request.automaticallyDetectsLanguage = true
+        let wanted = ["en-US", "ru-RU"]
+        if let supported = try? request.supportedRecognitionLanguages() {
+            request.recognitionLanguages = wanted.filter(supported.contains)
+        }
+        guard (try? VNImageRequestHandler(cgImage: image).perform([request])) != nil else { return "" }
+        let lines = (request.results ?? []).sorted { $0.boundingBox.midY > $1.boundingBox.midY }
+        return lines.compactMap { $0.topCandidates(1).first?.string }.joined(separator: "\n")
     }
 
     /// Главы по верхнему уровню оглавления PDF: от страницы главы до страницы следующей
