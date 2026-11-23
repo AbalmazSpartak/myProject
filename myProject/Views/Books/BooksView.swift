@@ -467,7 +467,7 @@ private struct AddBookCard: View {
                             RoundedRectangle(cornerRadius: 10, style: .continuous).fill(NewStyle.pastels[1]).offset(x: 5, y: 5)
                         }
                     }
-                Text("EPUB, FB2, TXT")
+                Text("EPUB, FB2, TXT, PDF")
                     .scaledFont(size: 15, design: AppDesign.isSketch ? .rounded : .default)
                     .tracking(AppDesign.isSketch ? 0.3 : 0)
                     .foregroundColor(Color.brandMuted)

@@ -60,7 +60,9 @@ nonisolated enum PDFBook {
             guard start.page < end, start.page < pageTexts.count else { continue }
             let body = paragraphs(from: Array(pageTexts[start.page..<min(end, pageTexts.count)]))
             guard body.contains(where: { $0.contains(where: \.isLetter) }) else { continue }
-            chapters.append(BookChapter(title: start.title.isEmpty ? "Глава \(chapters.count + 1)" : start.title, paragraphs: body))
+            // Заголовок главы уже есть в названии: первый абзац-повтор убираем
+            let trimmed = body.first.map { dropsAsTitle($0, title: start.title) } == true ? Array(body.dropFirst()) : body
+            chapters.append(BookChapter(title: start.title.isEmpty ? "Глава \(chapters.count + 1)" : start.title, paragraphs: trimmed))
         }
         return chapters
     }
@@ -68,10 +70,12 @@ nonisolated enum PDFBook {
     /// Строки страниц → абзацы: перенос по слогам склеивается, строки одного абзаца — в одну, номера страниц отбрасываются.
     /// Абзац кончается там, где строка закончила предложение и короче обычной
     static func paragraphs(from pageTexts: [String]) -> [String] {
-        let lines = pageTexts.flatMap { $0.components(separatedBy: .newlines) }
+        let rawLines = pageTexts.flatMap { $0.components(separatedBy: .newlines) }
             .map { $0.trimmingCharacters(in: .whitespaces) }
-        let lengths = lines.map(\.count).filter { $0 > 0 }.sorted()
+        // Обычная длина строки считается без «колонок одной строкой», иначе короткие строки примут за заголовки
+        let lengths = rawLines.map(\.count).filter { $0 > 0 && $0 <= longLine }.sorted()
         let usual = lengths.isEmpty ? 80 : lengths[min(lengths.count - 1, Int(Double(lengths.count) * 0.9))]
+        let lines = rawLines.flatMap(splitLongLine)
         var result: [String] = []
         var current = ""
         func flush() {
@@ -95,6 +99,35 @@ nonisolated enum PDFBook {
         }
         flush()
         return result
+    }
+
+    private static let longLine = 600
+
+    private static func dropsAsTitle(_ paragraph: String, title: String) -> Bool {
+        func key(_ text: String) -> String {
+            text.lowercased().filter { $0.isLetter || $0.isNumber }
+        }
+        let a = key(paragraph)
+        return !a.isEmpty && a == key(title)
+    }
+
+    /// Колонки некоторых PDF приходят одной очень длинной строкой без переводов строки:
+    /// режем её по предложениям на куски примерно по 450 знаков, между кусками — граница абзаца
+    private static func splitLongLine(_ line: String) -> [String] {
+        guard line.count > longLine else { return [line] }
+        let sentences = line.replacingOccurrences(of: "(?<=[.!?…])\\s+(?=[\"“A-ZА-ЯЁ])", with: "\n", options: .regularExpression)
+            .components(separatedBy: "\n")
+        var chunks: [String] = []
+        var current = ""
+        for sentence in sentences {
+            if !current.isEmpty, current.count + sentence.count > 450 {
+                chunks.append(current)
+                current = ""
+            }
+            current += current.isEmpty ? sentence : " " + sentence
+        }
+        if !current.isEmpty { chunks.append(current) }
+        return chunks.flatMap { [$0, ""] }
     }
 
     private static func endsSentence(_ line: String) -> Bool {

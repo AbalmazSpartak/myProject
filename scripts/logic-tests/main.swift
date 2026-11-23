@@ -100,6 +100,17 @@ expect(!paragraphs.contains { $0 == "12" }, "номер страницы отб�
 expect(paragraphs.contains { $0.contains("moustache") }, "перенос слова по слогам склеен (mous- tache → moustache)")
 expect(paragraphs.allSatisfy { !$0.hasPrefix(" ") && !$0.contains("  ") }, "в абзацах нет лишних пробелов")
 expect(PDFBook.paragraphs(from: ["", "  \n \n"]).isEmpty, "пустые страницы дают пустой список")
+// Колонка одной длинной строкой (так отдают текст некоторые двухколоночные PDF)
+let sentence = "The morning sun climbed slowly over the hills and the farmers were already at work in the fields. "
+let longColumn = String(repeating: sentence, count: 14)
+let longParagraphs = PDFBook.paragraphs(from: [longColumn])
+expect(longParagraphs.count >= 3, "длинная строка колонки делится на несколько абзацев")
+expect(longParagraphs.allSatisfy { $0.count <= 600 }, "абзацы из длинной строки не длиннее ~600 знаков")
+expect(longParagraphs.allSatisfy { $0.hasSuffix(".") }, "куски длинной строки кончаются на границе предложения")
+// Правая колонка обычными короткими строками после длинной левой: остаётся одним абзацем, а не разваливается построчно
+let rightColumn = ["When spring finally arrived, it came all at once.", "The snow melted in a single week, and the", "meadows filled with flowers that no one had", "seen for years."].joined(separator: "\n")
+let mixed = PDFBook.paragraphs(from: [longColumn + "\n" + rightColumn])
+expectEqual(mixed.count, longParagraphs.count + 1, "строки правой колонки после длинной левой склеены в один абзац")
 
 // MARK: - Текст и FB2: разбор книги
 
