@@ -142,7 +142,7 @@ struct NewCover: View {
         let seed = StableSeed.of(book.title)
         Color.clear
             .aspectRatio(2.0 / 3.0, contentMode: .fit)
-            .overlay { BookCover(data: book.coverData, title: book.title) }
+            .overlay { BookCover(data: book.coverData, title: book.title, author: book.author) }
             .clipShape(RoughRoundedRect(radius: 8, seed: seed))
             .overlay(RoughRoundedRect(radius: 8, seed: seed).stroke(NewStyle.outline, style: NewStyle.stroke))
             .background(RoughRoundedRect(radius: 8, seed: seed &+ 1).fill(shadow).offset(x: offset, y: offset))

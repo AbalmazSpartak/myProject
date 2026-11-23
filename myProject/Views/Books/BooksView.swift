@@ -538,6 +538,17 @@ struct BookCard: View {
 struct BookCover: View {
     let data: Data?
     let title: String
+    /// Автор — только для «Скетча»: на макете он мелкими буквами внизу обложки
+    var author: String = ""
+
+    /// Заливка и цвет текста пяти обложек макета «Скетча»; выбор по названию — у книги всегда одна и та же
+    private static let sketchCovers: [(fill: Color, text: Color)] = [
+        (Color(hex: 0xB8AFA0), Color(hex: 0x1E1E1C)),
+        (Color(hex: 0x3E4A3A), .white),
+        (Color(hex: 0x7B4433), .white),
+        (Color(hex: 0x5A6E8C), .white),
+        (Color(hex: 0xE2EFDC), Color(hex: 0x1E1E1C))
+    ]
 
     var body: some View {
         if let data, let image = CoverCache.image(data) {
@@ -551,6 +562,29 @@ struct BookCover: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
+            }
+        } else if AppDesign.isSketch {
+            let look = Self.sketchCovers[Int(StableSeed.of(title) % UInt64(Self.sketchCovers.count))]
+            ZStack(alignment: .topLeading) {
+                look.fill
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(title)
+                        .scaledFont(size: 19, weight: .bold, design: .serif)
+                        .lineSpacing(1)
+                        .multilineTextAlignment(.leading)
+                        .minimumScaleFactor(0.6)
+                    Spacer(minLength: 8)
+                    if !author.isEmpty {
+                        Text(author.uppercased())
+                            .scaledFont(size: 9)
+                            .tracking(1.2)
+                            .lineLimit(2)
+                    }
+                }
+                .foregroundStyle(look.text)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 14)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
         } else {
             ZStack {

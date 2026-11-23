@@ -63,7 +63,7 @@ struct ReaderMenuSheet: View {
                             HStack {
                                 Text(chapterTitles[index])
                                     .scaledFont(size: 16, design: .serif)
-                                    .foregroundStyle(index == currentChapter ? Color.brandTint : Color.brandDark)
+                                    .foregroundStyle(index == currentChapter && !AppDesign.isSketch ? Color.brandTint : Color.brandDark)
                                     .fontWeight(index == currentChapter ? .semibold : .regular)
                                     .lineLimit(1)
                                 Spacer()
@@ -126,7 +126,8 @@ struct ReaderMenuSheet: View {
         .padding(.horizontal, 14)
         .frame(height: 48)
         .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(AppDesign.isSketch ? Color.clear : Color.brandBorder, lineWidth: 1))
+        .sketchFrame(AppDesign.isSketch, radius: 12, shadow: NewStyle.blue, offset: 3)
     }
 
     /// «A» мельче и крупнее: шаг на один пункт, в тех же пределах, что и в «Оформлении»
@@ -140,7 +141,8 @@ struct ReaderMenuSheet: View {
                 .scaledFont(size: size, weight: .semibold, design: .serif)
                 .foregroundStyle(Color.brandDark)
                 .frame(width: 48, height: 48)
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.brandBorder, lineWidth: 1.5))
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(AppDesign.isSketch ? Color.clear : Color.brandBorder, lineWidth: 1.5))
+                .sketchFrame(AppDesign.isSketch, radius: 12, shadow: NewStyle.blue, offset: 3)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
@@ -161,9 +163,9 @@ struct ReaderMenuSheet: View {
         } label: {
             Text(title)
                 .scaledFont(size: 13, weight: isOn ? .semibold : .medium)
-                .foregroundStyle(isOn ? Color.brandTint : Color.brandMuted)
+                .foregroundStyle(isOn ? (AppDesign.isSketch ? Color.black : Color.brandTint) : Color.brandMuted)
                 .frame(maxWidth: .infinity, minHeight: 42)
-                .background(isOn ? Color.cardBackground : Color.clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .background(isOn && AppDesign.isSketch ? NewStyle.yellow : isOn ? Color.cardBackground : Color.clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isOn ? .isSelected : [])

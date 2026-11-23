@@ -4,7 +4,9 @@ import SwiftData
 /// Вкладка «Закладки» режима «Чтение» по холсту (экран 9): закладки из всех книг в одном месте, фильтр по книге.
 /// «Заметки» (экран 10) — пока пустой раздел: где и как выделять текст, решаем отдельно
 struct ReaderBookmarksTab: View {
-    private enum Section: String, CaseIterable { case bookmarks = "Закладки", notes = "Заметки" }
+    private enum Section: String, CaseIterable, Identifiable { case bookmarks = "Закладки", notes = "Заметки"
+        var id: String { rawValue }
+    }
 
     /// Закладка вместе с книгой, где она стоит
     private struct Entry: Identifiable {
@@ -60,12 +62,16 @@ struct ReaderBookmarksTab: View {
             VStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 14) {
                     Text("Закладки")
-                        .scaledFont(size: 34, weight: .semibold, design: .serif)
+                        .scaledFont(size: AppDesign.isSketch ? 38 : 34, weight: .semibold, design: AppDesign.isSketch ? .rounded : .serif)
                         .foregroundStyle(Color.brandDark)
-                    Picker("Раздел", selection: $section) {
-                        ForEach(Section.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                    if AppDesign.isSketch {
+                        SketchTabs(items: Section.allCases, title: \.rawValue, selection: $section)
+                    } else {
+                        Picker("Раздел", selection: $section) {
+                            ForEach(Section.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                        }
+                        .pickerStyle(.segmented)
                     }
-                    .pickerStyle(.segmented)
                     if books.count > 1 { bookChips }
                 }
                 .padding(.horizontal, 20)
@@ -148,7 +154,7 @@ struct ReaderBookmarksTab: View {
             openedBook = entry.book
         } label: {
             HStack(spacing: 12) {
-                Image(systemName: "bookmark").scaledFont(size: 20).foregroundStyle(Color.brandTint)
+                Image(systemName: "bookmark").scaledFont(size: 20).foregroundStyle(AppDesign.isSketch ? Color.brandDark : Color.brandTint)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title(for: entry))
                         .scaledFont(size: 15, weight: .semibold)
@@ -229,7 +235,8 @@ struct ReaderBookmarksTab: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.brandBorder, lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(AppDesign.isSketch ? Color.clear : Color.brandBorder, lineWidth: 1))
+            .sketchFrame(AppDesign.isSketch, radius: 16, shadow: NewStyle.blue, offset: 3)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

@@ -23,6 +23,57 @@ struct BookBookmarksView: View {
 
     var body: some View {
         NavigationStack {
+            Group {
+                if AppDesign.isSketch { sketchList } else { classicList }
+            }
+            .overlay {
+                if bookmarks.isEmpty {
+                    ContentUnavailableView("Закладок нет", systemImage: "bookmark",
+                                           description: Text("«Меню» → «Закладка здесь» — отметить место, которое открыто сейчас."))
+                }
+            }
+            .navigationTitle("Закладки")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Готово") { dismiss() }
+                }
+            }
+        }
+    }
+
+    /// «Скетч»: закладки одной группой с контуром, удаление — долгим нажатием
+    private var sketchList: some View {
+        ScrollView {
+            if !bookmarks.isEmpty {
+                LXGroup {
+                    ForEach(bookmarks) { bookmark in
+                        Button {
+                            onSelect(bookmark)
+                            dismiss()
+                        } label: {
+                            row(bookmark)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .contextMenu {
+                            Button(role: .destructive) { onDelete(bookmark) } label: {
+                                Label("Удалить", systemImage: "trash")
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
+            }
+        }
+        .background(Color.brandBackground.ignoresSafeArea())
+    }
+
+    private var classicList: some View {
             List {
                 ForEach(bookmarks) { bookmark in
                     Button {
@@ -40,20 +91,6 @@ struct BookBookmarksView: View {
                 }
             }
             .brandListBackground()
-            .overlay {
-                if bookmarks.isEmpty {
-                    ContentUnavailableView("Закладок нет", systemImage: "bookmark",
-                                           description: Text("«Меню» → «Закладка здесь» — отметить место, которое открыто сейчас."))
-                }
-            }
-            .navigationTitle("Закладки")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Готово") { dismiss() }
-                }
-            }
-        }
     }
 
     private func row(_ bookmark: BookBookmark) -> some View {

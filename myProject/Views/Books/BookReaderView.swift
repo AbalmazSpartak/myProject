@@ -649,25 +649,9 @@ struct BookReaderView: View {
 
     private var contents: some View {
         NavigationStack {
-            List(chapters.indices, id: \.self) { index in
-                Button {
-                    go(to: index)
-                    isShowingContents = false
-                } label: {
-                    HStack {
-                        Text(numbering.listTitle(for: index, title: chapters[index].title))
-                            .foregroundColor(.brandDark)
-                            .lineLimit(2)
-                        Spacer()
-                        if index == chapterIndex {
-                            Image(systemName: "bookmark.fill")
-                                .foregroundColor(Color.brandTint)
-                        }
-                    }
-                }
-                .listRowBackground(Color.cardBackground)
+            Group {
+                if AppDesign.isSketch { sketchContents } else { classicContents }
             }
-            .brandListBackground()
             .navigationTitle("Оглавление")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -678,6 +662,63 @@ struct BookReaderView: View {
             }
         }
         .appThemedColorScheme()
+    }
+
+    private var classicContents: some View {
+        List(chapters.indices, id: \.self) { index in
+            Button {
+                go(to: index)
+                isShowingContents = false
+            } label: {
+                HStack {
+                    Text(numbering.listTitle(for: index, title: chapters[index].title))
+                        .foregroundColor(.brandDark)
+                        .lineLimit(2)
+                    Spacer()
+                    if index == chapterIndex {
+                        Image(systemName: "bookmark.fill")
+                            .foregroundColor(Color.brandTint)
+                    }
+                }
+            }
+            .listRowBackground(Color.cardBackground)
+        }
+        .brandListBackground()
+    }
+
+    /// «Скетч»: главы одной группой с контуром, текущая — жёлтой плашкой
+    private var sketchContents: some View {
+        ScrollView {
+            LXGroup {
+                ForEach(chapters.indices, id: \.self) { index in
+                    let isCurrent = index == chapterIndex
+                    Button {
+                        go(to: index)
+                        isShowingContents = false
+                    } label: {
+                        HStack(spacing: 10) {
+                            Text(numbering.listTitle(for: index, title: chapters[index].title))
+                                .scaledFont(size: 16, weight: isCurrent ? .bold : .regular, design: .serif)
+                                .foregroundStyle(Color.brandDark)
+                                .multilineTextAlignment(.leading)
+                                .lineLimit(2)
+                            Spacer(minLength: 8)
+                            if isCurrent {
+                                Image(systemName: "bookmark.fill").scaledFont(size: 13).foregroundStyle(Color.brandDark)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+                        .background(isCurrent ? NewStyle.yellow.opacity(0.55) : Color.clear)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+        }
+        .background(Color.brandBackground.ignoresSafeArea())
     }
 
     // MARK: - Логика
