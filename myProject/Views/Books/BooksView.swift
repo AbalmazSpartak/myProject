@@ -31,8 +31,6 @@ struct BooksView: View {
     @AppStorage("books_tab") private var tab: LibraryTab = .mine
     @AppStorage("books_sort") private var sort: BookSort = .opened
 
-    private let columns = [GridItem(.adaptive(minimum: 150), spacing: 16)]
-
     /// Разделы плашки: при нижней панели «Чтения» у «Подписок» своя вкладка — здесь их не повторяем
     private var tabs: [LibraryTab] {
         hasTabBar ? LibraryTab.allCases.filter { $0 != .subscriptions } : LibraryTab.allCases
@@ -45,7 +43,7 @@ struct BooksView: View {
             if let fixedTab {
                 Group {
                     switch fixedTab {
-                    case .mine: grid(sortedBooks, withAddCard: true, withSearch: true)
+                    case .mine: libraryHome
                     case .audio: AudioLibraryView(books: books) { listenBook = $0 }
                     case .subscriptions: subscriptions
                     }
@@ -71,7 +69,7 @@ struct BooksView: View {
             // Разделы листаются и свайпом, плашка переключается вместе с ними
             TabView(selection: $tab) {
                 Group {
-                    grid(sortedBooks, withAddCard: true, withSearch: true)
+                    libraryHome
                         .tag(LibraryTab.mine)
                     AudioLibraryView(books: books) { listenBook = $0 }
                         .tag(LibraryTab.audio)
@@ -154,56 +152,26 @@ struct BooksView: View {
         }
     }
 
-    /// withAddCard — первой карточкой «＋ Добавить книгу» (в «Моих книгах»); withSearch — сверху поле поиска по названию и автору
-    private func grid(_ items: [Book], withAddCard: Bool = false, withSearch: Bool = false) -> some View {
-        let searching = withSearch && !Self.normalized(searchText).isEmpty
-        let shown = searching ? filtered(items) : items
-        return ScrollView {
-            VStack(spacing: 16) {
-                if withSearch, !items.isEmpty { searchField }
-                if searching, shown.isEmpty {
-                    ContentUnavailableView.search(text: searchText)
-                        .padding(.top, 40)
-                }
-                LazyVGrid(columns: columns, alignment: .leading, spacing: 22) {
-                    // При поиске карточка «Добавить книгу» не нужна — только найденное
-                    if withAddCard, !searching {
-                        AddBookCard { isImporting = true }
-                    }
-                    ForEach(shown) { book in
-                        BookCard(book: book) { openedBook = book }
-                            .contextMenu {
-                                Button(role: .destructive) { bookToDelete = book } label: {
-                                    Label("Удалить книгу", systemImage: "trash")
-                                }
-                            }
-                    }
-                }
-            }
-            .padding(20)
-        }
-        .scrollDismissesKeyboard(.interactively)
+    /// «Мои книги» по варианту C: «Продолжить чтение» и полки; при запросе — найденное карточками
+    private var libraryHome: some View {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return LibraryHomeView(
+            books: sortedBooks,
+            results: filtered(sortedBooks),
+            isSearching: !books.isEmpty && !Self.normalized(searchText).isEmpty,
+            query: query,
+            sort: $sort,
+            search: searchField,
+            onRead: { openedBook = $0 },
+            onListen: { listenBook = $0 },
+            onAdd: { isImporting = true },
+            onDelete: { bookToDelete = $0 },
+            onSearchAudio: { tab = .audio }
+        )
     }
 
-    /// Поле поиска книг: плашка с лупой и крестиком очистки, рядом — выбор порядка
-    private var searchField: some View {
-        HStack(spacing: 10) {
-            searchBox
-            Menu {
-                Picker("Порядок", selection: $sort) {
-                    ForEach(BookSort.allCases) { Text($0.title).tag($0) }
-                }
-            } label: {
-                Image(systemName: "arrow.up.arrow.down")
-                    .scaledFont(size: 16)
-                    .foregroundColor(.brandDark)
-                    .frame(width: 44, height: 44)
-                    .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .sketchFrame(design == AppDesign.sketch.rawValue)
-            }
-            .accessibilityLabel("Порядок книг: \(sort.title)")
-        }
-    }
+    /// Поле поиска книг; порядок выбирается в чипе у «Все книги»
+    private var searchField: some View { searchBox }
 
     private var searchBox: some View {
         HStack(spacing: 8) {
@@ -431,50 +399,6 @@ struct TabPlaceholder: View {
         }
         .padding(.horizontal, 36)
         .frame(maxWidth: .infinity)
-    }
-}
-
-/// Первая карточка «Моих книг»: книга или текст из «Файлов»
-private struct AddBookCard: View {
-    let action: () -> Void
-    @AppStorage(AppDesign.storageKey) private var design = AppDesign.classic.rawValue
-
-    var body: some View {
-        Button(action: action) {
-            VStack(alignment: .leading, spacing: 8) {
-                Color.clear
-                    .aspectRatio(2.0 / 3.0, contentMode: .fit)
-                    .overlay {
-                        VStack(spacing: 10) {
-                            Image(systemName: "plus")
-                                .scaledFont(size: 30, weight: .medium)
-                            Text("Добавить книгу")
-                                .scaledFont(size: 15, weight: .semibold)
-                                .multilineTextAlignment(.center)
-                        }
-                        .foregroundColor(Color.brandTint)
-                        .padding(12)
-                    }
-                    .background(Color.brandTint.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .strokeBorder(design == AppDesign.sketch.rawValue ? NewStyle.outline : Color.brandTint.opacity(0.45),
-                                          style: StrokeStyle(lineWidth: design == AppDesign.sketch.rawValue ? NewStyle.lineWidth : 1.5, dash: [6, 5]))
-                    }
-                    .background {
-                        if design == AppDesign.sketch.rawValue {
-                            RoundedRectangle(cornerRadius: 10, style: .continuous).fill(NewStyle.pastels[1]).offset(x: 5, y: 5)
-                        }
-                    }
-                Text("EPUB, FB2, TXT, PDF")
-                    .scaledFont(size: 15, design: AppDesign.isSketch ? .rounded : .default)
-                    .tracking(AppDesign.isSketch ? 0.3 : 0)
-                    .foregroundColor(Color.brandMuted)
-                    .lineLimit(1)
-            }
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Добавить книгу из «Файлов»")
     }
 }
 
