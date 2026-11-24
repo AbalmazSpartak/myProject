@@ -344,8 +344,10 @@ struct ReaderSelectionPanel: View {
             action()
         } label: {
             VStack(spacing: 4) {
+                // Одинаковая высота значка: у «doc.on.doc» он выше остальных и сдвигал подпись вниз
                 Image(systemName: icon)
                     .scaledFont(size: 18)
+                    .frame(height: 24)
                 Text(title)
                     .scaledFont(size: 12, weight: .medium)
                     .lineLimit(1)

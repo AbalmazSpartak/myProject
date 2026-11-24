@@ -335,6 +335,10 @@ nonisolated enum TextWordExtractor {
         case "can't": return "can't"
         case "won't": return "won't"
         case "shan't": return "shall"
+        // Отрицание в одно слово: «Don't» — «не», а не «делать» (do)
+        case "don't", "doesn't", "didn't", "isn't", "aren't", "wasn't", "weren't", "haven't", "hasn't", "hadn't",
+             "couldn't", "wouldn't", "shouldn't", "mustn't":
+            return normalized
         default: return nil
         }
     }

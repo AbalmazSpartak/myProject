@@ -1,6 +1,6 @@
 # Слова мастер-базы (myProject/Resources/words.csv) — для сверки новых слов
 # Обновить: python3 scripts/export_word_list.py
-# Значений: 6454, разных слов: 5680; A1 1055, A2 1163, B1 1091, B2 1670, C1 1475
+# Значений: 6468, разных слов: 5694; A1 1069, A2 1163, B1 1091, B2 1670, C1 1475
 # слово | часть речи | уровень | перевод
 
 a | det. | A1 | неопределенный артикль
@@ -308,6 +308,7 @@ architectural | adj. | C1 | архитектурный
 architecture | n. | A2 | архитектура
 archive | n. | C1 | архив
 area | n. | A1 | площадь, область, район
+aren't | modal v. | A1 | не являются, нет
 arena | n. | C1 | арена
 arguably | adv. | C1 | пожалуй, возможно
 argue | v. | A2 | спорить
@@ -1317,6 +1318,7 @@ costume | n. | B1 | костюм (маскарадный, сценический
 cottage | n. | B1 | коттедж, загородный домик
 cotton | n. | B1 | хлопок
 could | modal v. | A1 | мог, могла, могли
+couldn't | modal v. | A1 | не мог, не смог
 council | n. | B2 | совет (орган)
 councilor | n. | C1 | член совета
 counseling | n. | C1 | консультирование, психологическая помощь
@@ -1616,6 +1618,7 @@ dice | n. | A2 | игральные кости, кубики
 dictate | v. | C1 | диктовать
 dictator | n. | C1 | диктатор
 dictionary | n. | A1 | словарь
+didn't | modal v. | A1 | не (в прошлом)
 die | v. | A1 | умирать
 diet | n. | A1 | диета, питание
 differ | v. | B2 | отличаться
@@ -1725,6 +1728,7 @@ document | n. | A2 | документ
 document | v. | B2 | документировать
 documentary | n. | B1 | документальный фильм
 documentation | n. | C1 | документация
+doesn't | modal v. | A1 | не
 dog | n. | A1 | собака
 doll | n. | A1 | кукла
 dollar | n. | A1 | доллар
@@ -1734,6 +1738,7 @@ dominance | n. | C1 | господство, доминирование
 dominant | adj. | B2 | доминирующий
 dominate | v. | B2 | доминировать
 dominoes | n. | B1 | домино
+don't | modal v. | A1 | не, не надо
 donate | v. | B1 | жертвовать, передавать в дар
 donation | n. | B2 | пожертвование
 donor | n. | C1 | донор; жертвователь
@@ -2623,6 +2628,7 @@ habit | n. | A2 | привычка
 habitat | n. | B2 | среда обитания
 hack | n. | C1 | взлом, удар
 hack | v. | C1 | взламывать, рубить
+hadn't | modal v. | A1 | не имел, ещё не
 hail | v. | C1 | приветствовать; провозглашать
 hair | n. | A1 | волосы
 hairbrush | n. | A2 | щётка для волос
@@ -2664,6 +2670,7 @@ harmony | n. | C1 | гармония
 harp | n. | B2 | арфа
 harsh | adj. | C1 | суровый, резкий
 harvest | n. | C1 | урожай
+hasn't | modal v. | A1 | не имеет, ещё не
 hat | n. | A1 | шляпа
 hate | n. | B1 | ненависть
 hate | v. | A1 | ненавидеть
@@ -2674,6 +2681,7 @@ have a good time | phr. | A2 | хорошо провести время
 have a look | phr. | A2 | взглянуть
 have fun | phr. | A1 | веселиться, хорошо проводить время
 have to | modal v. | A1 | быть должным, вынужденным
+haven't | modal v. | A1 | не имею, ещё не
 hazard | n. | C1 | опасность, риск
 he | pron. | A1 | он
 head | n. | A1 | голова
@@ -3090,6 +3098,7 @@ ironing board | n. | B1 | гладильная доска
 irony | n. | C1 | ирония
 irrelevant | adj. | C1 | неуместный, не имеющий отношения
 island | n. | A1 | остров
+isn't | modal v. | A1 | не является, нет
 isolate | v. | B2 | изолировать
 isolated | adj. | B2 | изолированный, уединённый
 isolation | n. | C1 | изоляция, одиночество
@@ -3720,6 +3729,7 @@ musical | adj. | A2 | музыкальный
 musical | n. | B1 | мюзикл
 musician | n. | A2 | музыкант
 must | modal v. | A1 | должен
+mustn't | modal v. | A1 | нельзя
 mutual | adj. | C1 | взаимный
 my | det. | A1 | мой
 myself | pron. | A2 | себя, сам
@@ -5136,6 +5146,7 @@ shorts | n. | A1 | шорты
 shot | n. | B2 | выстрел, удар
 should | modal v. | A1 | следует
 shoulder | n. | A2 | плечо
+shouldn't | modal v. | A1 | не следует, не стоит
 shout | n. | A2 | крик
 shout | v. | A2 | кричать
 shovel | n. | B1 | лопата
@@ -6256,6 +6267,7 @@ wash | v. | A1 | мыть
 washbasin | n. | B2 | умывальник
 washing | n. | A2 | стирка; бельё
 washing machine | n. | A2 | стиральная машина
+wasn't | modal v. | A1 | не был, не была
 waste | adj. | B1 | ненужный, отработанный
 waste | n. | B1 | отходы, пустая трата
 waste | v. | B1 | тратить впустую
@@ -6301,6 +6313,7 @@ well | adv. | A1 | хорошо
 well | excl. | A1 | ну
 well | n. | C1 | колодец
 well-being | n. | B2 | благополучие
+weren't | modal v. | A1 | не были
 west | n. | A1 | запад
 western | adj. | B1 | западный
 wet | adj. | A2 | мокрый
@@ -6413,6 +6426,7 @@ worth | n. | B2 | ценность, стоимость
 worthwhile | adj. | C1 | стоящий
 worthy | adj. | C1 | достойный
 would | modal v. | A1 | бы (сослагательное наклонение)
+wouldn't | modal v. | A1 | не стал бы, не хотел
 wound | n. | B2 | рана
 wound | v. | B2 | ранить
 wow | excl. | A2 | ух ты!
