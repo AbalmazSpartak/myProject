@@ -207,7 +207,8 @@ struct BookReaderView: View {
                         book.position = chapterStarts[chapterIndex] + paragraph
                         book.furthest = max(book.furthest, book.position)
                     },
-                    onTap: handleTap
+                    onTap: handleTap,
+                    bottomInset: bottomOverlayHeight
                 ) {
                     chapterNavigation
                 }
@@ -1461,6 +1462,8 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
     let onScrollDirection: (Bool) -> Void
     let onVisible: (Int) -> Void
     let onTap: (URL) -> Void
+    /// Мини-плеер и нижняя строка лежат поверх списка: конец главы с кнопками не должен оказаться под ними
+    var bottomInset: CGFloat = 0
     @ViewBuilder let navigation: () -> Navigation
 
     /// Видимые абзацы — в обычном объекте, а не в @State: их смена при прокрутке не перерисовывает главу
@@ -1472,6 +1475,7 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
         lhs.chapterID == rhs.chapterID && lhs.paragraphs.count == rhs.paragraphs.count
             && lhs.font == rhs.font && lhs.textColor == rhs.textColor && lhs.lineSpacing == rhs.lineSpacing
             && lhs.translations.count == rhs.translations.count && lhs.bookmarked == rhs.bookmarked
+            && lhs.bottomInset == rhs.bottomInset
     }
 
     var body: some View {
@@ -1498,7 +1502,8 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
                 }
                 .scrollTargetLayout()
                 .padding(.horizontal, 22)
-                .padding(.vertical, 18)
+                .padding(.top, 18)
+                .padding(.bottom, 18 + bottomInset)
             }
             .onScrollTargetVisibilityChange(idType: Int.self, threshold: 0.01) { ids in
                 visible.ids = ids
