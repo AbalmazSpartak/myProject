@@ -133,6 +133,7 @@ export default {
       const salt = state.salt || "00000000000000000000000000000000";
       const check = await hashPassword(body.password, salt);
       const result = await stub.login(check);
+      if (result.locked) return json({ error: "locked", wait: result.locked }, 429);
       return result.ok ? json({ token: `${id}.${result.secret}`, email }) : json({ error: "wrong" }, 401);
     }
 
@@ -158,6 +159,7 @@ export default {
         const check = await hashPassword(body.old, state.salt || "00000000000000000000000000000000");
         const salt = randomHex(16);
         const result = await stub.changePassword(hash, check, salt, await hashPassword(body.password, salt));
+        if (result.locked) return json({ error: "locked", wait: result.locked }, 429);
         return result.ok ? json({ ok: true }) : json({ error: result.error }, 401);
       }
       const me = await stub.me(hash);
@@ -262,39 +264,49 @@ export class User extends DurableObject {
     return { ok: true, secret: await this.newSession() };
   }
 
-  loginState() {
-    const lockedUntil = Number(this.value("lockedUntil") || 0);
-    const wait = Math.ceil((lockedUntil - Date.now()) / 1000);
-    return { salt: this.value("salt"), locked: wait > 0 ? wait : 0 };
+  /// Сколько секунд ещё закрыт вход; 0 — открыт
+  lockedFor() {
+    const wait = Math.ceil((Number(this.value("lockedUntil") || 0) - Date.now()) / 1000);
+    return wait > 0 ? wait : 0;
   }
 
-  /// check — хэш введённого пароля с солью аккаунта; после 5 неверных подряд вход закрыт на 15 минут
-  async login(check) {
-    const stored = this.value("password");
-    if (stored && sameHash(stored, check)) {
-      this.put("failures", 0);
-      return { ok: true, secret: await this.newSession() };
-    }
+  loginState() {
+    return { salt: this.value("salt"), locked: this.lockedFor() };
+  }
+
+  /// Неверный пароль: после 5 подряд вход закрыт на 15 минут
+  countFailure() {
     const failures = Number(this.value("failures") || 0) + 1;
     this.put("failures", failures);
     if (failures >= LOGIN_ATTEMPTS) {
       this.put("failures", 0);
       this.put("lockedUntil", Date.now() + LOGIN_LOCK_MS);
     }
+  }
+
+  /// check — хэш введённого пароля с солью аккаунта.
+  /// Блокировка проверяется здесь же, в базе пользователя: её вызовы идут строго по очереди,
+  /// поэтому пачка одновременных запросов не проскакивает до того, как вход закроется
+  async login(check) {
+    const locked = this.lockedFor();
+    if (locked) return { ok: false, locked };
+    const stored = this.value("password");
+    if (stored && sameHash(stored, check)) {
+      this.put("failures", 0);
+      return { ok: true, secret: await this.newSession() };
+    }
+    this.countFailure();
     return { ok: false };
   }
 
   async changePassword(sessionHash, oldCheck, salt, hash) {
     const sql = this.ctx.storage.sql;
     if (!sql.exec("SELECT hash FROM sessions WHERE hash = ?", sessionHash).toArray()[0]) return { ok: false, error: "unauthorized" };
+    const locked = this.lockedFor();
+    if (locked) return { ok: false, locked };
     const stored = this.value("password");
     if (!stored || !sameHash(stored, oldCheck)) {
-      const failures = Number(this.value("failures") || 0) + 1;
-      this.put("failures", failures);
-      if (failures >= LOGIN_ATTEMPTS) {
-        this.put("failures", 0);
-        this.put("lockedUntil", Date.now() + LOGIN_LOCK_MS);
-      }
+      this.countFailure();
       return { ok: false, error: "wrong" };
     }
     this.put("salt", salt);
