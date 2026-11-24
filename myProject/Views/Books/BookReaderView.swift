@@ -30,6 +30,9 @@ struct BookReaderView: View {
     @State private var isShowingPlayer = false
     /// Высота нижнего слоя (мини-плеер и нижняя панель): на столько панель выделения поднимается над ним
     @State private var bottomOverlayHeight: CGFloat = 0
+    /// Высоты мини-плеера и нижней строки по отдельности (последние ненулевые): отступ прокрутки от них не прыгает, когда строка прячется
+    @State private var miniPlayerHeight: CGFloat = 0
+    @State private var bottomBarHeight: CGFloat = 0
     @State private var sleep = SleepTimer.off
     @State private var sleepEndsAt: Date?
     @State private var sleepTask: Task<Void, Never>?
@@ -119,6 +122,12 @@ struct BookReaderView: View {
     nonisolated static let wordScheme = "wlword"
 
     private var isEnglish: Bool { language == BookLanguage.english }
+
+    /// Нижний отступ прокрутки: строка и плеер (если виден) — всегда, спрятана строка сейчас или нет
+    private var scrollBottomInset: CGFloat {
+        let playerShown = !isShowingPlayer && (speech.isPlaying || speech.isPreparing || speech.paragraph != nil)
+        return bottomBarHeight + (playerShown ? miniPlayerHeight : 0)
+    }
 
     private var chapter: BookChapter? {
         chapters.indices.contains(chapterIndex) ? chapters[chapterIndex] : nil
@@ -219,7 +228,7 @@ struct BookReaderView: View {
                         noteText = ""
                         noteDraft = NoteDraft(text: text, paragraph: chapterStarts[chapterIndex] + paragraph, range: range)
                     },
-                    bottomInset: bottomOverlayHeight
+                    bottomInset: scrollBottomInset
                 ) {
                     chapterNavigation
                 }
@@ -336,10 +345,12 @@ struct BookReaderView: View {
                     // Озвучка идёт — мини-плеер над нижней панелью: пауза, прогресс главы, скорость
                     if speech.isPlaying || speech.isPreparing || speech.paragraph != nil {
                         miniPlayer
+                            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { if $0 > 0 { miniPlayerHeight = $0 } }
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                     if !isChromeHidden {
                         bottomBar
+                            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { if $0 > 0 { bottomBarHeight = $0 } }
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
