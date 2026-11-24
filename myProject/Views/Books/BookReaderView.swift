@@ -223,12 +223,14 @@ struct BookReaderView: View {
                     language: language,
                     passage: bookPassage,
                     onSelectionStart: { setChromeHidden(true) },
+                    onSelectionEnd: { setChromeHidden(false) },
                     onNote: { text, paragraph, range in
                         guard chapterStarts.indices.contains(chapterIndex) else { return }
                         noteText = ""
                         noteDraft = NoteDraft(text: text, paragraph: chapterStarts[chapterIndex] + paragraph, range: range)
                     },
-                    bottomInset: scrollBottomInset
+                    bottomInset: scrollBottomInset,
+                    panelInset: scrollBottomInset - bottomBarHeight
                 ) {
                     chapterNavigation
                 }
@@ -1491,9 +1493,13 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
     let language: String
     let passage: (Int, NSRange) -> BookPassage?
     let onSelectionStart: () -> Void
+    /// Выделение снято — читалка возвращает нижнюю панель
+    var onSelectionEnd: () -> Void = {}
     let onNote: (String, Int, NSRange) -> Void
     /// Мини-плеер и нижняя строка лежат поверх списка: конец главы с кнопками не должен оказаться под ними
     var bottomInset: CGFloat = 0
+    /// Высота мини-плеера (0 — его нет): панель выделения встаёт на место нижней строки, над плеером
+    var panelInset: CGFloat = 0
     @ViewBuilder let navigation: () -> Navigation
 
     /// Видимые абзацы — в обычном объекте, а не в @State: их смена при прокрутке не перерисовывает главу
@@ -1514,7 +1520,7 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
         lhs.chapterID == rhs.chapterID && lhs.paragraphs.count == rhs.paragraphs.count
             && lhs.font == rhs.font && lhs.textColor == rhs.textColor && lhs.lineSpacing == rhs.lineSpacing
             && lhs.translations.count == rhs.translations.count && lhs.bookmarked == rhs.bookmarked
-            && lhs.bottomInset == rhs.bottomInset
+            && lhs.bottomInset == rhs.bottomInset && lhs.panelInset == rhs.panelInset
     }
 
     var body: some View {
@@ -1554,6 +1560,11 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
                 visible.ids = ids
             }
             .onScrollGeometryChange(for: CGFloat.self, of: { $0.contentOffset.y }) { _, offset in
+                // Пока есть выделение, внизу стоит его панель: нижняя строка не показывается и не прячется от прокрутки
+                guard selection == nil else {
+                    scrollAnchor.offset = offset
+                    return
+                }
                 let moved = offset - scrollAnchor.offset
                 if offset < 20 {
                     onScrollDirection(false)
@@ -1613,7 +1624,7 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
                                   onNote: onNote,
                                   onClose: { clearSelection() })
                     .padding(.horizontal, 12)
-                    .padding(.bottom, 8 + bottomInset)
+                    .padding(.bottom, 8 + panelInset)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -1711,6 +1722,7 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
             selection = nil
             selectionLayout = nil
         }
+        onSelectionEnd()
     }
 
     /// Слово выделения → та же ссылка, что у нажатия: читалка покажет карточку слова
