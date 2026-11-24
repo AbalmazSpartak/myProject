@@ -75,9 +75,9 @@ struct ScanResultsView: View {
     @State private var aiBase: [String: Word] = [:]
     /// Запас ИИ кончился или нет сети — остальное перевёл встроенный переводчик
     @State private var aiProblem: BookWordsAI.Problem?
-    /// «Отмечать слова, которые уже учу» — запоминается для следующих сканов
-    @AppStorage(Self.selectLearningKey) private var selectLearning = false
-    private static let selectLearningKey = "scan_select_learning"
+    /// «Скрыть слова, которые уже учу» — запоминается для следующих сканов; по умолчанию включено
+    @AppStorage(Self.hideLearningKey) private var hideLearning = true
+    private static let hideLearningKey = "scan_hide_learning"
 
     private enum TranslationState {
         case idle, translating, done, failed
@@ -94,15 +94,23 @@ struct ScanResultsView: View {
         self.photo = photo
         self.onSave = onSave
         if let fileName { _listName = State(initialValue: fileName) }
-        // По умолчанию отмечены новые слова и слова из базы, которые ещё не начали учить,
-        // а с «Отмечать слова, которые уже учу» — все найденные
-        let selectLearning = UserDefaults.standard.bool(forKey: Self.selectLearningKey)
-        _selected = State(initialValue: Set(candidates.filter { selectLearning || !Self.isLearning($0) }.map(\.id)))
+        // По умолчанию слова, которые уже учат, скрыты и не отмечены; если показ включён — они в списке и отмечены
+        let hideLearning = UserDefaults.standard.object(forKey: Self.hideLearningKey) as? Bool ?? true
+        _selected = State(initialValue: Set(candidates.filter { !hideLearning || !Self.isLearning($0) }.map(\.id)))
     }
 
     /// Слово из базы, которое уже начали учить (хотя бы раз оценили в карточках)
     private static func isLearning(_ candidate: ScanCandidate) -> Bool {
         candidate.existing.map { $0.state != .new } ?? false
+    }
+
+    /// Уже изучаемое слово (в том числе узнанное ИИ) и включено «Скрыть слова, которые уже учу» — в списке его нет
+    private func isHidden(_ candidate: ScanCandidate) -> Bool {
+        hideLearning && isLearningNow(candidate)
+    }
+
+    private func isLearningNow(_ candidate: ScanCandidate) -> Bool {
+        base(candidate).map { $0.state != .new } ?? false
     }
 
     /// Слово базы: найденное сразу или узнанное ИИ
@@ -138,12 +146,12 @@ struct ScanResultsView: View {
 
     /// Фразовые глаголы и выражения из базы, найденные в тексте целиком
     private var phrases: [ScanCandidate] {
-        candidates.filter { base($0) != nil && $0.extracted.isPhrase }
+        candidates.filter { base($0) != nil && $0.extracted.isPhrase && !isHidden($0) }
     }
 
     /// Сложные слова сверху; из файла — самые частые
     private var knownWords: [ScanCandidate] {
-        let known = candidates.filter { base($0) != nil && !$0.extracted.isPhrase }
+        let known = candidates.filter { base($0) != nil && !$0.extracted.isPhrase && !isHidden($0) }
         return fileName == nil ? known.sorted { levelRank($0) > levelRank($1) } : known
     }
 
@@ -188,16 +196,16 @@ struct ScanResultsView: View {
                         translationProgress
                     }
                 }
-                if candidates.contains(where: Self.isLearning) {
+                if candidates.contains(where: isLearningNow) {
                     Section {
-                        Toggle("Отмечать слова, которые уже учу", isOn: $selectLearning)
-                            .onChange(of: selectLearning) { _, isOn in
-                                // Меняем галочки только у уже изучаемых слов — отметки остальных не трогаем
-                                let ids = Set(candidates.filter(Self.isLearning).map(\.id))
-                                if isOn { selected.formUnion(ids) } else { selected.subtract(ids) }
+                        Toggle("Скрыть слова, которые уже учу", isOn: $hideLearning)
+                            .onChange(of: hideLearning) { _, isOn in
+                                // Меняем только уже изучаемые слова: скрытые не отмечены, показанные — отмечены; отметки остальных не трогаем
+                                let ids = Set(candidates.filter(isLearningNow).map(\.id))
+                                if isOn { selected.subtract(ids) } else { selected.formUnion(ids) }
                             }
                     } footer: {
-                        Text("Тогда в словарь из текста сразу попадут все его слова. Настройка запоминается для следующих сканов.")
+                        Text("Слова, которые вы уже учите, не показываются в списке. Настройка запоминается для следующих сканов.")
                     }
                 }
                 if !phrases.isEmpty {
@@ -244,9 +252,7 @@ struct ScanResultsView: View {
                     } header: {
                         sectionHeader("Уже есть в базе", items: knownWords)
                     } footer: {
-                        Text(selectLearning
-                             ? "Из базы слово попадёт в словарь, оставаясь в своей теме и со своим прогрессом."
-                             : "Слова, которые вы уже учите, не отмечены. Из базы слово попадёт в словарь, оставаясь в своей теме.")
+                        Text("Из базы слово попадёт в словарь, оставаясь в своей теме и со своим прогрессом.")
                     }
                 }
             }
@@ -521,7 +527,7 @@ struct ScanResultsView: View {
                 let word = matches.first { $0.partOfSpeech == entry.pos } ?? matches[0]
                 aiBase[candidate.id] = word
                 unknown.remove(candidate.id)
-                if selectLearning || word.state == .new { selected.insert(candidate.id) } else { selected.remove(candidate.id) }
+                if !hideLearning || word.state == .new { selected.insert(candidate.id) } else { selected.remove(candidate.id) }
                 continue
             }
             // Слово не из словаря проверки орфографии, но ИИ его знает — значит, нужное
