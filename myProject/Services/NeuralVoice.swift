@@ -618,23 +618,34 @@ final class NeuralVoice {
         pendingKey = key
         isPreparing = true
         let folder = Self.modelFolder
+        let began = ContinuousClock.now
         speakTask = Task {
             var index = 0
             do {
                 while index < parts.count {
                     let partKey = "\(voice)|\(speed)|\(parts[index])"
                     let samples: [Float]
+                    var source = "кеш"
+                    var generated = Duration.zero
                     if let cached = cache[partKey] {
                         samples = cached
                     } else {
                         // Kokoro на нейроядре уже в памяти (читается книга) — слово им: быстрее, и вторая модель не нужна
-                        samples = KokoroML.shared.isLoaded
+                        let onNeuralEngine = KokoroML.shared.isLoaded
+                        source = onNeuralEngine ? "нейроядро" : "процессор"
+                        let started = ContinuousClock.now
+                        samples = onNeuralEngine
                             ? try await KokoroML.shared.synthesize(parts[index], voice: Self.kokoroName(voice), speed: speed).audio.samples
                             : try await engine.generate(parts[index], voice: voice, speed: speed, folder: folder)
+                        generated = ContinuousClock.now - started
                         remember(samples, for: partKey)
                     }
                     try Task.checkCancellation()
                     try schedule(samples)
+                    if index == 0 {
+                        // Замер: сколько от нажатия до начала звука и сколько из этого заняла подготовка звука (с загрузкой модели, если она была холодной)
+                        print("[TTS слово] \(source): до звука \(Self.milliseconds(ContinuousClock.now - began)) мс, подготовка \(Self.milliseconds(generated)) мс, «\(parts[0])»")
+                    }
                     isPreparing = false
                     index += 1
                 }
@@ -698,6 +709,20 @@ final class NeuralVoice {
             }
         }
         return parts
+    }
+
+    private nonisolated static func milliseconds(_ duration: Duration) -> Int {
+        let parts = duration.components
+        return Int(parts.seconds * 1000 + parts.attoseconds / 1_000_000_000_000_000)
+    }
+
+    /// Открыли английскую книгу: слова при нажатии озвучивает модель на процессоре, и в «Чтении» её никто не загружал —
+    /// первое слово ждало 2–3 с. Не грузим, если слова скажет Kokoro на нейроядре (он грузится при открытии книги и сам
+    /// выгружает эту модель — вместе в памяти они не помещаются) или выбран системный голос
+    func warmUpForWords() {
+        guard !SpeechSettings.forcesSystemVoice, !KokoroML.shared.isBusy else { return }
+        if let voice = bookVoice(language: BookLanguage.english), case .kokoroML = voice.engine { return }
+        warmUp()
     }
 
     /// Загрузить модель заранее — первая фраза не ждёт 2–3 с загрузки

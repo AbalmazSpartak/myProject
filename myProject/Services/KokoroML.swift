@@ -50,6 +50,9 @@ final class KokoroML {
         return version.majorVersion < 26 || (version.majorVersion == 26 && version.minorVersion < 4)
     }
 
+    /// Модель в памяти или грузится прямо сейчас
+    var isBusy: Bool { isLoaded || loadTask != nil }
+
     /// Скачан и на этой iOS работает
     var isReady: Bool { phase == .ready && Self.isSupported }
 

@@ -753,6 +753,8 @@ struct BookReaderView: View {
         // Запуск в режиме «Чтение» загрузит Kokoro заранее, только если последняя книга английская
         UserDefaults.standard.set(language, forKey: KokoroML.lastBookLanguageKey)
         speech.preloadVoice()
+        // Слова при нажатии озвучивает модель на процессоре — загружаем её сейчас, а не при первом нажатии
+        if isEnglish { NeuralVoice.shared.warmUpForWords() }
         var start = 0
         chapterStarts = chapters.map { chapter in
             defer { start += chapter.paragraphs.count }
