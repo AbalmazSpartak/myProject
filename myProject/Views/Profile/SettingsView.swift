@@ -151,7 +151,17 @@ struct SettingsView: View {
     private var paletteSection: some View {
         Section {
             themePicker
-            Toggle("Чёрный фон ночью", isOn: Binding(get: { isBlack }, set: { SettingsReturn.isPending = true; isBlack = $0 }))
+            Toggle(isOn: Binding(get: { isBlack }, set: { SettingsReturn.isPending = true; isBlack = $0 })) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Чёрный фон ночью")
+                    // Переключатель работает всегда, но виден только в тёмной теме — при светлой скажем об этом
+                    if selectedTheme == "light" {
+                        Text("Выбрана светлая тема: чёрный фон появится, когда включите тёмную или системную при тёмном режиме iPhone")
+                            .scaledFont(size: 12)
+                            .foregroundStyle(Color.brandMuted)
+                    }
+                }
+            }
             // Пока кнопки не выбирали отдельно, они идут за основным цветом
             swatchRow("Основной цвет", selection: Binding(get: { shownAccent }, set: { pickedAccent = $0 }))
             swatchRow("Цвет кнопок", selection: Binding(get: { shownButton }, set: { pickedButton = $0 }))
