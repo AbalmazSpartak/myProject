@@ -18,6 +18,7 @@ struct AccountView: View {
     @State private var repeated = ""
     @State private var oldPassword = ""
     @State private var isChangingPassword = false
+    @State private var isDeleting = false
     @State private var isBusy = false
     @State private var message: String?
     @State private var notice: String?
@@ -263,6 +264,54 @@ struct AccountView: View {
             }
             .buttonStyle(.plain)
             .padding(.top, 8)
+            deleteSection
+                .padding(.top, 20)
+        }
+    }
+
+    /// Удаление аккаунта: сначала только ссылка, по нажатию — предупреждение и пароль для подтверждения
+    @ViewBuilder
+    private var deleteSection: some View {
+        if isDeleting {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Удалить аккаунт навсегда?")
+                    .scaledFont(size: 17, weight: .semibold)
+                    .foregroundColor(.brandDark)
+                Text("С сервера сотрутся почта и пароль, на всех устройствах будет выполнен выход. Отменить это нельзя. Слова, книги и прогресс на этом устройстве останутся.")
+                    .scaledFont(size: 13)
+                    .foregroundColor(.brandMuted)
+                field("lock") {
+                    SecureField("Пароль для подтверждения", text: $oldPassword)
+                        .textContentType(.password)
+                }
+                Button(action: deleteAccount) {
+                    HStack(spacing: 8) {
+                        Text("Удалить навсегда").scaledFont(size: 15, weight: .semibold)
+                        if isBusy { ProgressView().tint(.white) }
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, minHeight: 46)
+                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.red.opacity(oldPassword.isEmpty ? 0.4 : 1)))
+                }
+                .buttonStyle(.plain)
+                .disabled(oldPassword.isEmpty || isBusy)
+                link("Отмена") { isDeleting = false; clearPasswords(); message = nil }
+            }
+            .padding(16)
+            .background(Color.red.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.red.opacity(0.35), lineWidth: 1))
+        } else {
+            Button {
+                isDeleting = true
+                isChangingPassword = false
+                clearPasswords()
+                notice = nil
+                message = nil
+            } label: {
+                Text("Удалить аккаунт").scaledFont(size: 14, weight: .medium).foregroundColor(.red)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -371,6 +420,17 @@ struct AccountView: View {
             clearPasswords()
             isChangingPassword = false
             notice = "Пароль изменён."
+        }
+    }
+
+    private func deleteAccount() {
+        guard !oldPassword.isEmpty else { return }
+        run {
+            try await account.deleteAccount(password: oldPassword)
+            clearPasswords()
+            isDeleting = false
+            step = .signIn
+            message = "Аккаунт удалён."
         }
     }
 

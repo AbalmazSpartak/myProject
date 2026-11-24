@@ -6,6 +6,7 @@
 // GET  /me            (Bearer token)               → { email }
 // POST /me/password   (Bearer token) { old, password } → смена пароля, другие устройства выходят
 // POST /auth/logout   (Bearer token)               → выход на этом устройстве
+// POST /me/delete     (Bearer token) { password }  → удаление аккаунта: почта, пароль, коды и все сессии стираются
 // Каждый пользователь — своя база (Durable Object по хэшу почты); токен = «id.секрет», в базе только хэш секрета;
 // пароль — только хэш PBKDF2 с отдельной солью.
 import { DurableObject } from "cloudflare:workers";
@@ -139,7 +140,7 @@ export default {
 
     const token = (request.headers.get("authorization") || "").replace(/^Bearer /, "");
     const [id, secret] = token.split(".");
-    if (path === "/me" || path === "/me/password" || path === "/auth/logout") {
+    if (path === "/me" || path === "/me/password" || path === "/me/delete" || path === "/auth/logout") {
       if (!id || !secret || !/^[0-9a-f]{32}$/.test(id)) return json({ error: "unauthorized" }, 401);
       const stub = user(id);
       const hash = await sha256(secret);
@@ -159,6 +160,17 @@ export default {
         const check = await hashPassword(body.old, state.salt || "00000000000000000000000000000000");
         const salt = randomHex(16);
         const result = await stub.changePassword(hash, check, salt, await hashPassword(body.password, salt));
+        if (result.locked) return json({ error: "locked", wait: result.locked }, 429);
+        return result.ok ? json({ ok: true }) : json({ error: result.error }, 401);
+      }
+      if (path === "/me/delete") {
+        if (request.method !== "POST") return json({ error: "method" }, 405);
+        const body = await read();
+        if (typeof body.password !== "string" || body.password.length > MAX_PASSWORD) return json({ error: "bad_request" }, 400);
+        if (!(await allow("login", IP_LOGIN_PER_HOUR))) return json({ error: "too_many" }, 429);
+        const state = await stub.loginState();
+        if (state.locked) return json({ error: "locked", wait: state.locked }, 429);
+        const result = await stub.deleteAccount(hash, await hashPassword(body.password, state.salt || "00000000000000000000000000000000"));
         if (result.locked) return json({ error: "locked", wait: result.locked }, 429);
         return result.ok ? json({ ok: true }) : json({ error: result.error }, 401);
       }
@@ -314,6 +326,22 @@ export class User extends DurableObject {
     this.put("failures", 0);
     // Остальные устройства входят заново с новым паролем
     sql.exec("DELETE FROM sessions WHERE hash != ?", sessionHash);
+    return { ok: true };
+  }
+
+  /// Удаление аккаунта по паролю: стираются все строки всех таблиц (сами таблицы остаются пустыми —
+  /// по этой почте можно зарегистрироваться заново)
+  deleteAccount(sessionHash, check) {
+    const sql = this.ctx.storage.sql;
+    if (!sql.exec("SELECT hash FROM sessions WHERE hash = ?", sessionHash).toArray()[0]) return { ok: false, error: "unauthorized" };
+    const locked = this.lockedFor();
+    if (locked) return { ok: false, locked };
+    const stored = this.value("password");
+    if (!stored || !sameHash(stored, check)) {
+      this.countFailure();
+      return { ok: false, error: "wrong" };
+    }
+    for (const table of ["codes", "tickets", "sessions", "profile"]) sql.exec(`DELETE FROM ${table}`);
     return { ok: true };
   }
 

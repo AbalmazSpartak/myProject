@@ -114,6 +114,32 @@ final class Account {
         }
     }
 
+    /// Удаление аккаунта навсегда (подтверждается паролем): сервер стирает почту, пароль и все сессии,
+    /// здесь стираются ключ входа и почта. Слова и книги на устройстве не трогаются
+    func deleteAccount(password: String) async throws {
+        guard let token = Self.token else { throw Failure.network }
+        let (status, body) = try await Self.post("me/delete", ["password": password], token: token)
+        switch status {
+        case 200: forget()
+        case 400: throw Failure.wrongPassword
+        case 401:
+            // Ключ устарел (пароль сменили на другом устройстве) — нужен новый вход
+            if body["error"] as? String == "unauthorized" { forget() }
+            throw Failure.wrongPassword
+        case 429:
+            if body["error"] as? String == "locked" { throw Failure.locked(body["wait"] as? Int ?? 900) }
+            throw Failure.tooMany
+        default: throw Failure.network
+        }
+    }
+
+    /// Стирает вход только на этом устройстве, без запроса к серверу
+    private func forget() {
+        Self.token = nil
+        UserDefaults.standard.removeObject(forKey: Self.emailKey)
+        email = nil
+    }
+
     private func accept(_ body: [String: Any], fallback: String) throws {
         guard let token = body["token"] as? String else { throw Failure.network }
         Self.token = token
@@ -130,9 +156,7 @@ final class Account {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             _ = try? await URLSession.shared.data(for: request)
         }
-        Self.token = nil
-        UserDefaults.standard.removeObject(forKey: Self.emailKey)
-        email = nil
+        forget()
     }
 
     /// Ключ входа для будущих запросов синхронизации
