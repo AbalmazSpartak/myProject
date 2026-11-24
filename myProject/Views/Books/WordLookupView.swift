@@ -154,8 +154,13 @@ struct WordLookupView: View {
             Button {
                 TextToSpeechManager.shared.speak(lemma.isEmpty ? tapped.word : lemma)
             } label: {
-                Image(systemName: "speaker.wave.2")
-                    .scaledFont(size: 20)
+                Group {
+                    if NeuralVoice.shared.isPreparing {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Image(systemName: "speaker.wave.2").scaledFont(size: 20)
+                    }
+                }
                     .foregroundStyle(AppDesign.isSketch ? Color.brandDark : Color.brandOnSoft)
                     .frame(width: 44, height: 44)
                     .background(Circle().fill(AppDesign.isSketch ? NewStyle.pastels[1] : Color.brandAccent))
@@ -163,6 +168,12 @@ struct WordLookupView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Озвучить")
+            // Звук слова готовится, пока карточка открыта: нажатие звучит сразу
+            .task(id: lemma) {
+                // Словарная форма находится в первые мгновения; до неё не готовим, чтобы не делать звук дважды
+                guard !lemma.isEmpty else { return }
+                NeuralVoice.shared.prefetch(lemma)
+            }
         }
     }
 

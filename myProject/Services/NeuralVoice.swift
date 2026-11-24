@@ -629,7 +629,13 @@ final class NeuralVoice {
                     var generated = Duration.zero
                     if let cached = cache[partKey] {
                         samples = cached
+                    } else if let running = prefetching[partKey], let ready = try? await running.value {
+                        // Это слово уже готовится (или подготовлено) с момента выделения — ждём то же, а не делаем заново
+                        samples = ready
+                        source = "заранее"
+                        generated = ContinuousClock.now - began
                     } else {
+                        try Task.checkCancellation()
                         // Kokoro на нейроядре уже в памяти (читается книга) — слово им: быстрее, и вторая модель не нужна
                         let onNeuralEngine = KokoroML.shared.isLoaded
                         source = onNeuralEngine ? "нейроядро" : "процессор"
@@ -709,6 +715,34 @@ final class NeuralVoice {
             }
         }
         return parts
+    }
+
+    /// Звуки слов, которые готовятся заранее, — ключ как у кеша
+    private var prefetching: [String: Task<[Float], Error>] = [:]
+
+    /// Слово выделили, но «Озвучить» ещё не нажали: готовим звук сейчас, чтобы нажатие звучало сразу.
+    /// Тот же голос и скорость, что при нажатии (обычная скорость, не «медленно»); готовое — в кеш.
+    /// Только короткий текст одним куском; системному голосу готовить нечего
+    func prefetch(_ text: String) {
+        guard isActive, !SpeechSettings.forcesSystemVoice else { return }
+        // Нейроядро грузится — модель на процессоре рядом не загружаем: вместе в памяти они не помещаются
+        if KokoroML.shared.isBusy, !KokoroML.shared.isLoaded { return }
+        let parts = Self.split(text)
+        guard parts.count == 1, let part = parts.first, part.split(whereSeparator: \.isWhitespace).count <= 4 else { return }
+        let voice = selectedVoice
+        let speed = Float(SpeechSettings.neuralSpeedFactor)
+        let key = "\(voice)|\(speed)|\(part)"
+        guard cache[key] == nil, prefetching[key] == nil else { return }
+        let folder = Self.modelFolder
+        let onNeuralEngine = KokoroML.shared.isLoaded
+        prefetching[key] = Task {
+            defer { prefetching[key] = nil }
+            let samples = onNeuralEngine
+                ? try await KokoroML.shared.synthesize(part, voice: Self.kokoroName(voice), speed: speed).audio.samples
+                : try await engine.generate(part, voice: voice, speed: speed, folder: folder)
+            remember(samples, for: key)
+            return samples
+        }
     }
 
     private nonisolated static func milliseconds(_ duration: Duration) -> Int {

@@ -80,8 +80,14 @@ struct ReaderSelectionPanel: View {
                     Haptics.tap()
                     speak()
                 } label: {
-                    Image(systemName: "speaker.wave.2.fill")
-                        .scaledFont(size: 15)
+                    // Нейроголос готовит звук — вместо динамика кружок: видно, что нажатие сработало
+                    Group {
+                        if NeuralVoice.shared.isPreparing {
+                            ProgressView().controlSize(.small).tint(.brandDark)
+                        } else {
+                            Image(systemName: "speaker.wave.2.fill").scaledFont(size: 15)
+                        }
+                    }
                         .foregroundColor(.brandDark)
                         .frame(width: 34, height: 34)
                         .background(sketch ? NewStyle.yellow : Color.brandBackground, in: Circle())
@@ -197,6 +203,13 @@ struct ReaderSelectionPanel: View {
         .task(id: text) {
             passage = passageLookup()
             baseWord = findBaseWord()
+        }
+        // Звук слова — заранее, пока вы читаете перевод: «Озвучить» тогда звучит сразу. Пока тянете ручки выделения, не готовим
+        .task(id: text) {
+            guard isEnglish else { return }
+            try? await Task.sleep(for: .milliseconds(350))
+            guard !Task.isCancelled else { return }
+            NeuralVoice.shared.prefetch(text)
         }
         .onChange(of: text) { _, _ in
             translation = nil
