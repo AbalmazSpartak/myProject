@@ -18,6 +18,8 @@ struct ReaderSelectionPanel: View {
     var language = BookLanguage.english
     /// Место в переводе книги — ищется, когда панель открылась
     let passageLookup: () -> BookPassage?
+    /// Предложение со словом и место слова в нём: по предложению выбирается значение слова
+    var sentenceLookup: () -> (sentence: String, range: Range<String.Index>)? = { nil }
     /// У одного слова — «Карточка»: полная карточка слова, как при нажатии
     var onOpenCard: (() -> Void)?
     /// «Заметка» к выделенному месту: читалка спрашивает описание и сохраняет
@@ -27,6 +29,8 @@ struct ReaderSelectionPanel: View {
     @AppStorage(ReaderSelectionPanel.systemTranslatorKey) private var usesSystemTranslator = false
     /// Слово из словаря приложения — его перевод показывается сразу
     @State private var baseWord: Word?
+    /// Все значения слова из словаря, подходящее по предложению — первым
+    @State private var baseMeanings: [Word] = []
     @State private var translation: String?
     @State private var config: TranslationSession.Configuration?
     @State private var isTranslating = false
@@ -82,7 +86,7 @@ struct ReaderSelectionPanel: View {
             }
 
             if let baseWord {
-                Text(baseWord.russian)
+                Text(meaningsText(for: baseWord))
                     .scaledFont(size: 15)
                     .foregroundColor(.brandDark.opacity(0.75))
                     .lineLimit(6)
@@ -240,6 +244,7 @@ struct ReaderSelectionPanel: View {
         .onChange(of: text) { _, _ in
             translation = nil
             baseWord = nil
+            baseMeanings = []
             failed = false
             rudeHidden = false
             isAdded = false
@@ -254,9 +259,25 @@ struct ReaderSelectionPanel: View {
         guard isEnglish, isSingleWord else { return nil }
         let clean = text.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
         guard !clean.isEmpty else { return nil }
-        let found = TextWordExtractor.lemma(of: clean, at: clean.startIndex..<clean.endIndex, in: clean)
+        // Часть речи — по предложению из книги, а не по слову отдельно: «Well,» в начале фразы — «ну», а не «здоровый»
+        let found: (lemma: String, partOfSpeech: String)
+        if let context = sentenceLookup(), context.sentence.localizedCaseInsensitiveContains(clean) {
+            found = TextWordExtractor.lemma(of: clean, at: context.range, in: context.sentence)
+        } else {
+            found = TextWordExtractor.lemma(of: clean, at: clean.startIndex..<clean.endIndex, in: clean)
+        }
         let matches = modelContext.words(spelled: [found.lemma, clean])
-        return matches.first { $0.partOfSpeech == found.partOfSpeech } ?? matches.first
+        // Подходящее по предложению значение — первым, остальные — следом
+        let fitting = matches.filter { $0.partOfSpeech == found.partOfSpeech }
+        baseMeanings = fitting + matches.filter { $0.partOfSpeech != found.partOfSpeech }
+        return fitting.first ?? matches.first
+    }
+
+    /// До трёх значений слова через точку с запятой, без повторов; первым — подходящее по предложению
+    private func meaningsText(for word: Word) -> String {
+        var seen = Set<String>()
+        let all = ([word] + baseMeanings).map(\.russian).filter { seen.insert($0.lowercased()).inserted }
+        return all.prefix(3).joined(separator: "; ")
     }
 
     /// Перевод книги с подсвеченными переводами выделенного слова
@@ -283,7 +304,10 @@ struct ReaderSelectionPanel: View {
     }
 
     private func action(_ title: String, icon: String, disabled: Bool = false, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+        Button {
+            Haptics.tap()
+            action()
+        } label: {
             VStack(spacing: 4) {
                 Image(systemName: icon)
                     .scaledFont(size: 17)

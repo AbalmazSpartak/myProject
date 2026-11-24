@@ -261,10 +261,23 @@ struct ReaderPagedText: View, Equatable {
                         let selected = selection.range
                         ReaderSelectionPanel(text: layout.string(selected), bookTitle: bookTitle, language: language,
                                              passageLookup: { layout.firstParagraphPart(of: selected).flatMap { passage($0.paragraph, $0.range) } },
-                                             onOpenCard: NSEqualRanges(selection.range, selection.anchor) ? {
+                                             sentenceLookup: {
+                                                 // Предложение, в котором стоит слово: по нему определяется часть речи и значение
+                                                 guard let part = layout.firstParagraphPart(of: selected), plainParagraphs.indices.contains(part.paragraph),
+                                                       let range = Range(part.range, in: plainParagraphs[part.paragraph]) else { return nil }
+                                                 let paragraph = plainParagraphs[part.paragraph]
+                                                 let sentenceRange = BookReaderView.sentence(containing: range, in: paragraph)
+                                                 let sentence = String(paragraph[sentenceRange])
+                                                 let from = paragraph.distance(from: sentenceRange.lowerBound, to: range.lowerBound)
+                                                 let length = paragraph.distance(from: range.lowerBound, to: range.upperBound)
+                                                 guard from >= 0, let start = sentence.index(sentence.startIndex, offsetBy: from, limitedBy: sentence.endIndex) else { return nil }
+                                                 let end = sentence.index(start, offsetBy: length, limitedBy: sentence.endIndex) ?? sentence.endIndex
+                                                 return (sentence, start..<end)
+                                             },
+                                             onOpenCard: {
                                                  openWord(selected)
                                                  clearSelection()
-                                             } : nil,
+                                             },
                                              onNote: {
                                                  if let part = layout.firstParagraphPart(of: selected) {
                                                      onNote(layout.string(selected), part.paragraph, part.range)

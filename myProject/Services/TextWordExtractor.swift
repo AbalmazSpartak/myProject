@@ -292,7 +292,7 @@ nonisolated enum TextWordExtractor {
         tagger.setLanguage(.english, range: sentence.startIndex..<sentence.endIndex)
         let lemma = correctedLemma(word) ?? tagger.tag(at: range.lowerBound, unit: .word, scheme: .lemma).0?.rawValue.lowercased()
         let lexical = tagger.tag(at: range.lowerBound, unit: .word, scheme: .lexicalClass).0
-        let partOfSpeech = lexical.flatMap { partsOfSpeech[$0] } ?? ""
+        let partOfSpeech = lexical.flatMap { partsOfSpeech[$0] ?? ($0 == .interjection ? "excl." : nil) } ?? ""
         return (lemma.flatMap { isWordLike($0) ? $0 : nil } ?? word.lowercased(), partOfSpeech)
     }
 

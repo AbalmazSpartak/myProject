@@ -1300,7 +1300,7 @@ struct BookReaderView: View {
         return "\(match.1.lowercased()) \(match.2.lowercased())"
     }
 
-    private static func sentence(containing range: Range<String.Index>, in text: String) -> Range<String.Index> {
+    static func sentence(containing range: Range<String.Index>, in text: String) -> Range<String.Index> {
         var result = text.startIndex..<text.endIndex
         text.enumerateSubstrings(in: text.startIndex..<text.endIndex, options: .bySentences) { _, sentenceRange, _, stop in
             if sentenceRange.contains(range.lowerBound) {
