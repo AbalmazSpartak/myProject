@@ -201,6 +201,8 @@ struct ReaderPagedText: View, Equatable {
     var noted: [Int: [NSRange]] = [:]
     let onPrevious: () -> Void
     let onNext: () -> Void
+    /// Нижний слой читалки (мини-плеер озвучки) перекрывает страницу: панель выделения встаёт над ним
+    var bottomInset: CGFloat = 0
 
     @State private var pages: [[ReaderPaginator.Segment]] = []
     @State private var page = 0
@@ -233,7 +235,7 @@ struct ReaderPagedText: View, Equatable {
         lhs.chapterID == rhs.chapterID && lhs.paragraphs.count == rhs.paragraphs.count && lhs.readerFont == rhs.readerFont
             && lhs.fontSize == rhs.fontSize && lhs.textColor == rhs.textColor && lhs.lineSpacing == rhs.lineSpacing
             && lhs.curl == rhs.curl && lhs.animated == rhs.animated && lhs.background == rhs.background && lhs.bookTitle == rhs.bookTitle
-            && lhs.language == rhs.language && lhs.bookmarked == rhs.bookmarked && lhs.noted == rhs.noted
+            && lhs.bottomInset == rhs.bottomInset && lhs.language == rhs.language && lhs.bookmarked == rhs.bookmarked && lhs.noted == rhs.noted
     }
 
     var body: some View {
@@ -287,7 +289,7 @@ struct ReaderPagedText: View, Equatable {
                             clearSelection()
                         }
                             .padding(.horizontal, 12)
-                            .padding(.bottom, 8)
+                            .padding(.bottom, 8 + bottomInset)
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }

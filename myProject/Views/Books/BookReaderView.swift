@@ -28,6 +28,8 @@ struct BookReaderView: View {
     @State private var didAutoListen = false
     /// Экран слушания поверх читалки; таймер сна
     @State private var isShowingPlayer = false
+    /// Высота нижнего слоя (мини-плеер и нижняя панель): на столько панель выделения поднимается над ним
+    @State private var bottomOverlayHeight: CGFloat = 0
     @State private var sleep = SleepTimer.off
     @State private var sleepEndsAt: Date?
     @State private var sleepTask: Task<Void, Never>?
@@ -179,7 +181,8 @@ struct BookReaderView: View {
                     },
                     noted: chapterNotedRanges,
                     onPrevious: { go(to: chapterIndex - 1, atEnd: true) },
-                    onNext: { go(to: chapterIndex + 1) }
+                    onNext: { go(to: chapterIndex + 1) },
+                    bottomInset: bottomOverlayHeight
                 )
                 .equatable()
                 .id("\(chapterIndex)-\(style.phonicsID)-\(themeSwitchID)-\(contentVersion)")
@@ -328,6 +331,10 @@ struct BookReaderView: View {
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { bottomOverlayHeight = $0 }
+            } else {
+                Color.clear.frame(width: 0, height: 0)
+                    .onAppear { bottomOverlayHeight = 0 }
             }
         }
         .overlay(alignment: .bottom) {
