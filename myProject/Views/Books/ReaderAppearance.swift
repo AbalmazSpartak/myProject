@@ -386,15 +386,9 @@ struct ReaderAppearanceSheet: View {
                         .foregroundColor(Color.brandMuted)
 
                     section("Листание")
-                    Picker("Листание", selection: $layout) {
-                        ForEach(ReaderLayout.allCases) { Text($0.title).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
+                    ChoiceSegments(selection: $layout) { $0.title }
                     if layout == .pages {
-                        Picker("Анимация", selection: $pageTurn) {
-                            ForEach(ReaderPageTurn.allCases) { Text($0.title).tag($0) }
-                        }
-                        .pickerStyle(.segmented)
+                        ChoiceSegments(selection: $pageTurn) { $0.title }
                     }
 
                     // «Читаем и учим»: подсветка доступна и в режиме «Чтение»; нет её только в «Только читалке»
@@ -452,23 +446,14 @@ struct ReaderAppearanceSheet: View {
                         .frame(maxWidth: .infinity)
 
                     section("Шрифт")
-                    Picker("Шрифт", selection: $font) {
-                        ForEach(ReaderFont.allCases) { Text($0.title).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
+                    ChoiceSegments(selection: $font) { $0.title }
 
                     section("Интервал между строками")
-                    Picker("Интервал", selection: $spacing) {
-                        ForEach(ReaderSpacing.allCases) { Text($0.title).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
+                    ChoiceSegments(selection: $spacing) { $0.title }
 
                     section("Перенос слов")
-                    Picker("Перенос слов", selection: $hyphenation) {
-                        Text("Слово целиком").tag(false)
-                        Text("По слогам").tag(true)
-                    }
-                    .pickerStyle(.segmented)
+                    ChoiceSegments(selection: $hyphenation,
+                                   options: [(false, "Слово целиком"), (true, "По слогам")])
 
                     Button("Сбросить оформление") {
                         theme = .app
