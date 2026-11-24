@@ -81,13 +81,11 @@ struct ReaderSelectionPanel: View {
                     speak()
                 } label: {
                     // Нейроголос готовит звук — вместо динамика кружок: видно, что нажатие сработало
-                    Group {
-                        if NeuralVoice.shared.isPreparing {
-                            ProgressView().controlSize(.small).tint(.brandDark)
-                        } else {
-                            Image(systemName: "speaker.wave.2.fill").scaledFont(size: 15)
-                        }
-                    }
+                    // Значок остаётся на месте (невидимым), кружок — поверх него: иначе строка меняет высоту и панель дёргается
+                    Image(systemName: "speaker.wave.2.fill")
+                        .scaledFont(size: 15)
+                        .opacity(NeuralVoice.shared.isPreparing ? 0 : 1)
+                        .overlay { if NeuralVoice.shared.isPreparing { ProgressView().controlSize(.small).tint(.brandDark) } }
                         .foregroundColor(.brandDark)
                         .frame(width: 34, height: 34)
                         .background(sketch ? NewStyle.yellow : Color.brandBackground, in: Circle())

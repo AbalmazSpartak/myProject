@@ -640,9 +640,13 @@ final class NeuralVoice {
                         let onNeuralEngine = KokoroML.shared.isLoaded
                         source = onNeuralEngine ? "нейроядро" : "процессор"
                         let started = ContinuousClock.now
-                        samples = onNeuralEngine
-                            ? try await KokoroML.shared.synthesize(parts[index], voice: Self.kokoroName(voice), speed: speed).audio.samples
-                            : try await engine.generate(parts[index], voice: voice, speed: speed, folder: folder)
+                        // Одиночное слово модель обрывает на последнем звуке — хрип в конце; у фразы такого нет (в конце знак)
+                        let single = parts.count == 1
+                        let input = single ? Self.speechInput(parts[index]) : parts[index]
+                        let raw = onNeuralEngine
+                            ? try await KokoroML.shared.synthesize(input, voice: Self.kokoroName(voice), speed: speed).audio.samples
+                            : try await engine.generate(input, voice: voice, speed: speed, folder: folder)
+                        samples = single ? Self.polished(raw) : raw
                         generated = ContinuousClock.now - started
                         remember(samples, for: partKey)
                     }
@@ -737,12 +741,33 @@ final class NeuralVoice {
         let onNeuralEngine = KokoroML.shared.isLoaded
         prefetching[key] = Task {
             defer { prefetching[key] = nil }
-            let samples = onNeuralEngine
-                ? try await KokoroML.shared.synthesize(part, voice: Self.kokoroName(voice), speed: speed).audio.samples
-                : try await engine.generate(part, voice: voice, speed: speed, folder: folder)
+            let input = Self.speechInput(part)
+            let raw = onNeuralEngine
+                ? try await KokoroML.shared.synthesize(input, voice: Self.kokoroName(voice), speed: speed).audio.samples
+                : try await engine.generate(input, voice: voice, speed: speed, folder: folder)
+            let samples = Self.polished(raw)
             remember(samples, for: key)
             return samples
         }
+    }
+
+    /// Текст для модели: у одиночного слова без знака в конце — точка («Now» → «Now.»). Без неё модель обрывает последний звук
+    /// и в конце слышен хрип; с точкой заканчивает, как фразу. В кеше и на экране слово остаётся прежним
+    nonisolated static func speechInput(_ part: String) -> String {
+        guard let last = part.last, last.isLetter || last.isNumber else { return part }
+        return part + "."
+    }
+
+    /// Короткое слово: мягкое начало, затухание в конце и немного тишины после — остаток звука не обрывается резко
+    nonisolated static func polished(_ samples: [Float]) -> [Float] {
+        guard samples.count > 1_200 else { return samples }
+        var result = samples
+        let fadeIn = 120   // 5 мс при 24 кГц
+        for index in 0..<fadeIn { result[index] *= Float(index) / Float(fadeIn) }
+        let fadeOut = 600  // 25 мс
+        for index in 0..<fadeOut { result[result.count - 1 - index] *= Float(index) / Float(fadeOut) }
+        result.append(contentsOf: [Float](repeating: 0, count: 2_400))  // 100 мс тишины
+        return result
     }
 
     private nonisolated static func milliseconds(_ duration: Duration) -> Int {

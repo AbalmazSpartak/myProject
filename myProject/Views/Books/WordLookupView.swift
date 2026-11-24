@@ -32,6 +32,8 @@ struct WordLookupView: View {
     /// ИИ-подсказка не пришла: запас на сегодня кончился или нет сети
     @State private var cloudMessage: String?
     @AppStorage(CloudContext.enabledKey) private var aiHints = false
+    /// Скорость слов — та же, что в «Озвучке»
+    @AppStorage(SpeechSettings.rateKey) private var speechRate = SpeechSettings.defaultRate
     @AppStorage(AppMode.storageKey) private var mode = AppMode.learning
     /// Разговорная форма старой книги (knowed, a-going, de) — плашка с обычной формой и урок
     @State private var colloquial: ColloquialForm?
@@ -149,18 +151,18 @@ struct WordLookupView: View {
                 }
                 .scaledFont(size: 14)
                 .foregroundColor(Color.brandMuted)
+                speedChips
+                    .padding(.top, 4)
             }
             Spacer()
             Button {
                 TextToSpeechManager.shared.speak(lemma.isEmpty ? tapped.word : lemma)
             } label: {
-                Group {
-                    if NeuralVoice.shared.isPreparing {
-                        ProgressView().controlSize(.small)
-                    } else {
-                        Image(systemName: "speaker.wave.2").scaledFont(size: 20)
-                    }
-                }
+                // Значок остаётся на месте (невидимым), кружок — поверх него: иначе строка меняет высоту и карточка дёргается
+                Image(systemName: "speaker.wave.2")
+                    .scaledFont(size: 20)
+                    .opacity(NeuralVoice.shared.isPreparing ? 0 : 1)
+                    .overlay { if NeuralVoice.shared.isPreparing { ProgressView().controlSize(.small) } }
                     .foregroundStyle(AppDesign.isSketch ? Color.brandDark : Color.brandOnSoft)
                     .frame(width: 44, height: 44)
                     .background(Circle().fill(AppDesign.isSketch ? NewStyle.pastels[1] : Color.brandAccent))
@@ -169,12 +171,53 @@ struct WordLookupView: View {
             .buttonStyle(.plain)
             .accessibilityLabel("Озвучить")
             // Звук слова готовится, пока карточка открыта: нажатие звучит сразу
-            .task(id: lemma) {
+            .task(id: "\(lemma)|\(speechRate)") {
                 // Словарная форма находится в первые мгновения; до неё не готовим, чтобы не делать звук дважды
                 guard !lemma.isEmpty else { return }
                 NeuralVoice.shared.prefetch(lemma)
             }
         }
+    }
+
+    /// Скорость слова: крайние и обычная точки ползунка «Озвучки» (0,75× · 1× · 1,25× для нейроголоса)
+    private static let speeds: [(rate: Double, title: String)] = [
+        (SpeechSettings.rateRange.lowerBound, "0,75×"), (SpeechSettings.defaultRate, "1×"), (SpeechSettings.rateRange.upperBound, "1,25×")
+    ]
+
+    private var speedChips: some View {
+        let nearest = Self.speeds.min { abs($0.rate - speechRate) < abs($1.rate - speechRate) }?.rate
+        return HStack(spacing: 6) {
+            ForEach(Self.speeds, id: \.rate) { option in
+                let selected = option.rate == nearest
+                Button {
+                    setSpeed(option.rate)
+                } label: {
+                    Text(option.title)
+                        .scaledFont(size: 13, weight: .semibold)
+                        .foregroundStyle(selected ? (AppDesign.isSketch ? NewStyle.onYellow : Color.white)
+                                                  : (AppDesign.isSketch ? Color.brandDark : Color.brandOnSoft))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Capsule().fill(selected ? (AppDesign.isSketch ? NewStyle.yellow : Color.brandTint)
+                                                            : (AppDesign.isSketch ? NewStyle.pastels[1] : Color.brandAccent)))
+                        .overlay { if AppDesign.isSketch { Capsule().stroke(NewStyle.outline, style: NewStyle.stroke) } }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Скорость \(option.title)")
+                .accessibilityAddTraits(selected ? .isSelected : [])
+            }
+        }
+    }
+
+    /// Новая скорость слов (общая с «Озвучкой») и сразу слово этой скоростью.
+    /// Скорость чтения книги вслух, пока она не выбрана отдельно, повторяет скорость слов — закрепляем её, чтобы книга не ускорилась
+    private func setSpeed(_ rate: Double) {
+        Haptics.tap()
+        if UserDefaults.standard.object(forKey: SpeechSettings.bookRateKey) == nil {
+            UserDefaults.standard.set(SpeechSettings.bookRate, forKey: SpeechSettings.bookRateKey)
+        }
+        speechRate = rate
+        TextToSpeechManager.shared.speak(lemma.isEmpty ? tapped.word : lemma)
     }
 
     @ViewBuilder
