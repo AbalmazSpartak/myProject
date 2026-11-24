@@ -71,11 +71,24 @@ struct ReaderSelectionPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text(text)
-                    .scaledFont(size: 16, design: .serif)
+                    .scaledFont(size: sketch ? 24 : 16, weight: sketch ? .bold : .regular, design: sketch ? .rounded : .serif)
                     .foregroundColor(.brandDark)
                     .lineLimit(4)
+                Button {
+                    Haptics.tap()
+                    speak()
+                } label: {
+                    Image(systemName: "speaker.wave.2.fill")
+                        .scaledFont(size: 15)
+                        .foregroundColor(.brandDark)
+                        .frame(width: 34, height: 34)
+                        .background(sketch ? NewStyle.yellow : Color.brandBackground, in: Circle())
+                        .sketchFrame(sketch, radius: 17, shadow: NewStyle.blue, offset: 2)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Озвучить")
                 Spacer(minLength: 8)
                 Button(action: onClose) {
                     Image(systemName: "xmark.circle.fill")
@@ -87,10 +100,15 @@ struct ReaderSelectionPanel: View {
 
             if let baseWord {
                 Text(meaningsText(for: baseWord))
-                    .scaledFont(size: 15)
-                    .foregroundColor(.brandDark.opacity(0.75))
+                    .scaledFont(size: 18)
+                    .foregroundColor(.brandDark)
                     .lineLimit(6)
                     .textSelection(.enabled)
+            }
+            if isEnglish, isSingleWord, !usesSystemTranslator {
+                Label(baseWord == nil ? "Нет в словаре" : "Из словаря", systemImage: "character.book.closed")
+                    .scaledFont(size: 12)
+                    .foregroundColor(Color.brandMuted)
             }
             if let translation {
                 Text(baseWord == nil ? translation : "Переводчик iOS: \(translation)")
@@ -148,68 +166,7 @@ struct ReaderSelectionPanel: View {
                 }
             }
 
-            HStack(spacing: 8) {
-                if !isEnglish {
-                    // Книга не на английском: перевода на русский нет — толкование из словаря iPhone
-                    if isSingleWord {
-                        action("Толкование", icon: "character.book.closed") {
-                            definedWord = DefinedWord(term: text.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters)))
-                        }
-                    }
-                } else if isSingleWord && !usesSystemTranslator {
-                    // Перевод — из словаря приложения; переводчик iOS включается в Настройках
-                    action(baseWord == nil ? "Нет в словаре" : "Из словаря", icon: "character.book.closed", disabled: true) {}
-                } else if isSingleWord {
-                    action(translation == nil ? "Перевести" : "Готово", icon: "character.bubble", disabled: translation != nil || isTranslating) {
-                        if config == nil {
-                            config = TranslationSession.Configuration(source: Locale.Language(identifier: "en"),
-                                                                      target: Locale.Language(identifier: "ru"))
-                        } else {
-                            config?.invalidate()
-                        }
-                    }
-                } else {
-                    action("Google", icon: "globe") {
-                        if let url = Self.googleTranslateURL(text) { googlePage = GooglePage(url: url) }
-                    }
-                }
-                if isSingleWord, let onOpenCard {
-                    action("Карточка", icon: "text.book.closed", action: onOpenCard)
-                }
-                // ВРЕМЕННО: толкование из словаря iPhone и для английских книг — посмотреть, как работает (в неанглийских оно есть всегда)
-                if isEnglish, isSingleWord {
-                    action("Толкование", icon: "text.magnifyingglass") {
-                        definedWord = DefinedWord(term: text.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters)))
-                    }
-                }
-                action("Озвучить", icon: "speaker.wave.2") {
-                    if isEnglish {
-                        TextToSpeechManager.shared.speak(text)
-                    } else if let voice = SpeechSettings.bestVoice(language: language) {
-                        TextToSpeechManager.shared.preview(text, voice: voice)
-                    }
-                }
-                action(copied ? "Скопировано" : "Копировать", icon: "doc.on.doc") {
-                    UIPasteboard.general.string = text
-                    copied = true
-                }
-                if let onNote {
-                    action("Заметка", icon: "note.text.badge.plus", action: onNote)
-                }
-                if isEnglish && fitsDictionary {
-                    action(isAdded ? "В словаре" : "В словарь", icon: isAdded ? "checkmark.circle.fill" : "plus.circle",
-                           disabled: isAdded || (isSingleWord && usesSystemTranslator && translation == nil && !rudeHidden && baseWord == nil && bookSuggestion == nil)) {
-                        if dictionaryTranslation != nil {
-                            add()
-                        } else {
-                            // Подсказка из перевода книги — сразу в поле, поправить можно
-                            manualTranslation = bookSuggestion ?? ""
-                            isEnteringTranslation = true
-                            isTranslationFocused = true
-                        }
-                    }
-                }
-            }
+            actionsView
         }
         .padding(14)
         .background(Color.cardBackground)
@@ -303,28 +260,106 @@ struct ReaderSelectionPanel: View {
         return components?.url
     }
 
-    private func action(_ title: String, icon: String, disabled: Bool = false, action: @escaping () -> Void) -> some View {
+    private var sketch: Bool { AppDesign.isSketch }
+
+    private func speak() {
+        if isEnglish {
+            TextToSpeechManager.shared.speak(text)
+        } else if let voice = SpeechSettings.bestVoice(language: language) {
+            TextToSpeechManager.shared.preview(text, voice: voice)
+        }
+    }
+
+    private func openDefinition() {
+        definedWord = DefinedWord(term: text.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters)))
+    }
+
+    /// Главное действие — большая кнопка («Карточка» у слова, «Google» у фразы), остальные — ряд кнопок поменьше
+    private var actionsView: some View {
+        VStack(spacing: 10) {
+            if isSingleWord, let onOpenCard {
+                primaryButton("Карточка", icon: "text.book.closed", action: onOpenCard)
+            } else if isEnglish, !isSingleWord {
+                primaryButton("Google", icon: "globe") {
+                    if let url = Self.googleTranslateURL(text) { googlePage = GooglePage(url: url) }
+                }
+            }
+            HStack(spacing: 6) {
+                if isSingleWord, isEnglish, usesSystemTranslator {
+                    miniButton(translation == nil ? "Перевести" : "Готово", icon: "character.bubble", disabled: translation != nil || isTranslating) {
+                        if config == nil {
+                            config = TranslationSession.Configuration(source: Locale.Language(identifier: "en"),
+                                                                      target: Locale.Language(identifier: "ru"))
+                        } else {
+                            config?.invalidate()
+                        }
+                    }
+                }
+                // Толкование из словаря iPhone (в неанглийских книгах перевода на русский нет — оно главное)
+                if isSingleWord {
+                    miniButton("Толкование", icon: "text.magnifyingglass", action: openDefinition)
+                }
+                miniButton(copied ? "Скопировано" : "Копировать", icon: "doc.on.doc") {
+                    UIPasteboard.general.string = text
+                    copied = true
+                }
+                if let onNote {
+                    miniButton("Заметка", icon: "note.text.badge.plus", action: onNote)
+                }
+                if isEnglish && fitsDictionary {
+                    miniButton(isAdded ? "В словаре" : "В словарь", icon: isAdded ? "checkmark.circle.fill" : "plus.circle",
+                               disabled: isAdded || (isSingleWord && usesSystemTranslator && translation == nil && !rudeHidden && baseWord == nil && bookSuggestion == nil)) {
+                        if dictionaryTranslation != nil {
+                            add()
+                        } else {
+                            // Подсказка из перевода книги — сразу в поле, поправить можно
+                            manualTranslation = bookSuggestion ?? ""
+                            isEnteringTranslation = true
+                            isTranslationFocused = true
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func primaryButton(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
+        Button {
+            Haptics.tap()
+            action()
+        } label: {
+            Label(title, systemImage: icon)
+                .scaledFont(size: 18, weight: .bold, design: sketch ? .rounded : .default)
+                .foregroundColor(sketch ? NewStyle.onYellow : .white)
+                .frame(maxWidth: .infinity, minHeight: 54)
+                .background(sketch ? NewStyle.yellow : Color.brandTint, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .sketchFrame(sketch, radius: 16, shadow: NewStyle.blue, offset: 3)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func miniButton(_ title: String, icon: String, disabled: Bool = false, action: @escaping () -> Void) -> some View {
         Button {
             Haptics.tap()
             action()
         } label: {
             VStack(spacing: 4) {
                 Image(systemName: icon)
-                    .scaledFont(size: 17)
+                    .scaledFont(size: 18)
                 Text(title)
-                    .scaledFont(size: 11, weight: .medium)
+                    .scaledFont(size: 12, weight: .medium)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
-            .background(Color.brandBackground)
-            .cornerRadius(10)
+            .frame(maxWidth: .infinity, minHeight: 58)
+            .padding(.horizontal, 2)
+            .background(sketch ? Color.cardBackground : Color.brandBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .sketchFrame(sketch, radius: 12, shadow: NewStyle.blue, offset: 2)
         }
         .buttonStyle(.plain)
         .foregroundColor(.brandDark)
         .disabled(disabled)
-        .opacity(disabled && !(title == "В словаре" || title == "Готово" || title == "Из словаря") ? 0.4 : 1)
+        .opacity(disabled && !(title == "В словаре" || title == "Готово") ? 0.4 : 1)
     }
 
     /// Фраза — своим словом в словаре книги, с переводом; учится в тренировках, как слова
