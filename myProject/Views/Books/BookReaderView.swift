@@ -208,6 +208,17 @@ struct BookReaderView: View {
                         book.furthest = max(book.furthest, book.position)
                     },
                     onTap: handleTap,
+                    plainParagraphs: chapter?.paragraphs ?? [],
+                    uiFont: style.font.uiFont(size: style.fontSize),
+                    bookTitle: book.title,
+                    language: language,
+                    passage: bookPassage,
+                    onSelectionStart: { setChromeHidden(true) },
+                    onNote: { text, paragraph, range in
+                        guard chapterStarts.indices.contains(chapterIndex) else { return }
+                        noteText = ""
+                        noteDraft = NoteDraft(text: text, paragraph: chapterStarts[chapterIndex] + paragraph, range: range)
+                    },
                     bottomInset: bottomOverlayHeight
                 ) {
                     chapterNavigation
@@ -1462,6 +1473,14 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
     let onScrollDirection: (Bool) -> Void
     let onVisible: (Int) -> Void
     let onTap: (URL) -> Void
+    /// Выделение долгим нажатием, как на страницах: тексты абзацев, шрифт для раскладки и всё для панели выделения
+    let plainParagraphs: [String]
+    let uiFont: UIFont
+    let bookTitle: String
+    let language: String
+    let passage: (Int, NSRange) -> BookPassage?
+    let onSelectionStart: () -> Void
+    let onNote: (String, Int, NSRange) -> Void
     /// Мини-плеер и нижняя строка лежат поверх списка: конец главы с кнопками не должен оказаться под ними
     var bottomInset: CGFloat = 0
     @ViewBuilder let navigation: () -> Navigation
@@ -1470,6 +1489,15 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
     @State private var visible = VisibleParagraphs()
     /// Откуда началось движение в одну сторону — шапка меняется, когда ушли от него на 40 точек
     @State private var scrollAnchor = ScrollAnchor()
+    /// Выделенное долгим нажатием: абзац, символы и слово, с которого начали. Выделяется внутри одного абзаца
+    @State private var selection: (paragraph: Int, range: NSRange, anchor: NSRange)?
+    @State private var selectionLayout: ReaderPageLayout?
+    /// Что тянет палец: продолжение долгого нажатия или одна из «ручек»; пока тянет — прокрутка выключена
+    @State private var dragMode: SelectionDrag?
+    /// Ширина текста абзаца: по ней строится раскладка для нажатий
+    @State private var textWidth: CGFloat = 0
+    /// Нажатие: в обычном объекте — его смена при прокрутке не должна перерисовывать главу
+    @State private var touch = TouchState()
 
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.chapterID == rhs.chapterID && lhs.paragraphs.count == rhs.paragraphs.count
@@ -1487,7 +1515,11 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
                                         lineSpacing: lineSpacing, speech: speech, mark: mark,
                                         translation: translations.indices.contains(index) ? translations[index] : nil,
                                         translationFont: translationFont,
+                                        selected: selection?.paragraph == index ? selection?.range : nil,
                                         onShiftTranslation: { onShiftTranslation(index, $0) })
+                            .overlay(alignment: .topLeading) { handles(paragraph: index) }
+                            .contentShape(Rectangle())
+                            .simultaneousGesture(pressGesture(paragraph: index))
                             .overlay(alignment: .topTrailing) {
                                 if bookmarked.contains(index) {
                                     BookmarkRibbon()
@@ -1505,6 +1537,8 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
                 .padding(.top, 18)
                 .padding(.bottom, 18 + bottomInset)
             }
+            .scrollDisabled(dragMode != nil)
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { textWidth = $0 - 44 }
             .onScrollTargetVisibilityChange(idType: Int.self, threshold: 0.01) { ids in
                 visible.ids = ids
             }
@@ -1555,6 +1589,150 @@ private struct ReaderChapterText<Navigation: View>: View, Equatable {
             onTap(url)
             return .handled
         })
+        // Палец отпустили — панель с выделенным: перевод, озвучка, копирование, в словарь
+        .overlay(alignment: .bottom) {
+            if let selection, dragMode == nil, let layout = selectionLayout {
+                let selected = selection.range
+                ReaderLookupPanel(layout: layout, selected: selected, plainParagraphs: plainParagraphs, bookTitle: bookTitle,
+                                  language: language, passage: passage,
+                                  onOpenCard: {
+                                      openWord(selected)
+                                      clearSelection()
+                                  },
+                                  onNote: onNote,
+                                  onClose: { clearSelection() })
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 8 + bottomInset)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+    }
+
+    // MARK: - Выделение: долгое нажатие на слово, дальше палец или «ручки» тянут края; нажатие на слово — карточка
+
+    private func pressGesture(paragraph index: Int) -> some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { value in
+                if !touch.isDown {
+                    touch.isDown = true
+                    touch.moved = false
+                    touch.long = false
+                    if let selection, selection.paragraph == index, let layout = selectionLayout {
+                        // Палец у края выделения — тянем этот край
+                        let point = value.startLocation
+                        let first = layout.rect(of: selection.range.location)
+                        let last = layout.rect(of: NSMaxRange(selection.range) - 1)
+                        if hypot(point.x - first.minX, point.y - first.midY) < 34 { dragMode = .start }
+                        else if hypot(point.x - last.maxX, point.y - last.midY) < 34 { dragMode = .end }
+                    } else {
+                        touch.longPress?.cancel()
+                        let location = value.startLocation
+                        touch.longPress = Task {
+                            try? await Task.sleep(for: .milliseconds(450))
+                            guard !Task.isCancelled, touch.isDown, !touch.moved else { return }
+                            touch.long = true
+                            beginSelection(at: location, paragraph: index)
+                        }
+                    }
+                }
+                if !touch.moved, hypot(value.translation.width, value.translation.height) > 10 { touch.moved = true }
+                if dragMode != nil { moveSelection(to: value.location) }
+            }
+            .onEnded { value in
+                touch.longPress?.cancel()
+                let wasDragging = dragMode != nil
+                let current = (moved: touch.moved, long: touch.long)
+                touch.isDown = false
+                dragMode = nil
+                // Долгое нажатие и протягивание края — выделение остаётся, под ним панель; свайп — это прокрутка
+                guard !wasDragging, !current.long, !current.moved else { return }
+                // Нажатие мимо выделения — снять его
+                if selection != nil {
+                    clearSelection()
+                    return
+                }
+                tapWord(at: value.location, paragraph: index)
+            }
+    }
+
+    /// Раскладка абзаца — та же TextKit, что и на страницах; без переносов: в прокрутке их нет
+    private func layout(paragraph index: Int) -> ReaderPageLayout? {
+        guard plainParagraphs.indices.contains(index), textWidth > 50 else { return nil }
+        let length = (plainParagraphs[index] as NSString).length
+        return ReaderPageLayout(segments: [ReaderPaginator.Segment(paragraph: index, range: NSRange(location: 0, length: length))],
+                                paragraphs: plainParagraphs, font: uiFont, lineSpacing: lineSpacing, width: textWidth,
+                                hyphenationFactor: 0)
+    }
+
+    private func beginSelection(at location: CGPoint, paragraph index: Int) {
+        guard let layout = layout(paragraph: index),
+              let character = layout.index(at: location, exact: true),
+              let word = layout.word(at: character) else { return }
+        Haptics.tap()
+        onSelectionStart()
+        selectionLayout = layout
+        selection = (index, word, word)
+        dragMode = .extend
+    }
+
+    private func moveSelection(to location: CGPoint) {
+        guard var current = selection, let layout = selectionLayout, let mode = dragMode,
+              let character = layout.index(at: location, exact: false) else { return }
+        let word = layout.word(at: character) ?? NSRange(location: character, length: 1)
+        switch mode {
+        case .extend:
+            current.range = NSUnionRange(current.anchor, word)
+        case .start:
+            let end = NSMaxRange(current.range)
+            guard word.location < end else { return }
+            current.range = NSRange(location: word.location, length: end - word.location)
+        case .end:
+            let end = NSMaxRange(word)
+            guard end > current.range.location else { return }
+            current.range = NSRange(location: current.range.location, length: end - current.range.location)
+        }
+        if !NSEqualRanges(current.range, selection?.range ?? NSRange()) { selection = current }
+    }
+
+    private func clearSelection() {
+        guard selection != nil else { return }
+        withAnimation(.easeOut(duration: 0.2)) {
+            selection = nil
+            selectionLayout = nil
+        }
+    }
+
+    /// Слово выделения → та же ссылка, что у нажатия: читалка покажет карточку слова
+    private func openWord(_ range: NSRange) {
+        guard let position = selectionLayout?.paragraphPosition(of: range),
+              let url = URL(string: "wlword://w/\(position.paragraph)/\(position.range.location)/\(position.range.length)?card=1") else { return }
+        onTap(url)
+    }
+
+    /// Нажатие на слово — карточка слова
+    private func tapWord(at location: CGPoint, paragraph index: Int) {
+        guard let layout = layout(paragraph: index),
+              let character = layout.index(at: location, exact: true),
+              let word = layout.word(at: character),
+              let position = layout.paragraphPosition(of: word),
+              let url = URL(string: "wlword://w/\(position.paragraph)/\(position.range.location)/\(position.range.length)") else { return }
+        onTap(url)
+    }
+
+    /// «Ручки» выделения, как в iOS: у начала — точка сверху, у конца — снизу
+    @ViewBuilder
+    private func handles(paragraph index: Int) -> some View {
+        if let selection, selection.paragraph == index, let layout = selectionLayout {
+            let first = layout.rect(of: selection.range.location)
+            let last = layout.rect(of: NSMaxRange(selection.range) - 1)
+            ZStack(alignment: .topLeading) {
+                ReaderSelectionHandle(height: first.height, dotOnTop: true)
+                    .offset(x: first.minX - 5, y: first.minY - 10)
+                ReaderSelectionHandle(height: last.height, dotOnTop: false)
+                    .offset(x: last.maxX - 5, y: last.minY)
+            }
+            .allowsHitTesting(false)
+        }
     }
 }
 
@@ -1571,6 +1749,8 @@ private struct ReaderParagraph: View {
     /// Абзац перевода — под оригиналом, мельче и бледнее
     let translation: String?
     let translationFont: Font
+    /// Выделенное долгим нажатием — в символах абзаца
+    var selected: NSRange?
     /// Перевод не тот — сдвинуть с этого абзаца до конца главы
     let onShiftTranslation: (Int) -> Void
 
@@ -1578,7 +1758,7 @@ private struct ReaderParagraph: View {
         let isReading = speech.paragraph == index
         let isMarked = mark.paragraph == index
         VStack(alignment: .leading, spacing: 8) {
-            Text(isReading || isMarked || !mark.pageQuery.isEmpty ? highlighted : text)
+            Text(display)
                 .font(font)
                 .foregroundColor(textColor)
                 .lineSpacing(lineSpacing)
@@ -1602,6 +1782,16 @@ private struct ReaderParagraph: View {
         }
     }
 
+    /// Нажатия на слова разбирает сама читалка по раскладке — ссылки у слов не нужны (иначе долгое нажатие открывает меню ссылки)
+    private var display: AttributedString {
+        var result = highlighted
+        result.link = nil
+        if let selected, let range = Range(selected, in: result) {
+            result[range].backgroundColor = Color.accentColor.opacity(0.28)
+        }
+        return result
+    }
+
     private var highlighted: AttributedString {
         var result = text
         if speech.paragraph == index, let word = speech.word, let range = Range(word, in: result) {
@@ -1617,6 +1807,17 @@ private struct ReaderParagraph: View {
         }
         return result
     }
+}
+
+/// Что тянет выделение в прокрутке
+private enum SelectionDrag { case extend, start, end }
+
+/// Нажатие на абзац: палец на экране, сдвинулся ли (тогда это прокрутка), сработало ли долгое. Без наблюдения
+private final class TouchState {
+    var isDown = false
+    var moved = false
+    var long = false
+    var longPress: Task<Void, Never>?
 }
 
 /// Какие абзацы сейчас на экране. Класс без наблюдения: запись не вызывает перерисовку

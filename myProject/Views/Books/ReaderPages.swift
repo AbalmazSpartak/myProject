@@ -63,7 +63,8 @@ nonisolated final class ReaderPageLayout {
     private let container: NSTextContainer
     private let lineSpacing: CGFloat
 
-    init(segments: [ReaderPaginator.Segment], paragraphs: [String], font: UIFont, lineSpacing: CGFloat, width: CGFloat) {
+    init(segments: [ReaderPaginator.Segment], paragraphs: [String], font: UIFont, lineSpacing: CGFloat, width: CGFloat,
+         hyphenationFactor: Float = ReaderSettings.hyphenationFactor) {
         self.segments = segments
         self.lineSpacing = lineSpacing
         let pieces = segments.map { (paragraphs[$0.paragraph] as NSString).substring(with: $0.range) }
@@ -79,7 +80,7 @@ nonisolated final class ReaderPageLayout {
         let style = NSMutableParagraphStyle()
         style.lineSpacing = lineSpacing
         style.paragraphSpacing = ReaderPaginator.paragraphSpacing
-        style.hyphenationFactor = ReaderSettings.hyphenationFactor
+        style.hyphenationFactor = hyphenationFactor
         storage = NSTextStorage(string: joined, attributes: [.font: font, .paragraphStyle: style, .languageIdentifier: "en"])
         storage.addLayoutManager(manager)
         container = NSTextContainer(size: CGSize(width: width, height: .greatestFiniteMagnitude))
@@ -261,33 +262,14 @@ struct ReaderPagedText: View, Equatable {
                     // Палец отпустили — панель с выделенным: перевод, озвучка, копирование, в словарь
                     if let selection, press == nil, let layout = selectionLayout {
                         let selected = selection.range
-                        ReaderSelectionPanel(text: layout.string(selected), bookTitle: bookTitle, language: language,
-                                             passageLookup: { layout.firstParagraphPart(of: selected).flatMap { passage($0.paragraph, $0.range) } },
-                                             sentenceLookup: {
-                                                 // Предложение, в котором стоит слово: по нему определяется часть речи и значение
-                                                 guard let part = layout.firstParagraphPart(of: selected), plainParagraphs.indices.contains(part.paragraph),
-                                                       let range = Range(part.range, in: plainParagraphs[part.paragraph]) else { return nil }
-                                                 let paragraph = plainParagraphs[part.paragraph]
-                                                 let sentenceRange = BookReaderView.sentence(containing: range, in: paragraph)
-                                                 let sentence = String(paragraph[sentenceRange])
-                                                 let from = paragraph.distance(from: sentenceRange.lowerBound, to: range.lowerBound)
-                                                 let length = paragraph.distance(from: range.lowerBound, to: range.upperBound)
-                                                 guard from >= 0, let start = sentence.index(sentence.startIndex, offsetBy: from, limitedBy: sentence.endIndex) else { return nil }
-                                                 let end = sentence.index(start, offsetBy: length, limitedBy: sentence.endIndex) ?? sentence.endIndex
-                                                 return (sentence, start..<end)
-                                             },
-                                             onOpenCard: {
-                                                 openWord(selected)
-                                                 clearSelection()
-                                             },
-                                             onNote: {
-                                                 if let part = layout.firstParagraphPart(of: selected) {
-                                                     onNote(layout.string(selected), part.paragraph, part.range)
-                                                 }
-                                                 clearSelection()
-                                             }) {
-                            clearSelection()
-                        }
+                        ReaderLookupPanel(layout: layout, selected: selected, plainParagraphs: plainParagraphs, bookTitle: bookTitle,
+                                          language: language, passage: passage,
+                                          onOpenCard: {
+                                              openWord(selected)
+                                              clearSelection()
+                                          },
+                                          onNote: onNote,
+                                          onClose: { clearSelection() })
                             .padding(.horizontal, 12)
                             .padding(.bottom, 8 + bottomInset)
                             .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -882,4 +864,20 @@ private struct HyphenatedLabel: UIViewRepresentable {
 
 private extension NSAttributedString.Key {
     nonisolated static let languageIdentifier = NSAttributedString.Key("NSLanguage")
+}
+
+/// «Ручка» выделения в прокрутке: у начала — точка сверху, у конца — снизу
+struct ReaderSelectionHandle: View {
+    let height: CGFloat
+    let dotOnTop: Bool
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if dotOnTop { Circle().frame(width: 10, height: 10) }
+            Rectangle().frame(width: 2, height: height)
+            if !dotOnTop { Circle().frame(width: 10, height: 10) }
+        }
+        .frame(width: 10)
+        .foregroundColor(.accentColor)
+    }
 }
