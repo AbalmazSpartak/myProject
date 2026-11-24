@@ -1254,7 +1254,7 @@ struct BookReaderView: View {
             return
         }
         // «Перевод по нажатию» выключен в «Оформлении» читалки — нажатие на слово ничего не делает
-        guard AppMode.tapTranslationEnabled else { return }
+        guard AppMode.tapTranslationEnabled || url.query == "card=1" else { return }
         // Перевод слова — чтение вслух на паузу, продолжится кнопкой ▶️
         speech.pause()
         let paragraph = chapter.paragraphs[parts[0]]

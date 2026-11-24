@@ -570,7 +570,8 @@ struct ReaderPagedText: View, Equatable {
     /// Слово страницы → та же ссылка, что у слов в прокрутке: читалка покажет карточку слова
     private func openWord(_ range: NSRange) {
         guard let position = selectionLayout?.paragraphPosition(of: range),
-              let url = URL(string: "wlword://w/\(position.paragraph)/\(position.range.location)/\(position.range.length)") else { return }
+              // ?card=1 — кнопка «Карточка» в панели выделения: карточка открывается и при выключенном «Переводе по нажатию»
+              let url = URL(string: "wlword://w/\(position.paragraph)/\(position.range.location)/\(position.range.length)?card=1") else { return }
         onTap(url)
     }
 
