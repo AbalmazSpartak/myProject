@@ -11,6 +11,9 @@ python3 scripts/validate_words.py || status=1
 echo; echo "== Слова: темы и теги =="
 python3 scripts/check_words_topics.py || status=1
 
+echo; echo "== Словарь «Интерфейс приложений» =="
+python3 scripts/check_interface_words.py || status=1
+
 echo; echo "== Логика приложения (Swift) =="
 BIN="$(mktemp -d)/logic-tests"
 swiftc -swift-version 6 -default-isolation MainActor -enable-upcoming-feature NonisolatedNonsendingByDefault -o "$BIN" \

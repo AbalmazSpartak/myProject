@@ -34,6 +34,7 @@ struct MyApp: App {
                 // Один профиль: убирает дубликаты, если они успели появиться
                 UserProfile.ensureSingle(in: mainContext)
                 DataPreloader.syncBundledWords(context: mainContext)
+                InterfaceDictionary.sync(context: mainContext)
                 // Обрывки «ca» / «wo» / «sha» из разобранных книг — в can't / won't / shall
                 DataPreloader.fixContractionFragments(context: mainContext)
                 DataPreloader.resetImagesIfSourcesChanged(context: mainContext)
