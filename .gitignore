@@ -27,3 +27,6 @@ server/**/node_modules/
 # Секреты для локального wrangler dev
 server/**/.dev.vars
 *.xcodeproj/-Xcc/
+
+# Результаты навыков founder (заметки по бизнесу, не код приложения)
+founder/
