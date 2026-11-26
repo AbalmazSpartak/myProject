@@ -6,10 +6,10 @@
 - Target: iOS 18.0+, iPhone and iPad, plus the `WordWidget` widget extension (iOS 18 needed for Translation in text scan). Mac/visionOS appear in the target's supported platforms but are not tested.
 - Packages: FluidAudio (Kokoro neural voice on Neural Engine), sherpa-onnx (Piper voices).
 
-## Two Apps, Two Branches
-- **LexiStream** (bundle id `com.personalteam.lexistream`, new design) lives in branch `lexistream-dev`.
-- **WordLearner** (original app) lives in `main`.
-- Same project and scheme (`myProject`) in both; the branch decides which app gets built. Commit work for an app to its branch; other branches only for temporary experiments. Shared code needed by both apps: ask before cherry-picking it to the other branch.
+## Branches: only LexiStream is in development
+- **LexiStream** (bundle id `com.personalteam.lexistream`, new design) lives in branch `lexistream-dev` — all current work goes here.
+- **WordLearner** (original app) lives in `main`, which is **frozen**: don't commit or cherry-pick anything to `main` unless the user asks.
+- Same project and scheme (`myProject`) in both; the branch decides which app gets built. Other branches only for temporary experiments.
 
 ## Build and Test Commands
 - Build (simulator): xcodebuild -project myProject.xcodeproj -scheme myProject -destination 'generic/platform=iOS Simulator' -configuration Debug build
